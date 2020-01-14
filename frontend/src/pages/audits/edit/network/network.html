@@ -1,0 +1,91 @@
+<div>
+<breadcrumb buttons :title="AuditService.audit.name">
+    <div slot="buttons">
+        <q-btn-dropdown 
+        class="q-mr-sm" 
+        label="Import" 
+        no-caps 
+        color="grey-4" 
+        text-color="black"
+        auto-close
+        >
+            <q-list>
+                <q-item clickable @click="$refs.nmapFile.click()">
+                    <q-item-section>
+                        <q-item-label>
+                            Nmap
+                            <input
+                            type="file"
+                            ref="nmapFile"
+                            accept=".xml"
+                            class="hidden"
+                            @change="importNetworkScan($event.target.files, 'nmap')"
+                            />
+                        </q-item-label>
+                    </q-item-section>
+                </q-item>
+                <q-separator />
+                <q-item clickable @click="$refs.nessusFile.click()">
+                    <q-item-section>
+                        <q-item-label>
+                            Nessus
+                            <input
+                            type="file"
+                            ref="nessusFile"
+                            accept=".nessus"
+                            class="hidden"
+                            @change="importNetworkScan($event.target.files, 'nessus')"
+                            />
+                        </q-item-label>
+                    </q-item-section>
+                </q-item>
+            </q-list>
+        </q-btn-dropdown>
+        <q-btn color="positive" label="Save" no-caps style="width: 100px" @click="updateAuditNetwork" />
+    </div>
+</breadcrumb>
+
+<div class="row q-col-gutter-md q-pa-md">
+    <div class="col-md-6">
+        <q-card>
+            <q-card-section>Associate imported hosts with Perimeters</q-card-section>
+            <q-separator />
+            <q-card-section v-for="scope of audit.scope" :key="scope.name">
+                    <span class="text-h6">{{scope.name}}</span>
+                    <div class="q-col-gutter-md row">
+                            <q-select
+                            class="col-md-6"
+                            multiple
+                            :display-value="'Select Hosts'"
+                            v-model="selectedTargets"
+                            :options="targetsOptions"
+                            @input="updateScopeHosts(scope)"
+                            />
+                            <div v-for="(host, index) of scope.hosts">
+                            <q-chip 
+                            :key="host.ip"
+                            color="blue-14"
+                            text-color="white"
+                            dense
+                            class="col-md-6 cursor-pointer"
+                            @click.native="currentHost = _.cloneDeep(host)"
+                            >
+                            {{host.ip}}
+                            </q-chip>
+                        </div>
+                    </div>
+            </q-card-section>
+        </q-card>
+    </div>
+    <div v-if="currentHost !== null" class="col-md-6">
+        <q-table
+        :title="`${currentHost.ip} (${currentHost.hostname})`"
+        :data="currentHost.services"
+        :columns="dtHostHeaders"
+        :pagination.sync="hostPagination"
+        row-key="port"
+        style="background-color: white"
+        />
+    </div>
+</div>
+</div>

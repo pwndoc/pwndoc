@@ -1,0 +1,166 @@
+<div>
+<div class="row">
+    <div v-if="languages.length === 0" class="col-md-4 offset-md-4 q-mt-md">
+        <p>No languages are defined. </br> Please create Languages in <a href="/datas/custom">Datas -> Custom Datas -> Languages</a></p>
+    </div>
+    <div v-if="templates.length === 0" class="col-md-4 offset-md-4 q-mt-md">
+        <p>No templates are defined. </br> Please create Templates in <a href="/datas/templates">Datas -> Templates</a></p>
+    </div>
+    <div v-else class="col-md-8 offset-md-2 q-mt-md">
+        <q-table
+            :columns="dtHeaders"
+            :data="audits"
+            :filter="search"
+            :filter-method="customFilter"
+            :pagination.sync="pagination"
+            row-key="_id"
+            separator="none"
+        >
+            <template v-slot:top>
+                <q-input
+                class="col-md-3"
+                color="secondary"
+                label="Search Finding"
+                autofocus
+                v-model="search.finding"
+                @keyup.enter="getAudits"
+                >
+                    <template v-slot:prepend>
+                        <q-icon name="search" />
+                    </template>
+                </q-input>
+                <q-space />
+                <q-btn 
+                    flat 
+                    color="white" 
+                    text-color="black" 
+                    no-caps
+                    @click="cleanCurrentAudit(); $refs.createModal.show()"
+                    >
+                    New Audit
+                </q-btn>     
+            </template>
+           
+            <template v-slot:top-row="props">
+                <q-tr>
+                    <q-td
+                    v-for="col in props.cols"
+                    :key="col.name"
+                    style="width:20%"
+                    >
+                       <div v-if="['name', 'users', 'date'].indexOf(col.name) > -1">
+                           <q-input 
+                           dense
+                           color="secondary"
+                           label="Search..."
+                           v-model="search[col.name]"
+                           clearable
+                           />
+                       </div>
+                       <div v-else-if="col.name === 'company'">
+                           <q-select
+                            dense 
+                            label="Search..." 
+                            :options="companies"
+                            v-model="search.company"
+                            option-value="name"
+                            option-label="name"
+                            map-options
+                            emit-value
+                            clearable
+                            />
+                       </div>
+                       <div v-else-if="col.name === 'language'">
+                           <q-select 
+                           dense
+                           label="Search..."
+                           :options="languages"
+                           v-model="search.language"
+                           option-value="language"
+                           option-label="language"
+                           map-options 
+                           emit-value
+                           clearable
+                           />
+                       </div>
+                    </q-td>
+                </q-tr>
+            </template>
+
+            <q-td slot="body-cell-language" slot-scope="props">
+                {{convertLocale(props.row.language)}}
+            </q-td>
+            <q-td slot="body-cell-users" slot-scope="props">
+                {{convertParticipants(props.row)}}
+            </q-td>
+            <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
+                <q-btn size="sm" flat color="primary" :to="'/audits/'+props.row._id" icon="fa fa-edit" />
+                <q-btn size="sm" flat color="info" @click="generateReport(props.row._id)" icon="fa fa-download" />
+                <q-btn size="sm" flat color="negative" @click="confirmDeleteAudit(props.row)" icon="fa fa-trash" />
+            </q-td>
+
+            <div slot="bottom" slot-scope="props" class="row fit">
+                <div class="q-table-control">
+                    <span v-if="audits.length === 1">1 Audit</span>                
+                    <span v-else>{{audits.length}} Audits</span>                
+                </div>
+                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
+                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
+                </div>
+            </div>    
+    
+        </q-table>
+    </div>
+</div>
+
+<q-dialog ref="createModal" @hide="cleanCurrentAudit()">
+    <q-card style="width:800px">
+        <q-bar class="bg-primary text-white">
+            <div class="q-toolbar-title">
+                Create Audit
+            </div>
+            <q-space />
+            <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+        </q-bar>
+        <q-card-section>
+            <q-input
+            label='Name *'
+            :error="!!errors.name"
+            :error-message="errors.name"
+            autofocus
+            @keyup.enter="createAudit()"
+            v-model="currentAudit.name"
+            />
+            <q-select 
+            label="Select Language *"
+            :error="!!errors.language"
+            :error-message="errors.language"
+            v-model="currentAudit.language" 
+            :options="languages" 
+            option-value="locale" 
+            option-label="language" 
+            emit-value 
+            map-options
+            />
+            <q-select
+            label="Select Template *"
+            :error="!!errors.template"
+            :error-message="errors.template"
+            v-model="currentAudit.template"
+            :options="templates"
+            option-value="_id"
+            option-label="name"
+            emit-value
+            map-options
+            /> 
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+            <q-btn class="bg-white text-black" @click="$refs.createModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" @click="createAudit()">Create</q-btn>
+        </q-card-actions>
+    </q-card>
+</q-dialog>
+</div>

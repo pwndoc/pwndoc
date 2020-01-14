@@ -1,0 +1,37 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo
+    container_name: mongo-pwndoc
+    volumes:
+      - ./backend/mongo-data:/data/db
+    ports:
+      - 127.0.0.1:27017:27017
+    environment:
+      - MONGO_DB:pwndoc
+    networks:
+      - backend
+
+  pwndoc-backend:
+    build: ./backend
+    container_name: pwndoc-backend
+    restart: always
+    ports:
+      - 4242:4242
+    links:
+      - mongodb
+    networks: 
+      - backend
+
+  pwndoc-frontend:
+    build: ./frontend
+    container_name: pwndoc-frontend
+    restart: always
+    ports:
+      - 8443:8443
+    networks:
+      - backend
+
+networks:
+  backend:
+      driver: bridge

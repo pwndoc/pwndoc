@@ -1,0 +1,55 @@
+// app global css
+
+/* Hack colors */
+
+// Hack for white text on white bg in q-btn elements 
+.q-btn.bg-white.text-white {
+    color: #000000!important;
+}
+
+/* Home Drawer style */
+/*.home-drawer>.q-list>.q-link:hover:after,
+.home-drawer>.q-router-link--active:after,
+.home-drawer>.q-item--active:after {
+    --color: #77C84E;
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: var(--color);
+}*/
+
+.home-drawer .q-router-link--active {
+    background-color: var(--q-color-primary);
+    opacity: 0.9;
+    color: white!important;
+}
+
+.chip-center .q-chip-main {
+    margin: auto;
+}
+
+// Make one line for each chip (for example in q-select)
+.q-chip-one-line .q-chip {
+    margin-right: 100%;
+}
+
+.dropzone {
+    border: dashed;
+    border-color: $blue;
+    border-width: 2px;
+    border-radius: 5px;
+    height: 50px!important;
+    color: $grey-8;
+}
+
+.vertical-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
