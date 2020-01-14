@@ -1,0 +1,17 @@
+<div>
+<breadcrumb buttons :title="AuditService.audit.name">
+    <div slot="buttons">
+    <q-btn color="positive" label="Save" no-caps style="width: 100px" @click="updateAuditSummary" />
+    </div>
+</breadcrumb>
+
+<div class="row q-col-gutter-md q-pa-md">
+    <div class="col-md-12">
+        <q-card >
+            <q-card-section>
+                <q-input class="q-mb-md" label="Executive Summary" stack-label type="textarea" autogrow v-model="audit.summary" />
+            </q-card-section>
+        </q-card>
+    </div>
+</div>
+</div>

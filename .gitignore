@@ -1,0 +1,17 @@
+.DS_Store
+.thumbs.db
+node_modules
+/dist
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+mongo-data*
+.quasar
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

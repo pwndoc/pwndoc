@@ -1,0 +1,69 @@
+<div>
+<div class="row">
+    <div class="col-md-10 offset-md-1 q-mt-md">
+        <q-card>
+            <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                <div class="text-h6">Vulnerabilities</div>
+            </q-card-section>
+            <q-separator />
+            <div v-if=UserService.isAdmin()>
+                <q-card-section>
+                    <div class="text-bold">Import Vulnerabilities</div>
+                </q-card-section>
+                <q-card-section>
+                    <div class="text-grey-8">Import Vulnerabilities from a .yml or .json file. This allows you to easily import a batch of vulnerabilities templates</div>
+                </q-card-section>
+                <q-card-section>
+                    <input
+                    ref="importVulnerabilities"
+                    value=""
+                    type="file"
+                    multiple
+                    accept=".yml, .json"
+                    class="hidden"
+                    @change="importVulnerabilities($event.target.files)"
+                    />
+                    <q-btn 
+                    label="Import"
+                    color="secondary"
+                    flat
+                    class="bg-secondary text-white"
+                    @click="$refs.importVulnerabilities.click()"
+                    />
+                </q-card-section>
+                <q-separator />
+            </div>
+            <q-card-section>
+                <div class="text-bold">Export Vulnerabilities</div>
+            </q-card-section>
+            <q-card-section>
+                    <div class="text-grey-8">Export Vulnerabilities to yaml format. This export can easily be re-imported afterward</div>
+                </q-card-section>
+                <q-card-section>
+                    <q-btn 
+                    label="Export"
+                    color="secondary"
+                    flat
+                    class="bg-secondary text-white"
+                    @click="getVulnerabilities"
+                    />
+                </q-card-section>
+        </q-card>
+    </div>
+
+    <div class="col-md-10 offset-md-1 q-mt-md">
+        <q-card>
+            <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                <div class="text-h6">Audits</div>
+            </q-card-section>
+            <q-separator />
+            <q-card-section>
+                TODO
+            </q-card-section>
+        </q-card>
+    </div>
+</div>
+
+
+</div>
+        

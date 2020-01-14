@@ -1,0 +1,140 @@
+<div>
+<div class="row">
+    <div class="col-md-10 offset-md-1 q-mt-md">
+        <q-table
+            :columns="dtHeaders"
+            :data="companies"
+            :filter="search"
+            :pagination.sync="pagination"
+            row-key="name"
+            style="background-color: white"
+        >
+            <div slot="top-left" slot-scope="props">
+                <q-input
+                color="secondary"
+                label="Search"
+                autofocus
+                clearable
+                v-model="search"
+                />
+            </div>
+
+            <div slot="top-right" slot-scope="props">
+                <q-btn 
+                    flat 
+                    color="white" 
+                    text-color="black" 
+                    no-caps
+                    @click="cleanCurrentCompany(); $refs.createModal.show()"
+                    >
+                    Add Company
+                </q-btn>            
+            </div>
+
+            <q-td slot="body-cell-logo" slot-scope="props">
+                <img v-if="props.row.logo" :src="props.row.logo" height="42" width="42" />
+            </q-td>
+
+            <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
+                <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
+                </q-btn>
+                <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCompany(props.row)">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
+                </q-btn>
+            </q-td>
+
+            <div slot="bottom" slot-scope="props" class="row fit">
+                <div class="q-table-control">
+                    <span v-if="companies.length === 1">1 Company</span>                
+                    <span v-else>{{companies.length}} Companies</span>                
+                </div>
+                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
+                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
+                </div>
+            </div>    
+    
+        </q-table>
+    </div>
+</div>
+
+<q-dialog ref="createModal" @hide="cleanErrors()">
+    <q-card style="width:800px">
+        <q-bar class="bg-primary text-white">
+            <div class="q-toolbar-title">
+                Add Company
+            </div>
+            <q-space />
+            <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+        </q-bar>
+
+        <q-card-section>
+            <div class="row">
+                <q-input
+                    label='Name *'
+                    autofocus
+                    class="col-md-12"
+                    :error="!!errors.name"
+                    :error-message="errors.name"
+                    @keyup.enter="createCompany()"
+                    v-model="currentCompany.name" />
+                <q-uploader
+                    ref="addUploader"
+                    class="col-md-12"
+                    url=""
+                    label='Logo'
+                    accept='.gif,.jpg,.jpeg,.png'
+                    hide-upload-btn
+                    @added="handleImage"
+                />
+            </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+            <q-btn class="bg-white text-black" @click="$refs.createModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" @click="createCompany()">Create</q-btn>
+        </q-card-actions>
+    </q-card>
+</q-dialog>
+
+<q-dialog ref="editModal" @hide="cleanErrors()">
+    <q-card style="width:800px">
+        <q-bar class="bg-primary text-white">
+            <div class="q-toolbar-title">
+                Edit Company
+            </div>
+            <q-space />
+            <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
+        </q-bar>
+
+        <q-card-section>
+            <div class="row">
+                <q-input
+                    label='Name *'
+                    autofocus
+                    class="col-md-12"
+                    :error="!!errors.name"
+                    :error-message="errors.name"
+                    ref="nameInput"
+                    @keyup.enter="updateCompany()"
+                    v-model="currentCompany.name" />
+                <q-uploader
+                    ref="addUploader"
+                    class="col-md-12"
+                    url=""
+                    label='Logo'
+                    accept='.gif,.jpg,.jpeg,.png'
+                    hide-upload-btn
+                    @added="handleImage"
+                />
+            </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+            <q-btn class="bg-white text-black" @click="$refs.editModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" @click="updateCompany()">Update</q-btn>
+        </q-card-actions>
+    </q-card>
+</q-dialog>
+</div>
+        

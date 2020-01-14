@@ -1,0 +1,29 @@
+{
+    "dev": {
+        "port": 5252,
+        "host": "",
+        "database": {
+            "name": "pwndoc",
+            "server": "mongo-pwndoc-dev",
+            "port": "27017"
+        }
+    },
+    "prod": {
+        "port": 4242,
+        "host": "",
+        "database": {
+            "name": "pwndoc",
+            "server": "mongo-pwndoc",
+            "port": "27017"
+        }
+    },
+    "test": {
+        "port": 5252,
+        "host": "localhost",
+        "database": {
+            "name": "pwndoc-test",
+            "server": "localhost",
+            "port": "27017"
+        }
+    }
+}

@@ -1,0 +1,268 @@
+<div>
+    <div class="row">
+        <div class="col-md-10 offset-md-1 q-mt-md">
+            <q-card>
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                    <div class="text-h6">Languages</div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-grey-8">Create Languages used in Audits and Vulnerabilities</div>
+                </q-card-section>
+                <q-card-section class="row">
+                    <div class="col-md-6">
+                        <q-item>
+                            <q-item-section>
+                                <q-input
+                                label="Language"
+                                v-model="newLanguage.language"
+                                clearable
+                                :error="!!errors.language"
+                                :error-message="errors.language"
+                                @keyup.enter="createLanguage"
+                                />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-input
+                                label="Locale"
+                                v-model="newLanguage.locale"
+                                clearable
+                                :error="!!errors.locale"
+                                :error-message="errors.locale"
+                                @keyup.enter="createLanguage"
+                                />
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn color="secondary" label="+" size="md" @click="createLanguage" />
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <q-item v-for="language of languages" :key="language.locale">
+                            <q-item-section>
+                                <q-input
+                                label="Language"
+                                v-model="language.language"
+                                readonly
+                                />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-input
+                                label="Locale"
+                                v-model="language.locale"
+                                readonly
+                                />
+                            </q-item-section>
+                            <q-item-section side >
+                                <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteLanguage(language.locale)"/>
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                </q-card-section>
+            </q-card>
+        </div>
+
+        <div class="col-md-10 offset-md-1 q-mt-md">
+            <q-card>
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                    <div class="text-h6">Audit types</div>
+                </q-card-section>
+                <q-separator />
+                
+                <q-card-section>
+                    <div class="text-grey-8">Create Audit types used in Audits</div>
+                </q-card-section>
+                <q-card-section v-if="languages.length > 0" class="row">
+                    <div class="col-md-6">
+                        <q-item class="row">
+                            <q-item-section class="col-md-4">
+                                <q-select 
+                                v-model="newAuditType.locale" 
+                                label="Language" 
+                                :options="languages" 
+                                option-value="locale"
+                                option-label="language"
+                                emit-value
+                                map-options 
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input
+                                label="Name"
+                                v-model="newAuditType.name"
+                                clearable
+                                :error="!!errors.auditType"
+                                :error-message="errors.auditType"
+                                @keyup.enter="createAuditType"
+                                />
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn color="secondary" label="+" size="md" @click="createAuditType" />
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                    <div class="col-md-6">
+                        <q-item v-for="auditType of auditTypes" :key="auditType.name" v-if="auditType.locale === newAuditType.locale">
+                            <q-item-section>
+                                <q-input
+                                label="Name"
+                                v-model="auditType.name"
+                                readonly
+                                />
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteAuditType(auditType.name)"/>
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                </q-card-section>
+                <q-card-section v-else>
+                    <p>Please create at least one Language</p>
+                </q-card-section>
+            </q-card>
+        </div>
+
+        <div class="col-md-10 offset-md-1 q-mt-md">
+            <q-card>
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                    <div class="text-h6">Vulnerability types</div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-grey-8">Create Vulnerability types used in Vulnerabilities and Findings</div>
+                </q-card-section>
+                <q-card-section v-if="languages.length > 0" class="row">
+                    <div class="col-md-6">
+                        <q-item class="row">
+                            <q-item-section class="col-md-4">
+                                <q-select 
+                                v-model="newVulnType.locale" 
+                                label="Language" 
+                                :options="languages" 
+                                option-value="locale"
+                                option-label="language"
+                                emit-value
+                                map-options 
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input
+                                label="Name"
+                                v-model="newVulnType.name"
+                                clearable
+                                :error="!!errors.vulnType"
+                                :error-message="errors.vulnType"
+                                @keyup.enter="createVulnerabilityType"
+                                />
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn color="secondary" label="+" size="md" @click="createVulnerabilityType" />
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                    <div class="col-md-6">
+                        <q-item v-for="vulnType of vulnTypes" :key="vulnType.name" v-if="vulnType.locale === newVulnType.locale">
+                            <q-item-section>
+                                <q-input
+                                label="Name"
+                                v-model="vulnType.name"
+                                readonly
+                                />
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteVulnerabilityType(vulnType.name)"/>
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                </q-card-section>
+                <q-card-section v-else>
+                    <p>Please create at least one Language</p>
+                </q-card-section>
+            </q-card>
+        </div>
+
+        <div class="col-md-10 offset-md-1 q-my-md">
+            <q-card>
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                    <div class="text-h6">Custom Sections</div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-grey-8">Create Custom Sections used in Audits</div>
+                </q-card-section>
+                <q-card-section v-if="languages.length > 0" class="row">
+                    <div class="col-md-6">
+                        <q-item class="row">
+                            <q-item-section class="col-md-2">
+                                <q-select 
+                                v-model="newSection.locale" 
+                                label="Language" 
+                                :options="languages" 
+                                option-value="locale"
+                                option-label="language"
+                                emit-value
+                                map-options 
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input
+                                label="Name"
+                                v-model="newSection.name"
+                                clearable
+                                :error="!!errors.sectionName"
+                                :error-message="errors.sectionName"
+                                @keyup.enter="createSection"
+                                />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-input
+                                label="Field (For Template)"
+                                v-model="newSection.field"
+                                clearable
+                                :error="!!errors.sectionField"
+                                :error-message="errors.sectionField"
+                                @keyup.enter="createSection"
+                                />
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn color="secondary" label="+" size="md" @click="createSection" />
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                    <div class="col-md-6">
+                        <q-item v-for="section of sections" :key="section.field" v-if="section.locale === newSection.locale">
+                            <q-item-section>
+                                <q-input
+                                label="Name"
+                                v-model="section.name"
+                                readonly
+                                />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-input
+                                label="Field"
+                                v-model="section.field"
+                                readonly
+                                />
+                            </q-item-section>
+                            <q-item-section side >
+                                <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteSection(section.field)"/>
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                </q-card-section>
+                <q-card-section v-else>
+                    <p>Please create at least one Language</p>
+                </q-card-section>
+            </q-card>
+        </div>
+    </div>    
+</div>
+        

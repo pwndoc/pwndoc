@@ -1,0 +1,95 @@
+<div>
+    <div class="row">
+        <div class="col-md-8 offset-md-2 q-mt-md">
+            <q-card>
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                    <div class="text-h6">Update User Information</div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section class="row">
+                    <q-list class="col-md-6">
+                        <q-item>
+                            <q-item-section side>Role</q-item-section>
+                            <q-item-section side>
+                                <q-chip square :label="user.role" class="text-white" :color="(user.role === 'admin')?'orange':'info'" />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input 
+                                v-model="user.username" 
+                                label="Username" 
+                                stack-label 
+                                :error="!!errors.username"
+                                :error-message="errors.username" />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input 
+                                v-model="user.firstname" 
+                                label="Firstname" 
+                                stack-label
+                                :error="!!errors.firstname"
+                                :error-message="errors.firstname"
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input 
+                                v-model="user.lastname" 
+                                label="Lastname" 
+                                stack-label 
+                                :error="!!errors.lastname"
+                                :error-message="errors.lastname"
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-field borderless :error="!!errors.newPassword" :error-message="errors.newPassword">
+                                    <q-input 
+                                    class="col-md-6 q-pr-sm" 
+                                    v-model="user.newPassword" 
+                                    label="New Password" 
+                                    stack-label 
+                                    type="password"
+                                    clearable
+                                    />
+                                    <q-input 
+                                    class="col-md-6 q-pl-sm" 
+                                    v-model="user.confirmPassword" 
+                                    label="Confirm Password" 
+                                    stack-label 
+                                    type="password"
+                                    clearable
+                                    />
+                                </q-field>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input 
+                                v-model="user.currentPassword" 
+                                label="Current Password *" 
+                                stack-label 
+                                type="password"
+                                :error="!!errors.currentPassword" 
+                                :error-message="errors.currentPassword"
+                                @keyup.enter="updateProfile"
+                                >
+                                    <template v-slot:append>
+                                        <q-btn label="Update" unelevated color="secondary" @click="updateProfile" />
+                                    </template>
+                                </q-input>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+                <q-separator />
+            </q-card>
+        </div>
+    </div>
+</div>
+        

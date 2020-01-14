@@ -1,0 +1,195 @@
+<div>
+<div class="row">
+    <div class="col-md-10 offset-md-1 q-mt-md">
+        <q-table
+            :columns="dtHeaders"
+            :data="collabs"
+            :filter="search"
+            :pagination.sync="pagination"
+            row-key="username"
+            style="background-color: white"
+        >
+            <div slot="top-left" slot-scope="props">
+                <q-input
+                color="secondary"
+                label="Search"
+                autofocus
+                clearable
+                v-model="search"
+                />
+            </div>
+
+            <div slot="top-right" slot-scope="props" v-if="UserService.isAdmin()">
+                <q-btn 
+                    flat 
+                    color="white" 
+                    text-color="black" 
+                    no-caps
+                    @click="cleanCurrentCollab(); $refs.createModal.show()"
+                    >
+                    Add Collaborator
+                </q-btn>            
+            </div>
+
+            <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
+                <div v-if="UserService.isAdmin()">
+                    <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
+                    </q-btn>
+                    <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCollab(props.row)">
+                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
+                    </q-btn>
+                </div>
+            </q-td>
+
+            <div slot="bottom" slot-scope="props" class="row">
+                <div class="q-table-control">
+                    <span v-if="collabs.length === 1">1 Collaborator</span>                
+                    <span v-else>{{collabs.length}} Collaborators</span>                
+                </div>
+                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
+                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
+                </div>
+            </div>    
+    
+        </q-table>
+    </div>
+</div>
+
+<q-dialog ref="createModal" @hide="cleanErrors()">
+    <q-card style="width:800px">
+        <q-bar class="bg-primary text-white">
+            <div class="q-toolbar-title">
+                Add Collaborator
+            </div>
+            <q-space />
+            <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+        </q-bar>
+        
+        <q-card-section>
+            <q-input
+            label='Username *'
+            autofocus
+            class="col-md-12"
+            :error="!!errors.username"
+            :error-message="errors.username"
+            hide-bottom-space
+            @keyup.enter="createCollab()"
+            v-model="currentCollab.username" />
+        </q-card-section>
+        <q-card-section>
+            <q-input
+            label='Lastname *'
+            class="col-md-12"
+            :error="!!errors.lastname"
+            :error-message="errors.lastname"
+            hide-bottom-space
+            @keyup.enter="createCollab()"
+            v-model="currentCollab.lastname" />
+        </q-card-section>
+        <q-card-section>
+            <q-input
+            label='Firstname *'
+            class="col-md-12"
+            :error="!!errors.firstname"
+            :error-message="errors.firstname"
+            hide-bottom-space
+            @keyup.enter="createCollab()"
+            v-model="currentCollab.firstname" />
+        </q-card-section>  
+        <q-card-section>
+            <q-select
+            label="Role *"
+            class="col-md-12"
+            v-model="currentCollab.role"
+            :options="['user', 'admin']"
+            @keyup.enter="createCollab()"/>
+        </q-card-section>
+        <q-card-section>
+            <q-input 
+            v-model="currentCollab.password" 
+            label="Password *" 
+            type="password"
+            :error="!!errors.password" 
+            :error-message="errors.password"
+            hide-bottom-space
+            @keyup.enter="createCollab()"
+            />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+            <q-btn class="bg-white text-black" @click="$refs.createModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" @click="createCollab()">Create</q-btn>
+        </q-card-actions>
+    </q-card>
+</q-dialog>
+
+<q-dialog ref="editModal" @hide="cleanErrors()">
+    <q-card style="width:800px">
+        <q-bar class="bg-primary text-white">
+            <div class="q-toolbar-title">
+                Edit Collaborator
+            </div>
+            <q-space />
+            <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
+        </q-bar>
+        
+        <q-card-section>
+                <q-input
+                label='Username *'
+                autofocus
+                class="col-md-12"
+                :error="!!errors.username"
+                :error-message="errors.username"
+                hide-bottom-space
+                @keyup.enter="updateCollab()"
+                v-model="currentCollab.username" />
+            </q-card-section>
+            <q-card-section>
+                <q-input
+                label='Lastname *'
+                class="col-md-12"
+                :error="!!errors.lastname"
+                :error-message="errors.lastname"
+                hide-bottom-space
+                @keyup.enter="updateCollab()"
+                v-model="currentCollab.lastname" />
+            </q-card-section>
+            <q-card-section>
+                <q-input
+                label='Firstname *'
+                class="col-md-12"
+                :error="!!errors.firstname"
+                :error-message="errors.firstname"
+                hide-bottom-space
+                @keyup.enter="updateCollab()"
+                v-model="currentCollab.firstname" />
+            </q-card-section>  
+            <q-card-section>
+                <q-select
+                label="Role *"
+                class="col-md-12"
+                v-model="currentCollab.role"
+                :options="['user', 'admin']"
+                @keyup.enter="updateCollab()"/>
+            </q-card-section>   
+            <q-card-section>
+                <q-input 
+                v-model="currentCollab.password" 
+                label="Password" 
+                type="password"
+                @keyup.enter="updateCollab()"
+                />
+            </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right">
+            <q-btn class="bg-white text-black" @click="$refs.editModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" @click="updateCollab()">Update</q-btn>
+        </q-card-actions>
+    </q-card>
+</q-dialog>
+</div>

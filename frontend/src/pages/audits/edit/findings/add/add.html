@@ -1,0 +1,78 @@
+<div>
+<breadcrumb buttons :title="AuditService.audit.name">
+</breadcrumb>
+
+<div class="row q-col-gutter-md q-pa-md">
+    <div class="col-md-10 offset-md-1">
+        <q-table
+        :columns="dtVulnHeaders"
+        :data="vulnerabilities"
+        :filter="searchVuln"
+        :pagination.sync="vulnPagination"
+        row-key="_id"
+        style="background-color: white"
+        >
+            <template v-slot:top>
+                <q-input
+                class="col-md-3"
+                label="Search"
+                color="secondary"
+                clearable
+                autofocus
+                v-model="searchVuln"
+                />
+                <q-select 
+                class="q-pl-md col-md-3"
+                v-model="dtLanguage" 
+                label="Language" 
+                :options="languages" 
+                option-value="locale" 
+                option-label="language"
+                map-options
+                emit-value
+                @input="getVulnerabilities"
+                />
+                <q-space />
+                <q-input v-model="findingTitle" label="Title" class="q-pl-md col-md-6" @keyup.enter="addFinding()">
+                    <template v-slot:append>
+                        <q-btn label="Create" no-caps flat @click="addFinding()" />
+                    </template>
+                </q-input>
+            </template>
+
+            <template v-slot:body="props">
+                <q-tr :props="props">
+                    <q-td key="title" :props="props">
+                        {{props.row.detail.title}}
+                        <q-btn dense round flat :icon="props.expand ? 'arrow_drop_up' : 'arrow_drop_down'" @click="props.expand = !props.expand" />
+                    </q-td>
+                    <q-td key="vulnType" :props="props">
+                        {{props.row.detail.vulnType}}
+                    </q-td>
+                    <q-td key="action" :props="props" style="width:1px">
+                        <q-btn flat color="primary" icon="fa fa-plus-circle" @click="addFinding(props.row)">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Add to Findings</q-tooltip>                            
+                        </q-btn>
+                    </q-td>
+                </q-tr>
+                <q-tr v-show="props.expand" :props="props">
+                    <q-td colspan="100%" class="bg-grey-4">
+                        <div class="text-left" style="white-space: initial">{{props.row.detail.description}}</div>
+                    </q-td>
+                </q-tr>
+            </template>
+
+            <div slot="bottom" slot-scope="props" class="row fit">
+                <div class="q-table-control">
+                    <span v-if="vulnerabilities.length === 1">1 Vulnerability</span>                
+                    <span v-else>{{vulnerabilities.length}} Vulnerabilities</span>                
+                </div>
+                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
+                    <q-pagination input v-model="vulnPagination.page" :max="props.pagesNumber" />            
+                </div>
+            </div>    
+    
+        </q-table>
+    </div>
+</div>
+</div>

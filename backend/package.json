@@ -1,0 +1,37 @@
+{
+  "name": "pwndoc-backend",
+  "version": "0.0.1",
+  "description": "pwndoc backend",
+  "productName": "pwndoc",
+  "author": "Stanley HAMMER",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "prod": "NODE_ENV=prod nodemon src/app.js",
+    "test": "NODE_ENV=test nodemon src/app.js",
+    "tests": "mocha --exit"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-http": "^3.0.0",
+    "nodemon": "^1.19.4",
+    "npm": "^6.12.0"
+  },
+  "dependencies": {
+    "angular-expressions": "^1.0.0",
+    "bcrypt": "^3.0.6",
+    "body-parser": "^1.17.1",
+    "docxtemplater": "^3.1.0",
+    "docxtemplater-image-module": "^3.1.0",
+    "express": "^4.15.2",
+    "http": "0.0.0",
+    "image-size": "^0.8.3",
+    "js-yaml": "^3.13.1",
+    "jsonwebtoken": "^8.1.0",
+    "jszip": "^2.6.1",
+    "lodash": "^4.17.15",
+    "mongoose": "^5.7.7",
+    "socket.io": "^2.3.0",
+    "winston": "^2.3.1"
+  }
+}

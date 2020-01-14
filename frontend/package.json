@@ -1,0 +1,46 @@
+{
+  "name": "pwndoc-frontend",
+  "version": "1.0.0",
+  "description": "pwndoc frontend",
+  "productName": "pwndoc",
+  "cordovaId": "org.cordova.quasar.app",
+  "author": "Stanley Hammer",
+  "private": true,
+  "scripts": {
+    "build": "quasar build",
+    "dev": "quasar dev",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.3.3",
+    "axios": "^0.18.1",
+    "js-yaml": "^3.13.1",
+    "jwt-decode": "^2.2.0",
+    "quasar": "^1.5.4",
+    "socket.io-client": "^2.3.0",
+    "vue-affix": "^0.4.0",
+    "vue-dragula": "^1.3.1",
+    "vue-lodash": "^2.0.0",
+    "vue2-dragula": "^2.5.4",
+    "vuedraggable": "^2.23.2"
+  },
+  "devDependencies": {
+    "@quasar/cli": "^1.0.5",
+    "@quasar/app": "^1.3.3",
+    "devtron": "^1.4.0",
+    "electron": "^2.0.0",
+    "electron-debug": "^1.5.0",
+    "electron-devtools-installer": "^2.2.4",
+    "strip-ansi": "^3.0.1"
+  },
+  "engines": {
+    "node": ">= 8.9.0",
+    "npm": ">= 5.6.0",
+    "yarn": ">= 1.6.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 10"
+  ]
+}
