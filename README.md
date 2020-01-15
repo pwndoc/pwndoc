@@ -3,6 +3,17 @@
 PwnDoc is a pentest reporting application making it simple and easy to write your findings and generate a customizable docx report.
 The main goal is to have more time to Pwn and less time to Doc by mutualizing datas like vulnerabilities between users.
 
+# Demos
+
+#### Multi-User reporting
+![Shared Audit demo gif](https://raw.githubusercontent.com/pwndoc/pwndoc/master/demos/shared_audit_demo.gif)
+
+#### Finding edition
+![Finding edit demo gif](https://raw.githubusercontent.com/pwndoc/pwndoc/master/demos/audit_finding_demo.gif)
+
+#### Vulnerability management workflow
+![Create and update demo gif](https://raw.githubusercontent.com/pwndoc/pwndoc/master/demos/create_and_update_finding.gif)
+
 # Installation
 
 PwnDoc uses 3 containers: the backend, the frontend and the database. They can be run all at once using the docker-compose file in this directory using the following command.
