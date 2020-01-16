@@ -140,6 +140,9 @@ export default {
             .then((data) => {
                 this.init = data.data.datas;
             })
+            .catch(err => {
+                console.log(err)
+            })
         },
 
          initUser() {
