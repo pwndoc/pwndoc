@@ -143,6 +143,8 @@ AuditSchema.statics.getAuditForUser = (auditId, username) => {
             if (row) {
                 var query = Audit.findById(auditId).or([{creator: row._id}, {collaborators: row._id}]);
                 query.populate('template');
+                query.populate('creator');
+                query.populate('company');
                 return query.exec();
             }
             else
@@ -186,6 +188,41 @@ AuditSchema.statics.create = (audit, username) => {
             }
             else
                 reject({fn: 'BadParameters', message: 'Template not found'});
+        })
+        .then((rows) => {
+            resolve(rows);
+        })
+        .catch((err) => {
+            reject(err);
+        })
+    });
+}
+
+// Delete audit
+AuditSchema.statics.delete = (auditId, username, role) => {
+    return new Promise((resolve, reject) => {
+        var User = mongoose.model('User');
+        var query = User.findOne({username: username});
+        query.exec()
+        .then((row) => {
+            if (row) {
+                var query = Audit.findById(auditId);
+                query.populate('creator');
+                return query.exec();
+            }
+            else
+                reject({fn: 'BadParameters', message: 'User not found'});
+            
+        })
+        .then((row) => {
+            if (row && (row.creator.username === username || role === 'admin')) {
+                var query = Audit.findOneAndRemove({_id: auditId});
+                return query.exec();                
+            }
+            else if (!row)
+                reject({fn: 'BadParameters', message: 'Audit not found'});
+            else
+                reject({fn: 'Forbidden', message: 'User is not the creator of this Audit'});
         })
         .then((rows) => {
             resolve(rows);
