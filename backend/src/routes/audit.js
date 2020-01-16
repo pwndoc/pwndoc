@@ -41,6 +41,13 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
+     // Delete audit
+     app.delete("/api/audits/:auditId", auth.hasRole('user'), function(req, res) {
+        Audit.delete(req.params.auditId, req.decodedToken.username, req.decodedToken.role)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
     // Get audit general information
     app.get("/api/audits/:auditId/general", auth.hasRole('user'), function(req, res) {
         Audit.getGeneral(req.params.auditId)
