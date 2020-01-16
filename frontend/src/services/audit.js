@@ -104,7 +104,9 @@ export default {
       var link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
       link.download = response.headers['content-disposition'].split('"')[1];
+      document.body.appendChild(link);
       link.click();
+      link.remove();
     })
     // window.open(`${window.location.protocol}//${window.location.hostname}:${process.env.API_PORT}/api/audits/${auditId}/generate`)
   }
