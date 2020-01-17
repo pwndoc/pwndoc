@@ -1,7 +1,7 @@
 # PwnDoc
 
 PwnDoc is a pentest reporting application making it simple and easy to write your findings and generate a customizable docx report.
-The main goal is to have more time to Pwn and less time to Doc by mutualizing datas like vulnerabilities between users.
+The main goal is to have more time to Pwn and less time to Doc by mutualizing data like vulnerabilities between users.
 
 # Demos
 
@@ -37,13 +37,15 @@ docker-compose down
 ```
 Application is accessible through https://localhost:8443
 
+**When using Firefox, a certificate exception must be added for the backend. For that go to https://localhost:4242/api/users/init**
+
 For developpment purposes, specific docker-compose file can be used in each folder (backend/frontend).
 
 # Features
 
-## Custom datas
+## Custom data
 
-It's possible to customize some datas to be shared between users:
+It's possible to customize some data to be shared between users:
 - Companies
 - Clients
 - Languages (for vulnerabilities and audits)
@@ -53,7 +55,7 @@ It's possible to customize some datas to be shared between users:
 
 ## Multiple language support
 
-It's possible to define several languages that will then be available for audits and vulnerabilities sections, and also for custom datas.
+It's possible to define several languages that will then be available for audits and vulnerabilities sections, and also for custom data.
 
 ## Vulnerabilities management
 
