@@ -7,6 +7,7 @@ yarn-debug.log*
 yarn-error.log*
 mongo-data*
 .quasar
+report-templates
 
 # Editor directories and files
 .idea
