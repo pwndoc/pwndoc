@@ -8,7 +8,7 @@ var customGenerator = require('./custom-generator');
 
 // Generate document with docxtemplater
 function generateDoc(audit) {
-    var content = fs.readFileSync(__basedir+'/../report-templates/'+audit.template.filename, "binary");
+    var content = fs.readFileSync(`${__basedir}/../report-templates/${audit.template.name}.docx`, "binary");
 
     var zip = new JSZip(content);
 
@@ -16,7 +16,7 @@ function generateDoc(audit) {
     // opts.centered = true;
     opts.getImage = function(tagValue, tagName) {
         tagValue = tagValue.split(",")[1];
-        return new Buffer(tagValue, 'base64');
+        return Buffer.from(tagValue, 'base64');
         // return fs.readFileSync(tagValue, {encoding: 'base64'});
     }
     opts.getSize = function(img, tagValue, tagName) {

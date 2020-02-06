@@ -2,8 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var TemplateSchema = new Schema({
-    name:      {type: String, required: true, unique: true},
-    filename:  String
+    name:      {type: String, required: true, unique: true}
 
 }, {timestamps: true});
 

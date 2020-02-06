@@ -98,16 +98,7 @@ export default {
   },
 
   generateAuditReport: function(auditId) {
-    Vue.prototype.$axios.get(`audits/${auditId}/generate`, {responseType: 'blob'})
-    .then(response => {
-      var blob = new Blob([response.data], {type: "application/octet-stream"});
-      var link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = response.headers['content-disposition'].split('"')[1];
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    })
+    return Vue.prototype.$axios.get(`audits/${auditId}/generate`, {responseType: 'blob'})
     // window.open(`${window.location.protocol}//${window.location.hostname}:${process.env.API_PORT}/api/audits/${auditId}/generate`)
   }
 }
