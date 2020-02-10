@@ -8,6 +8,7 @@ yarn-error.log*
 mongo-data*
 .quasar
 report-templates
+custom-generator.js
 
 # Editor directories and files
 .idea
