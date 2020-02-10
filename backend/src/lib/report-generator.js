@@ -5,6 +5,7 @@ var expressions = require('angular-expressions');
 var ImageModule = require('docxtemplater-image-module');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
+var utils = require('./utils');
 
 // Generate document with docxtemplater
 function generateDoc(audit) {
@@ -94,6 +95,7 @@ expressions.filters.NewLines = function(input) {
 
     if(!input) return pre + post;
 
+    input = utils.escapeXMLEntities(input);
     input = input.replace(/\n/g, lineBreak);
     return pre + input + post;
 }
