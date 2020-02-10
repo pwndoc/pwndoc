@@ -60,12 +60,17 @@ module.exports = function(app) {
             }
             else if (req.body.name && req.body.file) {
                 var fileBuffer = Buffer.from(req.body.file, 'base64');
-                fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.docx`);
+                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.docx`)} catch {}
                 fs.writeFileSync(`${__basedir}/../report-templates/${req.body.name}.docx`, fileBuffer);
             }
-            Response.Created(res, 'Template updated successfully')
+            Response.Created(res, 'Template updated successfully');
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => {
+            if (err.code && err.code === "ENOENT")
+                Response.NotFound(res, 'Template File was not Found');
+            else
+                Response.Internal(res, err);
+        })
     });
 
     // Delete template
@@ -73,8 +78,14 @@ module.exports = function(app) {
         Template.delete(req.params.templateId)
         .then(data => {
             fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.docx`);
-            Response.Created(res, 'Template deleted successfully')
+            Response.Created(res, 'Template deleted successfully');
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => {
+            if (err.code && err.code === "ENOENT")
+                Response.Created(res, 'Template File not found but deleted successfully in database');
+            else
+                Response.Internal(res, err)
+        
+        })
     });
 }
