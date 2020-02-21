@@ -2,4 +2,8 @@
 
 <script src='./vulnerabilities.js'></script>
 
-<style></style>
+<style>
+.card-section-merge {
+    height: calc(60vh - 173px);
+}
+</style>

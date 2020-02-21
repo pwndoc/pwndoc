@@ -11,7 +11,10 @@
                     <div class="text-bold">Import Vulnerabilities</div>
                 </q-card-section>
                 <q-card-section>
-                    <div class="text-grey-8">Import Vulnerabilities from a .yml or .json file. This allows you to easily import a batch of vulnerabilities templates</div>
+                    <div class="text-grey-8">
+                        Import Vulnerabilities from a .yml or .json file. (Serpico format accepted)<br />
+                        This allows you to easily import a batch of vulnerabilities templates.
+                    </div>
                 </q-card-section>
                 <q-card-section>
                     <input
@@ -48,6 +51,26 @@
                     @click="getVulnerabilities"
                     />
                 </q-card-section>
+                <q-separator />
+                <div v-if=UserService.isAdmin()>
+                    <q-card-section>
+                        <div class="text-bold">Delete All Vulnerabilities</div>
+                    </q-card-section>
+                    <q-card-section>
+                        <div class="text-grey-8">
+                            Delete all existing vulnerabilities.<br />
+                            <strong>This action is definitive!!</strong>
+                        </div>
+                    </q-card-section>
+                    <q-card-section>
+                        <q-btn 
+                        label="Delete All"
+                        flat
+                        class="bg-negative text-white"
+                        @click="deleteAllVulnerabilities"
+                        />
+                    </q-card-section>
+                </div>
         </q-card>
     </div>
 
