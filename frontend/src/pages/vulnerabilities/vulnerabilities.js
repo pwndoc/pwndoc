@@ -25,6 +25,7 @@ export default {
                 rowsPerPage: 20,
                 sortBy: 'title'
             },
+            filteredRowsCount: 0,
             // Vulnerabilities languages
             languages: [],
             locale: '',
@@ -50,7 +51,12 @@ export default {
             vulnUpdates: [],
             currentUpdate: '',
             currentUpdateLocale: '',
-            vulnTypes: []
+            vulnTypes: [],
+            // Merge languages
+            mergeLanguageLeft: '',
+            mergeLanguageRight: '',
+            mergeVulnLeft: '',
+            mergeVulnRight: ''
         }
     },
 
@@ -74,6 +80,18 @@ export default {
     computed: {
         vulnTypesLang: function() {
             return this.vulnTypes.filter(type => type.locale === this.currentLanguage);
+        },
+
+        computedVulnerabilities: function() {
+            var result = [];
+            this.vulnerabilities.forEach(vuln => {
+                for (var i=0; i<vuln.details.length; i++) {
+                    if (vuln.details[i].locale === this.dtLanguage && vuln.details[i].title) {
+                        result.push(vuln);
+                    }
+                }
+            })
+            return result;
         }
     },
 
@@ -298,18 +316,54 @@ export default {
         },
 
         customFilter: function(rows, terms, cols, getCellValue) {
-            return rows && rows.filter(row => {
+            var result = rows && rows.filter(row => {
                 var title = this.getDtTitle(row)
                 var type = this.getDtType(row)
                 return title.toLowerCase().indexOf(terms.title||"") > -1 && 
                 type.toLowerCase().indexOf(terms.type||"") > -1 &&
                 (row.status === terms.valid || row.status === terms.new || row.status === terms.updates)
+                // try {var regexTitle = new RegExp(terms.title, 'ig')} catch {var regexTitle = ""}
+                // return title.match(regexTitle) && 
+                // type.toLowerCase().indexOf(terms.type||"") > -1 &&
+                // (row.status === terms.valid || row.status === terms.new || row.status === terms.updates)
             })
+            this.filteredRowsCount = result.length;
+            return result;
         },
 
         goToAudits: function(row) {
             var title = this.getDtTitle(row);
             this.$router.push({name: 'audits', params: {finding: title}});
-        }
+        },
+
+        getVulnTitleLocale: function(vuln, locale) {
+            for (var i=0; i<vuln.details.length; i++) {
+                if (vuln.details[i].locale === locale && vuln.details[i].title) return vuln.details[i].title;
+            }
+            return "undefined";
+        },
+
+        mergeVulnerabilities: function() {
+            VulnerabilityService.mergeVulnerability(this.mergeVulnLeft, this.mergeVulnRight, this.mergeLanguageRight)
+            .then(() => {
+                this.getVulnerabilities();
+                Notify.create({
+                    message: 'Vulnerability merge successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+        test: function(props) {console.log(props)}
     }
 }

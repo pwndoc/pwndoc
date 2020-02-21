@@ -6,7 +6,7 @@
     <div v-else class="col-md-8 offset-md-2 q-mt-md">
         <q-table
             :columns="dtHeaders"
-            :data="vulnerabilities"
+            :data="computedVulnerabilities"
             :filter="search"
             :filter-method="customFilter"
             :pagination.sync="pagination"
@@ -28,6 +28,15 @@
                 <q-toggle label="Valid" v-model="search.valid" :true-value=0 />
                 <q-toggle label="New" color="light-blue" v-model="search.new" :true-value=1 />
                 <q-toggle label="Updates" color="orange" v-model="search.updates" :true-value=2 />
+                <q-btn 
+                    v-if="UserService.isAdmin()"
+                    class="q-ml-md"
+                    color="secondary" 
+                    no-caps
+                    @click="$refs.mergeModal.show()"
+                    >
+                    Merge Vulnerabilities
+                </q-btn>  
                 <q-space />
                 <q-btn 
                     v-if="UserService.isAdmin()"
@@ -61,7 +70,7 @@
             </template>
 
             <template v-slot:body="props">
-                <q-tr :props="props" :class="(props.row.status === 1)?'bg-light-blue-2':(props.row.status === 2)?'bg-orange-2':''">
+                <q-tr v-if="getDtTitle(props.row) !== 'Not defined for this language yet'" :props="props" :class="(props.row.status === 1)?'bg-light-blue-2':(props.row.status === 2)?'bg-orange-2':''">
                     <q-td key="title" :props="props">
                         {{getDtTitle(props.row)}}
                     </q-td>
@@ -92,8 +101,8 @@
 
             <div slot="bottom" slot-scope="props" class="row fit">
                 <div class="q-table-control">
-                    <span v-if="vulnerabilities.length === 1">1 Vulnerability</span>                
-                    <span v-else>{{vulnerabilities.length}} Vulnerabilities</span>                
+                    <span v-if="computedVulnerabilities.length === 1">{{filteredRowsCount}} / 1 Vulnerability (Total: {{vulnerabilities.length}})</span>                
+                    <span v-else>{{filteredRowsCount}} / {{computedVulnerabilities.length}} Vulnerabilities (Total: {{vulnerabilities.length}})</span>                
                 </div>
                 <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
                     <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
@@ -638,6 +647,85 @@
             </q-page>
         </q-page-container>
     </q-layout>
-            
-    </q-dialog>
+</q-dialog>
+
+<q-dialog persistent ref="mergeModal">
+    <q-card  style="width: 1000px; max-width: 1000px; height: 60vh">
+        <q-bar class="bg-primary text-white">
+            <span>Merge Vulnerabilities</span>
+            <q-space />
+            <q-btn dense flat icon="close" @click="$refs.mergeModal.hide()" />
+        </q-bar>
+
+        <div v-if="languages.length < 2">
+            <q-card-section>
+            The goal is to merge different vulnerabilities with different languages into the same vulnerabiliy.<br />
+            So a minimum of 2 Languages must exist.
+            </q-card-section>
+        </div>
+        <div v-else class="row">
+            <div class="col-md-6">
+                <q-card-section class="col-md-6">
+                    <q-select
+                    label='Language (Add from right)'
+                    v-model="mergeLanguageLeft"
+                    :options="languages"
+                    option-value="locale"
+                    option-label="language"
+                    map-options
+                    emit-value
+                    @input="mergeVulnLeft = ''"
+                    />
+                </q-card-section>
+                <q-card-section class="card-section-merge">
+                    <q-scroll-area class="full-height">
+                        <q-list>
+                            <q-item tag="label" v-for="vuln of vulnerabilities" v-if="getVulnTitleLocale(vuln, mergeLanguageRight) === 'undefined' && getVulnTitleLocale(vuln, mergeLanguageLeft) !== 'undefined'" dense class="q-pl-none">
+                                    <q-item-section side top>
+                                        <q-radio v-model="mergeVulnLeft" :val="vuln._id" />
+                                    </q-item-section>
+                                    <q-item-section>
+                                            <q-item-label>{{getVulnTitleLocale(vuln, mergeLanguageLeft)}}</q-item-label>
+                                    </q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-scroll-area>
+                </q-card-section>
+            </div>
+            <q-separator vertical />
+            <div class="col">
+                <q-card-section>
+                    <q-select
+                    label='Language (Move to left)'
+                    v-model="mergeLanguageRight"
+                    :options="languages"
+                    option-value="locale"
+                    option-label="language"
+                    map-options
+                    emit-value
+                    @input="mergeVulnRight = ''"
+                    />
+                </q-card-section>
+                <q-card-section class="card-section-merge">
+                    <q-scroll-area class="full-height">
+                        <q-list>
+                            <q-item tag="label" v-for="vuln of vulnerabilities" v-if="getVulnTitleLocale(vuln, mergeLanguageLeft) === 'undefined' && getVulnTitleLocale(vuln, mergeLanguageRight) !== 'undefined'" dense class="q-pl-none">
+                                    <q-item-section side top>
+                                        <q-radio v-model="mergeVulnRight" :val="vuln._id" />
+                                    </q-item-section>
+                                    <q-item-section>
+                                            <q-item-label>{{getVulnTitleLocale(vuln, mergeLanguageRight)}}</q-item-label>
+                                    </q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-scroll-area>
+                </q-card-section>
+            </div>
+        </div>
+        <q-separator />
+        <q-card-actions align="center">
+                <q-btn color="secondary" @click="mergeVulnerabilities" :disable="mergeVulnLeft === '' || mergeVulnRight === ''">Merge</q-btn>
+            </q-card-actions>
+    </q-card>
+</q-dialog>
 </div>
