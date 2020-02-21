@@ -5,7 +5,7 @@
             <q-icon name="fa fa-exclamation-circle" />
             {{errors.alert}}
         </q-banner>
-        <q-card v-show="init === true" align="center" style="width:350px">
+        <q-card v-show="init === true && loaded === true" align="center" style="width:350px">
             <q-card-section>
                 PwnDoc Initialization, Register first User
             </q-card-section>
@@ -61,7 +61,7 @@
                 <q-btn color="secondary" @click="initUser()">Create First User</q-btn>
             </q-card-actions>
         </q-card>
-        <q-card v-show="init === false" align="center" style="width:350px">
+        <q-card v-show="init === false && loaded === true" align="center" style="width:350px">
             <q-card-section>
                 PwnDoc Login
             </q-card-section>
@@ -104,12 +104,14 @@
 </template>
 
 <script>
+import {Loading} from 'quasar';
 import UserService from '@/services/user';
 
 export default {
     data () {
         return {
             init: false,
+            loaded: false,
             username: "",
             firstname: "",
             lastname: "",
@@ -136,11 +138,19 @@ export default {
         },
 
         checkInit() {
+            Loading.show({message: '<p>Trying to contact backend</p>', customClass: 'loading', backgroundColor: 'blue-grey-8'});
             UserService.isInit()
             .then((data) => {
+                Loading.hide();
+                this.loaded = true;
                 this.init = data.data.datas;
             })
             .catch(err => {
+                Loading.show({
+                    message: "<i class='material-icons'>wifi_off</i><br /><p>Something went wrong contacting backend</p>", 
+                    spinner: null, 
+                    backgroundColor: 'red-10', 
+                    customClass: 'loading-error'})
                 console.log(err)
             })
         },
@@ -191,8 +201,24 @@ export default {
 }
 </script>
 
-<style lang="stylus" scoped>
+<style lang="stylus">
 .login-background {
     background-color: #e6ecf0;
+}
+
+.loading p {
+    font-size: 20px;
+}
+
+.loading-error .material-icons {
+    font-size: 100px;
+}
+
+.loading-error p {
+    font-size: 20px;
+}
+
+.loading-error:before {
+    opacity: 0.7;
 }
 </style>
