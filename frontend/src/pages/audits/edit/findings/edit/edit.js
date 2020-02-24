@@ -51,7 +51,9 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
-        if (_.isEqual(this.finding, this.findingOrig))
+        if (_.isEqualWith(this.finding, this.findingOrig, (value1, value2, key) => {
+            return (key === "cvssv3" || (key === "cvssScore" && parseFloat(value1) == parseFloat(value2))) ? true : undefined
+        }))
             next();
         else {
             Dialog.create({
@@ -65,7 +67,9 @@ export default {
     },
 
     beforeRouteUpdate (to, from , next) {
-        if (_.isEqual(this.finding, this.findingOrig))
+        if (_.isEqualWith(this.finding, this.findingOrig, (value1, value2, key) => {
+            return (key === "cvssv3" || (key === "cvssScore" && parseFloat(value1) == parseFloat(value2))) ? true : undefined
+        }))
             next();
         else {
             Dialog.create({
