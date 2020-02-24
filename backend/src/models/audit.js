@@ -307,7 +307,9 @@ AuditSchema.statics.updateNetwork = (id, scope) => {
 // Create finding
 AuditSchema.statics.createFinding = (auditId, finding) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findByIdAndUpdate(auditId, {$push: {findings: {$each: [finding], $sort: {cvssScore: -1}}}});
+        var query = Audit
+        .findByIdAndUpdate(auditId, {$push: {findings: {$each: [finding], $sort: {cvssScore: -1}}}})
+        .collation({locale: "en_US", numericOrdering: true});
         query.exec()
         .then((rows) => {
             resolve(rows);
@@ -368,7 +370,9 @@ AuditSchema.statics.updateFinding = (auditId, findingId, newFinding) => {
             } 
         })
         .then(() => {
-            return Audit.findByIdAndUpdate(auditId, {$push: {findings: {$each: [], $sort: {cvssScore: -1}}}});
+            return Audit
+            .findByIdAndUpdate(auditId, {$push: {findings: {$each: [], $sort: {cvssScore: -1}}}})
+            .collation({locale: "en_US", numericOrdering: true});
         })
         .then(() => {
             resolve();            
