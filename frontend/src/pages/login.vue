@@ -1,11 +1,11 @@
 <template>
 <div style="height:100vh;display:flex">
-    <div style="margin:auto">
+    <div v-if="loaded === true" style="margin:auto">
         <q-banner rounded v-if="errors.alert" class="bg-red-4 text-white">
             <q-icon name="fa fa-exclamation-circle" />
             {{errors.alert}}
         </q-banner>
-        <q-card v-show="init === true && loaded === true" align="center" style="width:350px">
+        <q-card v-show="init === true" align="center" style="width:350px">
             <q-card-section>
                 PwnDoc Initialization, Register first User
             </q-card-section>
@@ -61,7 +61,7 @@
                 <q-btn color="secondary" @click="initUser()">Create First User</q-btn>
             </q-card-actions>
         </q-card>
-        <q-card v-show="init === false && loaded === true" align="center" style="width:350px">
+        <q-card v-show="init === false" align="center" style="width:350px">
             <q-card-section>
                 PwnDoc Login
             </q-card-section>
