@@ -74,7 +74,7 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
-        if (_.isEqual(this.audit, this.auditOrig))
+        if (to.name === "401" || _.isEqual(this.audit, this.auditOrig))
             next();
         else {
             Dialog.create({
@@ -107,10 +107,9 @@ export default {
             .then((data) => {
                 this.audit = data.data.datas;
                 this.auditOrig = _.cloneDeep(this.audit);
-                // Object.assign(this.audit, data.data.datas);
             })
-            .catch((err) => {
-                console.log(err)
+            .catch((err) => {              
+                console.log(err.response)
             })
         },
 
@@ -154,7 +153,7 @@ export default {
             CompanyService.getCompanies()
             .then((data) => {
                 this.companies = data.data.datas;
-                this.filterClients('init')
+                this.filterClients()
             })
             .catch((err) => {
                 console.log(err)
@@ -205,20 +204,24 @@ export default {
             })
         },
 
+        // Filter client options when selecting company
         filterClients: function(value) {
-            if (value !== 'init') this.audit.client = {};
-            if (value) {
+            if (this.audit.company) {
                 this.selectClients = [];
                 this.clients.map(client => {
-                    if (client.company && client.company.name === this.audit.company.name) this.selectClients.push({_id: client._id, email: client.email})
+                    if (client.company && client.company.name === this.audit.company.name) this.selectClients.push(client)
                 })
             }
             else
                 this.selectClients = this.clients;
         },
 
+        // Filter company options when selecting client 
         filterCompany: function(value) {
-            if (value && value.company) {
+            if (value && !value.company) {
+                this.audit.company = {};
+            }
+            else if (value) {
                 for (var i=0; i<this.companies.length; i++) {
                     if (this.companies[i].name === value.company.name) {
                         this.audit.company = this.companies[i];
