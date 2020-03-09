@@ -9,8 +9,8 @@
     <div class="col-md-6">
         <q-card >
             <q-card-section>
-                <q-input label="Name *" stack-label v-model="audit.name" />
-                <q-input label="Location" stack-label v-model="audit.location" />
+                <q-input label="Name *" v-model="audit.name" />
+                <q-input label="Location" v-model="audit.location" />
                 <q-select 
                 label="Assessment Type"
                 v-model="audit.auditType" 
@@ -22,7 +22,6 @@
                 />
                 <q-select
                 label="Company"
-                stack-label
                 v-model="audit.company"
                 :options="companies"
                 option-value="_id"
@@ -32,7 +31,6 @@
                 />
                 <q-select
                 label="Client"
-                stack-label
                 v-model="audit.client"
                 :options="selectClients"
                 option-value="email"
@@ -42,7 +40,6 @@
                 />
                 <q-select 
                 label="Collaborators"
-                stack-label
                 v-model="audit.collaborators"
                 :options="collaborators"
                 option-value="username"
