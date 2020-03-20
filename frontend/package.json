@@ -16,6 +16,7 @@
     "axios": "^0.18.1",
     "js-yaml": "^3.13.1",
     "jwt-decode": "^2.2.0",
+    "lodash": "^4.17.15",
     "quasar": "^1.5.4",
     "socket.io-client": "^2.3.0",
     "vue-affix": "^0.4.0",
