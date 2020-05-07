@@ -6,6 +6,7 @@ var ImageModule = require('docxtemplater-image-module');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
+var merge = require("lodash/merge");
 
 // Generate document with docxtemplater
 function generateDoc(audit) {
@@ -92,19 +93,41 @@ expressions.filters.NewLines = function(input) {
     var pre = '<w:p><w:r><w:t>';
     var post = '</w:t></w:r></w:p>';
     var lineBreak = '<w:br/>';
+    var result = '';
 
     if(!input) return pre + post;
 
     input = utils.escapeXMLEntities(input);
-    input = input.replace(/\n/g, lineBreak);
-    return pre + input + post;
+    var inputArray = input.split(/\n\n+/g);
+    inputArray.forEach(p => {
+        result += `${pre}${p.replace(/\n/g, lineBreak)}${post}`
+    });
+    // input = input.replace(/\n/g, lineBreak);
+    // return pre + input + post;
+    return result;
 }
 
 // Compile all angular expressions
 var angularParser = function(tag) {
     expressions = {...expressions, ...customGenerator.expressions};
+    if (tag === '.') {
+        return {
+            get: function(s){ return s;}
+        };
+    }
+    const expr = expressions.compile(
+        tag.replace(/(’|‘)/g, "'").replace(/(“|”)/g, '"')
+    );
     return {
-        get: tag === '.' ? function(s){ return s;} : expressions.compile(tag)
+        get: function(scope, context) {
+            let obj = {};
+            const scopeList = context.scopeList;
+            const num = context.num;
+            for (let i = 0, len = num + 1; i < len; i++) {
+                obj = merge(obj, scopeList[i]);
+            }
+            return expr(scope, obj);
+        }
     };
 }
 
