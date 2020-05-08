@@ -56,7 +56,7 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
-        if (_.isEqual(this.audit, this.auditOrig))
+        if (this.$_.isEqual(this.audit, this.auditOrig))
             next();
         else {
             Dialog.create({
@@ -83,7 +83,7 @@ export default {
             .then((data) => {
                 this.audit = data.data.datas;
                 // Object.assign(this.audit, data.data.datas);
-                this.auditOrig = _.cloneDeep(this.audit);
+                this.auditOrig = this.$_.cloneDeep(this.audit);
             })
             .catch((err) => {
                 console.log(err)
@@ -94,7 +94,7 @@ export default {
         updateAuditNetwork: function() {
             AuditService.updateAuditNetwork(this.auditId, this.audit)
             .then(() => {
-                this.auditOrig = _.cloneDeep(this.audit);
+                this.auditOrig = this.$_.cloneDeep(this.audit);
                 Notify.create({
                     message: 'Audit updated successfully',
                     color: 'positive',

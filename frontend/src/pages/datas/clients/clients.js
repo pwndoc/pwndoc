@@ -169,7 +169,7 @@ export default {
         },
 
         clone: function(row) {
-            this.currentClient = Vue._.clone(row);
+            this.currentClient = this.$_.clone(row);
             this.emailUpdate = row.email;
         },
 

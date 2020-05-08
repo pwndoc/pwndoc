@@ -74,7 +74,7 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
-        if (to.name === "401" || _.isEqual(this.audit, this.auditOrig))
+        if (to.name === "401" || this.$_.isEqual(this.audit, this.auditOrig))
             next();
         else {
             Dialog.create({
@@ -106,7 +106,7 @@ export default {
             AuditService.getAuditGeneral(this.auditId)
             .then((data) => {
                 this.audit = data.data.datas;
-                this.auditOrig = _.cloneDeep(this.audit);
+                this.auditOrig = this.$_.cloneDeep(this.audit);
             })
             .catch((err) => {              
                 console.log(err.response)
@@ -117,7 +117,7 @@ export default {
         updateAuditGeneral: function() {
             AuditService.updateAuditGeneral(this.auditId, this.audit)
             .then(() => {
-                this.auditOrig = _.cloneDeep(this.audit);
+                this.auditOrig = this.$_.cloneDeep(this.audit);
                 Notify.create({
                     message: 'Audit updated successfully',
                     color: 'positive',

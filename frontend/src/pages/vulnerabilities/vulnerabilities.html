@@ -628,7 +628,7 @@
                             </q-card-section>
                             <q-card-section>
                                 <q-select
-                                :bg-color="!(_.isEqual(currentVulnerability.references, update.references))?'red-1':''"
+                                :bg-color="!($_.isEqual(currentVulnerability.references, update.references))?'red-1':''"
                                 label="References"
                                 stack-label
                                 class="q-chip-one-line"
