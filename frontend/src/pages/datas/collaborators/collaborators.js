@@ -155,7 +155,7 @@ export default {
         },
 
         clone: function(row) {
-            this.currentCollab = Vue._.clone(row);
+            this.currentCollab = this.$_.clone(row);
             this.usernameUpdate = row.username;
         },
 

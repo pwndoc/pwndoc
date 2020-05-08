@@ -193,7 +193,7 @@ export default {
             res = res.replace(/\[\[\[/g, '\n')
             res = res.replace(/]]]/g, '\n')
             // Apostroph
-            res = _.unescape(res)
+            res = this.$_.unescape(res)
 
             return res
         },

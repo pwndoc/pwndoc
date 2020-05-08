@@ -49,7 +49,7 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
-        if (_.isEqual(this.section, this.sectionOrig))
+        if (this.$_.isEqual(this.section, this.sectionOrig))
             next();
         else {
             Dialog.create({
@@ -63,7 +63,7 @@ export default {
     },
 
     beforeRouteUpdate (to, from , next) {
-        if (_.isEqual(this.section, this.sectionOrig))
+        if (this.$_.isEqual(this.section, this.sectionOrig))
             next();
         else {
             Dialog.create({
@@ -91,7 +91,7 @@ export default {
                 this.section = data.data.datas;
                 if (this.section.paragraphs.length === 0)
                     this.section.paragraphs = [{text: "", images: []}]
-                this.sectionOrig = _.cloneDeep(this.section);                
+                this.sectionOrig = this.$_.cloneDeep(this.section);                
             })
             .catch((err) => {
                 console.log(err)
@@ -103,7 +103,7 @@ export default {
         updateSection: function() {
             AuditService.updateSection(this.auditId, this.sectionId, this.section)
             .then(() => {
-                this.sectionOrig = _.cloneDeep(this.section);
+                this.sectionOrig = this.$_.cloneDeep(this.section);
                 Notify.create({
                     message: 'Section updated successfully',
                     color: 'positive',

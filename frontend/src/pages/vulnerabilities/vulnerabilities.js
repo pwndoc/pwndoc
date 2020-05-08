@@ -241,7 +241,7 @@ export default {
         clone: function(row) {
             this.cleanCurrentVulnerability();
             
-            this.currentVulnerability = _.clone(row)
+            this.currentVulnerability = this.$_.clone(row)
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;

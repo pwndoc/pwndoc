@@ -68,7 +68,7 @@
                             text-color="white"
                             dense
                             class="col-md-6 cursor-pointer"
-                            @click.native="currentHost = _.cloneDeep(host)"
+                            @click.native="currentHost = $_.cloneDeep(host)"
                             >
                             {{host.ip}}
                             </q-chip>

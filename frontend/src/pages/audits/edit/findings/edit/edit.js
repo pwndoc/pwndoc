@@ -51,7 +51,7 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
-        if (_.isEqualWith(this.finding, this.findingOrig, (value1, value2, key) => {
+        if (this.$_.isEqualWith(this.finding, this.findingOrig, (value1, value2, key) => {
             return (key === "cvssv3" || (key === "cvssScore" && parseFloat(value1) == parseFloat(value2))) ? true : undefined
         }))
             next();
@@ -67,7 +67,7 @@ export default {
     },
 
     beforeRouteUpdate (to, from , next) {
-        if (_.isEqualWith(this.finding, this.findingOrig, (value1, value2, key) => {
+        if (this.$_.isEqualWith(this.finding, this.findingOrig, (value1, value2, key) => {
             return (key === "cvssv3" || (key === "cvssScore" && parseFloat(value1) == parseFloat(value2))) ? true : undefined
         }))
             next();
@@ -117,7 +117,7 @@ export default {
                 this.finding = data.data.datas;
                 if (this.finding.paragraphs.length === 0)
                     this.finding.paragraphs = [{text: "", images: []}]
-                this.findingOrig = _.cloneDeep(this.finding);                
+                this.findingOrig = this.$_.cloneDeep(this.finding);                
             })
             .catch((err) => {
                 console.log(err)
@@ -128,7 +128,7 @@ export default {
         updateFinding: function() {
             AuditService.updateFinding(this.auditId, this.findingId, this.finding)
             .then(() => {
-                this.findingOrig = _.cloneDeep(this.finding);
+                this.findingOrig = this.$_.cloneDeep(this.finding);
                 Notify.create({
                     message: 'Finding updated successfully',
                     color: 'positive',
