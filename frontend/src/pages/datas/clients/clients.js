@@ -118,7 +118,7 @@ export default {
             })
             .catch((err) => {
                 Notify.create({
-                    message: err,
+                    message: err.response.data.datas,
                     color: 'negative',
                     textColor:'white',
                     position: 'top-right'
@@ -139,7 +139,7 @@ export default {
             })
             .catch((err) => {
                 Notify.create({
-                    message: err,
+                    message: err.response.data.datas,
                     color: 'negative',
                     textColor:'white',
                     position: 'top-right'

@@ -176,7 +176,7 @@ export default {
               })
             .catch((err) => {
                 Notify.create({
-                    message: 'Error generating template',
+                    message: err.response.data.datas,
                     color: 'negative',
                     textColor:'white',
                     position: 'top-right'
