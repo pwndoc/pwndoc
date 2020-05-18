@@ -44,10 +44,10 @@
 						<q-item-section avatar>
 							<q-icon name="fa fa-list"></q-icon>
 						</q-item-section>
-						<q-item-section>Findings</q-item-section>
+						<q-item-section>Findings ({{audit.findings.length || 0}})</q-item-section>
 						<q-item-section>
 							<q-btn
-							@click="$router.push('/audits/'+auditId+'/findings/add')"
+							@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
 							label=ADD
 							unelevated
 							dense
@@ -181,41 +181,24 @@ export default {
 						auditId: "",
 						findings: [],
 						users: [],
-						audit: {},
+						audit: {findings: {}},
 						sections: [],
-						splitterRatio: 80
+						splitterRatio: 80,
+						loading: true
 				}
 		},
 
 		created: function() {
-				this.auditId = this.$route.params.auditId;
-				this.getAudit(); // Calls getSections
-				// this.getAuditGeneral();
-
-				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
-				this.$socket.on('roomUsers', (users) => {
-					var userIndex = 0;
-					this.users = users.map((user,index) => {
-						if (user.username === UserService.user.username) {
-							user.color = "#77C84E";
-							user.me = true;
-							userIndex = index;
-						}
-						return user;
-					});
-					this.users.unshift(this.users.splice(userIndex, 1)[0]);
-				})
-				this.$socket.on('updateUsers', () => {
-					this.$socket.emit('updateUsers', {room: this.auditId})
-				})
-				this.$socket.on('updateAudit', () => {
-					this.getAudit();
-				})
+			this.auditId = this.$route.params.auditId;
+			this.getAudit(); // Calls getSections	
+			
 		},
 
 		destroyed: function() {
-			this.$socket.emit('leave', {username: UserService.user.username, room: this.auditId});
-			localStorage.removeItem('uploadedImages');
+			if (!this.loading) {
+				this.$socket.emit('leave', {username: UserService.user.username, room: this.auditId});
+				localStorage.removeItem('uploadedImages');
+			}
 		},
 
 		computed: {
@@ -237,25 +220,43 @@ export default {
 				return "light-blue";
 			},
 
-			getAuditGeneral: function() {
-				AuditService.getAuditGeneral(this.auditId)
-				.then((data) => {
-					this.audit = data.data.datas;
-					this.getSections();
+			// Sockets handle
+			handleSocket: function() {
+				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
+				this.$socket.on('roomUsers', (users) => {
+					var userIndex = 0;
+					this.users = users.map((user,index) => {
+						if (user.username === UserService.user.username) {
+							user.color = "#77C84E";
+							user.me = true;
+							userIndex = index;
+						}
+						return user;
+					});
+					this.users.unshift(this.users.splice(userIndex, 1)[0]);
 				})
-				.catch((err) => {
-					console.log(err)
+				this.$socket.on('updateUsers', () => {
+					this.$socket.emit('updateUsers', {room: this.auditId})
+				})
+				this.$socket.on('updateAudit', () => {
+					this.getAudit();
 				})
 			},
 
 			getAudit: function() {
 				AuditService.getAudit(this.auditId)
 				.then((data) => {
-					this.audit = data.data.datas;
-					this.getSections();
+					this.audit = data.data.datas
+					this.getSections()
+					if (this.loading)
+						this.handleSocket()
+					this.loading = false
 				})
 				.catch((err) => {
-					console.log(err)
+					if (err.response.status === 403)
+						this.$router.push({name: '403', params: {error: err.response.data.datas}})
+					else if (err.response.status === 404)
+						this.$router.push({name: '404', params: {error: err.response.data.datas}})
 				})
 			},
 

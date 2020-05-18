@@ -102,7 +102,7 @@
             label="Role *"
             class="col-md-12"
             v-model="currentCollab.role"
-            :options="['user', 'admin']"
+            :options="['user', 'report', 'admin']"
             @keyup.enter="createCollab()"/>
         </q-card-section>
         <q-card-section>
@@ -172,7 +172,7 @@
                 label="Role *"
                 class="col-md-12"
                 v-model="currentCollab.role"
-                :options="['user', 'admin']"
+                :options="['user', 'report', 'admin']"
                 @keyup.enter="updateCollab()"/>
             </q-card-section>   
             <q-card-section>

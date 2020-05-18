@@ -6,7 +6,7 @@
         style="width:30vw;max-width:150px;"
       >
     </p>
-    <p class="text-faded">{{message}} <strong>(404)</strong></p>
+    <p class="text-faded">{{message}} <strong>(403)</strong></p>
     <q-btn
       color="secondary"
       style="width:200px;"

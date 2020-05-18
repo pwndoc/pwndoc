@@ -1,7 +1,7 @@
 module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
-    var auth = require('../lib/auth');
+    var acl = require('../lib/auth').acl;
     var Language = require('mongoose').model('Language');
     var AuditType = require('mongoose').model('AuditType');
     var VulnerabilityType = require('mongoose').model('VulnerabilityType');
@@ -10,14 +10,14 @@ module.exports = function(app) {
 /* ===== LANGUAGES ===== */
 
     // Get languages list
-    app.get("/api/data/languages", auth.hasRole('user'), function(req, res) {
+    app.get("/api/data/languages", acl.hasPermission('languages:read'), function(req, res) {
         Language.getAll()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Create language
-    app.post("/api/data/languages", auth.hasRole('admin'), function(req, res) {
+    app.post("/api/data/languages", acl.hasPermission('languages:create'), function(req, res) {
         if (!req.body.locale || !req.body.language) {
             Response.BadParameters(res, 'Missing required parameters: locale, language');
             return;
@@ -33,7 +33,7 @@ module.exports = function(app) {
     });
     
     // Delete Language
-    app.delete("/api/data/languages/:locale", auth.hasRole('admin'), function(req, res) {
+    app.delete("/api/data/languages/:locale", acl.hasPermission('languages:delete'), function(req, res) {
         Language.delete(req.params.locale)
         .then(msg => {
             Response.Created(res, 'Language deleted successfully')
@@ -44,14 +44,14 @@ module.exports = function(app) {
 /* ===== AUDIT TYPES ===== */
 
     // Get audit types list
-    app.get("/api/data/audit-types", auth.hasRole('user'), function(req, res) {
+    app.get("/api/data/audit-types", acl.hasPermission('audit-types:read'), function(req, res) {
         AuditType.getAll()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Create audit type
-    app.post("/api/data/audit-types", auth.hasRole('admin'), function(req, res) {
+    app.post("/api/data/audit-types", acl.hasPermission('audit-types:create'), function(req, res) {
         if (!req.body.name || !req.body.locale) {
             Response.BadParameters(res, 'Missing required parameters: name, locale');
             return;
@@ -66,7 +66,7 @@ module.exports = function(app) {
     });
     
     // Delete audit type
-    app.delete("/api/data/audit-types/:name", auth.hasRole('admin'), function(req, res) {
+    app.delete("/api/data/audit-types/:name", acl.hasPermission('audit-types:delete'), function(req, res) {
         AuditType.delete(req.params.name)
         .then(msg => {
             Response.Created(res, 'Audit type deleted successfully')
@@ -77,14 +77,14 @@ module.exports = function(app) {
 /* ===== VULNERABILITY TYPES ===== */
 
      // Get vulnerability types list
-     app.get("/api/data/vulnerability-types", auth.hasRole('user'), function(req, res) {
+     app.get("/api/data/vulnerability-types", acl.hasPermission('vulnerability-types:read'), function(req, res) {
         VulnerabilityType.getAll()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Create vulnerability type
-    app.post("/api/data/vulnerability-types", auth.hasRole('admin'), function(req, res) {
+    app.post("/api/data/vulnerability-types", acl.hasPermission('vulnerability-types:create'), function(req, res) {
         if (!req.body.name || !req.body.locale) {
             Response.BadParameters(res, 'Missing required parameters: name, locale');
             return;
@@ -99,7 +99,7 @@ module.exports = function(app) {
     });
     
     // Delete vulnerability type
-    app.delete("/api/data/vulnerability-types/:name", auth.hasRole('admin'), function(req, res) {
+    app.delete("/api/data/vulnerability-types/:name", acl.hasPermission('vulnerability-types:delete'), function(req, res) {
         VulnerabilityType.delete(req.params.name)
         .then(msg => {
             Response.Created(res, 'Vulnerability type deleted successfully')
@@ -110,21 +110,21 @@ module.exports = function(app) {
 /* ===== SECTIONS ===== */
 
     // Get sections list
-    app.get("/api/data/sections", auth.hasRole('user'), function(req, res) {
+    app.get("/api/data/sections", acl.hasPermission('sections:read'), function(req, res) {
         CustomSection.getAll()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
      // Get sections by language
-     app.get("/api/data/sections/:locale", auth.hasRole('user'), function(req, res) {
+     app.get("/api/data/sections/:locale", acl.hasPermission('sections:read'), function(req, res) {
         CustomSection.getAllByLanguage(req.params.locale)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Create section
-    app.post("/api/data/sections", auth.hasRole('admin'), function(req, res) {
+    app.post("/api/data/sections", acl.hasPermission('sections:create'), function(req, res) {
         if (!req.body.field || !req.body.name || !req.body.locale) {
             Response.BadParameters(res, 'Missing required parameters: field, name, locale');
             return;
@@ -141,7 +141,7 @@ module.exports = function(app) {
     });
     
     // Delete section
-    app.delete("/api/data/sections/:field", auth.hasRole('admin'), function(req, res) {
+    app.delete("/api/data/sections/:field", acl.hasPermission('sections:delete'), function(req, res) {
         CustomSection.delete(req.params.field)
         .then(msg => {
             Response.Created(res, 'Section deleted successfully')

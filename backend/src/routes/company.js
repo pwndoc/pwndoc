@@ -2,17 +2,17 @@ module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
     var Company = require('mongoose').model('Company');
-    var auth = require('../lib/auth');
+    var acl = require('../lib/auth').acl;
 
     // Get companies list
-    app.get("/api/companies", auth.hasRole('user'), function(req, res) {
+    app.get("/api/companies", acl.hasPermission('companies:read'), function(req, res) {
         Company.getAll()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Create company
-    app.post("/api/companies", auth.hasRole('user'), function(req, res) {
+    app.post("/api/companies", acl.hasPermission('companies:create'), function(req, res) {
         if (!req.body.name) {
             Response.BadParameters(res, 'Required paramters: name');
             return;
@@ -31,7 +31,7 @@ module.exports = function(app) {
     });
 
     // Update company
-    app.put("/api/companies/:name", auth.hasRole('user'), function(req, res) {
+    app.put("/api/companies/:name", acl.hasPermission('companies:update'), function(req, res) {
         var company = {};
         // Optional parameters
         if (req.body.name) company.name = req.body.name;
@@ -43,7 +43,7 @@ module.exports = function(app) {
     });
 
     // Delete company
-    app.delete("/api/companies/:name", auth.hasRole('user'), function(req, res) {
+    app.delete("/api/companies/:name", acl.hasPermission('companies:delete'), function(req, res) {
         Company.delete(req.params.name)
         .then(msg => Response.Created(res, 'Company deleted successfully'))
         .catch(err => Response.Internal(res, err))

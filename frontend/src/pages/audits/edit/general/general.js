@@ -18,18 +18,18 @@ export default {
             auditId: null,
             // Current editing audit object
             audit: {
-                name: "",
-                location: "",
-                auditType: "",
-                client: {},
-                company: {},
-                collaborators: [],
-                date: "",
-                date_start: "",
-                date_end: "",
-                scope: [],
-                language: "",
-                template: ""
+                // name: "",
+                // location: "",
+                // auditType: "",
+                // client: {},
+                // company: {},
+                // collaborators: [],
+                // date: "",
+                // date_start: "",
+                // date_end: "",
+                // scope: [],
+                // language: "",
+                // template: ""
             },
             auditOrig: {},
             // List of existing clients
@@ -74,7 +74,7 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
-        if (to.name === "401" || this.$_.isEqual(this.audit, this.auditOrig))
+        if (this.$_.isEqual(this.audit, this.auditOrig))
             next();
         else {
             Dialog.create({
