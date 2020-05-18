@@ -2,19 +2,19 @@ module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
     var Template = require('mongoose').model('Template');
-    var auth = require('../lib/auth');
+    var acl = require('../lib/auth').acl;
     var utils = require('../lib/utils');
     var fs = require('fs');
 
     // Get templates list
-    app.get("/api/templates", auth.hasRole('user'), function(req, res) {
+    app.get("/api/templates", acl.hasPermission('templates:read'), function(req, res) {
         Template.getAll()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Create template
-    app.post("/api/templates", auth.hasRole('admin'), function(req, res) {
+    app.post("/api/templates", acl.hasPermission('templates:create'), function(req, res) {
         if (!req.body.name || !req.body.file) {
             Response.BadParameters(res, 'Missing required parameters');
             return;
@@ -39,7 +39,7 @@ module.exports = function(app) {
     });
 
     // Update template
-    app.put("/api/templates/:templateId", auth.hasRole('admin'), function(req, res) {
+    app.put("/api/templates/:templateId", acl.hasPermission('templates:update'), function(req, res) {
         if (req.body.name && !utils.validFilename(req.body.name)) {
             Response.BadParameters(res, 'Bad name format');
             return;
@@ -74,7 +74,7 @@ module.exports = function(app) {
     });
 
     // Delete template
-    app.delete("/api/templates/:templateId", auth.hasRole('admin'), function(req, res) {
+    app.delete("/api/templates/:templateId", acl.hasPermission('templates:delete'), function(req, res) {
         Template.delete(req.params.templateId)
         .then(data => {
             fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.docx`);

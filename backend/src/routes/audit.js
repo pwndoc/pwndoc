@@ -2,31 +2,24 @@ module.exports = function(app, io) {
 
     var Response = require('../lib/httpResponse');
     var Audit = require('mongoose').model('Audit');
-    var AuditType = require('mongoose').model('AuditType');
-    var auth = require('../lib/auth');
+    var acl = require('../lib/auth').acl;
     var reportGenerator = require('../lib/report-generator');
 
-    // Get audits list of user (all for admin) with regex filter on findings
-    app.get("/api/audits", auth.hasRole('user'), function(req, res) {
-        var filters = {};
-        if (req.query.findingTitle) filters['findings.title'] = new RegExp(req.query.findingTitle, 'i');
+    /* ### AUDITS LIST ### */
 
-        if (req.decodedToken.role === 'admin') {
-            Audit.getAll(filters)
+    // Get audits list of user (all for admin) with regex filter on findings
+    app.get("/api/audits", acl.hasPermission('audits:read'), function(req, res) {
+        var filters = {};
+        if (req.query.findingTitle) filters['findings.title'] = new RegExp(req.query.findingTitle, 'i')
+            Audit.getAudits(acl.isAdmin(req.decodedToken.role, 'audits:read'), req.decodedToken.id, filters)
             .then(msg => Response.Ok(res, msg))
             .catch(err => Response.Internal(res, err))
-        }
-        else {
-            Audit.getAllForUser(req.decodedToken.username, filters)
-            .then(msg => Response.Ok(res, msg))
-            .catch(err => Response.Internal(res, err))
-        }
     });
 
-    // Create audit with name, template and username provided
-    app.post("/api/audits", auth.hasRole('user'), function(req, res) {
+    // Create audit with name, template, language and username provided
+    app.post("/api/audits", acl.hasPermission('audits:create'), function(req, res) {
         if (!req.body.name || !req.body.language || !req.body.template) {
-            Response.BadParameters(res, 'Missing some required paramters');
+            Response.BadParameters(res, 'Missing some required parameters');
             return;
         }
 
@@ -36,27 +29,36 @@ module.exports = function(app, io) {
         audit.language = req.body.language;
         audit.template = req.body.template;
 
-        Audit.create(audit, req.decodedToken.username)
+        Audit.create(audit, req.decodedToken.id)
         .then(msg => Response.Created(res, 'Audit created successfully'))
         .catch(err => Response.Internal(res, err))
     });
 
-     // Delete audit
-     app.delete("/api/audits/:auditId", auth.hasRole('user'), function(req, res) {
-        Audit.delete(req.params.auditId, req.decodedToken.username, req.decodedToken.role)
+    // Delete audit if creator or admin
+    app.delete("/api/audits/:auditId", acl.hasPermission('audits:delete'), function(req, res) {
+        Audit.delete(acl.isAdmin(req.decodedToken.role, 'audits:delete'), req.params.auditId, req.decodedToken.id)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    })
+
+    /* ### AUDITS EDIT ### */
+
+    // Get Audit with ID
+    app.get("/api/audits/:auditId", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.getAudit(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Get audit general information
-    app.get("/api/audits/:auditId/general", auth.hasRole('user'), function(req, res) {
-        Audit.getGeneral(req.params.auditId)
+    app.get("/api/audits/:auditId/general", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.getGeneral(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Update audit general information
-    app.put("/api/audits/:auditId/general", auth.hasRole('user'), function(req, res) {
+    app.put("/api/audits/:auditId/general", acl.hasPermission('audits:update'), function(req, res) {
         var update = {};
         // Optional parameters
         if (req.body.name) update.name = req.body.name;
@@ -80,7 +82,7 @@ module.exports = function(app, io) {
         }
         if (req.body.template) update.template = req.body.template;        
 
-        Audit.updateGeneral(req.params.auditId, update)
+        Audit.updateGeneral(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
@@ -89,25 +91,25 @@ module.exports = function(app, io) {
     });
 
     // Get audit network information
-    app.get("/api/audits/:auditId/network", auth.hasRole('user'), function(req, res) {
-        Audit.getNetwork(req.params.auditId)
+    app.get("/api/audits/:auditId/network", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.getNetwork(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Update audit network information
-    app.put("/api/audits/:auditId/network", auth.hasRole('user'), function(req, res) {
+    app.put("/api/audits/:auditId/network", acl.hasPermission('audits:update'), function(req, res) {
         var update = {};
         // Optional parameters
         if (req.body.scope) update.scope = req.body.scope;
 
-        Audit.updateNetwork(req.params.auditId, update)
+        Audit.updateNetwork(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Add finding to audit
-    app.post("/api/audits/:auditId/findings", auth.hasRole('user'), function(req, res) {
+    app.post("/api/audits/:auditId/findings", acl.hasPermission('audits:update'), function(req, res) {
         if (!req.body.title) {
             Response.BadParameters(res, 'Missing some required paramters: title');
             return;
@@ -132,7 +134,7 @@ module.exports = function(app, io) {
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
 
-        Audit.createFinding(req.params.auditId, finding)
+        Audit.createFinding(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, finding)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
@@ -141,21 +143,21 @@ module.exports = function(app, io) {
     });
 
     // Get findings list title
-    app.get("/api/audits/:auditId/findings", auth.hasRole('user'), function(req, res) {
-        Audit.getFindings(req.params.auditId)
+    app.get("/api/audits/:auditId/findings", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.getFindings(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Get finding of audit
-    app.get("/api/audits/:auditId/findings/:findingId", auth.hasRole('user'), function(req, res) {
-        Audit.getFinding(req.params.auditId, req.params.findingId)
+    app.get("/api/audits/:auditId/findings/:findingId", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.getFinding(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.findingId)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Update finding of audit
-    app.put("/api/audits/:auditId/findings/:findingId", auth.hasRole('user'), function(req, res) {
+    app.put("/api/audits/:auditId/findings/:findingId", acl.hasPermission('audits:update'), function(req, res) {
         var finding = {};
         // Optional parameters
         if (req.body.title) finding.title = req.body.title;
@@ -173,7 +175,7 @@ module.exports = function(app, io) {
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
 
-        Audit.updateFinding(req.params.auditId, req.params.findingId, finding)
+        Audit.updateFinding(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.findingId, finding)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');            
             Response.Ok(res, msg)
@@ -182,8 +184,8 @@ module.exports = function(app, io) {
     });
 
     // Delete finding of audit
-    app.delete("/api/audits/:auditId/findings/:findingId", auth.hasRole('user'), function(req, res) {
-        Audit.deleteFinding(req.params.auditId, req.params.findingId)
+    app.delete("/api/audits/:auditId/findings/:findingId", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.deleteFinding(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.findingId)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');            
             Response.Ok(res, msg);
@@ -192,14 +194,14 @@ module.exports = function(app, io) {
     });
 
      // Get audit Summary
-     app.get("/api/audits/:auditId/summary", auth.hasRole('user'), function(req, res) {
-        Audit.getSummary(req.params.auditId)
+     app.get("/api/audits/:auditId/summary", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.getSummary(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Update audit Summary
-    app.put("/api/audits/:auditId/summary", auth.hasRole('user'), function(req, res) {
+    app.put("/api/audits/:auditId/summary", acl.hasPermission('audits:update'), function(req, res) {
         if (!req.body.summary) {
             Response.BadParameters(res, 'Missing some required paramters');
             return;
@@ -208,7 +210,7 @@ module.exports = function(app, io) {
         // Mandatory parameters
         update.summary = req.body.summary;    
 
-        Audit.updateSummary(req.params.auditId, update)
+        Audit.updateSummary(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
             Response.Ok(res, msg)
         })
@@ -216,7 +218,7 @@ module.exports = function(app, io) {
     });
 
     // Add section to audit
-    app.post("/api/audits/:auditId/sections", auth.hasRole('user'), function(req, res) {
+    app.post("/api/audits/:auditId/sections", acl.hasPermission('audits:update'), function(req, res) {
         if (!req.body.field || !req.body.name) {
             Response.BadParameters(res, 'Missing some required paramters: field, name');
             return;
@@ -227,7 +229,7 @@ module.exports = function(app, io) {
         section.name = req.body.name;
         section.field = req.body.field;
 
-        Audit.createSection(req.params.auditId, section)
+        Audit.createSection(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, section)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
@@ -236,19 +238,19 @@ module.exports = function(app, io) {
     });
 
     // Get section of audit
-    app.get("/api/audits/:auditId/sections/:sectionId", auth.hasRole('user'), function(req, res) {
-        Audit.getSection(req.params.auditId, req.params.sectionId)
+    app.get("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.getSection(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.sectionId)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Update section of audit
-    app.put("/api/audits/:auditId/sections/:sectionId", auth.hasRole('user'), function(req, res) {
+    app.put("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
         var section = {};
         // Optional parameters
         if (req.body.paragraphs) section.paragraphs = req.body.paragraphs;
 
-        Audit.updateSection(req.params.auditId, req.params.sectionId, section)
+        Audit.updateSection(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.sectionId, section)
         .then(msg => {
             Response.Ok(res, msg)
         })
@@ -256,8 +258,8 @@ module.exports = function(app, io) {
     });
 
     // Delete section of audit
-    app.delete("/api/audits/:auditId/sections/:sectionId", auth.hasRole('user'), function(req, res) {
-        Audit.deleteSection(req.params.auditId, req.params.sectionId)
+    app.delete("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
+        Audit.deleteSection(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.sectionId)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');            
             Response.Ok(res, msg);
@@ -265,30 +267,14 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
-    // Get Audit with ID
-    app.get("/api/audits/:auditId/", auth.hasRole('user'), function(req, res) {
-        Audit.getAudit(req.params.auditId)
-        .then(msg => Response.Ok(res, msg))
-        .catch(err => Response.Internal(res, err))
-    });
-
     // Generate Report for specific audit
-    app.get("/api/audits/:auditId/generate", auth.hasRole('user'), function(req, res){
-        if (req.decodedToken.role === 'admin') {
-            Audit.getAudit(req.params.auditId)
-            .then( audit => {
-                var reportDoc = reportGenerator.generateDoc(audit);
-                Response.SendFile(res, `${audit.name}.docx`, reportDoc);
-            })
-            .catch(err => Response.Internal(res, err));
-        }
-        else {
-            Audit.getAuditForUser(req.params.auditId, req.decodedToken.username)
-            .then( audit => {
-                var reportDoc = reportGenerator.generateDoc(audit);
-                Response.SendFile(res, `${audit.name}.docx`, reportDoc);
-            })
-            .catch(err => Response.Internal(res, err))
-        }
+    app.get("/api/audits/:auditId/generate", acl.hasPermission('audits:update'), function(req, res){
+        Audit.getAudit(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id)
+        .then( audit => {
+            console.log(audit)
+            var reportDoc = reportGenerator.generateDoc(audit);
+            Response.SendFile(res, `${audit.name}.docx`, reportDoc);
+        })
+        .catch(err => Response.Internal(res, err));
     });
 }

@@ -11,7 +11,7 @@ var UserSchema = new Schema({
     password:       {type: String, required: true},
     firstname:      {type: String, required: true},
     lastname:       {type: String, required: true},
-    role:           {type: String, enum: ['admin', 'user'], default: 'user'},
+    role:           {type: String, enum: ['admin', 'report', 'user'], default: 'user'},
 }, {timestamps: true});
 
 /*
@@ -151,6 +151,7 @@ UserSchema.methods.getToken = function () {
         .then(function(row) {
             if (row && bcrypt.compareSync(user.password, row.password)) {
                 var payload = {};
+                payload.id = row._id;
                 payload.username = row.username;
                 payload.role = row.role;
                 payload.firstname = row.firstname;

@@ -10,7 +10,7 @@ export default {
             AuditService: AuditService,
 
             audit: {
-                scope: []
+                // scope: []
             },
             auditOrig: {},
             // List of available targets for select options

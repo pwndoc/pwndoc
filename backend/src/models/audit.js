@@ -66,177 +66,101 @@ var AuditSchema = new Schema({
 */
 
 // Get all audits (admin)
-AuditSchema.statics.getAll = (filters) => {
+AuditSchema.statics.getAudits = (isAdmin, userId, filters) => {
     return new Promise((resolve, reject) => { 
         var query = Audit.find(filters)
-        query.populate('creator', '-_id username');
-        query.populate('collaborators', '-_id username');
-        query.populate('company', '-_id name');
-        query.select('id name language creator collaborators company createdAt');
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.populate('creator', '-_id username')
+        query.populate('collaborators', '-_id username')
+        query.populate('company', '-_id name')
+        query.select('id name language creator collaborators company createdAt')
         query.exec()
         .then((rows) => {
-            resolve(rows);
+            resolve(rows)
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
-}
-
-// Get all audits for username
-AuditSchema.statics.getAllForUser = (username, filters) => {
-    return new Promise((resolve, reject) => {
-        var User = mongoose.model('User');
-        var query = User.findOne({username: username});
-        query.exec()
-        .then((row) => {
-            if (row) {
-                var query = Audit.find(filters).or([{creator: row._id}, {collaborators: row._id}]);
-                query.populate('creator', '-_id username');
-                query.populate('collaborators', '-_id username');
-                query.populate('company', '-_id name');
-                query.select('id name language creator collaborators company createdAt');
-                return query.exec();
-            }
-            else
-                reject({fn: 'BadParameters', message: 'User not found'});
-        })
-        .then((rows) => {
-            resolve(rows);
-        })
-        .catch((err) => {
-            reject(err);
-        })
-    });
+    })
 }
 
 // Get Audit with ID to generate report
-AuditSchema.statics.getAudit = (auditId) => {
+AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
     return new Promise((resolve, reject) => {
-        var query = Audit.findById(auditId);
-        query.populate('template');
-        query.populate('creator');
-        query.populate('company');
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.populate('template')
+        query.populate('creator')
+        query.populate('company')
         query.exec()
         .then((row) => {
-            if (row)
-                resolve(row);
-            else
-                reject({fn: 'BadParameters', message: 'Audit not found'});
-        })
-        .catch((err) => {
-            if (err.name === "CastError")
-                reject({fn: 'BadParameters', message: 'Bad Audit Id'});
-            else
-                reject(err);
-        })
-    });
-}
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
 
-// Get Audit with ID to generate report and check user has right to access
-AuditSchema.statics.getAuditForUser = (auditId, username) => {
-    return new Promise((resolve, reject) => {
-        var User = mongoose.model('User');
-        var query = User.findOne({username: username});
-        query.exec()
-        .then(row => {
-            if (row) {
-                var query = Audit.findById(auditId).or([{creator: row._id}, {collaborators: row._id}]);
-                query.populate('template');
-                query.populate('creator');
-                query.populate('company');
-                return query.exec();
-            }
-            else
-                reject({fn: 'BadParameters', message: 'User not found'});
-        })
-        .then((row) => {
-            if (row)
-                resolve(row);
-            else
-                reject({fn: 'BadParameters', message: 'Audit not found'});
+            resolve(row)
         })
         .catch((err) => {
             if (err.name === "CastError")
-                reject({fn: 'BadParameters', message: 'Bad Audit Id'});
+                reject({fn: 'BadParameters', message: 'Bad Audit Id'})
             else
-                reject(err);
+                reject(err)
         })
-    });
+    })
 }
 
 // Create audit
-AuditSchema.statics.create = (audit, username) => {
+AuditSchema.statics.create = (audit, userId) => {
     return new Promise((resolve, reject) => {
-        var User = mongoose.model('User');
-        var query = User.findOne({username: username});
-        query.exec()
+        audit.creator = userId
+        var Template = mongoose.model('Template')
+        var query = Template.findById(audit.template)
+        return query.exec()
         .then((row) => {
             if (row) {
-                var Template = mongoose.model('Template');
-                var query = Template.findById(audit.template);
-                audit.creator = row._id;
-                return query.exec();
+                return new Audit(audit).save()              
             }
             else
-                reject({fn: 'BadParameters', message: 'User not found'});
-            
-        })
-        .then((row) => {
-            if (row) {
-                return new Audit(audit).save();                
-            }
-            else
-                reject({fn: 'BadParameters', message: 'Template not found'});
+                throw({fn: 'NotFound', message: 'Template not found'})
         })
         .then((rows) => {
-            resolve(rows);
+            resolve(rows)
         })
         .catch((err) => {
-            reject(err);
+            if (err.name === "ValidationError")
+                reject({fn: 'BadParameters', message: 'Audit validation failed'})
+            else
+                reject(err)
         })
-    });
+    })
 }
 
 // Delete audit
-AuditSchema.statics.delete = (auditId, username, role) => {
+AuditSchema.statics.delete = (isAdmin, auditId, userId) => {
     return new Promise((resolve, reject) => {
-        var User = mongoose.model('User');
-        var query = User.findOne({username: username});
-        query.exec()
+        var query = Audit.findOneAndRemove({_id: auditId})
+        if (!isAdmin)
+            query.or([{creator: userId}])
+        return query.exec()               
         .then((row) => {
-            if (row) {
-                var query = Audit.findById(auditId);
-                query.populate('creator');
-                return query.exec();
-            }
-            else
-                reject({fn: 'BadParameters', message: 'User not found'});
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
             
-        })
-        .then((row) => {
-            if (row && (row.creator.username === username || role === 'admin')) {
-                var query = Audit.findOneAndRemove({_id: auditId});
-                return query.exec();                
-            }
-            else if (!row)
-                reject({fn: 'BadParameters', message: 'Audit not found'});
-            else
-                reject({fn: 'Forbidden', message: 'User is not the creator of this Audit'});
-        })
-        .then((rows) => {
-            resolve(rows);
+            resolve(row)
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Get audit general information
-AuditSchema.statics.getGeneral = (id) => {
+AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(id);
+        var query = Audit.findById(auditId);
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.populate({
             path: 'client', 
             select: 'email firstname lastname', 
@@ -244,124 +168,164 @@ AuditSchema.statics.getGeneral = (id) => {
                 path: 'company', 
                 select: 'name'}
             });
-        query.populate('collaborators', 'username firstname lastname');
-        query.populate('company');
-        query.select('id name auditType location date date_start date_end client collaborators language scope.name template');
+        query.populate('collaborators', 'username firstname lastname')
+        query.populate('company')
+        query.select('id name auditType location date date_start date_end client collaborators language scope.name template')
         query.exec()
         .then((row) => {
-            var formatScope = row.scope.map(item => {return item.name});
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'});
+
+            var formatScope = row.scope.map(item => {return item.name})
             for (var i=0;i<formatScope.length;i++) {
-                row.scope[i] = formatScope[i];
+                row.scope[i] = formatScope[i]
             }
-            resolve(row);
+            resolve(row)
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Update audit general information
-AuditSchema.statics.updateGeneral = (id, update) => {
+AuditSchema.statics.updateGeneral = (isAdmin, auditId, userId, update) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findByIdAndUpdate(id, update);
+        var query = Audit.findByIdAndUpdate(auditId, update)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.exec()
-        .then((rows) => {
-            resolve(rows);
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+            
+            resolve("Audit General updated successfully")
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Get audit Network information
-AuditSchema.statics.getNetwork = (id) => {
+AuditSchema.statics.getNetwork = (isAdmin, auditId, userId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(id);
-        query.select('id scope');
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.select('scope')
         query.exec()
         .then((row) => {
-            resolve(row);
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+            
+            resolve(row)
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Update audit Network information
-AuditSchema.statics.updateNetwork = (id, scope) => {
+AuditSchema.statics.updateNetwork = (isAdmin, auditId, userId, scope) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findByIdAndUpdate(id, scope);
+        var query = Audit.findByIdAndUpdate(auditId, scope)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.exec()
-        .then((rows) => {
-            resolve(rows);
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            resolve("Audit Network updated successfully")
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Create finding
-AuditSchema.statics.createFinding = (auditId, finding) => {
+AuditSchema.statics.createFinding = (isAdmin, auditId, userId, finding) => {
     return new Promise((resolve, reject) => { 
         var query = Audit
-        .findByIdAndUpdate(auditId, {$push: {findings: {$each: [finding], $sort: {cvssScore: -1}}}})
-        .collation({locale: "en_US", numericOrdering: true});
+            .findByIdAndUpdate(auditId, {$push: {findings: {$each: [finding], $sort: {cvssScore: -1}}}})
+            .collation({locale: "en_US", numericOrdering: true})
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.exec()
-        .then((rows) => {
-            resolve(rows);
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            resolve("Audit Finding created successfully")
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Get findings list titles
-AuditSchema.statics.getFindings = (auditId) => {
+AuditSchema.statics.getFindings = (isAdmin, auditId, userId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId);
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.select('-_id findings._id findings.title findings.cvssSeverity findings.cvssScore');
         query.sort({'findings.cvssScore': -1})
         query.exec()
         .then((row) => {
-            resolve(row);
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            resolve(row)
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Get finding of audit
-AuditSchema.statics.getFinding = (auditId, findingId) => {
+AuditSchema.statics.getFinding = (isAdmin, auditId, userId, findingId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId);
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.select('findings')
         query.exec()
         .then((row) => {
-            var finding = row.findings.id(findingId);
-            if (finding === null) reject({fn: 'BadParameters', message: 'Finding id not found'});
-            else resolve(finding);
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            var finding = row.findings.id(findingId)
+            if (finding === null) 
+                throw({fn: 'NotFound', message: 'Finding not found'})
+            else 
+                resolve(finding)
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Update finding of audit
-AuditSchema.statics.updateFinding = (auditId, findingId, newFinding) => {
+AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFinding) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId);
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.exec()
         .then((row) => {
-            var finding = row.findings.id(findingId);
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            var finding = row.findings.id(findingId)
             if (finding === null)
-                reject({fn: 'BadParameters', message: 'Finding id not found'});           
+                reject({fn: 'NotFound', message: 'Finding not found'})         
             else {
                 Object.keys(newFinding).forEach((key) => {
                     finding[key] = newFinding[key]
@@ -372,112 +336,141 @@ AuditSchema.statics.updateFinding = (auditId, findingId, newFinding) => {
         .then(() => {
             return Audit
             .findByIdAndUpdate(auditId, {$push: {findings: {$each: [], $sort: {cvssScore: -1}}}})
-            .collation({locale: "en_US", numericOrdering: true});
+            .collation({locale: "en_US", numericOrdering: true})
         })
         .then(() => {
-            resolve();            
+            resolve("Audit Finding updated successfully")        
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Delete finding of audit
-AuditSchema.statics.deleteFinding = (auditId, findingId) => {
+AuditSchema.statics.deleteFinding = (isAdmin, auditId, userId, findingId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId);
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.select('findings')
         query.exec()
         .then((row) => {
-            var finding = row.findings.id(findingId);
-            if (finding === null) reject({fn: 'BadParameters', message: 'Finding id not found'});
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            var finding = row.findings.id(findingId)
+            if (finding === null) reject({fn: 'NotFound', message: 'Finding not found'})
             else {
-                row.findings.pull(findingId);
-                return row.save();
+                row.findings.pull(findingId)
+                return row.save()
             }
         })
         .then(() => {
-            resolve();
+            resolve("Audit Finding deleted successfully")
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Get audit Summary
-AuditSchema.statics.getSummary = (id) => {
+AuditSchema.statics.getSummary = (isAdmin, auditId, userId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(id);
-        query.select('id summary');
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.select('id summary')
         query.exec()
         .then((row) => {
-            resolve(row);
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            resolve(row)
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Update audit Summary
-AuditSchema.statics.updateSummary = (id, update) => {
+AuditSchema.statics.updateSummary = (isAdmin, auditId, userId, update) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findByIdAndUpdate(id, update);
+        var query = Audit.findByIdAndUpdate(auditId, update)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.exec()
-        .then((rows) => {
-            resolve(rows);
+        .then((row) => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            resolve(row)
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Create section
-AuditSchema.statics.createSection = (auditId, section) => {
+AuditSchema.statics.createSection = (isAdmin, auditId, userId, section) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findOneAndUpdate({_id: auditId, 'sections.field': {$ne: section.field}}, {$push: {sections: section}});
+        var query = Audit.findOneAndUpdate({_id: auditId, 'sections.field': {$ne: section.field}}, {$push: {sections: section}})
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.exec()
         .then((row) => {
-            if (row)
-                resolve(row);
-            else
-                reject({fn: 'BadParameters', message: 'Section already exists'})
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Section already exists'})
+            
+            resolve('Audit Section created successfully')
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Get section of audit
-AuditSchema.statics.getSection = (auditId, sectionId) => {
+AuditSchema.statics.getSection = (isAdmin, auditId, userId, sectionId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId);
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.select('sections')
         query.exec()
         .then((row) => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
             var section = row.sections.id(sectionId);
-            if (section === null) reject({fn: 'BadParameters', message: 'Section id not found'});
-            else resolve(section);
+            if (section === null) 
+                throw({fn: 'NotFound', message: 'Section id not found'});
+            else 
+                resolve(section);
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Update section of audit
-AuditSchema.statics.updateSection = (auditId, sectionId, newSection) => {
+AuditSchema.statics.updateSection = (isAdmin, auditId, userId, sectionId, newSection) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId);
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.exec()
         .then((row) => {
-            var section = row.sections.id(sectionId);
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+            
+            var section = row.sections.id(sectionId)
             if (section === null)
-                reject({fn: 'BadParameters', message: 'Section id not found'});           
+                throw({fn: 'NotFound', message: 'Section not found'})          
             else {
                 Object.keys(newSection).forEach((key) => {
                     section[key] = newSection[key]
@@ -486,80 +479,40 @@ AuditSchema.statics.updateSection = (auditId, sectionId, newSection) => {
             } 
         })
         .then(() => {
-            resolve();            
+            resolve('Audit Section updated successfully')        
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
+    })
 }
 
 // Delete section of audit
-AuditSchema.statics.deleteSection = (auditId, sectionId) => {
+AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId);
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
         query.select('sections')
         query.exec()
         .then((row) => {
-            var section = row.sections.id(sectionId);
-            if (section === null) reject({fn: 'BadParameters', message: 'Section id not found'});
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
+
+            var section = row.sections.id(sectionId)
+            if (section === null) throw({fn: 'NotFound', message: 'Section not found'})
             else {
-                row.sections.pull(sectionId);
-                return row.save();
+                row.sections.pull(sectionId)
+                return row.save()
             }
         })
         .then(() => {
-            resolve();
+            resolve('Audit Section deleted successfully')
         })
         .catch((err) => {
-            reject(err);
+            reject(err)
         })
-    });
-}
-
-// Search audits (admin)
-AuditSchema.statics.search = () => {
-    return new Promise((resolve, reject) => { 
-        var query = Audit.find()
-        query.populate('creator', '-_id username');
-        query.populate('collaborators', '-_id username');
-        query.populate('company', '-_id name');
-        query.select('id name language creator collaborators company createdAt');
-        query.exec()
-        .then((rows) => {
-            resolve(rows);
-        })
-        .catch((err) => {
-            reject(err);
-        })
-    });
-}
-
-// Search audits for username
-AuditSchema.statics.searchForUser = (username) => {
-    return new Promise((resolve, reject) => {
-        var User = mongoose.model('User');
-        var query = User.findOne({username: username});
-        query.exec()
-        .then((row) => {
-            if (row) {
-                var query = Audit.find().or([{creator: row._id}, {collaborators: row._id}]);
-                query.populate('creator', '-_id username');
-                query.populate('collaborators', '-_id username');
-                query.populate('company', '-_id name');
-                query.select('id name language creator collaborators company createdAt');
-                return query.exec();
-            }
-            else
-                reject({fn: 'BadParameters', message: 'User not found'});
-        })
-        .then((rows) => {
-            resolve(rows);
-        })
-        .catch((err) => {
-            reject(err);
-        })
-    });
+    })
 }
 
 /*

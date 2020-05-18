@@ -2,17 +2,17 @@ module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
     var Client = require('mongoose').model('Client');
-    var auth = require('../lib/auth');
+    var acl = require('../lib/auth').acl;
 
     // Get clients list
-    app.get("/api/clients", auth.hasRole('user'), function(req, res) {
+    app.get("/api/clients", acl.hasPermission('clients:read'), function(req, res) {
         Client.getAll()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Create client
-    app.post("/api/clients", auth.hasRole('user'), function(req, res) {
+    app.post("/api/clients", acl.hasPermission('clients:create'), function(req, res) {
         if (!req.body.email) {
             Response.BadParameters(res, 'Required paramters: email');
             return;
@@ -37,7 +37,7 @@ module.exports = function(app) {
     });
 
     // Update client
-    app.put("/api/clients/:email", auth.hasRole('user'), function(req, res) {
+    app.put("/api/clients/:email", acl.hasPermission('clients:update'), function(req, res) {
         var client = {};
         // Optional parameters
         if (req.body.email) client.email = req.body.email;
@@ -55,7 +55,7 @@ module.exports = function(app) {
     });
 
     // Delete client
-    app.delete("/api/clients/:email", auth.hasRole('user'), function(req, res) {
+    app.delete("/api/clients/:email", acl.hasPermission('clients:delete'), function(req, res) {
         Client.delete(req.params.email)
         .then(msg => Response.Created(res, 'Client deleted successfully'))
         .catch(err => Response.Internal(res, err))

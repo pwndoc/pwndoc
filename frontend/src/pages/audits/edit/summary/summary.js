@@ -12,7 +12,7 @@ export default {
 
             // Set audit ID
             auditId: null,
-            audit: {summary: ""},
+            audit: {},
             auditOrig: {}
         }
     },

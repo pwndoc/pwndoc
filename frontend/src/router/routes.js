@@ -23,8 +23,10 @@ export default [
       {path: 'custom', component: () => import('pages/datas/custom')}
     ]},
     {path: 'vulnerabilities', component: () => import('pages/vulnerabilities'), meta: {breadcrumb: 'Vulnerabilities'}},
-    {path: 'profile', component: () => import('pages/profile')}  
+    {path: 'profile', component: () => import('pages/profile')},
+    {path: '403', name: '403', component: () => import('pages/403')},
+    {path: '404', name: '404', component: () => import('pages/404')}
   ]},
-  { path: '/login', component: () => import('pages/login') },
-  { path: '*', redirect: '/' }
+  {path: '/login', component: () => import('pages/login')},
+  {path: '*', redirect: '/'}
 ]

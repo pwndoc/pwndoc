@@ -2,10 +2,10 @@ module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
     var User = require('mongoose').model('User');
-    var auth = require('../lib/auth');
+    var acl = require('../lib/auth').acl;
 
     // Check token validity
-    app.get("/api/users/checktoken", auth.hasRole('user'), function(req, res) {
+    app.get("/api/users/checktoken", acl.hasPermission('users:read'), function(req, res) {
         Response.Ok(res, 'Valid token');
     });
 
@@ -33,28 +33,28 @@ module.exports = function(app) {
     });
 
     // Get all users
-    app.get("/api/users", auth.hasRole('user'), function(req, res) {
+    app.get("/api/users", acl.hasPermission('users:read'), function(req, res) {
         User.getAll()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Get user self
-    app.get("/api/users/me", auth.hasRole('user'), function(req, res) {
+    app.get("/api/users/me", acl.hasPermission('users:read'), function(req, res) {
         User.getByUsername(req.decodedToken.username)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Get user by username
-    app.get("/api/users/:username", auth.hasRole('admin'), function(req, res) {
+    app.get("/api/users/:username", acl.hasPermission('users:read'), function(req, res) {
         User.getByUsername(req.params.username)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Create user
-    app.post("/api/users", auth.hasRole('admin'), function(req, res) {
+    app.post("/api/users", acl.hasPermission('users:create'), function(req, res) {
         if (!req.body.username || !req.body.password || !req.body.firstname || !req.body.lastname) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
@@ -112,7 +112,7 @@ module.exports = function(app) {
     });
 
     // Update my profile
-    app.put("/api/users/me", auth.hasRole('user'), function(req, res) {
+    app.put("/api/users/me", acl.hasPermission('users:read'), function(req, res) {
         if (!req.body.currentPassword ||
             (req.body.newPassword && !req.body.confirmPassword) ||
             (req.body.confirmPassword && !req.body.newPassword)) {
@@ -141,7 +141,7 @@ module.exports = function(app) {
     });
 
     // Update any user (admin only)
-    app.put("/api/users/:username", auth.hasRole('admin'), function(req, res) {
+    app.put("/api/users/:username", acl.hasPermission('users:update'), function(req, res) {
         if (!req.body.username || !req.body.firstname || !req.body.lastname ||
             !req.body.role) {
             Response.BadParameters(res, 'Missing some required parameters');
@@ -164,7 +164,7 @@ module.exports = function(app) {
     });
 
     // Delete any user (admin only)
-    app.delete("/api/users/:username", auth.hasRole('admin'), function(req, res) {
+    app.delete("/api/users/:username", acl.hasPermission('users:delete'), function(req, res) {
         User.deleteOne({username: req.params.username})
         .then(msg => {
             if (msg.n === 0)

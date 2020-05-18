@@ -120,7 +120,10 @@ export default {
                 this.findingOrig = this.$_.cloneDeep(this.finding);                
             })
             .catch((err) => {
-                console.log(err)
+                if (err.response.status === 403)
+                    this.$router.push({name: '403', params: {error: err.response.data.datas}})
+                else if (err.response.status === 404)
+                    this.$router.push({name: '404', params: {error: err.response.data.datas}})
             })
         },
 
