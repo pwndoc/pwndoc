@@ -28,7 +28,7 @@ module.exports = function(app) {
         language.language = req.body.language;
 
         Language.create(language)
-        .then(msg => Response.Ok(res, msg))
+        .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
     
@@ -36,7 +36,7 @@ module.exports = function(app) {
     app.delete("/api/data/languages/:locale", acl.hasPermission('languages:delete'), function(req, res) {
         Language.delete(req.params.locale)
         .then(msg => {
-            Response.Created(res, 'Language deleted successfully')
+            Response.Ok(res, 'Language deleted successfully')
         })
         .catch(err => Response.Internal(res, err))
     });
@@ -61,7 +61,7 @@ module.exports = function(app) {
         auditType.name = req.body.name;
         auditType.locale = req.body.locale;
         AuditType.create(auditType)
-        .then(msg => Response.Ok(res, msg))
+        .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
     
@@ -69,7 +69,7 @@ module.exports = function(app) {
     app.delete("/api/data/audit-types/:name", acl.hasPermission('audit-types:delete'), function(req, res) {
         AuditType.delete(req.params.name)
         .then(msg => {
-            Response.Created(res, 'Audit type deleted successfully')
+            Response.Ok(res, 'Audit type deleted successfully')
         })
         .catch(err => Response.Internal(res, err))
     });
@@ -94,7 +94,7 @@ module.exports = function(app) {
         vulnType.name = req.body.name;
         vulnType.locale = req.body.locale;
         VulnerabilityType.create(vulnType)
-        .then(msg => Response.Ok(res, msg))
+        .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
     
@@ -102,7 +102,7 @@ module.exports = function(app) {
     app.delete("/api/data/vulnerability-types/:name", acl.hasPermission('vulnerability-types:delete'), function(req, res) {
         VulnerabilityType.delete(req.params.name)
         .then(msg => {
-            Response.Created(res, 'Vulnerability type deleted successfully')
+            Response.Ok(res, 'Vulnerability type deleted successfully')
         })
         .catch(err => Response.Internal(res, err))
     });
@@ -136,15 +136,15 @@ module.exports = function(app) {
         section.locale = req.body.locale;
 
         CustomSection.create(section)
-        .then(msg => Response.Ok(res, msg))
+        .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
     
     // Delete section
-    app.delete("/api/data/sections/:field", acl.hasPermission('sections:delete'), function(req, res) {
-        CustomSection.delete(req.params.field)
+    app.delete("/api/data/sections/:field/:locale", acl.hasPermission('sections:delete'), function(req, res) {
+        CustomSection.delete(req.params.field, req.params.locale)
         .then(msg => {
-            Response.Created(res, 'Section deleted successfully')
+            Response.Ok(res, 'Section deleted successfully')
         })
         .catch(err => Response.Internal(res, err))
     });

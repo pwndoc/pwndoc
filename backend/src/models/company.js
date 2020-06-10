@@ -52,7 +52,7 @@ CompanySchema.statics.update = (name, company) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'BadParameters', message: 'Company name not found'});
+                reject({fn: 'NotFound', message: 'Company name not found'});
         })
         .catch((err) => {
             if (err.code === 11000)
@@ -72,7 +72,7 @@ CompanySchema.statics.delete = (name) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'BadParameters', message: 'Company name not found'});
+                reject({fn: 'NotFound', message: 'Company name not found'});
         })
         .catch((err) => {
             reject(err);

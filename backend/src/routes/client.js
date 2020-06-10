@@ -50,14 +50,14 @@ module.exports = function(app) {
         if (req.body.company && req.body.company.name) company = req.body.company.name;
 
         Client.update(req.params.email, client, company)
-        .then(msg => Response.Created(res, 'Client updated successfully'))
+        .then(msg => Response.Ok(res, 'Client updated successfully'))
         .catch(err => Response.Internal(res, err))
     });
 
     // Delete client
     app.delete("/api/clients/:email", acl.hasPermission('clients:delete'), function(req, res) {
         Client.delete(req.params.email)
-        .then(msg => Response.Created(res, 'Client deleted successfully'))
+        .then(msg => Response.Ok(res, 'Client deleted successfully'))
         .catch(err => Response.Internal(res, err))
     });
 }

@@ -50,7 +50,7 @@ AuditTypeSchema.statics.delete = (name) => {
             if (res.deletedCount === 1)
                 resolve('Audit Type deleted');
             else
-                reject({fn: 'BadParameters', message: 'Audit Type not found'});
+                reject({fn: 'NotFound', message: 'Audit Type not found'});
         })
         .catch((err) => {
             reject(err);

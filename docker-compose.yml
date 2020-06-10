@@ -14,7 +14,10 @@ services:
 
   pwndoc-backend:
     build: ./backend
+    image: yeln4ts/pwndoc:backend
     container_name: pwndoc-backend
+    depends_on:
+      - mongodb
     restart: always
     ports:
       - 4242:4242
@@ -25,6 +28,7 @@ services:
 
   pwndoc-frontend:
     build: ./frontend
+    image: yeln4ts/pwndoc:frontend
     container_name: pwndoc-frontend
     restart: always
     ports:

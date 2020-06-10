@@ -38,14 +38,14 @@ module.exports = function(app) {
         if (req.body.logo) company.logo = req.body.logo;
 
         Company.update(req.params.name, company)
-        .then(msg => Response.Created(res, 'Company updated successfully'))
+        .then(msg => Response.Ok(res, 'Company updated successfully'))
         .catch(err => Response.Internal(res, err))
     });
 
     // Delete company
     app.delete("/api/companies/:name", acl.hasPermission('companies:delete'), function(req, res) {
         Company.delete(req.params.name)
-        .then(msg => Response.Created(res, 'Company deleted successfully'))
+        .then(msg => Response.Ok(res, 'Company deleted successfully'))
         .catch(err => Response.Internal(res, err))
     });
 }

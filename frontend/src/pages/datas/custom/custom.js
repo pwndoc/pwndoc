@@ -272,8 +272,8 @@ export default {
         },
 
         // Delete section
-        deleteSection: function(field) {
-            DataService.deleteSection(field)
+        deleteSection: function(field, locale) {
+            DataService.deleteSection(field, locale)
             .then((data) => {
                 this.getSections();
                 Notify.create({

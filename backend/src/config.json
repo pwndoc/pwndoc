@@ -18,11 +18,11 @@
         }
     },
     "test": {
-        "port": 5252,
-        "host": "localhost",
+        "port": 6262,
+        "host": "",
         "database": {
-            "name": "pwndoc-test",
-            "server": "localhost",
+            "name": "pwndoc",
+            "server": "mongo-pwndoc-test",
             "port": "27017"
         }
     }

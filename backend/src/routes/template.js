@@ -63,7 +63,7 @@ module.exports = function(app) {
                 try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.docx`)} catch {}
                 fs.writeFileSync(`${__basedir}/../report-templates/${req.body.name}.docx`, fileBuffer);
             }
-            Response.Created(res, 'Template updated successfully');
+            Response.Ok(res, 'Template updated successfully');
         })
         .catch(err => {
             if (err.code && err.code === "ENOENT")
@@ -78,11 +78,11 @@ module.exports = function(app) {
         Template.delete(req.params.templateId)
         .then(data => {
             fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.docx`);
-            Response.Created(res, 'Template deleted successfully');
+            Response.Ok(res, 'Template deleted successfully');
         })
         .catch(err => {
             if (err.code && err.code === "ENOENT")
-                Response.Created(res, 'Template File not found but deleted successfully in database');
+                Response.Ok(res, 'Template File not found but deleted successfully in database');
             else
                 Response.Internal(res, err)
         

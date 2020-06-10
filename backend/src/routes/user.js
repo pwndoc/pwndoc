@@ -101,7 +101,7 @@ module.exports = function(app) {
                     newUser.password = req.body.password;
 
                     newUser.getToken()
-                    .then(msg => Response.Ok(res, msg))
+                    .then(msg => Response.Created(res, msg))
                     .catch(err => Response.Internal(res, err))
                 })
                 .catch((err) => Response.Internal(res, err))
@@ -142,21 +142,14 @@ module.exports = function(app) {
 
     // Update any user (admin only)
     app.put("/api/users/:username", acl.hasPermission('users:update'), function(req, res) {
-        if (!req.body.username || !req.body.firstname || !req.body.lastname ||
-            !req.body.role) {
-            Response.BadParameters(res, 'Missing some required parameters');
-            return;
-        }
-
         var user = {};
-        // Required params
-        user.username = req.body.username;
-        user.firstname = req.body.firstname;
-        user.lastname = req.body.lastname;
-        user.role = req.body.role;
-
-         // Optionals params
-         if (req.body.password) user.password = req.body.password;
+    
+        // Optionals params
+        if (req.body.username) user.username = req.body.username;
+        if (req.body.password) user.password = req.body.password;
+        if (req.body.firstname) user.firstname = req.body.firstname;
+        if (req.body.lastname) user.lastname = req.body.lastname;
+        if (req.body.role) user.role = req.body.role;
 
         User.updateUser(req.params.username, user)
         .then(msg => Response.Ok(res, msg))

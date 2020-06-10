@@ -49,7 +49,7 @@ export default {
         return Vue.prototype.$axios.post(`data/sections`, section)
     },
 
-    deleteSection: function(field) {
-        return Vue.prototype.$axios.delete(`data/sections/${field}`)
+    deleteSection: function(field, locale) {
+        return Vue.prototype.$axios.delete(`data/sections/${field}/${locale}`)
     },
 }

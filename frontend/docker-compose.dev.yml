@@ -5,6 +5,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.dev
+    image: yeln4ts/pwndoc:frontend-dev
     container_name: pwndoc-frontend-dev
     volumes:
       - ./src:/app/src

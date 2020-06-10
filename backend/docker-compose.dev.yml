@@ -17,6 +17,7 @@ services:
     build: 
       context: .
       dockerfile:  Dockerfile.dev
+    image: yeln4ts/pwndoc:backend-dev
     container_name: pwndoc-backend-dev
     volumes:
       - ./src:/app/src
