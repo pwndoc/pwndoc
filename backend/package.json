@@ -8,12 +8,11 @@
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "prod": "NODE_ENV=prod nodemon src/app.js",
-    "test": "NODE_ENV=test nodemon src/app.js",
-    "tests": "mocha --exit"
+    "test": "NODE_ENV=test jest tests/index.test.js"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "chai-http": "^3.0.0",
+    "axios": "^0.19.2",
+    "jest": "^26.0.1",
     "nodemon": "^1.19.4",
     "npm": "^6.12.0"
   },

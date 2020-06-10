@@ -51,7 +51,7 @@ TemplateSchema.statics.update = (templateId, template) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'BadParameters', message: 'Template not found'});
+                reject({fn: 'NotFound', message: 'Template not found'});
         })
         .catch((err) => {
             if (err.code === 11000)
@@ -71,7 +71,7 @@ TemplateSchema.statics.delete = (templateId) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'BadParameters', message: 'Template not found'});
+                reject({fn: 'NotFound', message: 'Template not found'});
         })
         .catch((err) => {
             reject(err);

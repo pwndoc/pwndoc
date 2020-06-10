@@ -1,0 +1,14 @@
+version: '3'
+services:
+  backend-test:
+    image: yeln4ts/pwndoc:backend-test
+    build: 
+      context: .
+      dockerfile:  Dockerfile.test
+    container_name: pwndoc-backend-test
+    volumes:
+      - ./tests:/app/tests
+      - ./jest.config.js:/app/jest.config.js
+    environment:
+      API_URL: https://localhost:4242
+    network_mode: host

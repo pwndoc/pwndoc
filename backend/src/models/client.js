@@ -69,7 +69,7 @@ ClientSchema.statics.update = (email, client, company) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'BadParameters', message: 'Client email not found'});
+                reject({fn: 'NotFound', message: 'Client email not found'});
         })
         .catch((err) => {
             if (err.code === 11000)
@@ -89,7 +89,7 @@ ClientSchema.statics.delete = (email) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'BadParameters', message: 'Client email not found'});
+                reject({fn: 'NotFound', message: 'Client email not found'});
         })
         .catch((err) => {
             reject(err);

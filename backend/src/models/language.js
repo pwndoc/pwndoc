@@ -51,7 +51,7 @@ LanguageSchema.statics.delete = (locale) => {
             if (res.deletedCount === 1)
                 resolve('Language deleted');
             else
-                reject({fn: 'BadParameters', message: 'Language not found'});
+                reject({fn: 'NotFound', message: 'Language not found'});
         })
         .catch((err) => {
             reject(err);

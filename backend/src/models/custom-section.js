@@ -3,9 +3,12 @@ var Schema = mongoose.Schema;
 
 var CustomSectionSchema = new Schema({
     field:  String,
-    name:   {type: String, unique: true},
+    name:   String,
     locale: String
 }, {timestamps: true});
+
+CustomSectionSchema.index({"field": 1, "locale": 1}, {name: "unique_field_locale", unique: true})
+CustomSectionSchema.index({"name": 1, "locale": 1}, {name: "unique_name_locale", unique: true})
 
 /*
 *** Statics ***
@@ -59,14 +62,14 @@ CustomSectionSchema.statics.create = (section) => {
 }
 
 // Delete Section
-CustomSectionSchema.statics.delete = (field) => {
+CustomSectionSchema.statics.delete = (field, locale) => {
     return new Promise((resolve, reject) => {
-        CustomSection.deleteOne({field: field})
+        CustomSection.deleteOne({field: field, locale: locale})
         .then((res) => {
             if (res.deletedCount === 1)
                 resolve('Custom Section deleted');
             else
-                reject({fn: 'BadParameters', message: 'Custom Section not found'});
+                reject({fn: 'NotFound', message: 'Custom Section not found'});
         })
         .catch((err) => {
             reject(err);
