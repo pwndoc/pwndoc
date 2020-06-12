@@ -150,6 +150,7 @@ export default {
                 tmpVuln.priority = null;
                 tmpVuln.remediationComplexity = null;
                 tmpVuln.references = this.formatSerpicoText(vuln.references);
+                if (tmpVuln.references !== "") tmpVuln.references = tmpVuln.references.split('\n');
                 var details = {};
                 details.locale = this.formatSerpicoText(vuln.language) || 'en';
                 details.title = this.formatSerpicoText(vuln.title);
@@ -194,6 +195,8 @@ export default {
             res = res.replace(/]]]/g, '\n')
             // Apostroph
             res = this.$_.unescape(res)
+
+            res = res.replace(/\n$/, '')
 
             return res
         },
