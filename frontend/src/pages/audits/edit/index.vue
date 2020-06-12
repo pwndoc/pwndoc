@@ -81,6 +81,8 @@
 							</div>
 					</q-list>
 
+					<q-separator class="q-mt-lg" />
+
 					<q-item
 					:to="'/audits/'+auditId+'/summary'"
 					class="q-py-lg"

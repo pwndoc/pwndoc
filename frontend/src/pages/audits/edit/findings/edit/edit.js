@@ -165,6 +165,14 @@ export default {
                         textColor:'white',
                         position: 'top-right'
                     })
+                    var nextFindingId = "add"
+                    var currentIndex = this.$parent.audit.findings.findIndex(e => e._id === this.findingId)
+                    if (this.$parent.audit.findings.length === 1)
+                        this.$router.push(`/audits/${this.$parent.auditId}/findings/add`)
+                    else if (currentIndex === this.$parent.audit.findings.length - 1)
+                        this.$router.push(`/audits/${this.$parent.auditId}/findings/${this.$parent.audit.findings[currentIndex - 1]._id}`)
+                    else
+                        this.$router.push(`/audits/${this.$parent.auditId}/findings/${this.$parent.audit.findings[currentIndex + 1]._id}`)
                 })
                 .catch((err) => {
                     Notify.create({
