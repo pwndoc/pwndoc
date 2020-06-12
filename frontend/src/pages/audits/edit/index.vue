@@ -145,7 +145,6 @@
 						<q-item-section avatar>
 							<q-icon name="fa fa-user"></q-icon>
 						</q-item-section>
-						<q-separator />
 						<q-item-section>Users Connected</q-item-section>	
 					</q-item>
 					<q-list dense>
