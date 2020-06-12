@@ -151,7 +151,7 @@ export default {
                 tmpVuln.remediationComplexity = null;
                 tmpVuln.references = this.formatSerpicoText(vuln.references);
                 var details = {};
-                details.locale = this.formatSerpicoText(vuln.language);
+                details.locale = this.formatSerpicoText(vuln.language) || 'en';
                 details.title = this.formatSerpicoText(vuln.title);
                 details.vulnType = this.formatSerpicoText(vuln.type);
                 details.description = this.formatSerpicoText(vuln.overview);
@@ -166,7 +166,7 @@ export default {
         },
 
         formatSerpicoText: function(str) {
-            if (str === null) return null
+            if (!str) return null
             if (str === 'English') return 'en'
             if (str === 'French') return 'fr'
 
