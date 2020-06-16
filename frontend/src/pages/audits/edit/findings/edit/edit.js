@@ -85,6 +85,10 @@ export default {
     computed: {
         vulnTypesLang: function() {
             return this.vulnTypes.filter(type => type.locale === AuditService.audit.locale);
+        },
+
+        screenshotsSize: function() {
+            return ((JSON.stringify(this.uploadedImages).length) / 1024).toFixed(2)
         }
     },
 
@@ -215,7 +219,7 @@ export default {
 
                     fileReader.onloadend = (e) => {
                         var rand = Math.floor(Math.random() * 1001);
-                        if (file.webkitRelativePath === "")
+                        if (file.webkitRelativePath === "" && /^image\/.*/.test(file.type))
                             this.uploadedImages[0].images.push({
                                 image: fileReader.result,
                                 caption: file.name,
@@ -242,7 +246,21 @@ export default {
                                 });
                         }
                         pending--;
-                        if (pending === 0) localStorage.setItem('uploadedImages', JSON.stringify(this.uploadedImages));
+                        if (pending === 0) {
+                            console.log(JSON.stringify(this.uploadedImages).length)
+                            try {
+                                localStorage.setItem('uploadedImages', JSON.stringify(this.uploadedImages));
+                            }
+                            catch (err) {
+                                Notify.create({
+                                    message: "LocalStorage quota exceeded",
+                                    caption: "Added Images won't be accessible in other findings",
+                                    type: 'warning',
+                                    progress: true,
+                                    timeout: 10000
+                                })
+                            }
+                        }
                     }
                     fileReader.readAsDataURL(file);
                     pending++;
