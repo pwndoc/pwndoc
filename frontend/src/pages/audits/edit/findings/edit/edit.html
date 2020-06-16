@@ -154,6 +154,10 @@
                         <q-card ref="cardImages" class="card-screenshots">
                             <q-card-section>
                                 <q-list no-border>
+                                    <q-item-label class="q-pb-sm"
+                                        ><span class="text-bold">Total size: {{screenshotsSize}} KB</span>
+                                    </q-item-label>
+                                    <q-separator />
                                     <div v-for="item of uploadedImages">
                                         <q-item-label header>
                                             <i class="fa fa-folder-open"></i>
