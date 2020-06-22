@@ -150,7 +150,7 @@ export default {
                 tmpVuln.priority = null;
                 tmpVuln.remediationComplexity = null;
                 tmpVuln.references = this.formatSerpicoText(vuln.references);
-                if (tmpVuln.references !== "") tmpVuln.references = tmpVuln.references.split('\n');
+                if (tmpVuln.references && tmpVuln.references !== "") tmpVuln.references = tmpVuln.references.split('\n');
                 var details = {};
                 details.locale = this.formatSerpicoText(vuln.language) || 'en';
                 details.title = this.formatSerpicoText(vuln.title);
