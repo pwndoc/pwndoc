@@ -8,8 +8,6 @@ import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import VulnService from '@/services/vulnerability';
 
-import Draggable from 'vuedraggable';
-
 export default {
     data: () => {
         return {
@@ -18,10 +16,6 @@ export default {
             finding: {},
             findingOrig: {},
             selectedTab: "definition",
-            // Uploaded Images for proofs
-            uploadedImages: [{folder: 'Screenshots', images: []}],
-            // Parameter to activate affix for list of screenshots
-            affix: false,
             vulnTypes: []
         }
     },
@@ -29,8 +23,7 @@ export default {
     components: {
         BasicEditor,
         Breadcrumb,
-        CvssCalculator,
-        Draggable
+        CvssCalculator
     },
 
     mounted: function() {
@@ -39,12 +32,9 @@ export default {
         this.getFinding();
         this.getVulnTypes();
 
-        this.uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [{folder: 'Screenshots', images: []}];
-
         this.$socket.emit('menu', {menu: 'editFinding', finding: this.findingId, room: this.auditId});
 
         // save on ctrl+s
-        var lastSave = 0;
         document.addEventListener('keydown', this._listener, false);
     },
 
@@ -185,7 +175,7 @@ export default {
                         textColor:'white',
                         position: 'top-right'
                     })
-                    var nextFindingId = "add"
+                    this.findingOrig = this.finding
                     var currentIndex = this.$parent.audit.findings.findIndex(e => e._id === this.findingId)
                     if (this.$parent.audit.findings.length === 1)
                         this.$router.push(`/audits/${this.$parent.auditId}/findings/add`)
@@ -224,92 +214,6 @@ export default {
                     position: 'top-right'
                 })
             })
-        },
-
-        // Import Proofs images
-        importImages: function(files, type) {
-            var pending = 0;
-            for (var i=0; i<files.length; i++) {
-                ((file) => {
-                    var fileReader = new FileReader();
-
-                    fileReader.onloadend = (e) => {
-                        var rand = Math.floor(Math.random() * 1001);
-                        if (file.webkitRelativePath === "" && /^image\/.*/.test(file.type))
-                            this.uploadedImages[0].images.push({
-                                image: fileReader.result,
-                                caption: file.name,
-                                id: rand
-                            });
-                        else if (/^image\/.*/.test(file.type)){
-                            var folder = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/')+1,file.webkitRelativePath.lastIndexOf('/'));
-                            var uILength = this.uploadedImages.length;
-                            for (var j=0; j<uILength; j++) {
-                                if (folder === this.uploadedImages[j].folder) {
-                                    this.uploadedImages[j].images.push({
-                                        image: fileReader.result,
-                                        caption: file.name,
-                                        id: rand
-                                    });
-                                    break;
-                                }
-                                    
-                            }
-                            if (j === uILength)
-                                this.uploadedImages.push({
-                                    folder: folder,
-                                    images: [{image: fileReader.result, caption: file.name, id: rand}]
-                                });
-                        }
-                        pending--;
-                        if (pending === 0) {
-                            console.log(JSON.stringify(this.uploadedImages).length)
-                            try {
-                                localStorage.setItem('uploadedImages', JSON.stringify(this.uploadedImages));
-                            }
-                            catch (err) {
-                                Notify.create({
-                                    message: "LocalStorage quota exceeded",
-                                    caption: "Added Images won't be accessible in other findings",
-                                    type: 'warning',
-                                    progress: true,
-                                    timeout: 10000
-                                })
-                            }
-                        }
-                    }
-                    fileReader.readAsDataURL(file);
-                    pending++;
-                })(files[i])
-            }
-        },
-
-        // Add Paragraph for specific finding
-        addParagraph: function() {
-            var paragraph = {text: "", images: []};
-            var pLength = this.finding.paragraphs.length - 1;
-            if (this.finding.paragraphs[pLength].text !== "" || this.finding.paragraphs[pLength].images.length > 0)
-                this.finding.paragraphs.push(paragraph);
-        },
-    
-        // Remmove specified paragraph for specific finding
-        removeParagraph: function(paragraph) {
-            Dialog.create({
-                title: 'Remvove Paragraph ?',
-                message: `This Paragraph will be permanently removed`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
-            })
-            .onOk(() => this.finding.paragraphs.splice(this.finding.paragraphs.indexOf(paragraph), 1))
-        },
-
-        removeImage: function(images, index) {
-            images.splice(index,1);
-        },
-
-        imageMove: function(evt) {
-            console.log(evt)
-
         }
     }
 }
