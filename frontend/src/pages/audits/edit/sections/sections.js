@@ -5,9 +5,6 @@ import BasicEditor from 'components/editor';
 
 import AuditService from '@/services/audit';
 
-import Draggable from 'vuedraggable';
-
-
 export default {
     data: () => {
         return {
@@ -18,15 +15,12 @@ export default {
             auditId: null,
             section: {},
             sectionOrig: {},
-            uploadedImages: [{folder: 'Screenshots', images: []}],
-            sideWidth: 0         
         }
     },
 
     components: {
         BasicEditor,
-        Breadcrumb,
-        Draggable
+        Breadcrumb
     },
 
     mounted: function() {
@@ -34,16 +28,10 @@ export default {
         this.sectionId = this.$route.params.sectionId;
         this.getSection();
 
-        this.uploadedImages = JSON.parse(localStorage.getItem('uploadedImages')) || [{folder: 'Screenshots', images: []}];
-
         this.$socket.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
 
         // save on ctrl+s
-        // var lastSave = 0;
         document.addEventListener('keydown', this._listener, false)
-
-        this.sideWidth = (this.$refs.screenshotsContainer.clientWidth - 16) + "px"
-
     },
 
     destroyed: function() {
@@ -137,6 +125,14 @@ export default {
                         textColor:'white',
                         position: 'top-right'
                     })
+                    this.sectionOrig = this.section
+                    var currentIndex = this.$parent.audit.sections.findIndex(e => e._id === this.sectionId)
+                    if (this.$parent.audit.sections.length === 1)
+                        this.$router.push(`/audits/${this.$parent.auditId}/general`)
+                    else if (currentIndex === this.$parent.audit.sections.length - 1)
+                        this.$router.push(`/audits/${this.$parent.auditId}/sections/${this.$parent.audit.sections[currentIndex - 1]._id}`)
+                    else
+                        this.$router.push(`/audits/${this.$parent.auditId}/sections/${this.$parent.audit.sections[currentIndex + 1]._id}`)
                 })
                 .catch((err) => {
                     Notify.create({
@@ -147,73 +143,6 @@ export default {
                     })
                 })
             })
-        },
-
-        // Import Proofs images
-        importImages: function(files, type) {
-            var pending = 0;
-            for (var i=0; i<files.length; i++) {
-                ((file) => {
-                    var fileReader = new FileReader();
-
-                    fileReader.onloadend = (e) => {
-                        var rand = Math.floor(Math.random() * 1001);
-                        if (file.webkitRelativePath === "")
-                            this.uploadedImages[0].images.push({
-                                image: fileReader.result,
-                                caption: file.name,
-                                id: rand
-                            });
-                        else if (/^image\/.*/.test(file.type)){
-                            var folder = file.webkitRelativePath.substring(file.webkitRelativePath.indexOf('/')+1,file.webkitRelativePath.lastIndexOf('/'));
-                            var uILength = this.uploadedImages.length;
-                            for (var j=0; j<uILength; j++) {
-                                if (folder === this.uploadedImages[j].folder) {
-                                    this.uploadedImages[j].images.push({
-                                        image: fileReader.result,
-                                        caption: file.name,
-                                        id: rand
-                                    });
-                                    break;
-                                }
-                                    
-                            }
-                            if (j === uILength)
-                                this.uploadedImages.push({
-                                    folder: folder,
-                                    images: [{image: fileReader.result, caption: file.name, id: rand}]
-                                });
-                        }
-                        pending--;
-                        if (pending === 0) localStorage.setItem('uploadedImages', JSON.stringify(this.uploadedImages));
-                    }
-                    fileReader.readAsDataURL(file);
-                    pending++;
-                })(files[i])
-            }
-        },
-
-        // Add Paragraph for specific section
-        addParagraph: function() {
-            var paragraph = {text: "", images: []};
-            var pLength = this.section.paragraphs.length - 1;
-            if (this.section.paragraphs[pLength].text !== "" || this.section.paragraphs[pLength].images.length > 0)
-                this.section.paragraphs.push(paragraph);
-        },
-    
-        // Remmove specified paragraph for specific section
-        removeParagraph: function(paragraph) {
-            Dialog.create({
-                title: 'Remvove Paragraph ?',
-                message: `This Paragraph will be permanently removed`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
-            })
-            .onOk(() => this.section.paragraphs.splice(this.section.paragraphs.indexOf(paragraph), 1))
-        },
-
-        removeImage: function(images, index) {
-            images.splice(index,1);
-        },
+        }
     }
 }
