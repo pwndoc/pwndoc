@@ -1,0 +1,444 @@
+<template>
+<q-card id="editor_content" flat bordered class="editor full-width">
+    <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
+        <q-toolbar class="editor-toolbar">
+            <div v-if="toolbar.indexOf('format') !== -1">
+                <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel" style="width:42px" class="text-bold">
+                    <q-list dense>
+                        <q-item 
+                        clickable 
+                        :class="{ 'is-active': isActive.paragraph() }" 
+                        @click="commands.paragraph()">
+                            <q-item-section>
+                                <q-icon name="fa fa-paragraph" />
+                            </q-item-section>
+                        </q-item>
+                        <q-item 
+                        clickable 
+                        :class="{ 'is-active': isActive.heading({level: 1}) }" 
+                        @click="commands.heading({level: 1})">
+                            <q-item-section>H1</q-item-section>
+                        </q-item>
+                        <q-item 
+                        clickable
+                        :class="{ 'is-active': isActive.heading({level: 2}) }"
+                        @click="commands.heading({level: 2})">
+                            <q-item-section>H2</q-item-section>
+                        </q-item>
+                        <q-item 
+                        clickable
+                        :class="{ 'is-active': isActive.heading({level: 3}) }"
+                        @click="commands.heading({level: 3})">
+                            <q-item-section>H3</q-item-section>
+                        </q-item>
+                        <q-item 
+                        clickable
+                        :class="{ 'is-active': isActive.heading({level: 4}) }"
+                        @click="commands.heading({level: 4})">
+                            <q-item-section>H4</q-item-section>
+                        </q-item>
+                        <q-item 
+                        clickable
+                        :class="{ 'is-active': isActive.heading({level: 5}) }"
+                        @click="commands.heading({level: 5})">
+                            <q-item-section>H5</q-item-section>
+                        </q-item>
+                        <q-item 
+                        clickable
+                        :class="{ 'is-active': isActive.heading({level: 6}) }"
+                        @click="commands.heading({level: 6})">
+                            <q-item-section>H6</q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-btn-dropdown>
+            </div>
+            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('format') !== -1" />
+            
+            <div v-if="toolbar.indexOf('marks') !== -1">
+                <q-btn flat size="sm" dense
+                :class="{ 'is-active': isActive.bold() }"
+                @click="commands.bold"
+                >
+                    <q-icon name="format_bold" />
+                </q-btn>
+
+                <q-btn flat size="sm" dense
+                :class="{ 'is-active': isActive.italic() }"
+                @click="commands.italic"
+                >
+                    <q-icon name="format_italic" />
+                </q-btn>
+
+                <q-btn flat size="sm" dense
+                :class="{ 'is-active': isActive.underline() }"
+                @click="commands.underline"
+                >
+                    <q-icon name="format_underline" />
+                </q-btn>
+
+                <q-btn flat size="sm" dense
+                :class="{ 'is-active': isActive.strike() }"
+                @click="commands.strike"
+                >
+                    <q-icon name="format_strikethrough" />
+                </q-btn>
+            </div>
+            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('marks') !== -1" />
+
+            <div v-if="toolbar.indexOf('list') !== -1">
+                <q-btn flat size="sm" dense
+                :class="{ 'is-active': isActive.bullet_list() }"
+                @click="commands.bullet_list"
+                >
+                    <q-icon name="format_list_bulleted" />
+                </q-btn>
+
+                <q-btn flat size="sm" dense
+                :class="{ 'is-active': isActive.ordered_list() }"
+                @click="commands.ordered_list"
+                >
+                    <q-icon name="format_list_numbered" />
+                </q-btn>
+            </div>
+            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('list') !== -1" />
+
+            <div v-if="toolbar.indexOf('code') !== -1">
+                <q-btn flat size="sm" dense
+                :class="{ 'is-active': isActive.code() }"
+                @click="commands.code"
+                >
+                    <q-icon name="code" />
+                </q-btn>
+
+                <q-btn flat size="sm" dense
+                :class="{ 'is-active': isActive.code_block() }"
+                @click="commands.code_block"
+                >
+                    <q-icon name="mdi-console" />
+                </q-btn>
+            </div>
+            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
+
+            <label class="cursor-pointer" v-if="toolbar.indexOf('image') !== -1">
+                <input
+                :value=imageValue
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="importImage($event.target.files)"
+                />
+                <q-icon name="image" />
+            </label>
+            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('image') !== -1" />
+
+            <q-btn flat size="sm" dense
+            @click="commands.undo"
+            >
+                <q-icon name="undo" />
+            </q-btn>
+
+            <q-btn flat size="sm" dense
+            @click="commands.redo"
+            >
+                <q-icon name="redo" />
+            </q-btn>
+
+        </q-toolbar>
+        <!-- <q-separator /> -->
+    </editor-menu-bar>
+    <q-separator />
+    <editor-content class="editor__content q-pa-sm" style="min-height:200px" :editor="editor" />
+</q-card>
+</template>
+
+<script>
+// Import the editor
+import { Editor, EditorContent, EditorMenuBar } from "tiptap"
+import {
+  Blockquote,
+  CodeBlock,
+  HardBreak,
+  Heading,
+  OrderedList,
+  BulletList,
+  ListItem,
+  Bold,
+  Code,
+  Italic,
+  Link,
+  Strike,
+  Underline,
+  History,
+  TrailingNode
+} from 'tiptap-extensions'
+
+import CustomImage from './editor-image'
+
+export default {
+    name: 'BasicEditor',
+    props: {
+        value: String,
+        editable: {
+            type: Boolean,
+            default: true
+        },
+        toolbar: {
+            type: Array,
+            default: function() {
+                return ['format', 'marks', 'list', 'code', 'image']
+            }
+        }
+    },
+    components: {
+        EditorContent,
+        EditorMenuBar
+    },
+    data() {
+        return {
+            editor: new Editor({
+                extensions: [
+                    new Blockquote(),
+                    new BulletList(),
+                    new CodeBlock(),
+                    new HardBreak(),
+                    new Heading({ levels: [1, 2, 3, 4, 5, 6] }),
+                    new ListItem(),
+                    new OrderedList(),
+                    new Link(),
+                    new Bold(),
+                    new Code(),
+                    new Italic(),
+                    new Strike(),
+                    new Underline(),
+                    new History(),
+                    new CustomImage(),
+                    new TrailingNode({node: 'paragraph', notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']})
+                ],
+                onUpdate: ({ getJSON, getHTML }) => {
+                    this.json = getJSON()
+                    this.html = getHTML()
+                    this.$emit('input', this.html)
+                },
+            }),
+            json: '',
+            html: '',
+            imageValue: ''
+            // formatIcon: 'fa fa-paragraph',
+            // formatLabel: null
+        }
+    },
+
+    watch: {
+       value (value) {
+           if (value === this.editor.getHTML()) {
+                return;
+            }
+           this.editor.setContent(value)
+       }
+    },
+
+    mounted: function() {
+        if (typeof this.value === "undefined" || this.value === this.editor.getHTML()) {
+            return;
+        }
+        this.editor.setContent(this.value)
+        console.log(this.editable)
+        this.editor.setOptions({editable: this.editable})
+    },
+
+    beforeDestroy() {
+        this.editor.destroy()
+    },
+
+    computed: {
+        formatIcon: function () {
+            if (this.editor.isActive.paragraph()) 
+                return 'fa fa-paragraph'
+            else
+                return null
+        },
+
+        formatLabel: function() {
+            if (this.editor.isActive.heading({level: 1})) return 'H1'
+            else if (this.editor.isActive.heading({level: 2})) return 'H2'
+            else if (this.editor.isActive.heading({level: 3})) return 'H3'
+            else if (this.editor.isActive.heading({level: 4})) return 'H4'
+            else if (this.editor.isActive.heading({level: 5})) return 'H5'
+            else if (this.editor.isActive.heading({level: 6})) return 'H6'
+        }
+    },
+
+    methods: {
+        importImage(files) {
+            var file = files[0];
+            var fileReader = new FileReader();
+
+            fileReader.onloadend = (e) => {
+                var src = fileReader.result
+                this.editor.commands.image({ src })
+                this.imageValue = ''
+            }
+
+            fileReader.readAsDataURL(file);
+        }
+    }
+}
+</script>
+
+<style lang="scss">
+.editor {
+    :focus {
+        outline: none;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    ul,
+    ol,
+    pre,
+    blockquote {
+        &:first-child {
+            margin-top: 0;
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+.editor {
+  &__content {
+
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+
+    * {
+      caret-color: currentColor;
+    }
+
+    h1 {
+        font-size: 4.25rem;
+    }
+
+    pre {
+      padding: 0.7rem 1rem;
+      border-radius: 5px;
+      background: black;
+      color: white;
+      font-size: 0.8rem;
+      overflow-x: auto;
+
+      code {
+        display: block;
+      }
+    }
+
+    p code {
+      padding: 0.2rem 0.4rem;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      background: rgba(black, 0.1);
+      color: rgba(black, 0.8);
+    }
+
+    ul,
+    ol {
+      padding-left: 1rem;
+    }
+
+    li > p,
+    li > ol,
+    li > ul {
+      margin: 0;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    blockquote {
+      border-left: 3px solid rgba(black, 0.1);
+      color: rgba(black, 0.8);
+      padding-left: 0.8rem;
+      font-style: italic;
+
+      p {
+        margin: 0;
+      }
+    }
+
+    img {
+      max-width: 100%;
+      border-radius: 3px;
+    }
+
+    table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 100%;
+      margin: 0;
+      overflow: hidden;
+
+      td, th {
+        min-width: 1em;
+        border: 2px solid grey;
+        padding: 3px 5px;
+        vertical-align: top;
+        box-sizing: border-box;
+        position: relative;
+        > * {
+          margin-bottom: 0;
+        }
+      }
+
+      th {
+        font-weight: bold;
+        text-align: left;
+      }
+
+      .selectedCell:after {
+        z-index: 2;
+        position: absolute;
+        content: "";
+        left: 0; right: 0; top: 0; bottom: 0;
+        background: rgba(200, 200, 255, 0.4);
+        pointer-events: none;
+      }
+
+      .column-resize-handle {
+        position: absolute;
+        right: -2px; top: 0; bottom: 0;
+        width: 4px;
+        z-index: 20;
+        background-color: #adf;
+        pointer-events: none;
+      }
+    }
+
+    .tableWrapper {
+      margin: 1em 0;
+      overflow-x: auto;
+    }
+
+    .resize-cursor {
+      cursor: ew-resize;
+      cursor: col-resize;
+    }
+
+  }
+}
+.is-active {
+    color: green;
+}
+.editor-toolbar {
+    min-height: 32px;
+}
+</style>

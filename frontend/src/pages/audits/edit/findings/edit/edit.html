@@ -27,57 +27,15 @@
         <q-separator vertical />
         <q-toggle label="Redacted" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
         <q-space />
-        <q-btn-dropdown
-        v-if="selectedTab === 'proofs'"
-        color=grey-4
-        class="q-mr-sm"
-        label="Add Screenshots"
-        no-caps
-        text-color="black"
-        >
-            <q-list>
-                <q-item clickable v-close-popup>
-                    <q-item-section>
-                        <label>
-                            Files
-                            <input
-                            value=""
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            class="hidden"
-                            @change="importImages($event.target.files, 'files')"
-                            />
-                        </label>
-                    </q-item-section>
-                </q-item>
-                <q-separator />
-                <q-item clickable v-close-popup>
-                    <q-item-section>
-                        <label>
-                            Folder
-                            <input
-                            type="file"
-                            webkitdirectory
-                            mozdirectory
-                            directory
-                            class="hidden"
-                            @change="importImages($event.target.files, 'folder')"
-                            />
-                        </label>
-                    </q-item-section>
-                </q-item>
-            </q-list>
-        </q-btn-dropdown>
     </q-tabs>
 
-    <q-tab-panels v-model="selectedTab" animated class="bg-transparent full-width" >
+    <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 offset-md-2" >
         <q-tab-panel name="definition">
             <q-card>
                 <q-card-section class="row q-col-gutter-md">
-                        <q-input class="col-md-10" label="Title *" stack-label v-model="finding.title" />
+                        <q-input class="col-md-8" label="Title *" stack-label v-model="finding.title" />
                         <q-select 
-                        class="col-md-2"
+                        class="col-md-4"
                         label="Type"
                         v-model="finding.vulnType" 
                         :options="vulnTypesLang" 
@@ -86,8 +44,16 @@
                         emit-value 
                         map-options
                         />
-                        <q-input class="col-md-12" label="Description" stack-label type="textarea" autogrow v-model="finding.description" />
-                        <q-input class="col-md-12" label="Observation" stack-label type="textarea" autogrow v-model="finding.observation" />
+                        <q-field class="col-md-12" borderless label="Description" stack-label>
+                            <template v-slot="control">
+                                <basic-editor v-model="finding.description" :toolbar="['format', 'marks', 'list', 'code']" />
+                            </template>
+                        </q-field>
+                        <q-field class="col-md-12" borderless label="Observation" stack-label>
+                            <template v-slot="control">
+                                <basic-editor v-model="finding.observation" :toolbar="['format', 'marks', 'list', 'code']" />
+                            </template>
+                        </q-field>
                         <q-select 
                         class="col-md-12"
                         label="References"
@@ -104,84 +70,12 @@
         </q-tab-panel>
         <q-tab-panel name="proofs" id="affix-ref">
             <div class="q-col-gutter-md row">
-                <div class="col-md-10">
-                    <div v-for="paragraph of finding.paragraphs">
-                        <q-card class="q-mb-sm">
-                            <q-card-actions align="right">
-                                <q-icon
-                                name="fa fa-plus"
-                                class="cursor-pointer q-mr-sm"
-                                @click.native="addParagraph()"
-                                />
-                                <q-icon
-                                v-if="finding.paragraphs.length > 1"
-                                name="fa fa-times"
-                                class="cursor-pointer q-mr-sm"
-                                @click.native="removeParagraph(paragraph)"
-                                />
-                            </q-card-actions>
-
-                            <q-separator />
-                            
-                            <q-card-section>
-                                <q-input type="textarea" autogrow v-model="paragraph.text" />
-                            </q-card-section>
-
-                            <q-separator />
-
-                            <q-card-section>
-                                <div class="row">
-                                    <div class="col-md-12 dropzone row" v-if="paragraph.images.length === 0">
-                                        <div class="vertical-center col-md-2 offset-md-5">Drag Screenshots here...</div>
-                                    </div>
-                                    <draggable v-model="paragraph.images" group="screenshots" animation=200 handle=".handle" class="col-md-4 offset-md-4 paragraph-ghost">
-                                        <div v-for="(image,index) of paragraph.images" :key="index">
-                                            <div class="handle">
-                                                <q-img :src="image.image" style="max-width:600px; max-height:600px">
-                                                    <q-btn color="red" class="absolute-top-right" @click="removeImage(paragraph.images,index)">x</q-btn>                                      
-                                                </q-img>
-                                            </div>
-                                            <q-input v-model="image.caption" class="caption-text"></q-input>
-                                        </div>
-                                    </draggable>
-                                </div>
-                            </q-card-section>
-                        </q-card>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <affix relative-element-selector="#affix-ref" :offset="{ top: 45, bottom: 0}">
-                        <q-card ref="cardImages" class="card-screenshots">
-                            <q-card-section>
-                                <q-list no-border>
-                                    <q-item-label class="q-pb-sm"
-                                        ><span class="text-bold">Total size: {{screenshotsSize}} KB</span>
-                                    </q-item-label>
-                                    <q-separator />
-                                    <div v-for="item of uploadedImages">
-                                        <q-item-label header>
-                                            <i class="fa fa-folder-open"></i>
-                                            {{item.folder}}
-                                        </q-item-label>
-                                        <draggable v-model="item.images" :group="{name: 'screenshots', pull: 'clone', put: false}" :sort="false" animation=200>
-                                            <div v-for="image of item.images" class="q-ma-md">
-                                                <q-item class="q-pa-none">
-                                                    <q-item-label >
-                                                        <q-item-section>
-                                                            <img :src="image.image" style="max-height:3em;max-width: 10em" />
-                                                        </q-item-section>
-                                                        <q-item-section text-color="black">
-                                                            {{image.caption}}
-                                                        </q-item-section>
-                                                    </q-item-label>
-                                                </q-item>
-                                            </div>
-                                        </draggable>
-                                    </div>
-                                </q-list>
-                            </q-card-section>
-                        </q-card>
-                    </affix>
+                <div class="col-md-12">
+                    <q-card>
+                        <q-card-section>
+                            <basic-editor v-model="finding.poc" />
+                        </q-card-section>
+                    </q-card>
                 </div>
             </div>
         </q-tab-panel>
@@ -240,7 +134,11 @@
                 </div>
             </q-card-section>
             <q-card-section>
-                <q-input label="Remediation" stack-label type="textarea" autogrow v-model="finding.remediation" />
+                <q-field class="col-md-12" borderless label="Remediation" stack-label>
+                    <template v-slot="control">
+                        <basic-editor v-model="finding.remediation" :toolbar="['format', 'marks', 'list', 'code']" />
+                    </template>
+                </q-field>
             </q-card-section>
         </q-card>
     </q-tab-panel>

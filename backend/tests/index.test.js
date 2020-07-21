@@ -1,6 +1,6 @@
 var axios = require('axios')
 var https = require('https');
-var apiUrl = process.env.API_URL || 'https://localhost:4242'
+var apiUrl = process.env.API_URL || 'https://localhost:5252'
 
 const request = axios.create({
     baseURL: apiUrl,
@@ -20,3 +20,4 @@ require('./template.test')(request)
 require('./company.test')(request)
 require('./client.test')(request)
 require('./vulnerability.test')(request)
+require('./lib.test')()

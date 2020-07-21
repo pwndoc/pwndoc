@@ -6,10 +6,10 @@
 </breadcrumb>
 
 <div class="row q-col-gutter-md q-pa-md">
-    <div class="col-md-12">
+    <div class="col-md-8 offset-md-2">
         <q-card >
             <q-card-section>
-                <q-input class="q-mb-md" label="Executive Summary" stack-label type="textarea" autogrow v-model="audit.summary" />
+                <basic-editor v-model="audit.summary" />
             </q-card-section>
         </q-card>
     </div>

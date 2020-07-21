@@ -1,5 +1,6 @@
 import { Notify, Dialog } from 'quasar';
 
+import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
 import CvssCalculator from 'components/cvsscalculator'
 
@@ -26,6 +27,7 @@ export default {
     },
 
     components: {
+        BasicEditor,
         Breadcrumb,
         CvssCalculator,
         Draggable
@@ -119,8 +121,8 @@ export default {
             AuditService.getFinding(this.auditId, this.findingId)
             .then((data) => {
                 this.finding = data.data.datas;
-                if (this.finding.paragraphs.length === 0)
-                    this.finding.paragraphs = [{text: "", images: []}]
+                if (this.finding.paragraphs.length > 0 && !this.finding.poc)
+                    this.finding.poc = this.convertParagraphsToHTML(this.finding.paragraphs)
                 this.findingOrig = this.$_.cloneDeep(this.finding);                
             })
             .catch((err) => {
@@ -129,6 +131,20 @@ export default {
                 else if (err.response.status === 404)
                     this.$router.push({name: '404', params: {error: err.response.data.datas}})
             })
+        },
+
+        // For retro compatibility with old paragraphs
+        convertParagraphsToHTML: function(paragraphs) {
+            var result = ""
+            paragraphs.forEach(p => {
+                result += `<p>${p.text}</p>`
+                if (p.images.length > 0) {
+                    p.images.forEach(img => {
+                        result += `<img src="${img.image}" alt="${img.caption}" />`
+                    })
+                }
+            })
+            return result
         },
 
         // Update Finding

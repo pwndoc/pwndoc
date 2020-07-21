@@ -163,6 +163,24 @@ export default {
             .onOk(() => this.deleteAudit(audit._id))
         },
 
+        // Convert blob to text
+        BlobReader: function(data) {
+            const fileReader = new FileReader();
+
+            return new Promise((resolve, reject) => {
+                fileReader.onerror = () => {
+                    fileReader.abort()
+                    reject(new Error('Problem parsing blob'));
+                }
+
+                fileReader.onload = () => {
+                    resolve(fileReader.result)
+                }
+
+                fileReader.readAsText(data)
+            })
+        },
+
         generateReport: function(auditId) {
             AuditService.generateAuditReport(auditId)
             .then(response => {
@@ -174,12 +192,21 @@ export default {
                 link.click();
                 link.remove();
               })
-            .catch((err) => {
+            .catch( async err => {
+                var message = "Error generating template"
+                if (err.response && err.response.data) {
+                    var blob = new Blob([err.response.data], {type: "application/json"})
+                    var blobData = await this.BlobReader(blob)
+                    message = JSON.parse(blobData).datas
+                }
                 Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
+                    message: message,
+                    type: 'negative',
                     textColor:'white',
-                    position: 'top-right'
+                    position: 'top',
+                    closeBtn: true,
+                    timeout: 0,
+                    classes: "text-pre-wrap"
                 })
             })
         },

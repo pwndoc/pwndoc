@@ -157,7 +157,7 @@ UserSchema.methods.getToken = function () {
                 payload.firstname = row.firstname;
                 payload.lastname = row.lastname;
 
-                var token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '24h'});
+                var token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '3 days'});
                 resolve({token: `JWT ${token}`});
             }
             else

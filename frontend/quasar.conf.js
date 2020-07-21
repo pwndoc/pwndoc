@@ -18,13 +18,14 @@ module.exports = function (ctx) {
     extras: [
       'material-icons',
       'fontawesome-v5',
+      'mdi-v4',
       'roboto-font'
     ],
     supportIE: true,
     build: {
       scopeHoisting: true,
       vueRouterMode: 'history',
-      // vueCompiler: true,
+      vueCompiler: true,
       // gzip: true,
       // analyze: true,
       // extractCSS: false,
@@ -72,6 +73,7 @@ module.exports = function (ctx) {
         'QDate',
         'QDialog',
         'QDrawer',
+        'QEditor',
         'QField',
         'QFooter',
         'QHeader',

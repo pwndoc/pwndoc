@@ -130,7 +130,7 @@ module.exports = function(app, io) {
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
         if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
         if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
-        if (req.body.paragraphs) finding.paragraphs = req.body.paragraphs;
+        if (req.body.poc) finding.poc = req.body.poc;
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
 
@@ -171,7 +171,7 @@ module.exports = function(app, io) {
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
         if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
         if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
-        if (req.body.paragraphs) finding.paragraphs = req.body.paragraphs;
+        if (req.body.poc) finding.poc = req.body.poc;
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
 
@@ -248,7 +248,7 @@ module.exports = function(app, io) {
     app.put("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
         var section = {};
         // Optional parameters
-        if (req.body.paragraphs) section.paragraphs = req.body.paragraphs;
+        if (req.body.text) section.text = req.body.text;
 
         Audit.updateSection(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.sectionId, section)
         .then(msg => {
@@ -271,7 +271,6 @@ module.exports = function(app, io) {
     app.get("/api/audits/:auditId/generate", acl.hasPermission('audits:update'), function(req, res){
         Audit.getAudit(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id)
         .then( audit => {
-            console.log(audit)
             var reportDoc = reportGenerator.generateDoc(audit);
             Response.SendFile(res, `${audit.name}.docx`, reportDoc);
         })

@@ -11,7 +11,10 @@
     "test": "NODE_ENV=test jest tests/index.test.js"
   },
   "devDependencies": {
+    "@babel/core": "^7.10.2",
+    "@babel/preset-env": "^7.10.2",
     "axios": "^0.19.2",
+    "babel-jest": "^26.0.1",
     "jest": "^26.0.1",
     "nodemon": "^1.19.4",
     "npm": "^6.12.0"
@@ -20,9 +23,12 @@
     "angular-expressions": "^1.0.1",
     "bcrypt": "^3.0.6",
     "body-parser": "^1.17.1",
+    "docx": "^5.2.0",
+    "docx-templates": "^4.3.0",
     "docxtemplater": "^3.1.0",
     "docxtemplater-image-module": "^3.1.0",
     "express": "^4.15.2",
+    "htmlparser2": "^4.1.0",
     "http": "0.0.0",
     "image-size": "^0.8.3",
     "js-yaml": "^3.13.1",
@@ -31,6 +37,7 @@
     "lodash": "^4.17.15",
     "mongoose": "^5.7.7",
     "socket.io": "^2.3.0",
-    "winston": "^2.3.1"
+    "winston": "^2.3.1",
+    "xml": "^1.0.1"
   }
 }

@@ -22,6 +22,7 @@ var Finding = {
     cvssScore:              String,
     cvssSeverity:           String,
     paragraphs:             [Paragraph],
+    poc:                    String,
     scope:                  [String],
     status:                 {type: Number, enum: [0,1], default: 1} // 0: done, 1: redacting
 }
@@ -57,7 +58,7 @@ var AuditSchema = new Schema({
     findings:           [Finding],
     template:           {type: Schema.Types.ObjectId, ref: 'Template'},
     creator:            {type: Schema.Types.ObjectId, ref: 'User'},
-    sections:           [{field: String, name: String, paragraphs: [Paragraph]}]
+    sections:           [{field: String, name: String, text: String}]
 
 }, {timestamps: true});
 
@@ -92,8 +93,10 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
         query.populate('template')
-        query.populate('creator')
+        query.populate('creator', 'username firstname lastname role')
         query.populate('company')
+        query.populate('client')
+        query.populate('collaborators', 'username firstname lastname role')
         query.exec()
         .then((row) => {
             if (!row)
