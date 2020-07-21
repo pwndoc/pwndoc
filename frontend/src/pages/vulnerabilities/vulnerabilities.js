@@ -1,5 +1,6 @@
 import { Dialog, Notify } from 'quasar';
 
+import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb'
 import CvssCalculator from 'components/cvsscalculator'
 
@@ -61,6 +62,7 @@ export default {
     },
 
     components: {
+        BasicEditor,
         Breadcrumb,
         CvssCalculator
     },

@@ -159,22 +159,18 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-input
-            label="Description"
-            stack-label
-            class="col-md-12"
-            v-model="currentVulnerability.details[currentDetailsIndex].description"
-            type="textarea"
-            :max-height="300" />
-            </q-card-section>
-            <q-card-section>
-            <q-input
-            label="Observation"
-            stack-label
-            class="col-md-12"
-            v-model="currentVulnerability.details[currentDetailsIndex].observation"
-            type="textarea"
-            :max-height="300" />
+            <q-field borderless label="Description" stack-label>
+                <template v-slot="control">
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" :toolbar="['format', 'marks', 'list', 'code']" />
+                </template>
+            </q-field>
+        </q-card-section>
+        <q-card-section>
+            <q-field borderless label="Observation" stack-label>
+                <template v-slot="control">
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" :toolbar="['format', 'marks', 'list', 'code']" />
+                </template>
+            </q-field>
         </q-card-section>
         <q-card-section>
             <div class="col-md-12">
@@ -189,13 +185,11 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-input
-            label="Remediation"
-            stack-label
-            class="col-md-12"
-            v-model="currentVulnerability.details[currentDetailsIndex].remediation"
-            type="textarea"
-            :max-height="300" />
+            <q-field borderless label="Remediation" stack-label>
+                <template v-slot="control">
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" :toolbar="['format', 'marks', 'list', 'code']" />
+                </template>
+            </q-field>
         </q-card-section>
         <q-card-section>
             <div class="q-col-gutter-md row">
@@ -288,22 +282,18 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-input
-            label="Description"
-            stack-label
-            class="col-md-12"
-            v-model="currentVulnerability.details[currentDetailsIndex].description"
-            type="textarea"
-            :max-height="300" />
-            </q-card-section>
-            <q-card-section>
-            <q-input
-            label="Observation"
-            stack-label
-            class="col-md-12"
-            v-model="currentVulnerability.details[currentDetailsIndex].observation"
-            type="textarea"
-            :max-height="300" />
+            <q-field borderless label="Description" stack-label>
+                <template v-slot="control">
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" :toolbar="['format', 'marks', 'list', 'code']" />
+                </template>
+            </q-field>
+        </q-card-section>
+        <q-card-section>
+            <q-field borderless label="Observation" stack-label>
+                <template v-slot="control">
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" :toolbar="['format', 'marks', 'list', 'code']" />
+                </template>
+            </q-field>
         </q-card-section>
         <q-card-section>
             <div class="col-md-12">
@@ -318,13 +308,11 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-input
-            label="Remediation"
-            stack-label
-            class="col-md-12"
-            v-model="currentVulnerability.details[currentDetailsIndex].remediation"
-            type="textarea"
-            :max-height="300" />
+            <q-field borderless label="Remediation" stack-label>
+                <template v-slot="control">
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" :toolbar="['format', 'marks', 'list', 'code']" />
+                </template>
+            </q-field>
         </q-card-section>
         <q-card-section>
             <div class="q-col-gutter-md row">
@@ -398,7 +386,7 @@
                             <q-tab name="current" label="Current" />
                         </q-tabs>
                     </q-card-section>
-                    <q-card-section class="q-col-gutter-md row">
+                    <q-card-section class="q-col-gutter-md row q-pt-none">
                         <q-input
                         label='Title *'
                         stack-label
@@ -434,20 +422,18 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <q-input
-                        label="Description"
-                        stack-label
-                        v-model="currentVulnerability.details[currentDetailsIndex].description"
-                        type="textarea"
-                        :max-height="300" />
+                        <q-field borderless label="Description" stack-label>
+                            <template v-slot="control">
+                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" :toolbar="['format', 'marks', 'list', 'code']" />
+                            </template>
+                        </q-field>
                     </q-card-section>
                     <q-card-section>
-                        <q-input
-                        label="Observation"
-                        stack-label
-                        v-model="currentVulnerability.details[currentDetailsIndex].observation"
-                        type="textarea"
-                        :max-height="300" />
+                        <q-field borderless label="Observation" stack-label>
+                            <template v-slot="control">
+                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" :toolbar="['format', 'marks', 'list', 'code']" />
+                            </template>
+                        </q-field>
                     </q-card-section>
                     <q-card-section>
                         <cvss-calculator
@@ -460,12 +446,11 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <q-input
-                        label="Remediation"
-                        stack-label
-                        v-model="currentVulnerability.details[currentDetailsIndex].remediation"
-                        type="textarea"
-                        :max-height="300" />
+                        <q-field borderless label="Remediation" stack-label>
+                            <template v-slot="control">
+                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" :toolbar="['format', 'marks', 'list', 'code']" />
+                            </template>
+                        </q-field>
                     </q-card-section>
                     <q-card-section class="q-col-gutter-md row">
                         <q-select
@@ -521,7 +506,7 @@
                         </q-tabs>
                     </q-card-section>
                     <q-tab-panels v-model="currentUpdate">
-                        <q-tab-panel v-for="update of vulnUpdates" :key="update._id" :name="update._id" class="q-pt-none">
+                        <q-tab-panel v-for="update of vulnUpdates" :key="update._id" :name="update._id" class="q-pa-none">
                             <q-card-section class="row q-col-gutter-md q-pt-none">
                                 <q-input
                                 label='Title *'
@@ -559,26 +544,32 @@
                                 />
                             </q-card-section>
                             <q-card-section>
-                                <q-input
-                                :class="(currentVulnerability.details[currentDetailsIndex].description !== update.description)?'bg-red-1':''"
-                                label="Description"
+                                <q-field 
+                                borderless 
+                                label="Description" 
                                 stack-label
-                                v-model="update.description"
-                                type="textarea"
-                                :max-height="300" 
-                                readonly
-                                />
+                                :class="(currentVulnerability.details[currentDetailsIndex].description !== update.description)?'bg-red-1':''"
+                                readonly>
+                                    <template v-slot="control">
+                                        <basic-editor 
+                                        :class="(currentVulnerability.details[currentDetailsIndex].description !== update.description)?'bg-red-1':''"
+                                        v-model="update.description" :toolbar="['format', 'marks', 'list', 'code']" :editable=false />
+                                    </template>
+                                </q-field>
                             </q-card-section>
                             <q-card-section>
-                                <q-input
-                                :class="(currentVulnerability.details[currentDetailsIndex].observation !== update.observation)?'bg-red-1':''"
-                                label="Observation"
+                                <q-field 
+                                borderless 
+                                label="Observation" 
                                 stack-label
-                                v-model="update.observation"
-                                type="textarea"
-                                :max-height="300"
-                                readonly
-                                />
+                                :class="(currentVulnerability.details[currentDetailsIndex].observation !== update.observation)?'bg-red-1':''"
+                                readonly>
+                                    <template v-slot="control">
+                                        <basic-editor 
+                                        :class="(currentVulnerability.details[currentDetailsIndex].observation !== update.observation)?'bg-red-1':''"
+                                        v-model="update.observation" :toolbar="['format', 'marks', 'list', 'code']" :editable=false />
+                                    </template>
+                                </q-field>
                             </q-card-section>
                             <q-card-section>
                                 <cvss-calculator
@@ -592,19 +583,22 @@
                                 />
                             </q-card-section>
                             <q-card-section>
-                                <q-input
-                                :class="(currentVulnerability.details[currentDetailsIndex].remediation !== update.remediation)?'bg-red-1':''"
-                                label="Remediation"
+                                <q-field 
+                                borderless 
+                                label="Remediation" 
                                 stack-label
-                                v-model="update.remediation"
-                                type="textarea"
-                                :max-height="300"
-                                readonly
-                                />
+                                :class="(currentVulnerability.details[currentDetailsIndex].remediation !== update.remediation)?'bg-red-1':''"
+                                readonly>
+                                    <template v-slot="control">
+                                        <basic-editor 
+                                        :class="(currentVulnerability.details[currentDetailsIndex].remediation !== update.remediation)?'bg-red-1':''"
+                                        v-model="update.remediation" :toolbar="['format', 'marks', 'list', 'code']" :editable=false />
+                                    </template>
+                                </q-field>
                             </q-card-section>
                             <q-card-section class="q-col-gutter-md row">
                                 <q-select
-                                :bg-color="(currentVulnerability.remediationComplexity !== update.remediationComplexity)?'red-1':''"
+                                :bg-color="(currentVulnerability.remediationComplexity != update.remediationComplexity)?'red-1':''"
                                 label="Remediation Complexity"
                                 stack-label
                                 class="col-md-6"
@@ -615,7 +609,7 @@
                                 readonly
                                 />
                                 <q-select
-                                :bg-color="(currentVulnerability.priority !== update.priority)?'red-1':''"
+                                :bg-color="(currentVulnerability.priority != update.priority)?'red-1':''"
                                 label="Remediation Priority"
                                 stack-label
                                 class="col-md-6"

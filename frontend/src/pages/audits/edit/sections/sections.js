@@ -1,6 +1,7 @@
 import { Notify, Dialog } from 'quasar';
 
 import Breadcrumb from 'components/breadcrumb';
+import BasicEditor from 'components/editor';
 
 import AuditService from '@/services/audit';
 
@@ -23,6 +24,7 @@ export default {
     },
 
     components: {
+        BasicEditor,
         Breadcrumb,
         Draggable
     },
@@ -89,8 +91,6 @@ export default {
             AuditService.getSection(this.auditId, this.sectionId)
             .then((data) => {
                 this.section = data.data.datas;
-                if (this.section.paragraphs.length === 0)
-                    this.section.paragraphs = [{text: "", images: []}]
                 this.sectionOrig = this.$_.cloneDeep(this.section);                
             })
             .catch((err) => {

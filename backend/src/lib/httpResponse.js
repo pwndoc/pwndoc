@@ -67,8 +67,7 @@ function Internal(res, error){
     if (typeof(fn) === 'function')
         fn(res, error.message);
     else {
-        console.log(error);
-        res.status(500).json({"status": "error", "datas": message});
+        res.status(500).json({"status": "error", "datas": error});
     }
 };
 exports.Internal = Internal;

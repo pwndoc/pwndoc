@@ -7,30 +7,35 @@ var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
 var merge = require("lodash/merge");
+var html2ooxml = require('./html2ooxml')
 
 // Generate document with docxtemplater
 function generateDoc(audit) {
-    var content = fs.readFileSync(`${__basedir}/../report-templates/${audit.template.name}.docx`, "binary");
+    var templatePath = `${__basedir}/../report-templates/${audit.template.name}.docx`
+    var preppedAudit = prepAuditData(audit)
+    var content = fs.readFileSync(templatePath, "binary");
 
     var zip = new JSZip(content);
 
     var opts = {};
     // opts.centered = true;
     opts.getImage = function(tagValue, tagName) {
-        tagValue = tagValue.split(",")[1];
-        return Buffer.from(tagValue, 'base64');
+        if (tagValue !== "undefined") {
+            tagValue = tagValue.split(",")[1];
+            return Buffer.from(tagValue, 'base64');
+        }
         // return fs.readFileSync(tagValue, {encoding: 'base64'});
     }
     opts.getSize = function(img, tagValue, tagName) {
         var sizeObj = sizeOf(img);
         var width = sizeObj.width;
         var height = sizeObj.height;
-        if (tagName === "company_logo_small") {
+        if (tagName === "company.logo_small") {
             var divider = sizeObj.height / 37;
             height = 37;
             width = Math.floor(sizeObj.width / divider);
         }
-        else if (tagName === "company_logo_large") {
+        else if (tagName === "company.logo") {
             var divider = sizeObj.height / 250;
             height = 250;
             width = Math.floor(sizeObj.width / divider);
@@ -49,21 +54,28 @@ function generateDoc(audit) {
     }
     var imageModule = new ImageModule(opts);
     var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser});
-    cvssHandle(audit);
-    customGenerator.apply(audit);
-    doc.setData(audit);
-
+    cvssHandle(preppedAudit);
+    customGenerator.apply(preppedAudit);
+    doc.setData(preppedAudit);
     try {
         doc.render();
     }
     catch (error) {
-        throw error;
+        if (error.properties && error.properties.errors instanceof Array) {
+            const errorMessages = error.properties.errors.map(function (error) {
+                return error.properties.explanation;
+            }).join("\n");
+            // errorMessages is a humanly readable message looking like this :
+            // 'The tag beginning with "foobar" is unopened'
+            throw `Template Error:\n${errorMessages}`;
+        }
+        else {
+            throw error
+        }
     }
-
     var buf = doc.getZip().generate({type:"nodebuffer"});
 
     return buf;
-    // fs.writeFileSync(__dirname+'/../../render/'+filename, buf);
 }
 exports.generateDoc = generateDoc;
 
@@ -72,7 +84,7 @@ exports.generateDoc = generateDoc;
 // Convert input date with parameter s (full,short): {input | convertDate: 's'}
 expressions.filters.convertDate = function(input, s) {
     var date = new Date(input);
-    if (date !== "Invalid Date") {
+    if (date != "Invalid Date") {
         var monthsFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         var monthsShort = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
         var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -104,6 +116,12 @@ expressions.filters.NewLines = function(input) {
     });
     // input = input.replace(/\n/g, lineBreak);
     // return pre + input + post;
+    return result;
+}
+
+
+expressions.filters.convertHTML = function(input) {
+    var result = html2ooxml(input)
     return result;
 }
 
@@ -219,4 +237,109 @@ function cvssStrToObject(cvss) {
     }
     return res
 }
+
+function prepAuditData(data) {
+    var result = {}
+    result.name = data.name || "undefined"
+    result.auditType = data.auditType || "undefined"
+    result.location = data.location || "undefined"
+    result.date = data.date || "undefined"
+    result.date_start = data.date_start || "undefined"
+    result.date_end = data.date_end || "undefined"
+
+    result.summary = []
+    if (data.summary) result.summary = splitHTMLParagraphs(data.summary)
+
+    result.company = {}
+    if (data.company) {
+        result.company.name = data.company.name || "undefined"
+        result.company.logo = data.company.logo || "undefined"
+        result.company.logo_small = data.company.logo || "undefined"
+    }
+
+    result.client = {}
+    if (data.client) {
+        result.client.email = data.client.email || "undefined"
+        result.client.firstname = data.client.firstname || "undefined"
+        result.client.lastname = data.client.lastname || "undefined"
+        result.client.phone = data.client.phone || "undefined"
+        result.client.cell = data.client.cell || "undefined"
+        result.client.title = data.client.title || "undefined"
+    }
+
+    result.collaborators = []
+    data.collaborators.forEach(collab => {
+        result.collaborators.push({
+            username: collab.username || "undefined",
+            firstname: collab.firstname || "undefined",
+            lastname: collab.lastname || "undefined",
+            role: collab.role || "undefined"
+        })
+    })
+    result.language = data.language || "undefined"
+    result.scope = data.scope || []
+
+    result.findings = []
+    data.findings.forEach(finding => {
+        result.findings.push({
+            title: finding.title || "",
+            vulnType: finding.vulnType || "",
+            description: finding.description || "",
+            observation: finding.observation || "",
+            remediation: finding.remediation || "",
+            remediationComplexity: finding.remediationComplexity || "",
+            priority: finding.priority || "",
+            references: finding.references || "",
+            cvssv3: finding.cvssv3 || "",
+            cvssScore: finding.cvssScore || "",
+            cvssSeverity: finding.cvssSeverity || "",
+            poc: splitHTMLParagraphs(finding.poc),
+            scope: finding.scope || "",
+            status: finding.status || ""
+        })
+    })
+
+    result.creator = {}
+    if (data.creator) {
+        result.creator.username = data.creator.username || "undefined"
+        result.creator.firstname = data.creator.firstname || "undefined"
+        result.creator.lastname = data.creator.lastname || "undefined"
+        result.creator.role = data.creator.role || "undefined"
+    }
+
+    data.sections.forEach(section => {
+        result[section.field] = section.paragraphs || []
+    })
+
+    result.findings.forEach(f => console.log(f.poc))
+    return result
+}
+
+function splitHTMLParagraphs(data) {
+    var result = []
+    if (!data)
+        return result
+
+    var splitted = data.split(/(<img.+?>)/)
+
+    splitted.forEach((value, index) => {
+        if (value.startsWith("<img")) {
+            var src = value.match(/<img.+src="(.*?)"/) || ""
+            var alt = value.match(/<img.+alt="(.*?)"/) || ""
+            if (src && src.length > 1) src = src[1]
+            if (alt && alt.length > 1) alt = alt[1]
+            if (result.length === 0)
+                result.push({text: "", images: []})
+            result[result.length-1].images.push({image: src, caption: alt})
+        }
+        else if (value === "") {
+            return
+        }
+        else {
+            result.push({text: value, images: []})
+        }
+    })
+    return result
+}
+
 

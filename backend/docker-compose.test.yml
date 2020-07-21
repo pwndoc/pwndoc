@@ -8,6 +8,7 @@ services:
     container_name: pwndoc-backend-test
     volumes:
       - ./tests:/app/tests
+      - ./src:/app/src
       - ./jest.config.js:/app/jest.config.js
     environment:
       API_URL: https://localhost:4242

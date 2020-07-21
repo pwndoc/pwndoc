@@ -149,8 +149,11 @@ export default {
                 tmpVuln.cvssSeverity = vuln.severity || null;
                 tmpVuln.priority = null;
                 tmpVuln.remediationComplexity = null;
-                tmpVuln.references = this.formatSerpicoText(vuln.references);
-                if (tmpVuln.references && tmpVuln.references !== "") tmpVuln.references = tmpVuln.references.split('\n');
+                tmpVuln.references = []
+                if (vuln.references && vuln.references !== "") {
+                    vuln.references = vuln.references.replace(/<paragraph>/g, '')
+                    tmpVuln.references = vuln.references.split('</paragraph>').filter(Boolean)
+                }
                 var details = {};
                 details.locale = this.formatSerpicoText(vuln.language) || 'en';
                 details.title = this.formatSerpicoText(vuln.title);
@@ -172,27 +175,27 @@ export default {
             if (str === 'French') return 'fr'
 
             var res = str
-            // Replace the paragraph tags and simply add linebreaks
-            res = res.replace(/<paragraph>/g, '')
-            res = res.replace(/<\/paragraph>/g, '\n')
-            // First level bullets
-            res = res.replace(/<bullet>/g, '* ')
-            res = res.replace(/<\/bullet>/g, '')
-            // Nested bullets
-            res = res.replace(/<bullet1>/g, '    * ')
-            res = res.replace(/<\/bullet1>/g, '')
             // Headers (used as bold in Serpico)
-            res = res.replace(/<h4>/g, '')
-            res = res.replace(/<\/h4>/g, '')
+            res = res.replace(/<paragraph><h4>/g, '<b>')
+            res = res.replace(/<\/h4><\/paragraph>/g, '</b>')
+            // First level bullets
+            res = res.replace(/<paragraph><bullet>/g, '<li><p>')
+            res = res.replace(/<\/bullet><\/paragraph>/g, '</p></li>')
+            // Nested bullets (used as first level bullets)
+            res = res.replace(/<paragraph><bullet1>/g, '<li><p>')
+            res = res.replace(/<\/bullet1><\/paragraph>/g, '</p></li>')
+            // Replace the paragraph tags and simply add linebreaks
+            res = res.replace(/<paragraph>/g, '<p>')
+            res = res.replace(/<\/paragraph>/g, '</p>')
             // Indented text
             res = res.replace(/<indented>/g, '    ')
             res = res.replace(/<\/indented>/g, '')
             // Italic
-            res = res.replace(/<italics>/g, '')
-            res = res.replace(/<\/italics>/g, '')
+            res = res.replace(/<italics>/g, '<i>')
+            res = res.replace(/<\/italics>/g, '</i>')
             // Code
-            res = res.replace(/\[\[\[/g, '\n')
-            res = res.replace(/]]]/g, '\n')
+            res = res.replace(/\[\[\[/g, '<pre><code>')
+            res = res.replace(/]]]/g, '</code></pre>')
             // Apostroph
             res = this.$_.unescape(res)
 

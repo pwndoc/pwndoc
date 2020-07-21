@@ -1,5 +1,6 @@
 import { Notify, Dialog } from 'quasar';
 
+import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
 
 import AuditService from '@/services/audit';
@@ -18,6 +19,7 @@ export default {
     },
 
     components: {
+        BasicEditor,
         Breadcrumb
     },
 

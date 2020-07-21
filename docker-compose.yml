@@ -17,7 +17,7 @@ services:
     image: yeln4ts/pwndoc:backend
     container_name: pwndoc-backend
     volumes:
-      - ./report-templates:/app/report-templates
+      - ./backend/report-templates:/app/report-templates
     depends_on:
       - mongodb
     restart: always
