@@ -308,10 +308,11 @@ function prepAuditData(data) {
     }
 
     data.sections.forEach(section => {
-        result[section.field] = section.paragraphs || []
+        result[section.field] = {
+            name: section.name,
+            text: splitHTMLParagraphs(section.text) 
+        }
     })
-
-    result.findings.forEach(f => console.log(f.poc))
     return result
 }
 
