@@ -1,151 +1,153 @@
 <template>
 <q-card id="editor_content" flat bordered class="editor full-width">
-    <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
-        <q-toolbar class="editor-toolbar">
-            <div v-if="toolbar.indexOf('format') !== -1">
-                <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel" style="width:42px" class="text-bold">
-                    <q-list dense>
-                        <q-item 
-                        clickable 
-                        :class="{ 'is-active': isActive.paragraph() }" 
-                        @click="commands.paragraph()">
-                            <q-item-section>
-                                <q-icon name="fa fa-paragraph" />
-                            </q-item-section>
-                        </q-item>
-                        <q-item 
-                        clickable 
-                        :class="{ 'is-active': isActive.heading({level: 1}) }" 
-                        @click="commands.heading({level: 1})">
-                            <q-item-section>H1</q-item-section>
-                        </q-item>
-                        <q-item 
-                        clickable
-                        :class="{ 'is-active': isActive.heading({level: 2}) }"
-                        @click="commands.heading({level: 2})">
-                            <q-item-section>H2</q-item-section>
-                        </q-item>
-                        <q-item 
-                        clickable
-                        :class="{ 'is-active': isActive.heading({level: 3}) }"
-                        @click="commands.heading({level: 3})">
-                            <q-item-section>H3</q-item-section>
-                        </q-item>
-                        <q-item 
-                        clickable
-                        :class="{ 'is-active': isActive.heading({level: 4}) }"
-                        @click="commands.heading({level: 4})">
-                            <q-item-section>H4</q-item-section>
-                        </q-item>
-                        <q-item 
-                        clickable
-                        :class="{ 'is-active': isActive.heading({level: 5}) }"
-                        @click="commands.heading({level: 5})">
-                            <q-item-section>H5</q-item-section>
-                        </q-item>
-                        <q-item 
-                        clickable
-                        :class="{ 'is-active': isActive.heading({level: 6}) }"
-                        @click="commands.heading({level: 6})">
-                            <q-item-section>H6</q-item-section>
-                        </q-item>
-                    </q-list>
-                </q-btn-dropdown>
-            </div>
-            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('format') !== -1" />
-            
-            <div v-if="toolbar.indexOf('marks') !== -1">
+    <affix relative-element-selector="#editor_content" :enabled="affix">
+        <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
+            <q-toolbar class="editor-toolbar">
+                <div v-if="toolbar.indexOf('format') !== -1">
+                    <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel" style="width:42px" class="text-bold">
+                        <q-list dense>
+                            <q-item 
+                            clickable 
+                            :class="{ 'is-active': isActive.paragraph() }" 
+                            @click="commands.paragraph()">
+                                <q-item-section>
+                                    <q-icon name="fa fa-paragraph" />
+                                </q-item-section>
+                            </q-item>
+                            <q-item 
+                            clickable 
+                            :class="{ 'is-active': isActive.heading({level: 1}) }" 
+                            @click="commands.heading({level: 1})">
+                                <q-item-section>H1</q-item-section>
+                            </q-item>
+                            <q-item 
+                            clickable
+                            :class="{ 'is-active': isActive.heading({level: 2}) }"
+                            @click="commands.heading({level: 2})">
+                                <q-item-section>H2</q-item-section>
+                            </q-item>
+                            <q-item 
+                            clickable
+                            :class="{ 'is-active': isActive.heading({level: 3}) }"
+                            @click="commands.heading({level: 3})">
+                                <q-item-section>H3</q-item-section>
+                            </q-item>
+                            <q-item 
+                            clickable
+                            :class="{ 'is-active': isActive.heading({level: 4}) }"
+                            @click="commands.heading({level: 4})">
+                                <q-item-section>H4</q-item-section>
+                            </q-item>
+                            <q-item 
+                            clickable
+                            :class="{ 'is-active': isActive.heading({level: 5}) }"
+                            @click="commands.heading({level: 5})">
+                                <q-item-section>H5</q-item-section>
+                            </q-item>
+                            <q-item 
+                            clickable
+                            :class="{ 'is-active': isActive.heading({level: 6}) }"
+                            @click="commands.heading({level: 6})">
+                                <q-item-section>H6</q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-btn-dropdown>
+                </div>
+                <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('format') !== -1" />
+                
+                <div v-if="toolbar.indexOf('marks') !== -1">
+                    <q-btn flat size="sm" dense
+                    :class="{ 'is-active': isActive.bold() }"
+                    @click="commands.bold"
+                    >
+                        <q-icon name="format_bold" />
+                    </q-btn>
+
+                    <q-btn flat size="sm" dense
+                    :class="{ 'is-active': isActive.italic() }"
+                    @click="commands.italic"
+                    >
+                        <q-icon name="format_italic" />
+                    </q-btn>
+
+                    <q-btn flat size="sm" dense
+                    :class="{ 'is-active': isActive.underline() }"
+                    @click="commands.underline"
+                    >
+                        <q-icon name="format_underline" />
+                    </q-btn>
+
+                    <q-btn flat size="sm" dense
+                    :class="{ 'is-active': isActive.strike() }"
+                    @click="commands.strike"
+                    >
+                        <q-icon name="format_strikethrough" />
+                    </q-btn>
+                </div>
+                <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('marks') !== -1" />
+
+                <div v-if="toolbar.indexOf('list') !== -1">
+                    <q-btn flat size="sm" dense
+                    :class="{ 'is-active': isActive.bullet_list() }"
+                    @click="commands.bullet_list"
+                    >
+                        <q-icon name="format_list_bulleted" />
+                    </q-btn>
+
+                    <q-btn flat size="sm" dense
+                    :class="{ 'is-active': isActive.ordered_list() }"
+                    @click="commands.ordered_list"
+                    >
+                        <q-icon name="format_list_numbered" />
+                    </q-btn>
+                </div>
+                <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('list') !== -1" />
+
+                <div v-if="toolbar.indexOf('code') !== -1">
+                    <q-btn flat size="sm" dense
+                    :class="{ 'is-active': isActive.code() }"
+                    @click="commands.code"
+                    >
+                        <q-icon name="code" />
+                    </q-btn>
+
+                    <q-btn flat size="sm" dense
+                    :class="{ 'is-active': isActive.code_block() }"
+                    @click="commands.code_block"
+                    >
+                        <q-icon name="mdi-console" />
+                    </q-btn>
+                </div>
+                <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
+
+                <label class="cursor-pointer" v-if="toolbar.indexOf('image') !== -1">
+                    <input
+                    :value=imageValue
+                    type="file"
+                    accept="image/*"
+                    class="hidden"
+                    @change="importImage($event.target.files)"
+                    />
+                    <q-icon name="image" />
+                </label>
+                <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('image') !== -1" />
+
                 <q-btn flat size="sm" dense
-                :class="{ 'is-active': isActive.bold() }"
-                @click="commands.bold"
+                @click="commands.undo"
                 >
-                    <q-icon name="format_bold" />
+                    <q-icon name="undo" />
                 </q-btn>
 
                 <q-btn flat size="sm" dense
-                :class="{ 'is-active': isActive.italic() }"
-                @click="commands.italic"
+                @click="commands.redo"
                 >
-                    <q-icon name="format_italic" />
+                    <q-icon name="redo" />
                 </q-btn>
 
-                <q-btn flat size="sm" dense
-                :class="{ 'is-active': isActive.underline() }"
-                @click="commands.underline"
-                >
-                    <q-icon name="format_underline" />
-                </q-btn>
-
-                <q-btn flat size="sm" dense
-                :class="{ 'is-active': isActive.strike() }"
-                @click="commands.strike"
-                >
-                    <q-icon name="format_strikethrough" />
-                </q-btn>
-            </div>
-            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('marks') !== -1" />
-
-            <div v-if="toolbar.indexOf('list') !== -1">
-                <q-btn flat size="sm" dense
-                :class="{ 'is-active': isActive.bullet_list() }"
-                @click="commands.bullet_list"
-                >
-                    <q-icon name="format_list_bulleted" />
-                </q-btn>
-
-                <q-btn flat size="sm" dense
-                :class="{ 'is-active': isActive.ordered_list() }"
-                @click="commands.ordered_list"
-                >
-                    <q-icon name="format_list_numbered" />
-                </q-btn>
-            </div>
-            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('list') !== -1" />
-
-            <div v-if="toolbar.indexOf('code') !== -1">
-                <q-btn flat size="sm" dense
-                :class="{ 'is-active': isActive.code() }"
-                @click="commands.code"
-                >
-                    <q-icon name="code" />
-                </q-btn>
-
-                <q-btn flat size="sm" dense
-                :class="{ 'is-active': isActive.code_block() }"
-                @click="commands.code_block"
-                >
-                    <q-icon name="mdi-console" />
-                </q-btn>
-            </div>
-            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
-
-            <label class="cursor-pointer" v-if="toolbar.indexOf('image') !== -1">
-                <input
-                :value=imageValue
-                type="file"
-                accept="image/*"
-                class="hidden"
-                @change="importImage($event.target.files)"
-                />
-                <q-icon name="image" />
-            </label>
-            <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('image') !== -1" />
-
-            <q-btn flat size="sm" dense
-            @click="commands.undo"
-            >
-                <q-icon name="undo" />
-            </q-btn>
-
-            <q-btn flat size="sm" dense
-            @click="commands.redo"
-            >
-                <q-icon name="redo" />
-            </q-btn>
-
-        </q-toolbar>
-        <!-- <q-separator /> -->
-    </editor-menu-bar>
+            </q-toolbar>
+            <!-- <q-separator /> -->
+        </editor-menu-bar>
+    </affix>
     <q-separator />
     <editor-content class="editor__content q-pa-sm" style="min-height:200px" :editor="editor" />
 </q-card>
@@ -187,6 +189,10 @@ export default {
             default: function() {
                 return ['format', 'marks', 'list', 'code', 'image']
             }
+        },
+        affix: {
+            type: Boolean,
+            default: false
         }
     },
     components: {
@@ -309,6 +315,15 @@ export default {
         &:last-child {
             margin-bottom: 0;
         }
+    }
+
+    .affix {
+        width: auto;
+        border-bottom: 1px solid rgba(0,0,0,0.12);
+        border-right: 1px solid rgba(0,0,0,0.12);
+        background-color: white;
+        top: 50px!important;
+        z-index: 1000
     }
 }
 
