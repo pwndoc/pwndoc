@@ -121,7 +121,10 @@ expressions.filters.NewLines = function(input) {
 
 
 expressions.filters.convertHTML = function(input) {
-    var result = html2ooxml(input)
+    if (typeof input === 'undefined')
+        var result = html2ooxml("")
+    else
+        var result = html2ooxml(input)
     return result;
 }
 
@@ -294,7 +297,7 @@ function prepAuditData(data) {
             cvssScore: finding.cvssScore || "",
             cvssSeverity: finding.cvssSeverity || "",
             poc: splitHTMLParagraphs(finding.poc),
-            scope: finding.scope || "",
+            affected: finding.scope || [],
             status: finding.status || ""
         })
     })
