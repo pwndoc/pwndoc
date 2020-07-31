@@ -36,7 +36,10 @@ export default {
             // Vulnerabilities languages
             languages: [],
             dtLanguage: "",
-            currentExpand: -1
+            currentExpand: -1,
+
+            // Vulnerability categories
+            vulnCategories: []
         }
     },
 
@@ -85,6 +88,17 @@ export default {
             VulnService.getVulnByLanguage(this.dtLanguage)
             .then((data) => {
                 this.vulnerabilities = data.data.datas;
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
+        // Get available vulnerability categories
+        getVulnerabilityCategories: function() {
+            DataService.getVulnerabilityCategories()
+            .then((data) => {
+                this.vulnCategories = data.data.datas;
             })
             .catch((err) => {
                 console.log(err)
