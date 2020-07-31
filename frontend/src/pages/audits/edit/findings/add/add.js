@@ -29,16 +29,14 @@ export default {
                 rowsPerPage: 20,
                 sortBy: 'title'
             },
-            // Search filter for vulnerabilities datatable
-            searchVuln: '',
+            filteredRowsCount: 0,
+            // Search filter
+            search: {title: '', vulnType: '', category: ''},
             
             // Vulnerabilities languages
             languages: [],
             dtLanguage: "",
-            currentExpand: -1,
-
-            // Vulnerability Categories
-            vulnCategories: []
+            currentExpand: -1
         }
     },
 
@@ -54,8 +52,20 @@ export default {
         this.getVulnerabilityCategories()
 
         this.$socket.emit('menu', {menu: 'addFindings', room: this.auditId});
+    },
 
-        // this.getVulnerabilities();
+    computed: {
+        vulnCategoriesOptions: function() {
+            return this.$_.uniq(this.$_.map(this.vulnerabilities, vuln => {
+                return vuln.category || 'No Category'
+            }))
+        },
+
+        vulnTypeOptions: function() {
+            return this.$_.uniq(this.$_.map(this.vulnerabilities, vuln => {
+                return vuln.detail.vulnType || 'Undefined'
+            }))
+        }
     },
 
     methods: {
@@ -64,10 +74,6 @@ export default {
             DataService.getLanguages()
             .then((data) => {
                 this.languages = data.data.datas;
-                // if (this.languages.length > 0) {
-                //     this.dtLanguage = this.languages[0].locale;
-                //     this.getVulnerabilities();
-                // }
             })
             .catch((err) => {
                 console.log(err)
@@ -85,23 +91,29 @@ export default {
             })
         },
 
-        // Get available vulnerability categories
-        getVulnerabilityCategories: function() {
-            DataService.getVulnerabilityCategories()
-            .then((data) => {
-                this.vulnCategories = data.data.datas;
-            })
-            .catch((err) => {
-                console.log(err)
-            })
-        },
-
         getDtTitle: function(row) {
             var index = row.details.findIndex(obj => obj.locale === this.dtLanguage.locale);
             if (index < 0)
                 return "Not defined for this language yet";
             else
                 return row.details[index].title;         
+        },
+
+        customFilter: function(rows, terms, cols, getCellValue) {
+            var result = rows && rows.filter(row => {
+                var title = (row.detail.title || "Not defined for this language").toLowerCase()
+                var type = (row.detail.vulnType || "Undefined").toLowerCase()
+                var category = (row.category || "No Category").toLowerCase()
+                var termTitle = (terms.title || "").toLowerCase()
+                var termCategory = (terms.category || "").toLowerCase()
+                var termVulnType = (terms.vulnType || "").toLowerCase()
+                return title.indexOf(termTitle) > -1 && 
+                type.indexOf(termVulnType) > -1 &&
+                category.indexOf(termCategory) > -1
+            })
+            this.filteredRowsCount = result.length
+            this.filteredRows = result
+            return result;
         },
 
         addFindingFromVuln: function(vuln) {
