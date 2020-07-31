@@ -7,22 +7,16 @@
         <q-table
         :columns="dtVulnHeaders"
         :data="vulnerabilities"
-        :filter="searchVuln"
+        :filter="search"
+        :filter-method="customFilter"
         :pagination.sync="vulnPagination"
         row-key="_id"
         style="background-color: white"
+        separator="none"
         >
             <template v-slot:top>
-                <q-input
-                class="col-md-3"
-                label="Search"
-                color="secondary"
-                clearable
-                autofocus
-                v-model="searchVuln"
-                />
                 <q-select 
-                class="q-pl-md col-md-3"
+                class="col-md-2"
                 v-model="dtLanguage" 
                 label="Language" 
                 :options="languages" 
@@ -54,6 +48,41 @@
                 </q-input>
             </template>
 
+            <template v-slot:top-row="props">
+                <q-tr>
+                    <q-td style="width: 60%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.title"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td style="width: 20%">
+                        <q-select
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.category"
+                        clearable
+                        :options="vulnCategoriesOptions"
+                        />
+                    </q-td>
+                    <q-td style="width: 20%">
+                        <q-select
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.vulnType"
+                        clearable
+                        :options="vulnTypeOptions"
+                        />
+                    </q-td>
+                    <q-td></q-td>
+                </q-tr>
+            </template>
+
             <template v-slot:body="props">
                 <q-tr :props="props">
                     <q-td key="title" :props="props">
@@ -61,10 +90,10 @@
                         <q-btn dense round flat :icon="props.expand ? 'arrow_drop_up' : 'arrow_drop_down'" @click="props.expand = !props.expand" />
                     </q-td>
                     <q-td key="category" :props="props">
-                        {{props.row.category}}
+                        {{props.row.category || 'No Category'}}
                     </q-td>
                     <q-td key="vulnType" :props="props">
-                        {{props.row.detail.vulnType}}
+                        {{props.row.detail.vulnType || 'Undefined'}}
                     </q-td>
                     <q-td key="action" :props="props" style="width:1px">
                         <q-btn flat color="primary" icon="fa fa-plus-circle" @click="addFindingFromVuln(props.row)">
@@ -81,8 +110,8 @@
 
             <div slot="bottom" slot-scope="props" class="row fit">
                 <div class="q-table-control">
-                    <span v-if="vulnerabilities.length === 1">1 Vulnerability</span>                
-                    <span v-else>{{vulnerabilities.length}} Vulnerabilities</span>                
+                    <span v-if="vulnerabilities.length === 1">{{filteredRowsCount}} / 1 Vulnerability</span>                
+                    <span v-else>{{filteredRowsCount}} / {{vulnerabilities.length}} Vulnerabilities</span>                
                 </div>
                 <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
                     <q-pagination input v-model="vulnPagination.page" :max="props.pagesNumber" />            
