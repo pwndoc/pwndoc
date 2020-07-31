@@ -89,6 +89,7 @@ export default {
 
         // Update Section
         updateSection: function() {
+            if (this.section.text) this.section.text = this.section.text.replace(/(<p><\/p>)+$/, '')
             AuditService.updateSection(this.auditId, this.sectionId, this.section)
             .then(() => {
                 this.sectionOrig = this.$_.cloneDeep(this.section);
