@@ -183,6 +183,8 @@ module.exports = function(app) {
         section.field = req.body.field;
         section.name = req.body.name;
         section.locale = req.body.locale;
+        // Optional parameters
+        if (req.body.text) section.text = req.body.text
 
         CustomSection.create(section)
         .then(msg => Response.Created(res, msg))

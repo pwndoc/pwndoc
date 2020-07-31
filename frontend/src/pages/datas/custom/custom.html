@@ -327,27 +327,43 @@
                                 <q-btn color="secondary" label="+" size="md" @click="createSection" />
                             </q-item-section>
                         </q-item>
+                        <q-item>
+                            <q-field class="col-md-12" borderless label="Default Text" stack-label>
+                                <template v-slot="control">
+                                    <basic-editor v-model="newSection.text" />
+                                </template>
+                            </q-field>
+                        </q-item>
                     </div>
                     <div class="col-md-6">
-                        <q-item v-for="section of sections" :key="section.field" v-if="section.locale === newSection.locale">
-                            <q-item-section>
-                                <q-input
-                                label="Name"
-                                v-model="section.name"
-                                readonly
-                                />
-                            </q-item-section>
-                            <q-item-section>
-                                <q-input
-                                label="Field"
-                                v-model="section.field"
-                                readonly
-                                />
-                            </q-item-section>
-                            <q-item-section side >
-                                <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteSection(section.field, section.locale)"/>
-                            </q-item-section>
-                        </q-item>
+                        <div v-for="section of sections" :key="section.field" v-if="section.locale === newSection.locale">
+                            <q-item>
+                                <q-item-section>
+                                    <q-input
+                                    label="Name"
+                                    v-model="section.name"
+                                    readonly
+                                    />
+                                </q-item-section>
+                                <q-item-section>
+                                    <q-input
+                                    label="Field"
+                                    v-model="section.field"
+                                    readonly
+                                    />
+                                </q-item-section>
+                                <q-item-section side >
+                                    <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteSection(section.field, section.locale)"/>
+                                </q-item-section>
+                            </q-item>
+                            <q-item v-if="section.text">
+                                <q-field class="col-md-12" borderless label="Default Text" stack-label>
+                                    <template v-slot="control">
+                                        <basic-editor v-model="section.text" :editable="false" />
+                                    </template>
+                                </q-field>
+                            </q-item>
+                        </div>
                     </div>
                 </q-card-section>
                 <q-card-section v-else>

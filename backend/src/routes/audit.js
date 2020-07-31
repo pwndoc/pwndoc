@@ -232,6 +232,8 @@ module.exports = function(app, io) {
         // Required parameters
         section.name = req.body.name;
         section.field = req.body.field;
+        // Optional parameters
+        if (req.body.text) section.text = req.body.text
 
         Audit.createSection(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, section)
         .then(msg => {
