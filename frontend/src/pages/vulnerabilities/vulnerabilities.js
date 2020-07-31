@@ -386,6 +386,11 @@ export default {
                         ? data.sort((a, b) => this.getDtTitle(b).localeCompare(this.getDtTitle(a)))
                         : data.sort((a, b) => this.getDtTitle(a).localeCompare(this.getDtTitle(b)))
                 }
+                else if (sortBy === 'category') {
+                    (descending)
+                        ? data.sort((a, b) => (b.category || 'No Category').localeCompare(a.category || 'No Category'))
+                        : data.sort((a, b) => (a.category || 'No Category').localeCompare(b.category || 'No Category'))
+                }
                 return data;
             }
         },
