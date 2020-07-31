@@ -99,6 +99,18 @@ export default {
                 }
             })
             return result;
+        },
+
+        vulnCategoriesOptions: function() {
+            var result = this.vulnCategories.map(cat => {return cat.name})
+            result.unshift('No Category')
+            return result
+        },
+
+        vulnTypeOptions: function() {
+            var result = this.vulnTypes.filter(type => type.locale === this.dtLanguage).map(type => {return type.name})
+            result.unshift('Undefined')
+            return result
         }
     },
 
@@ -380,17 +392,16 @@ export default {
 
         customFilter: function(rows, terms, cols, getCellValue) {
             var result = rows && rows.filter(row => {
-                var title = this.getDtTitle(row)
-                var type = this.getDtType(row)
-                var category = row.category || "None"
-                return title.toLowerCase().indexOf(terms.title||"") > -1 && 
-                type.toLowerCase().indexOf(terms.type||"") > -1 &&
-                category.toLowerCase().indexOf(terms.category||"") > -1 &&
+                var title = this.getDtTitle(row).toLowerCase()
+                var type = this.getDtType(row).toLowerCase()
+                var category = (row.category || "No Category").toLowerCase()
+                var termTitle = (terms.title || "").toLowerCase()
+                var termCategory = (terms.category || "").toLowerCase()
+                var termVulnType = (terms.type || "").toLowerCase()
+                return title.indexOf(termTitle) > -1 && 
+                type.indexOf(termVulnType||"") > -1 &&
+                category.indexOf(termCategory||"") > -1 &&
                 (row.status === terms.valid || row.status === terms.new || row.status === terms.updates)
-                // try {var regexTitle = new RegExp(terms.title, 'ig')} catch {var regexTitle = ""}
-                // return title.match(regexTitle) && 
-                // type.toLowerCase().indexOf(terms.type||"") > -1 &&
-                // (row.status === terms.valid || row.status === terms.new || row.status === terms.updates)
             })
             this.filteredRowsCount = result.length;
             return result;
