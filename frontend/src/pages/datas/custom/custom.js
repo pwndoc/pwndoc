@@ -1,5 +1,5 @@
 import { Dialog, Notify } from 'quasar';
-import Vue from 'vue'
+import BasicEditor from 'components/editor';
 
 import DataService from '@/services/data'
 
@@ -24,6 +24,10 @@ export default {
 
             errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: ''}
         }
+    },
+
+    components: {
+        BasicEditor
     },
 
     mounted: function() {
@@ -51,8 +55,8 @@ export default {
             })
         },
 
-         // Create Language
-         createLanguage: function() {
+        // Create Language
+        createLanguage: function() {
             this.cleanErrors();
             if (!this.newLanguage.locale)
                 this.errors.locale = "Locale required";
@@ -342,8 +346,8 @@ export default {
             })
         },
 
-         // Create section
-         createSection: function() {
+        // Create section
+        createSection: function() {
             this.cleanErrors();
             if (!this.newSection.field)
                 this.errors.sectionField = "Field required";
@@ -353,6 +357,7 @@ export default {
             if (this.errors.sectionName || this.errors.sectionField)
                 return;
 
+            if (this.newSection.text) this.newSection.text = this.newSection.text.replace(/(<p><\/p>)+$/, '')
             DataService.createSection(this.newSection)
             .then((data) => {
                 this.newSection.field = "";
