@@ -74,6 +74,7 @@ export default {
 
         // Save Audit Summary
         updateAuditSummary: function() {
+            if (this.audit.summary) this.audit.summary = this.audit.summary.replace(/(<p><\/p>)+$/, '')
             AuditService.updateAuditSummary(this.auditId, this.audit)
             .then(() => {
                 this.auditOrig = this.$_.cloneDeep(this.audit);
