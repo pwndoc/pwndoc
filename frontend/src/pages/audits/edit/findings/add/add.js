@@ -19,6 +19,7 @@ export default {
             // Headers for vulnerabilities datatable
             dtVulnHeaders: [
                 {name: 'title', label: 'Title', field: row => row.detail.title, align: 'left', sortable: true},
+                {name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true},
                 {name: 'vulnType', label: 'Type', field: row => row.detail.vulnType, align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
@@ -34,7 +35,10 @@ export default {
             // Vulnerabilities languages
             languages: [],
             dtLanguage: "",
-            currentExpand: -1
+            currentExpand: -1,
+
+            // Vulnerability Categories
+            vulnCategories: []
         }
     },
 
@@ -47,6 +51,7 @@ export default {
         this.getLanguages();
         this.dtLanguage = AuditService.audit.locale;
         this.getVulnerabilities();
+        this.getVulnerabilityCategories()
 
         this.$socket.emit('menu', {menu: 'addFindings', room: this.auditId});
 
@@ -80,6 +85,17 @@ export default {
             })
         },
 
+        // Get available vulnerability categories
+        getVulnerabilityCategories: function() {
+            DataService.getVulnerabilityCategories()
+            .then((data) => {
+                this.vulnCategories = data.data.datas;
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
         getDtTitle: function(row) {
             var index = row.details.findIndex(obj => obj.locale === this.dtLanguage.locale);
             if (index < 0)
@@ -88,7 +104,7 @@ export default {
                 return row.details[index].title;         
         },
 
-        addFinding: function(vuln) {
+        addFindingFromVuln: function(vuln) {
             var finding = null;
             if (vuln) {
                 finding = {
@@ -103,6 +119,50 @@ export default {
                     cvssv3: vuln.cvssv3,
                     cvssScore: (vuln.cvssScore)?vuln.cvssScore:"0",
                     cvssSeverity: (vuln.cvssSeverity)?vuln.cvssSeverity:"None",
+                    category: vuln.category,
+                    customFields: vuln.detail.customFields
+                };
+            }
+
+            if (finding) {
+                AuditService.createFinding(this.auditId, finding)
+                .then(() => {
+                    this.findingTitle = "";
+                    Notify.create({
+                        message: 'Finding created successfully',
+                        color: 'positive',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
+                })
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
+                })
+            }
+        },
+
+        addFinding: function(category) {
+            var finding = null;
+            if (category && this.findingTitle) {
+                finding = {
+                    title: this.findingTitle,
+                    vulnType: "",
+                    description: "",
+                    observation: "",
+                    remediation: "",
+                    remediationComplexity: "",
+                    priority: "",
+                    references: [],
+                    cvssv3: "",
+                    cvssScore: 0,
+                    cvssSeverity: "None",
+                    category: category.name,
+                    customFields: category.fields || []
                 };
             }
             else if (this.findingTitle){

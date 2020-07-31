@@ -186,6 +186,98 @@
             </q-card>
         </div>
 
+        <div class="col-md-10 offset-md-1 q-mt-md">
+            <q-card>
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                    <div class="text-h6">Vulnerability categories</div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-grey-8">Create Vulnerability categories used in Vulnerabilities and Findings</div>
+                </q-card-section>
+                <q-card-section class="row">
+                    <div class="col-md-6">
+                        <q-item>
+                            <q-item-section>
+                                <q-input
+                                label="Name"
+                                v-model="newVulnCat.name"
+                                clearable
+                                :error="!!errors.vulnCat"
+                                :error-message="errors.vulnCat"
+                                @keyup.enter="createVulnerabilityCategory"
+                                />
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn color="secondary" label="+" size="md" @click="createVulnerabilityCategory" />
+                            </q-item-section>
+                        </q-item>
+                    </div>
+                    <div class="col-md-6">
+                        <q-list v-if="vulnCategories.length > 0">
+                            <q-item v-for="vulnCat of vulnCategories" :key="vulnCat.name">
+                                <q-item-section>
+                                    <q-expansion-item :label="vulnCat.name" group="vulncat" popup>
+                                        <q-card>
+                                            <q-card-section>
+                                                <q-item v-for="(field, idx) of vulnCat.fields" :key="field.label">
+                                                    <q-item-section>
+                                                        <q-input
+                                                        label="Type"
+                                                        v-model="field.fieldType"
+                                                        readonly
+                                                        />
+                                                    </q-item-section>
+                                                    <q-item-section>
+                                                        <q-input
+                                                        label="Label"
+                                                        v-model="field.label"
+                                                        readonly
+                                                        />
+                                                    </q-item-section>
+                                                    <q-item-section side>
+                                                        <q-btn color="red" label="x" size="md" @click="updateVulnerabilityCategory(vulnCat, idx)" />
+                                                    </q-item-section>
+                                                </q-item>
+                                                <q-item>
+                                                    <q-item-section>
+                                                        <q-select
+                                                        label="Select Type"
+                                                        v-model="newVulnCatField.fieldType"
+                                                        clearable
+                                                        :options="['input', 'text']"
+                                                        :error="!!errors.vulnCatField"
+                                                        error-message="Type required"
+                                                        />
+                                                    </q-item-section>
+                                                    <q-item-section>
+                                                        <q-input
+                                                        label="Label"
+                                                        v-model="newVulnCatField.label"
+                                                        clearable
+                                                        :error="!!errors.vulnCatField"
+                                                        error-message="Label required"
+                                                        @keyup.enter="updateVulnerabilityCategory(vulnCat, null)"
+                                                        />
+                                                    </q-item-section>
+                                                    <q-item-section side>
+                                                        <q-btn color="secondary" label="+" size="md" @click="updateVulnerabilityCategory(vulnCat, null)" />
+                                                    </q-item-section>
+                                                </q-item>
+                                            </q-card-section>
+                                        </q-card>
+                                    </q-expansion-item>
+                                </q-item-section>
+                                <q-item-section side>
+                                    <q-btn color="red" label="x" size="md" @click="deleteVulnerabilityCategory(vulnCat.name)"/>
+                                </q-item-section>
+                            </q-item>
+                        </q-list>
+                    </div>
+                </q-card-section>
+            </q-card>
+        </div>
+
         <div class="col-md-10 offset-md-1 q-my-md">
             <q-card>
                 <q-card-section class="q-py-xs bg-blue-grey-5 text-white">

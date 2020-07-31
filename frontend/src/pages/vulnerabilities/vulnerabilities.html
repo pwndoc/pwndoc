@@ -12,7 +12,7 @@
             :pagination.sync="pagination"
             :sort-method="customSort"
             separator="none"
-            row-key="title"
+            row-key="name"
         >
             <template v-slot:top>
                 <q-select 
@@ -38,16 +38,28 @@
                     Merge Vulnerabilities
                 </q-btn>  
                 <q-space />
-                <q-btn 
-                    v-if="UserService.isAdmin()"
-                    flat 
-                    color="white" 
-                    text-color="black" 
-                    no-caps
-                    @click="$refs.createModal.show()"
-                    >
-                    New Vulnerability
-                </q-btn>            
+                <q-btn-dropdown 
+                v-if="UserService.isAdmin()"
+                flat 
+                color="white" 
+                text-color="black" 
+                no-caps
+                label="New Vulnerability"
+                >
+                    <q-list separator>
+                        <q-item-label header>Select category</q-item-label>
+                        <q-item clickable v-close-popup @click="currentCategory = null; cleanCurrentVulnerability(); $refs.createModal.show()">
+                            <q-item-section>
+                              <q-item-label>No Category</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="currentCategory = $_.cloneDeep(category); cleanCurrentVulnerability(); $refs.createModal.show()">
+                            <q-item-section>
+                              <q-item-label>{{category.name}}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-btn-dropdown>            
             </template>
 
             <template v-slot:top-row="props">
@@ -73,6 +85,9 @@
                 <q-tr v-if="getDtTitle(props.row) !== 'Not defined for this language yet'" :props="props" :class="(props.row.status === 1)?'bg-light-blue-2':(props.row.status === 2)?'bg-orange-2':''">
                     <q-td key="title" :props="props">
                         {{getDtTitle(props.row)}}
+                    </q-td>
+                    <q-td key="category" :props="props">
+                        {{props.row.category || 'No Category'}}
                     </q-td>
                     <q-td key="type" :props="props">
                         {{getDtType(props.row)}}
@@ -117,7 +132,8 @@
     <q-card style="width: 50vw">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
-                Add Vulnerability
+                <span v-if="currentCategory">Add Vulnerability ({{currentCategory.name}})</span>
+                <span v-else>Add Vulnerability (No Category)</span>
             </div>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
@@ -132,6 +148,7 @@
                 autofocus
                 :error="!!errors.title"
                 :error-message="errors.title"
+                hide-bottom-space
                 @keyup.enter="createVulnerability()"
                 v-model="currentVulnerability.details[currentDetailsIndex].title"
                 />
@@ -227,6 +244,27 @@
             />
         </q-card-section>
 
+        <q-expansion-item 
+        label="Custom Fields of the category"
+        v-if="currentVulnerability.details[currentDetailsIndex].customFields && currentVulnerability.details[currentDetailsIndex].customFields.length > 0"
+        default-opened
+        header-class="bg-blue-grey-5 text-white" 
+        expand-icon-class="text-white">
+            <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
+                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
+                    <template v-slot="control">
+                        <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                    </template>
+                </q-field>
+                <q-input
+                v-if="field.fieldType === 'input'"
+                :label='field.label'
+                stack-label
+                v-model="field.text"
+                />
+            </q-card-section>
+        </q-expansion-item>
+
         <q-separator />
 
         <q-card-actions align="right">
@@ -240,8 +278,28 @@
     <q-card style="width: 50vw">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
-                Edit Vulnerability
+                <span v-if="currentVulnerability.category">Edit Vulnerability ({{currentVulnerability.category}})</span>
+                <span v-else>Edit Vulnerability (No Category)</span>
             </div>
+            <q-separator vertical color="white" class="q-mx-md" />
+            <q-btn-dropdown
+            label="Change Category"
+            color="white"
+            >
+            <q-list separator>
+                <q-item-label header>Select category</q-item-label>
+                <q-item clickable v-close-popup @click="editChangeCategory()">
+                    <q-item-section>
+                      <q-item-label>No Category</q-item-label>
+                    </q-item-section>
+                </q-item>
+                <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="editChangeCategory(category)">
+                    <q-item-section>
+                      <q-item-label>{{category.name}}</q-item-label>
+                    </q-item-section>
+                </q-item>
+            </q-list>
+            </q-btn-dropdown>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
         </q-bar>
@@ -255,6 +313,7 @@
                 autofocus
                 :error="!!errors.title"
                 :error-message="errors.title"
+                hide-bottom-space
                 @keyup.enter="updateVulnerability()"
                 v-model="currentVulnerability.details[currentDetailsIndex].title"
                 />
@@ -350,6 +409,48 @@
             />
         </q-card-section>
 
+        <q-expansion-item 
+        label="Custom Fields of the category"
+        v-if="currentVulnerability.details[currentDetailsIndex].customFields && currentVulnerability.details[currentDetailsIndex].customFields.length > 0"
+        default-opened
+        header-class="bg-blue-grey-5 text-white" 
+        expand-icon-class="text-white">
+            <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
+                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
+                    <template v-slot="control">
+                        <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                    </template>
+                </q-field>
+                <q-input
+                v-if="field.fieldType === 'input'"
+                :label='field.label'
+                stack-label
+                v-model="field.text"
+                />
+            </q-card-section>
+        </q-expansion-item>
+
+        <!-- <q-expansion-item 
+        label="Custom Fields of the category"
+        v-if="currentCategory.fields && currentCategory.fields.length > 0"
+        default-opened
+        header-class="bg-blue-grey-5 text-white" 
+        expand-icon-class="text-white">
+            <q-card-section v-for="field of currentCategory.fields" :key="field.label">
+                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
+                    <template v-slot="control">
+                        <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                    </template>
+                </q-field>
+                <q-input
+                v-if="field.fieldType === 'input'"
+                :label='field.label'
+                stack-label
+                v-model="field.text"
+                />
+            </q-card-section>
+        </q-expansion-item> -->
+
         <q-separator />
 
         <q-card-actions align="right" v-if="UserService.isAdmin()">
@@ -391,10 +492,6 @@
                         label='Title *'
                         stack-label
                         class="col-md-8"
-                        autofocus
-                        :error="!!errors.title"
-                        :error-message="errors.title"
-                        @keyup.enter="updateVulnerability()"
                         v-model="currentVulnerability.details[currentDetailsIndex].title" 
                         readonly
                         />
@@ -485,6 +582,29 @@
                         new-value-mode="add-unique"
                         />
                     </q-card-section>
+
+                    <q-expansion-item 
+                    label="Custom Fields of the category"
+                    default-opened
+                    header-class="bg-blue-grey-5 text-white" 
+                    expand-icon-class="text-white">
+                        <div v-if="currentVulnerability.details[currentDetailsIndex].customFields">
+                            <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
+                                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
+                                    <template v-slot="control">
+                                        <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                                    </template>
+                                </q-field>
+                                <q-input
+                                v-if="field.fieldType === 'input'"
+                                :label='field.label'
+                                stack-label
+                                v-model="field.text"
+                                />
+                            </q-card-section>
+                        </div>
+                    </q-expansion-item>
+
                     <q-separator />
             
                     <q-card-actions align="right">
@@ -512,9 +632,6 @@
                                 label='Title *'
                                 stack-label
                                 class="col-md-8"
-                                autofocus
-                                :error="!!errors.title"
-                                :error-message="errors.title"
                                 v-model="update.title"
                                 readonly
                                 />
@@ -635,6 +752,38 @@
                                 readonly
                                 />
                             </q-card-section>
+
+                            <q-expansion-item 
+                            label="Custom Fields of the category" 
+                            default-opened
+                            header-class="bg-blue-grey-5 text-white" 
+                            expand-icon-class="text-white">
+                                <div v-if="update.customFields">
+                                    <q-card-section v-for="field of update.customFields" :key="field.label">
+                                        <q-field 
+                                        v-if="field.fieldType === 'text'" 
+                                        borderless 
+                                        :label="field.label" 
+                                        stack-label
+                                        :class="(isTextInCustomFields(field.text))?'bg-red-1':''"
+                                        >
+                                            <template v-slot="control">
+                                                <basic-editor 
+                                                :class="(isTextInCustomFields(field.text))?'bg-red-1':''"
+                                                v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" :editable=false />
+                                            </template>
+                                        </q-field>
+                                        <q-input
+                                        v-if="field.fieldType === 'input'"
+                                        :label='field.label'
+                                        stack-label
+                                        v-model="field.text"
+                                        readonly
+                                        :bg-color="(isTextInCustomFields(field.text))?'red-1':''"
+                                        />
+                                    </q-card-section>
+                                </div>
+                            </q-expansion-item>
                         </q-tab-panel>
                     </q-tab-panels>
                 </q-card>
@@ -674,7 +823,7 @@
                 <q-card-section class="card-section-merge">
                     <q-scroll-area class="full-height">
                         <q-list>
-                            <q-item tag="label" v-for="vuln of vulnerabilities" v-if="getVulnTitleLocale(vuln, mergeLanguageRight) === 'undefined' && getVulnTitleLocale(vuln, mergeLanguageLeft) !== 'undefined'" dense class="q-pl-none">
+                            <q-item tag="label" v-for="vuln of vulnerabilities" :key="vuln._id" v-if="getVulnTitleLocale(vuln, mergeLanguageRight) === 'undefined' && getVulnTitleLocale(vuln, mergeLanguageLeft) !== 'undefined'" dense class="q-pl-none">
                                     <q-item-section side top>
                                         <q-radio v-model="mergeVulnLeft" :val="vuln._id" />
                                     </q-item-section>
@@ -703,7 +852,7 @@
                 <q-card-section class="card-section-merge">
                     <q-scroll-area class="full-height">
                         <q-list>
-                            <q-item tag="label" v-for="vuln of vulnerabilities" v-if="getVulnTitleLocale(vuln, mergeLanguageLeft) === 'undefined' && getVulnTitleLocale(vuln, mergeLanguageRight) !== 'undefined'" dense class="q-pl-none">
+                            <q-item tag="label" v-for="vuln of vulnerabilities" :key="vuln._id" v-if="getVulnTitleLocale(vuln, mergeLanguageLeft) === 'undefined' && getVulnTitleLocale(vuln, mergeLanguageRight) !== 'undefined'" dense class="q-pl-none">
                                     <q-item-section side top>
                                         <q-radio v-model="mergeVulnRight" :val="vuln._id" />
                                     </q-item-section>

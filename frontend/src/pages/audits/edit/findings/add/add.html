@@ -35,7 +35,21 @@
                 <q-space />
                 <q-input v-model="findingTitle" label="Title" class="q-pl-md col-md-6" @keyup.enter="addFinding()">
                     <template v-slot:append>
-                        <q-btn label="Create" no-caps flat @click="addFinding()" />
+                        <q-btn-dropdown label="Create" no-caps flat>
+                            <q-list separator>
+                                <q-item-label header>Select category</q-item-label>
+                                <q-item clickable v-close-popup @click="addFinding()">
+                                    <q-item-section>
+                                      <q-item-label>No Category</q-item-label>
+                                    </q-item-section>
+                                </q-item>
+                                <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="addFinding(category)">
+                                    <q-item-section>
+                                      <q-item-label>{{category.name}}</q-item-label>
+                                    </q-item-section>
+                                </q-item>
+                            </q-list>
+                        </q-btn-dropdown>
                     </template>
                 </q-input>
             </template>
@@ -46,11 +60,14 @@
                         {{props.row.detail.title}}
                         <q-btn dense round flat :icon="props.expand ? 'arrow_drop_up' : 'arrow_drop_down'" @click="props.expand = !props.expand" />
                     </q-td>
+                    <q-td key="category" :props="props">
+                        {{props.row.category}}
+                    </q-td>
                     <q-td key="vulnType" :props="props">
                         {{props.row.detail.vulnType}}
                     </q-td>
                     <q-td key="action" :props="props" style="width:1px">
-                        <q-btn flat color="primary" icon="fa fa-plus-circle" @click="addFinding(props.row)">
+                        <q-btn flat color="primary" icon="fa fa-plus-circle" @click="addFindingFromVuln(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Add to Findings</q-tooltip>                            
                         </q-btn>
                     </q-td>

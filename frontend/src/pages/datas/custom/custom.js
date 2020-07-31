@@ -15,10 +15,14 @@ export default {
             vulnTypes: [],
             newVulnType: {name: "", locale: ""},
 
+            vulnCategories: [],
+            newVulnCat: {name: "", fields: []},
+            newVulnCatField: {label: "", fieldType: ""},
+
             sections: [],
             newSection: {field: "", name: "", locale: ""},
 
-            errors: {locale: '', language: '', auditType: '', vulnType: '', sectionField: '', sectionName: ''}
+            errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: ''}
         }
     },
 
@@ -26,6 +30,7 @@ export default {
         this.getLanguages();
         this.getAuditTypes();
         this.getVulnerabilityTypes();
+        this.getVulnerabilityCategories();
         this.getSections();
     },
 
@@ -227,6 +232,105 @@ export default {
             })
         },
 
+        // Get available vulnerability categories
+        getVulnerabilityCategories: function() {
+            DataService.getVulnerabilityCategories()
+            .then((data) => {
+                this.vulnCategories = data.data.datas;
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
+        // Create vulnerability category
+        createVulnerabilityCategory: function() {
+            this.cleanErrors();
+            if (!this.newVulnCat.name)
+                this.errors.vulnCat = "Name required";
+            
+            if (this.errors.vulnCat)
+                return;
+
+            DataService.createVulnerabilityCategory(this.newVulnCat)
+            .then((data) => {
+                this.newVulnCat.name = "";
+                this.getVulnerabilityCategories();
+                Notify.create({
+                    message: 'Vulnerability category created successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+         // Update vulnerability category
+        updateVulnerabilityCategory: function(vulnCat, indexDelete) {
+            this.cleanErrors();
+            if ((!this.newVulnCatField.label || !this.newVulnCatField.fieldType) && indexDelete === null)
+                this.errors.vulnCatField = "Label and type required";
+            
+            if (this.errors.vulnCatField)
+                return;
+
+            if (indexDelete !== null) {
+                vulnCat.fields.splice(indexDelete, 1)
+                var updateCat = vulnCat
+            }
+            else
+                var updateCat = {name: vulnCat.name, fields: vulnCat.fields.concat(this.newVulnCatField)}
+            DataService.updateVulnerabilityCategory(vulnCat.name, updateCat)
+            .then((data) => {
+                this.newVulnCatField = {label: "", type: ""};
+                this.getVulnerabilityCategories();
+                Notify.create({
+                    message: 'Vulnerability category updated successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+        // Delete vulnerability category
+        deleteVulnerabilityCategory: function(name) {
+            DataService.deleteVulnerabilityCategory(name)
+            .then((data) => {
+                this.getVulnerabilityCategories();
+                Notify.create({
+                    message: 'Vulnerability category deleted successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
         // Get available sections
         getSections: function() {
             DataService.getSections()
@@ -298,6 +402,7 @@ export default {
             this.errors.language = '';
             this.errors.auditType = '';
             this.errors.vulnType = '';
+            this.errors.vulnCat = '';
             this.errors.sectionField = '';
             this.errors.sectionName = '';
         }

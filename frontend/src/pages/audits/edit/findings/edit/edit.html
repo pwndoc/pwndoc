@@ -66,6 +66,28 @@
                         new-value-mode="add-unique"
                         />
                 </q-card-section>
+
+                <q-expansion-item 
+                label="Custom Fields of the category"
+                v-if="finding.customFields && finding.customFields.length > 0"
+                default-opened
+                header-class="bg-blue-grey-5 text-white" 
+                expand-icon-class="text-white">
+                    <q-card-section v-for="field of finding.customFields" :key="field.label">
+                        <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
+                            <template v-slot="control">
+                                <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                            </template>
+                        </q-field>
+                        <q-input
+                        v-if="field.fieldType === 'input'"
+                        :label='field.label'
+                        stack-label
+                        v-model="field.text"
+                        />
+                    </q-card-section>
+                </q-expansion-item>
+
             </q-card>
         </q-tab-panel>
         <q-tab-panel name="proofs">
