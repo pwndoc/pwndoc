@@ -1,3 +1,5 @@
+import UserService from '@/services/user'
+
 export default [
   {path: '/', component: () => import('layouts/home'), meta: {breadcrumb: 'Home'}, children: [
     {path: '', redirect: 'audits' },
@@ -20,7 +22,12 @@ export default [
       {path: 'clients', component: () => import('pages/datas/clients')},
       {path: 'templates', component: () => import('pages/datas/templates')},   
       {path: 'dump', component: () => import('pages/datas/dump')},
-      {path: 'custom', component: () => import('pages/datas/custom')}
+      {path: 'custom', component: () => import('pages/datas/custom'), beforeEnter(to, from, next) {
+        if (UserService.isAdmin()) 
+          next()
+        else
+          next({path: '/audits'})
+      }}
     ]},
     {path: 'vulnerabilities', component: () => import('pages/vulnerabilities'), meta: {breadcrumb: 'Vulnerabilities'}},
     {path: 'profile', component: () => import('pages/profile')},
