@@ -54,21 +54,29 @@
                     <span class="text-h6">{{scope.name}}</span>
                     <div class="q-col-gutter-md row">
                             <q-select
-                            class="col-md-6"
+                            class="col-md-12"
                             multiple
-                            :display-value="'Select Hosts'"
-                            v-model="selectedTargets"
+                            :label="selectHostsLabel"
+                            v-model="selectedTargets[scope.name]"
                             :options="targetsOptions"
-                            @input="updateScopeHosts(scope)"
-                            />
+                            use-chips
+                            clearable
+                            >
+                            <template v-slot:append>
+                                <q-btn round dense flat icon="add" @click.close="updateScopeHosts(scope)" />
+                              </template>
+                            </q-select>
                             <div v-for="(host, index) of scope.hosts">
                             <q-chip 
                             :key="host.ip"
-                            color="blue-14"
+                            color="blue-grey-7"
                             text-color="white"
                             dense
+                            square
                             class="col-md-6 cursor-pointer"
                             @click.native="currentHost = $_.cloneDeep(host)"
+                            removable
+                            @remove="scope.hosts.splice(index, 1)"
                             >
                             {{host.ip}}
                             </q-chip>
