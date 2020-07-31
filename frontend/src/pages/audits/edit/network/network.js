@@ -31,7 +31,7 @@ export default {
                 page: 1,
                 rowsPerPage: 20,
                 sortBy: 'port'
-            },
+            }
         }
     },
 
@@ -66,6 +66,15 @@ export default {
                 cancel: {label: 'Cancel', color: 'white'}
             })
             .onOk(() => next())
+        }
+    },
+
+    computed: {
+        selectHostsLabel: function() {
+            if (this.targetsOptions && this.targetsOptions.length > 0)
+                return 'Select Host'
+            else
+                return 'Import Hosts first'
         }
     },
 
@@ -128,9 +137,8 @@ export default {
         },
 
         updateScopeHosts: function(scope) {
-            scope.hosts = [];
-            for (var i=0; i<this.selectedTargets.length; i++) {
-                scope.hosts.push(this.selectedTargets[i].host);
+            for (var i=0; i<this.selectedTargets[scope.name].length; i++) {
+                scope.hosts.push(this.selectedTargets[scope.name][i].host);
             }
         },
 
