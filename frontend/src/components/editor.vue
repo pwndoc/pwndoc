@@ -248,7 +248,6 @@ export default {
             return;
         }
         this.editor.setContent(this.value)
-        console.log(this.editable)
         this.editor.setOptions({editable: this.editable})
     },
 

@@ -1,11 +1,16 @@
 var mongoose = require('mongoose');//.set('debug', true);
 var Schema = mongoose.Schema;
 
-var _ = require('lodash');
-
 var Paragraph = {
     text:   String,
     images: [{image: String, caption: String}]
+}
+
+var customField = {
+    _id:        false,
+    label:      String,
+    fieldType:  String,
+    text:       String
 }
 
 var Finding = {
@@ -24,7 +29,9 @@ var Finding = {
     paragraphs:             [Paragraph],
     poc:                    String,
     scope:                  [String],
-    status:                 {type: Number, enum: [0,1], default: 1} // 0: done, 1: redacting
+    status:                 {type: Number, enum: [0,1], default: 1}, // 0: done, 1: redacting
+    category:               String,
+    customFields:           [customField]
 }
 
 var Service = {

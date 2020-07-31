@@ -133,6 +133,8 @@ module.exports = function(app, io) {
         if (req.body.poc) finding.poc = req.body.poc;
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
+        if (req.body.category) finding.category = req.body.category
+        if (req.body.customFields) finding.customFields = req.body.customFields
 
         Audit.createFinding(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, finding)
         .then(msg => {
@@ -174,6 +176,8 @@ module.exports = function(app, io) {
         if (req.body.poc) finding.poc = req.body.poc;
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
+        if (req.body.category) finding.category = req.body.category
+        if (req.body.customFields) finding.customFields = req.body.customFields
 
         Audit.updateFinding(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.findingId, finding)
         .then(msg => {

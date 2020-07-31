@@ -5,6 +5,7 @@ module.exports = function(app) {
     var Language = require('mongoose').model('Language');
     var AuditType = require('mongoose').model('AuditType');
     var VulnerabilityType = require('mongoose').model('VulnerabilityType');
+    var VulnerabilityCategory = require('mongoose').model('VulnerabilityCategory');
     var CustomSection = require('mongoose').model('CustomSection');
 
 /* ===== LANGUAGES ===== */
@@ -103,6 +104,54 @@ module.exports = function(app) {
         VulnerabilityType.delete(req.params.name)
         .then(msg => {
             Response.Ok(res, 'Vulnerability type deleted successfully')
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
+/* ===== VULNERABILITY CATEGORY ===== */
+
+     // Get vulnerability category list
+     app.get("/api/data/vulnerability-categories", acl.hasPermission('vulnerability-categories:read'), function(req, res) {
+        VulnerabilityCategory.getAll()
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Create vulnerability category
+    app.post("/api/data/vulnerability-categories", acl.hasPermission('vulnerability-categories:create'), function(req, res) {
+        if (!req.body.name) {
+            Response.BadParameters(res, 'Missing required parameters: name');
+            return;
+        }
+
+        var vulnCat = {};
+        vulnCat.name = req.body.name;
+        vulnCat.fields = req.body.fields || [];
+        VulnerabilityCategory.create(vulnCat)
+        .then(msg => Response.Created(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Update vulnerability category
+    app.put("/api/data/vulnerability-categories/:name", acl.hasPermission('vulnerability-categories:update'), function(req, res) {
+        if (!req.body.fields) {
+            Response.BadParameters(res, 'Missing required parameters: fields');
+            return;
+        }
+
+        var vulnCat = {};
+        vulnCat.fields = req.body.fields;
+        if (req.params.name) vulnCat.name = req.params.name;
+        VulnerabilityCategory.update(req.params.name, vulnCat)
+        .then(msg => Response.Created(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+    
+    // Delete vulnerability category
+    app.delete("/api/data/vulnerability-categories/:name", acl.hasPermission('vulnerability-categories:delete'), function(req, res) {
+        VulnerabilityCategory.delete(req.params.name)
+        .then(msg => {
+            Response.Ok(res, 'Vulnerability category deleted successfully')
         })
         .catch(err => Response.Internal(res, err))
     });

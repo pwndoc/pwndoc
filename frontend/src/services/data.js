@@ -37,6 +37,22 @@ export default {
         return Vue.prototype.$axios.delete(`data/vulnerability-types/${name}`)
     },
 
+    getVulnerabilityCategories: function() {
+        return Vue.prototype.$axios.get(`data/vulnerability-categories`)
+    },
+
+    createVulnerabilityCategory: function(vulnerabilityCategory) {
+        return Vue.prototype.$axios.post(`data/vulnerability-categories`, vulnerabilityCategory)
+    },
+
+    updateVulnerabilityCategory: function(name, vulnCat) {
+        return Vue.prototype.$axios.put(`data/vulnerability-categories/${name}`, vulnCat)
+    },
+
+    deleteVulnerabilityCategory: function(name) {
+        return Vue.prototype.$axios.delete(`data/vulnerability-categories/${name}`)
+    },
+
     getSections: function() {
         return Vue.prototype.$axios.get(`data/sections`)
     },

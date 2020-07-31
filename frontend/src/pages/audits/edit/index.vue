@@ -55,7 +55,10 @@
 							/>
 						</q-item-section>
 					</q-item>
-					<q-list no-border v-for="finding of audit.findings" :key="finding._id">
+					
+					<div v-for="categoryFindings of findingList" :key="categoryFindings.category">
+						<q-item-label header>{{categoryFindings.category}}</q-item-label>
+						<q-list no-border v-for="finding of categoryFindings.findings" :key="finding._id">
 							<q-item
 							dense
 							class="cursor-pointer"
@@ -79,7 +82,8 @@
 							<div class="row">
 								<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
 							</div>
-					</q-list>
+						</q-list>
+					</div>
 
 					<q-separator class="q-mt-lg" />
 
@@ -185,14 +189,14 @@ export default {
 						audit: {findings: {}},
 						sections: [],
 						splitterRatio: 80,
-						loading: true
+						loading: true,
+						vulnCategories: []
 				}
 		},
 
 		created: function() {
 			this.auditId = this.$route.params.auditId;
-			this.getAudit(); // Calls getSections	
-			
+			this.getAudit(); // Calls getSections				
 		},
 
 		destroyed: function() {
@@ -207,7 +211,19 @@ export default {
 			networkUsers: function() {return this.users.filter(user => user.menu === 'network')},
 			summaryUsers: function() {return this.users.filter(user => user.menu === 'summary')},
 			findingUsers: function() {return this.users.filter(user => user.menu === 'editFinding')},
-			sectionUsers: function() {return this.users.filter(user => user.menu === 'editSection')}
+			sectionUsers: function() {return this.users.filter(user => user.menu === 'editSection')},
+
+			findingList: function() { // Group findings by category
+				return _.chain(this.audit.findings)
+				.groupBy("category")
+				.map((value, key) => {
+					if (key === 'undefined')
+						return { category: 'No Category', findings: value }
+					else
+						return {category: key, findings: value}
+				})
+				.value()
+			}
 		},
 
 		methods: {

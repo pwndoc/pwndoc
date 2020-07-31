@@ -17,6 +17,7 @@ export default {
             // Datatable headers
             dtHeaders: [
                 {name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true},
+                {name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true},
                 {name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
@@ -31,7 +32,7 @@ export default {
             languages: [],
             locale: '',
             // Search filter
-            search: {title: '', type: '', valid: 0, new: 1, updates: 2},
+            search: {title: '', type: '', category: '', valid: 0, new: 1, updates: 2},
             // Errors messages
             errors: {title: ''},
             // Selected or New Vulnerability
@@ -57,7 +58,10 @@ export default {
             mergeLanguageLeft: '',
             mergeLanguageRight: '',
             mergeVulnLeft: '',
-            mergeVulnRight: ''
+            mergeVulnRight: '',
+            // Vulnerability categories
+            vulnCategories: [],
+            currentCategory: null
         }
     },
 
@@ -71,6 +75,7 @@ export default {
         this.getLanguages();
         this.getVulnTypes();
         this.getVulnerabilities();
+        this.getVulnerabilityCategories()
     },
 
     watch: {
@@ -118,6 +123,17 @@ export default {
             DataService.getVulnerabilityTypes()
             .then((data) => {
                 this.vulnTypes = data.data.datas;
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
+        // Get available vulnerability categories
+        getVulnerabilityCategories: function() {
+            DataService.getVulnerabilityCategories()
+            .then((data) => {
+                this.vulnCategories = data.data.datas;
             })
             .catch((err) => {
                 console.log(err)
@@ -243,11 +259,31 @@ export default {
         clone: function(row) {
             this.cleanCurrentVulnerability();
             
-            this.currentVulnerability = this.$_.clone(row)
+            this.currentVulnerability = this.$_.cloneDeep(row)
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;
             this.getVulnUpdates(this.vulnerabilityId);
+        },
+
+        editChangeCategory: function(category) {
+            Dialog.create({
+                title: 'Confirm Category change',
+                message: `All present custom fields will be lost once vulnerability is updated`,
+                ok: {label: 'Confirm', color: 'negative'},
+                cancel: {label: 'Cancel', color: 'white'}
+            })
+            .onOk(() => {
+                if (category){
+                    this.currentVulnerability.category = category.name
+                    this.currentVulnerability.details[this.currentDetailsIndex].customFields = category.fields
+                }
+                else {
+                    this.currentVulnerability.category = null
+                    this.currentVulnerability.details[this.currentDetailsIndex].customFields = []
+                }
+                // this.updateVulnerability()
+            })
         },
 
         cleanErrors: function() {
@@ -264,23 +300,48 @@ export default {
             this.currentVulnerability.references = [];
             this.currentVulnerability.details = [];
             this.currentLanguage = this.dtLanguage;
+            if (this.currentCategory && this.currentCategory.name) 
+                this.currentVulnerability.category = this.currentCategory.name
+            else
+                this.currentVulnerability.category = null
             this.setCurrentDetails();
         },
 
+        // Create detail if locale doesn't exist else set the currentDetailIndex
         setCurrentDetails: function(value) {
             var index = this.currentVulnerability.details.findIndex(obj => obj.locale === this.currentLanguage);
             if (index < 0) {
-                this.currentVulnerability.details.push({
+                var details = {
                     locale: this.currentLanguage,
                     title: '',
                     vulnType: '',
                     description: '',
                     observation: '',
                     remediation: ''
-                })
+                }
+                if (this.currentCategory && this.currentCategory.fields && this.currentCategory.fields.length > 0) {
+                    details.customFields = []
+                    this.currentCategory.fields.forEach(field => {
+                        details.customFields.push({
+                            label: field.label,
+                            fieldType: field.fieldType,
+                            text: ''
+                        })
+                    })
+                }
+                
+                this.currentVulnerability.details.push(details)
                 index = this.currentVulnerability.details.length - 1;
             }
             this.currentDetailsIndex = index;
+        },
+
+        isTextInCustomFields: function(text) {
+            var result = false
+            if (this.currentVulnerability.details[this.currentDetailsIndex].customFields) {
+                result = typeof this.currentVulnerability.details[this.currentDetailsIndex].customFields.find(f => f.text === text) === 'undefined'
+            }
+            return result
         },
 
         getDtTitle: function(row) {
@@ -321,8 +382,10 @@ export default {
             var result = rows && rows.filter(row => {
                 var title = this.getDtTitle(row)
                 var type = this.getDtType(row)
+                var category = row.category || "None"
                 return title.toLowerCase().indexOf(terms.title||"") > -1 && 
                 type.toLowerCase().indexOf(terms.type||"") > -1 &&
+                category.toLowerCase().indexOf(terms.category||"") > -1 &&
                 (row.status === terms.valid || row.status === terms.new || row.status === terms.updates)
                 // try {var regexTitle = new RegExp(terms.title, 'ig')} catch {var regexTitle = ""}
                 // return title.match(regexTitle) && 
@@ -364,8 +427,6 @@ export default {
                     position: 'top-right'
                 })
             })
-        },
-
-        test: function(props) {console.log(props)}
+        }
     }
 }

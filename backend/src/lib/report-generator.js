@@ -6,8 +6,8 @@ var ImageModule = require('docxtemplater-image-module');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
-var merge = require("lodash/merge");
 var html2ooxml = require('./html2ooxml')
+var _ = require('lodash');
 
 // Generate document with docxtemplater
 function generateDoc(audit) {
@@ -122,7 +122,7 @@ expressions.filters.NewLines = function(input) {
 
 expressions.filters.convertHTML = function(input) {
     if (typeof input === 'undefined')
-        var result = html2ooxml("")
+        var result = html2ooxml('')
     else
         var result = html2ooxml(input)
     return result;
@@ -145,7 +145,7 @@ var angularParser = function(tag) {
             const scopeList = context.scopeList;
             const num = context.num;
             for (let i = 0, len = num + 1; i < len; i++) {
-                obj = merge(obj, scopeList[i]);
+                obj = _.merge(obj, scopeList[i]);
             }
             return expr(scope, obj);
         }
@@ -284,7 +284,7 @@ function prepAuditData(data) {
 
     result.findings = []
     data.findings.forEach(finding => {
-        result.findings.push({
+        var tmpFinding = {
             title: finding.title || "",
             vulnType: finding.vulnType || "",
             description: finding.description || "",
@@ -297,9 +297,16 @@ function prepAuditData(data) {
             cvssScore: finding.cvssScore || "",
             cvssSeverity: finding.cvssSeverity || "",
             poc: splitHTMLParagraphs(finding.poc),
-            affected: finding.scope || [],
-            status: finding.status || ""
-        })
+            affected: finding.scope || "",
+            status: finding.status || "",
+            category: finding.category || ""
+        }
+        if (finding.customFields) {
+            finding.customFields.forEach(field => {
+                tmpFinding[_.deburr(field.label.toLowerCase()).replace(/\s/g, '')] = field.text
+            })
+        }
+        result.findings.push(tmpFinding)
     })
 
     result.creator = {}
