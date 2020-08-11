@@ -12,8 +12,6 @@ import DataService from '@/services/data';
 export default {
     data: () => {
         return {
-            // **** Global ****
-            AuditService: AuditService,
             // Set audit ID
             auditId: null,
             // Current editing audit object

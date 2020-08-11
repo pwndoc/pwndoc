@@ -202,7 +202,7 @@ export default {
 		destroyed: function() {
 			if (!this.loading) {
 				this.$socket.emit('leave', {username: UserService.user.username, room: this.auditId});
-				localStorage.removeItem('uploadedImages');
+				this.$socket.off()
 			}
 		},
 

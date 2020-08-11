@@ -9,9 +9,6 @@ import DataService from '@/services/data';
 export default {
     data: () => {
         return {
-            // **** Findings ****
-            AuditService: AuditService,
-
             finding: {},
             findingTitle: '',
             // List of vulnerabilities from knowledge base
@@ -50,7 +47,7 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getLanguages();
-        this.dtLanguage = AuditService.audit.locale;
+        this.dtLanguage = this.$parent.audit.language;
         this.getVulnerabilities();
         this.getVulnerabilityCategories()
 

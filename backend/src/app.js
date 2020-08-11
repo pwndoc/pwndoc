@@ -50,8 +50,9 @@ io.on('connection', (socket) => {
   });
   socket.on('leave', (data) => {
     console.log(`user ${data.username} left room ${data.room}`)
-    socket.leave(data.room);
-    io.to(data.room).emit('updateUsers');
+    socket.leave(data.room, () => {
+      io.to(data.room).emit('updateUsers');
+    })
   })
   socket.on('updateUsers', (data) => {
     var userList = [...new Set(getSockets(data.room).map(s => {
