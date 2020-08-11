@@ -1,8 +1,6 @@
 import Vue from 'vue'
 
 export default {
-  audit: {},
-
   getAudits: function(filters) {
     var queryParams = "?";
     if (filters)
@@ -12,17 +10,7 @@ export default {
   },
 
   getAudit: function(auditId) {
-    return new Promise((resolve, reject) => {
-      Vue.prototype.$axios.get(`audits/${auditId}`)
-      .then(response => {
-        this.audit.locale = response.data.datas.language;
-        this.audit.name = response.data.datas.name;
-        resolve(response);
-      })
-      .catch(error => {
-        reject(error);
-      })
-    })
+    return Vue.prototype.$axios.get(`audits/${auditId}`)
   },
 
   createAudit: function(audit) {

@@ -11,8 +11,6 @@ import VulnService from '@/services/vulnerability';
 export default {
     data: () => {
         return {
-            AuditService: AuditService,
-
             finding: {},
             findingOrig: {},
             selectedTab: "definition",
@@ -76,7 +74,7 @@ export default {
 
     computed: {
         vulnTypesLang: function() {
-            return this.vulnTypes.filter(type => type.locale === AuditService.audit.locale);
+            return this.vulnTypes.filter(type => type.locale === this.$parent.audit.language);
         },
 
         screenshotsSize: function() {
@@ -198,7 +196,7 @@ export default {
 
          // Backup Finding to vulnerability database
          backupFinding: function() {
-            VulnService.backupFinding(AuditService.audit.locale, this.finding)
+            VulnService.backupFinding(this.$parent.audit.language, this.finding)
             .then((data) => {
                 Notify.create({
                     message: data.data.datas,

@@ -8,9 +8,6 @@ import AuditService from '@/services/audit';
 export default {
     data: () => {
         return {
-            // **** Global ****
-            AuditService: AuditService,
-
             // Set audit ID
             auditId: null,
             section: {},

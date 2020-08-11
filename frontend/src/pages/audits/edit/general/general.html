@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="AuditService.audit.name" id="edit-breadcrumb-affix">
+<breadcrumb buttons :title="$parent.audit.name" id="edit-breadcrumb-affix">
     <div slot="buttons">
     <q-btn color="positive" label="Save" no-caps style="width: 100px" @click="updateAuditGeneral" />
     </div>

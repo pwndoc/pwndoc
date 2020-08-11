@@ -7,8 +7,6 @@ import AuditService from '@/services/audit';
 export default {
     data: () => {
         return {
-            AuditService: AuditService,
-
             audit: {
                 // scope: []
             },
