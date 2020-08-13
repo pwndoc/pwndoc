@@ -43,6 +43,7 @@
                         option-label="name" 
                         emit-value 
                         map-options
+                        options-sanitize
                         />
                         <q-field class="col-md-12" borderless label="Description" stack-label>
                             <template v-slot="control">
@@ -64,6 +65,7 @@
                         hide-dropdown-icon
                         use-input
                         new-value-mode="add-unique"
+                        options-sanitize
                         />
                 </q-card-section>
 
@@ -115,6 +117,7 @@
                     hide-dropdown-icon
                     use-input
                     new-value-mode="add-unique"
+                    options-sanitize
                     />
                 </q-card-section>
             </q-card>
@@ -143,6 +146,7 @@
                     :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
                     map-options
                     emit-value
+                    options-sanitize
                     />
                     <q-select
                     label="Priority"
@@ -152,6 +156,7 @@
                     :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
                     map-options
                     emit-value
+                    options-sanitize
                     />
                 </div>
             </q-card-section>

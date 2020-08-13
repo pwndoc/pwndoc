@@ -103,7 +103,9 @@
             class="col-md-12"
             v-model="currentCollab.role"
             :options="['user', 'report', 'admin']"
-            @keyup.enter="createCollab()"/>
+            @keyup.enter="createCollab()"
+            options-sanitize
+            />
         </q-card-section>
         <q-card-section>
             <q-input 
@@ -173,7 +175,9 @@
                 class="col-md-12"
                 v-model="currentCollab.role"
                 :options="['user', 'report', 'admin']"
-                @keyup.enter="updateCollab()"/>
+                @keyup.enter="updateCollab()"
+                options-sanitize
+                />
             </q-card-section>   
             <q-card-section>
                 <q-input 
