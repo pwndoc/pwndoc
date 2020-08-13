@@ -19,6 +19,7 @@
                 option-label="name" 
                 emit-value 
                 map-options
+                options-sanitize
                 />
                 <q-select
                 label="Company"
@@ -28,6 +29,7 @@
                 option-label="name"
                 @input="filterClients"
                 clearable
+                options-sanitize
                 />
                 <q-select
                 label="Client"
@@ -37,6 +39,7 @@
                 option-label="email"
                 @input="filterCompany"
                 clearable
+                options-sanitize
                 />
                 <q-select 
                 label="Collaborators"
@@ -46,6 +49,7 @@
                 :option-label="(item) => item.firstname+' '+item.lastname"
                 multiple
                 use-chips
+                options-sanitize
                 />
             </q-card-section>
         </q-card>
@@ -89,6 +93,7 @@
                 hide-dropdown-icon
                 use-input
                 new-value-mode="add-unique"
+                options-sanitize
                 />
                 <q-select 
                 label="Language"
@@ -98,6 +103,7 @@
                 option-label="language" 
                 emit-value 
                 map-options
+                options-sanitize
                 />
                 <q-select
                 label="Template"
@@ -107,6 +113,7 @@
                 option-label="name"
                 emit-value
                 map-options
+                options-sanitize
                 /> 
             </q-card-section>
         </q-card>

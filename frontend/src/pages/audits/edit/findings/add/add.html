@@ -25,6 +25,7 @@
                 map-options
                 emit-value
                 @input="getVulnerabilities"
+                options-sanitize
                 />
                 <q-space />
                 <q-input v-model="findingTitle" label="Title" class="q-pl-md col-md-6" @keyup.enter="addFinding()">
@@ -67,6 +68,7 @@
                         v-model="search.category"
                         clearable
                         :options="vulnCategoriesOptions"
+                        options-sanitize
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -77,6 +79,7 @@
                         v-model="search.vulnType"
                         clearable
                         :options="vulnTypeOptions"
+                        options-sanitize
                         />
                     </q-td>
                     <q-td></q-td>

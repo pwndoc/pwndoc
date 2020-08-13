@@ -61,6 +61,7 @@
                             :options="targetsOptions"
                             use-chips
                             clearable
+                            options-sanitize
                             >
                             <template v-slot:append>
                                 <q-btn round dense flat icon="add" @click.close="updateScopeHosts(scope)" />

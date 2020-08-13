@@ -24,6 +24,7 @@
                 option-label="language" 
                 map-options
                 emit-value
+                options-sanitize
                 />
                 <q-toggle label="Valid" v-model="search.valid" :true-value=0 />
                 <q-toggle label="New" color="light-blue" v-model="search.new" :true-value=1 />
@@ -81,6 +82,7 @@
                         v-model="search.category"
                         clearable
                         :options="vulnCategoriesOptions"
+                        options-sanitize
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -91,6 +93,7 @@
                         v-model="search.type"
                         clearable
                         :options="vulnTypeOptions"
+                        options-sanitize
                         />
                     </q-td>
                     <q-td></q-td>
@@ -177,6 +180,7 @@
                 option-label="name" 
                 emit-value 
                 map-options
+                options-sanitize
                 />
                 <q-select
                 label='Language'
@@ -188,6 +192,7 @@
                 option-label="language"
                 map-options
                 emit-value
+                options-sanitize
                 />
             </div>
         </q-card-section>
@@ -234,6 +239,7 @@
                 :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
                 map-options
                 emit-value
+                options-sanitize
                 />
                 <q-select
                 label="Remediation Priority"
@@ -243,6 +249,7 @@
                 :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
                 map-options
                 emit-value
+                options-sanitize
                 />
             </div>
         </q-card-section>
@@ -257,6 +264,7 @@
             hide-dropdown-icon
             use-input
             new-value-mode="add-unique"
+            options-sanitize
             />
         </q-card-section>
 
@@ -342,6 +350,7 @@
                 option-label="name" 
                 emit-value 
                 map-options
+                options-sanitize
                 />
                 <q-select
                 label='Language'
@@ -353,6 +362,7 @@
                 option-label="language"
                 map-options
                 emit-value
+                options-sanitize
                 />
             </div>
         </q-card-section>
@@ -399,6 +409,7 @@
                 :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
                 map-options
                 emit-value
+                options-sanitize
                 />
                 <q-select
                 label="Remediation Priority"
@@ -408,6 +419,7 @@
                 :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
                 map-options
                 emit-value
+                options-sanitize
                 />
             </div>
         </q-card-section>
@@ -422,6 +434,7 @@
             hide-dropdown-icon
             use-input
             new-value-mode="add-unique"
+            options-sanitize
             />
         </q-card-section>
 
@@ -499,6 +512,7 @@
                         option-label="name" 
                         emit-value 
                         map-options
+                        options-sanitize
                         />
                         <q-select
                         label='Language'
@@ -511,6 +525,7 @@
                         map-options
                         emit-value
                         readonly
+                        options-sanitize
                         />
                     </q-card-section>
                     <q-card-section>
@@ -553,6 +568,7 @@
                         :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
                         map-options
                         emit-value
+                        options-sanitize
                         />
                         <q-select
                         label="Remediation Priority"
@@ -562,6 +578,7 @@
                         :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
                         map-options
                         emit-value
+                        options-sanitize
                         />
                     </q-card-section>
                     <q-card-section>
@@ -575,6 +592,7 @@
                         hide-dropdown-icon
                         use-input
                         new-value-mode="add-unique"
+                        options-sanitize
                         />
                     </q-card-section>
 
@@ -641,6 +659,7 @@
                                 emit-value 
                                 map-options
                                 readonly
+                                options-sanitize
                                 />
                                 <q-select
                                 label='Language'
@@ -653,6 +672,7 @@
                                 emit-value
                                 map-options
                                 readonly
+                                options-sanitize
                                 />
                             </q-card-section>
                             <q-card-section>
@@ -719,6 +739,7 @@
                                 map-options
                                 emit-value
                                 readonly
+                                options-sanitize
                                 />
                                 <q-select
                                 :bg-color="(currentVulnerability.priority != update.priority)?'red-1':''"
@@ -730,6 +751,7 @@
                                 map-options
                                 emit-value
                                 readonly
+                                options-sanitize
                                 />
                             </q-card-section>
                             <q-card-section>
@@ -745,6 +767,7 @@
                                 use-input
                                 new-value-mode="add-unique"
                                 readonly
+                                options-sanitize
                                 />
                             </q-card-section>
 
@@ -813,6 +836,7 @@
                     map-options
                     emit-value
                     @input="mergeVulnLeft = ''"
+                    options-sanitize
                     />
                 </q-card-section>
                 <q-card-section class="card-section-merge">
@@ -842,6 +866,7 @@
                     map-options
                     emit-value
                     @input="mergeVulnRight = ''"
+                    options-sanitize
                     />
                 </q-card-section>
                 <q-card-section class="card-section-merge">
