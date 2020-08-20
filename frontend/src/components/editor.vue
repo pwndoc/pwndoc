@@ -144,8 +144,8 @@
                     <q-icon name="redo" />
                 </q-btn>
 
-                <q-separator vertical class="q-mx-sm" v-if="diff && diffContent !== diff" />
-                <div v-if="diff && diffContent !== diff">
+                <q-separator vertical class="q-mx-sm" v-if="diff && value !== diff" />
+                <div v-if="diff && value !== diff">
                     <q-btn flat size="sm" dense
                     :class="{'is-active': toggleDiff}"
                     label="toggle diff"
@@ -386,6 +386,7 @@ export default {
       color: white;
       font-size: 0.8rem;
       overflow-x: auto;
+      white-space: pre-wrap;
 
       code {
         display: block;
