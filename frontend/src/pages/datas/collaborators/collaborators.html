@@ -11,6 +11,7 @@
         >
             <div slot="top-left" slot-scope="props">
                 <q-input
+                style="width: 300px"
                 color="secondary"
                 label="Search"
                 autofocus
@@ -21,14 +22,12 @@
 
             <div slot="top-right" slot-scope="props" v-if="UserService.isAdmin()">
                 <q-btn 
-                    flat 
-                    color="white" 
-                    text-color="black" 
-                    no-caps
-                    @click="cleanCurrentCollab(); $refs.createModal.show()"
-                    >
-                    Add Collaborator
-                </q-btn>            
+                unelevated
+                label="Add Collaborator" 
+                color="secondary"
+                no-caps
+                @click="cleanCurrentCollab(); $refs.createModal.show()"
+                />          
             </div>
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
@@ -122,8 +121,8 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn class="bg-white text-black" @click="$refs.createModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" @click="createCollab()">Create</q-btn>
+            <q-btn color="primary" outline @click="$refs.createModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" unelevated @click="createCollab()">Create</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
@@ -191,8 +190,8 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn class="bg-white text-black" @click="$refs.editModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" @click="updateCollab()">Update</q-btn>
+            <q-btn color="primary" outline @click="$refs.editModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" unelevated @click="updateCollab()">Update</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>

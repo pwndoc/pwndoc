@@ -3,7 +3,7 @@
     <div v-if="languages.length === 0" class="col-md-4 offset-md-4 q-mt-md">
         <p>No languages are defined. </br> Please create Languages in <a href="/datas/custom">Datas -> Custom Datas -> Languages</a></p>
     </div>
-    <div v-else class="col-md-8 offset-md-2 q-mt-md">
+    <div v-else class="col-8 offset-2 q-mt-md">
         <q-table
             :columns="dtHeaders"
             :data="computedVulnerabilities"
@@ -30,20 +30,19 @@
                 <q-toggle label="New" color="light-blue" v-model="search.new" :true-value=1 />
                 <q-toggle label="Updates" color="orange" v-model="search.updates" :true-value=2 />
                 <q-btn 
-                    v-if="UserService.isAdmin()"
-                    class="q-ml-md"
-                    color="secondary" 
-                    no-caps
-                    @click="$refs.mergeModal.show()"
-                    >
-                    Merge Vulnerabilities
-                </q-btn>  
+                v-if="UserService.isAdmin()"
+                class="q-ml-md"
+                label="Merge Vulnerabilities"
+                outline
+                color="secondary" 
+                no-caps
+                @click="$refs.mergeModal.show()"
+                />
                 <q-space />
                 <q-btn-dropdown 
                 v-if="UserService.isAdmin()"
-                flat 
-                color="white" 
-                text-color="black" 
+                unelevated
+                color="secondary"
                 no-caps
                 label="New Vulnerability"
                 >
@@ -292,8 +291,8 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn class="bg-white text-black" @click="$refs.createModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" @click="createVulnerability()">Create</q-btn>
+            <q-btn color="primary" outline @click="$refs.createModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" unelevated @click="createVulnerability()">Create</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
@@ -462,9 +461,9 @@
         <q-separator />
 
         <q-card-actions align="right" v-if="UserService.isAdmin()">
-            <q-btn class="bg-white text-black" @click="$refs.editModal.hide()">Cancel</q-btn>
-            <q-btn v-if="currentVulnerability.status === 1" label="Approve" color="light-blue" @click="updateVulnerability()" />
-            <q-btn v-else color="secondary" @click="updateVulnerability()">Update</q-btn>
+            <q-btn color="primary" outline @click="$refs.editModal.hide()">Cancel</q-btn>
+            <q-btn v-if="currentVulnerability.status === 1" label="Approve" color="light-blue" unelevated @click="updateVulnerability()" />
+            <q-btn v-else color="secondary" unelevated @click="updateVulnerability()">Update</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
@@ -621,8 +620,8 @@
                     <q-separator />
             
                     <q-card-actions align="right">
-                        <q-btn class="bg-white text-black" @click="$refs.updatesModal.hide()">Cancel</q-btn>
-                        <q-btn label="Approve" color="orange" @click="updateVulnerability()" />
+                        <q-btn color="primary" outline @click="$refs.updatesModal.hide()">Cancel</q-btn>
+                        <q-btn color="orange" unelevated label="Approve" @click="updateVulnerability()" />
                     </q-card-actions>
                 </q-card>
                 <q-card class="col-md-6">
@@ -895,7 +894,7 @@
         </div>
         <q-separator />
         <q-card-actions align="center">
-                <q-btn color="secondary" @click="mergeVulnerabilities" :disable="mergeVulnLeft === '' || mergeVulnRight === ''">Merge</q-btn>
+                <q-btn color="secondary" unelevated @click="mergeVulnerabilities" :disable="mergeVulnLeft === '' || mergeVulnRight === ''">Merge</q-btn>
             </q-card-actions>
     </q-card>
 </q-dialog>
