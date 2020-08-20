@@ -158,7 +158,7 @@
         </editor-menu-bar>
     </affix>
     <q-separator />
-    <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" style="min-height:200px" :editor="editor" />
+    <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor" />
     <div v-else class="editor__content q-pa-sm" style="min-height:200px" v-html="diffContent">
     </div>
 </q-card>
@@ -373,6 +373,11 @@ export default {
 
     * {
       caret-color: currentColor;
+    }
+
+    .ProseMirror {
+        min-height: 200px;
+        cursor: auto;
     }
 
     h1 {
