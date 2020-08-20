@@ -684,8 +684,10 @@
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
-                                        :class="(currentVulnerability.details[currentDetailsIndex].description !== update.description)?'bg-red-1':''"
-                                        v-model="update.description" :toolbar="['format', 'marks', 'list', 'code']" :editable=false />
+                                        v-model="update.description" 
+                                        :diff="currentVulnerability.details[currentDetailsIndex].description || ''" 
+                                        :toolbar="['format', 'marks', 'list', 'code']" 
+                                        :editable=false />
                                     </template>
                                 </q-field>
                             </q-card-section>
@@ -698,8 +700,10 @@
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
-                                        :class="(currentVulnerability.details[currentDetailsIndex].observation !== update.observation)?'bg-red-1':''"
-                                        v-model="update.observation" :toolbar="['format', 'marks', 'list', 'code']" :editable=false />
+                                        v-model="update.observation"
+                                        :diff="currentVulnerability.details[currentDetailsIndex].observation || ''"
+                                        :toolbar="['format', 'marks', 'list', 'code']" 
+                                        :editable=false />
                                     </template>
                                 </q-field>
                             </q-card-section>
@@ -723,8 +727,10 @@
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
-                                        :class="(currentVulnerability.details[currentDetailsIndex].remediation !== update.remediation)?'bg-red-1':''"
-                                        v-model="update.remediation" :toolbar="['format', 'marks', 'list', 'code']" :editable=false />
+                                        v-model="update.remediation" 
+                                        :diff="currentVulnerability.details[currentDetailsIndex].remediation || ''"
+                                        :toolbar="['format', 'marks', 'list', 'code']" 
+                                        :editable=false />
                                     </template>
                                 </q-field>
                             </q-card-section>
@@ -777,7 +783,7 @@
                             header-class="bg-blue-grey-5 text-white" 
                             expand-icon-class="text-white">
                                 <div v-if="update.customFields">
-                                    <q-card-section v-for="field of update.customFields" :key="field.label">
+                                    <q-card-section v-for="(field,idx) of update.customFields" :key="field.label">
                                         <q-field 
                                         v-if="field.fieldType === 'text'" 
                                         borderless 
@@ -787,8 +793,10 @@
                                         >
                                             <template v-slot="control">
                                                 <basic-editor 
-                                                :class="(isTextInCustomFields(field.text))?'bg-red-1':''"
-                                                v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" :editable=false />
+                                                v-model="field.text" 
+                                                :diff="currentVulnerability.details[currentDetailsIndex].customFields[idx].text || ''"
+                                                :toolbar="['format', 'marks', 'list', 'code']" 
+                                                :editable=false />
                                             </template>
                                         </q-field>
                                         <q-input
