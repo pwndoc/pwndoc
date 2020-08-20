@@ -1,6 +1,6 @@
 <template>
-<q-card id="editor_content" flat bordered class="editor full-width">
-    <affix relative-element-selector="#editor_content" :enabled="affix">
+<q-card flat bordered class="editor full-width">
+    <affix relative-element-selector=".affix-relative-element" :enabled="affix">
         <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
             <q-toolbar class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">

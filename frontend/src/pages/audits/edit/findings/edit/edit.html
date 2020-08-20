@@ -4,7 +4,7 @@
         <q-btn
         color="orange"
         class="q-mr-sm"
-        label="Create or Update vulnerability"
+        label="Propose Creation / Update in Vulnerability Database"
         no-caps
         @click="backupFinding()"
         />
@@ -25,7 +25,7 @@
         <q-tab ref="proofs" name="proofs" label="Proofs"/>
         <q-tab name="details" label="Details" />
         <q-separator vertical />
-        <q-toggle label="Redacted" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
+        <q-toggle label="Completed" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
         <q-space />
     </q-tabs>
 
@@ -95,7 +95,7 @@
         <q-tab-panel name="proofs">
             <div class="q-col-gutter-md row">
                 <div class="col-md-12">
-                    <q-card>
+                    <q-card class="affix-relative-element">
                         <q-card-section>
                             <basic-editor affix v-model="finding.poc" />
                         </q-card-section>
