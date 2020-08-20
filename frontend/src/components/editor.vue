@@ -144,12 +144,23 @@
                     <q-icon name="redo" />
                 </q-btn>
 
+                <q-separator vertical class="q-mx-sm" v-if="diff && diffContent !== diff" />
+                <div v-if="diff && diffContent !== diff">
+                    <q-btn flat size="sm" dense
+                    :class="{'is-active': toggleDiff}"
+                    label="toggle diff"
+                    @click="toggleDiff = !toggleDiff"
+                    />
+                </div>
+
             </q-toolbar>
             <!-- <q-separator /> -->
         </editor-menu-bar>
     </affix>
     <q-separator />
-    <editor-content class="editor__content q-pa-sm" style="min-height:200px" :editor="editor" />
+    <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" style="min-height:200px" :editor="editor" />
+    <div v-else class="editor__content q-pa-sm" style="min-height:200px" v-html="diffContent">
+    </div>
 </q-card>
 </template>
 
@@ -176,6 +187,10 @@ import {
 
 import CustomImage from './editor-image'
 
+const Diff = require('diff');
+import  HTMLDiff from 'htmldiff-js'
+const HtmlDiffer = require('html-differ').HtmlDiffer
+
 export default {
     name: 'BasicEditor',
     props: {
@@ -193,7 +208,8 @@ export default {
         affix: {
             type: Boolean,
             default: false
-        }
+        },
+        diff: String
     },
     components: {
         EditorContent,
@@ -228,9 +244,8 @@ export default {
             }),
             json: '',
             html: '',
-            imageValue: ''
-            // formatIcon: 'fa fa-paragraph',
-            // formatLabel: null
+            imageValue: '',
+            toggleDiff: true
         }
     },
 
@@ -240,6 +255,8 @@ export default {
                 return;
             }
            this.editor.setContent(value)
+
+           
        }
     },
 
@@ -270,6 +287,29 @@ export default {
             else if (this.editor.isActive.heading({level: 4})) return 'H4'
             else if (this.editor.isActive.heading({level: 5})) return 'H5'
             else if (this.editor.isActive.heading({level: 6})) return 'H6'
+        },
+
+        diffContent: function() {
+            var content = ''
+            if (typeof this.diff !== "undefined") {
+                var HtmlDiff = new Diff.Diff(true)
+                HtmlDiff.tokenize = function(value) {
+                    return value.split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
+                }
+                var diff = HtmlDiff.diff(this.diff, this.value)
+                diff.forEach(part => {
+                    const diffclass = part.added ? 'diffadd' : part.removed ? 'diffrem' : 'diffeq'
+                    var value = part.value.replace(/<p><\/p>/g, '<p><br></p>')
+                    if (part.added || part.removed) {
+                        value = value
+                        .replace(/(<p>)(.+?)(<\/p>|$)/g, `$1<span class="${diffclass}">$2</span>$3`) // Insert span diffclass in paragraphs
+                        .replace(/(<pre><code>)(.+?)(<\/code><\/pre>|$)/g, `$1<span class="${diffclass}">$2</span>$3`) // Insert span diffclass in codeblocks
+                        .replace(/(^[^<].*?)(<|$)/g, `<span class="${diffclass}">$1</span>$2`) // Insert span diffclass if text only
+                    }
+                        content += value
+                })
+            }
+            return content
         }
     },
 
@@ -454,5 +494,19 @@ export default {
 }
 .editor-toolbar {
     min-height: 32px;
+}
+
+.diffrem {
+    background-color: #fdb8c0;
+}
+pre .diffrem {
+    background-color: $red-6;
+}
+
+.diffadd {
+    background-color: #acf2bd;
+}
+pre .diffadd {
+    background-color: $green-6;
 }
 </style>
