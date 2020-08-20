@@ -33,7 +33,7 @@
                                 />
                             </q-item-section>
                             <q-item-section side>
-                                <q-btn color="secondary" label="+" size="md" @click="createLanguage" />
+                                <q-btn color="secondary" unelevated label="+" size="md" @click="createLanguage" />
                             </q-item-section>
                         </q-item>
                     </div>
@@ -55,7 +55,7 @@
                                 />
                             </q-item-section>
                             <q-item-section side >
-                                <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteLanguage(language.locale)"/>
+                                <q-btn color="red" unelevated label="x" size="md" class="q-mt-md" @click="deleteLanguage(language.locale)"/>
                             </q-item-section>
                         </q-item>
                     </div>
@@ -101,7 +101,7 @@
                                 />
                             </q-item-section>
                             <q-item-section side>
-                                <q-btn color="secondary" label="+" size="md" @click="createAuditType" />
+                                <q-btn color="secondary" unelevated label="+" size="md" @click="createAuditType" />
                             </q-item-section>
                         </q-item>
                     </div>
@@ -115,7 +115,7 @@
                                 />
                             </q-item-section>
                             <q-item-section side>
-                                <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteAuditType(auditType.name)"/>
+                                <q-btn color="red" unelevated label="x" size="md" class="q-mt-md" @click="deleteAuditType(auditType.name)"/>
                             </q-item-section>
                         </q-item>
                     </div>
@@ -163,7 +163,7 @@
                                 />
                             </q-item-section>
                             <q-item-section side>
-                                <q-btn color="secondary" label="+" size="md" @click="createVulnerabilityType" />
+                                <q-btn color="secondary" unelevated label="+" size="md" @click="createVulnerabilityType" />
                             </q-item-section>
                         </q-item>
                     </div>
@@ -177,7 +177,7 @@
                                 />
                             </q-item-section>
                             <q-item-section side>
-                                <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteVulnerabilityType(vulnType.name)"/>
+                                <q-btn color="red" unelevated label="x" size="md" class="q-mt-md" @click="deleteVulnerabilityType(vulnType.name)"/>
                             </q-item-section>
                         </q-item>
                     </div>
@@ -211,7 +211,7 @@
                                 />
                             </q-item-section>
                             <q-item-section side>
-                                <q-btn color="secondary" label="+" size="md" @click="createVulnerabilityCategory" />
+                                <q-btn color="secondary" unelevated label="+" size="md" @click="createVulnerabilityCategory" />
                             </q-item-section>
                         </q-item>
                     </div>
@@ -238,7 +238,7 @@
                                                         />
                                                     </q-item-section>
                                                     <q-item-section side>
-                                                        <q-btn color="red" label="x" size="md" @click="updateVulnerabilityCategory(vulnCat, idx)" />
+                                                        <q-btn color="red" unelevated label="x" size="md" @click="updateVulnerabilityCategory(vulnCat, idx)" />
                                                     </q-item-section>
                                                 </q-item>
                                                 <q-item>
@@ -264,7 +264,7 @@
                                                         />
                                                     </q-item-section>
                                                     <q-item-section side>
-                                                        <q-btn color="secondary" label="+" size="md" @click="updateVulnerabilityCategory(vulnCat, null)" />
+                                                        <q-btn color="secondary" unelevated label="+" size="md" @click="updateVulnerabilityCategory(vulnCat, null)" />
                                                     </q-item-section>
                                                 </q-item>
                                             </q-card-section>
@@ -272,7 +272,7 @@
                                     </q-expansion-item>
                                 </q-item-section>
                                 <q-item-section side>
-                                    <q-btn color="red" label="x" size="md" @click="deleteVulnerabilityCategory(vulnCat.name)"/>
+                                    <q-btn color="red" unelevated label="x" size="md" @click="deleteVulnerabilityCategory(vulnCat.name)"/>
                                 </q-item-section>
                             </q-item>
                         </q-list>
@@ -328,7 +328,7 @@
                                 />
                             </q-item-section>
                             <q-item-section side>
-                                <q-btn color="secondary" label="+" size="md" @click="createSection" />
+                                <q-btn color="secondary" unelevated label="+" size="md" @click="createSection" />
                             </q-item-section>
                         </q-item>
                         <q-item>
@@ -357,7 +357,7 @@
                                     />
                                 </q-item-section>
                                 <q-item-section side >
-                                    <q-btn color="red" label="x" size="md" class="q-mt-md" @click="deleteSection(section.field, section.locale)"/>
+                                    <q-btn color="red" unelevated label="x" size="md" class="q-mt-md" @click="deleteSection(section.field, section.locale)"/>
                                 </q-item-section>
                             </q-item>
                             <q-item v-if="section.text">

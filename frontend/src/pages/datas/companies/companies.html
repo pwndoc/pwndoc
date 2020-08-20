@@ -11,6 +11,7 @@
         >
             <div slot="top-left" slot-scope="props">
                 <q-input
+                style="width: 300px"
                 color="secondary"
                 label="Search"
                 autofocus
@@ -21,14 +22,12 @@
 
             <div slot="top-right" slot-scope="props">
                 <q-btn 
-                    flat 
-                    color="white" 
-                    text-color="black" 
-                    no-caps
-                    @click="cleanCurrentCompany(); $refs.createModal.show()"
-                    >
-                    Add Company
-                </q-btn>            
+                unelevated 
+                label="Add Company"
+                color="secondary" 
+                no-caps
+                @click="cleanCurrentCompany(); $refs.createModal.show()"
+                />         
             </div>
 
             <q-td slot="body-cell-logo" slot-scope="props">
@@ -91,8 +90,8 @@
         </q-card-section>
 
         <q-card-actions align="right">
-            <q-btn class="bg-white text-black" @click="$refs.createModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" @click="createCompany()">Create</q-btn>
+            <q-btn color="primary" outline @click="$refs.createModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" unelevated @click="createCompany()">Create</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
@@ -131,8 +130,8 @@
         </q-card-section>
 
         <q-card-actions align="right">
-            <q-btn class="bg-white text-black" @click="$refs.editModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" @click="updateCompany()">Update</q-btn>
+            <q-btn color="primary" outline @click="$refs.editModal.hide()">Cancel</q-btn>
+            <q-btn color="secondary" unelevated @click="updateCompany()">Update</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
