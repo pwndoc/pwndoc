@@ -187,9 +187,7 @@ import {
 
 import CustomImage from './editor-image'
 
-const Diff = require('diff');
-import  HTMLDiff from 'htmldiff-js'
-const HtmlDiffer = require('html-differ').HtmlDiffer
+const Diff = require('diff')
 
 export default {
     name: 'BasicEditor',
