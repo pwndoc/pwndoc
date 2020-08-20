@@ -55,7 +55,7 @@
     </div>
 </div>
 
-<q-dialog ref="createModal"  @hide="cleanCurrentTemplate()">
+<q-dialog ref="createModal" persistent @hide="cleanCurrentTemplate()">
     <q-card style="width:800px">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
@@ -101,7 +101,7 @@
     </q-card>
 </q-dialog>
 
-<q-dialog ref="editModal"  @hide="cleanCurrentTemplate()">
+<q-dialog ref="editModal" persistent @hide="cleanCurrentTemplate()">
     <q-card style="width:800px">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">

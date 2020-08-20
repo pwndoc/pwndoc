@@ -53,7 +53,7 @@
     </div>
 </div>
 
-<q-dialog ref="createModal" @hide="cleanErrors()" @show="$refs.lastnameInput.focus()">
+<q-dialog ref="createModal" persistent @hide="cleanErrors()" @show="$refs.lastnameInput.focus()">
     <q-card persistent style="width:800px">
         <q-bar class="bg-primary text-white">
             <span>Add Client</span>
@@ -135,7 +135,7 @@
     </q-card>
 </q-dialog>
 
-<q-dialog ref="editModal" @hide="cleanErrors()">
+<q-dialog ref="editModal" persistent @hide="cleanErrors()">
     <q-card persistent style="width:800px">
         <q-bar class="bg-primary text-white">
             <span>Edit Client</span>
