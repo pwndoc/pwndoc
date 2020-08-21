@@ -239,6 +239,8 @@ export default {
                     this.html = getHTML()
                     this.$emit('input', this.html)
                 },
+                disableInputRules: true,
+                disablePasteRules: true
             }),
             json: '',
             html: '',
