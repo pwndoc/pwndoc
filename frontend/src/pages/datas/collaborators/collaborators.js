@@ -36,7 +36,7 @@ export default {
                 role: ''
             },
             // Username to identify collab to update
-            usernameUpdate: ''
+            idUpdate: ''
         }
     },
 
@@ -102,7 +102,7 @@ export default {
             if (this.errors.lastname || this.errors.firstname || this.errors.username)
                 return;
 
-            CollabService.updateCollab(this.usernameUpdate, this.currentCollab)
+            CollabService.updateCollab(this.idUpdate, this.currentCollab)
             .then(() => {
                 this.getCollabs();
                 this.$refs.editModal.hide();
@@ -123,8 +123,8 @@ export default {
             })
         },
 
-        deleteCollab: function(username) {
-            CollabService.deleteCollab(username)
+        deleteCollab: function(collabId) {
+            CollabService.deleteCollab(collabId)
             .then(() => {
                 this.getCollabs();
                 Notify.create({
@@ -151,12 +151,12 @@ export default {
                 ok: {label: 'Confirm', color: 'negative'},
                 cancel: {label: 'Cancel', color: 'white'}
             })
-            .onOk(() => this.deleteCollab(collab.username))
+            .onOk(() => this.deleteCollab(collab._id))
         },
 
         clone: function(row) {
             this.currentCollab = this.$_.clone(row);
-            this.usernameUpdate = row.username;
+            this.idUpdate = row._id;
         },
 
         cleanErrors: function() {

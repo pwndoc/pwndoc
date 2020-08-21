@@ -9,11 +9,11 @@ export default {
     return Vue.prototype.$axios.post('clients', client)
   },
 
-  updateClient: function(email, client) {
-    return Vue.prototype.$axios.put(`clients/${email}`, client)
+  updateClient: function(clientId, client) {
+    return Vue.prototype.$axios.put(`clients/${clientId}`, client)
   },
 
-  deleteClient: function(email) {
-    return Vue.prototype.$axios.delete(`clients/${email}`)
+  deleteClient: function(clientId) {
+    return Vue.prototype.$axios.delete(`clients/${clientId}`)
   }
 }

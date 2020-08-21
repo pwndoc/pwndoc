@@ -9,11 +9,11 @@ export default {
     return Vue.prototype.$axios.post('companies', company)
   },
 
-  updateCompany: function(name, company) {
-    return Vue.prototype.$axios.put(`companies/${name}`, company)
+  updateCompany: function(companyId, company) {
+    return Vue.prototype.$axios.put(`companies/${companyId}`, company)
   },
 
-  deleteCompany: function(name) {
-    return Vue.prototype.$axios.delete(`companies/${name}`)
+  deleteCompany: function(companyId) {
+    return Vue.prototype.$axios.delete(`companies/${companyId}`)
   }
 }

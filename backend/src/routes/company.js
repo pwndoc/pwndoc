@@ -31,20 +31,20 @@ module.exports = function(app) {
     });
 
     // Update company
-    app.put("/api/companies/:name", acl.hasPermission('companies:update'), function(req, res) {
+    app.put("/api/companies/:id", acl.hasPermission('companies:update'), function(req, res) {
         var company = {};
         // Optional parameters
         if (req.body.name) company.name = req.body.name;
         if (req.body.logo) company.logo = req.body.logo;
 
-        Company.update(req.params.name, company)
+        Company.update(req.params.id, company)
         .then(msg => Response.Ok(res, 'Company updated successfully'))
         .catch(err => Response.Internal(res, err))
     });
 
     // Delete company
-    app.delete("/api/companies/:name", acl.hasPermission('companies:delete'), function(req, res) {
-        Company.delete(req.params.name)
+    app.delete("/api/companies/:id", acl.hasPermission('companies:delete'), function(req, res) {
+        Company.delete(req.params.id)
         .then(msg => Response.Ok(res, 'Company deleted successfully'))
         .catch(err => Response.Internal(res, err))
     });

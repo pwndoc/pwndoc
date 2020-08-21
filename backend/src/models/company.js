@@ -44,15 +44,15 @@ CompanySchema.statics.create = (company) => {
 }
 
 // Update company
-CompanySchema.statics.update = (name, company) => {
+CompanySchema.statics.update = (companyId, company) => {
     return new Promise((resolve, reject) => {
-        var query = Company.findOneAndUpdate({name: name}, company);
+        var query = Company.findOneAndUpdate({_id: companyId}, company);
         query.exec()
         .then((rows) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'NotFound', message: 'Company name not found'});
+                reject({fn: 'NotFound', message: 'Company Id not found'});
         })
         .catch((err) => {
             if (err.code === 11000)
@@ -64,15 +64,15 @@ CompanySchema.statics.update = (name, company) => {
 }
 
 // Delete company
-CompanySchema.statics.delete = (name) => {
+CompanySchema.statics.delete = (companyId) => {
     return new Promise((resolve, reject) => {
-        var query = Company.findOneAndRemove({name: name});
+        var query = Company.findOneAndRemove({_id: companyId});
         query.exec()
         .then((rows) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'NotFound', message: 'Company name not found'});
+                reject({fn: 'NotFound', message: 'Company Id not found'});
         })
         .catch((err) => {
             reject(err);
