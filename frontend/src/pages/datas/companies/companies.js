@@ -30,7 +30,7 @@ export default {
                 logo: ''
             },
             // Name for update
-            nameUpdate: ''
+            idUpdate: ''
         }
     },
 
@@ -87,7 +87,7 @@ export default {
             if (this.errors.name)
                 return;
 
-            CompanyService.updateCompany(this.nameUpdate, this.currentCompany)
+            CompanyService.updateCompany(this.idUpdate, this.currentCompany)
             .then(() => {
                 this.getCompanies();
                 this.$refs.editModal.hide();
@@ -108,8 +108,8 @@ export default {
             })
         },
 
-        deleteCompany: function(name) {
-            CompanyService.deleteCompany(name)
+        deleteCompany: function(companyId) {
+            CompanyService.deleteCompany(companyId)
             .then(() => {
                 this.getCompanies();
                 Notify.create({
@@ -136,14 +136,14 @@ export default {
                 ok: {label: 'Confirm', color: 'negative'},
                 cancel: {label: 'Cancel', color: 'white'}
             })
-            .onOk(() => this.deleteCompany(company.name))
+            .onOk(() => this.deleteCompany(company._id))
         },
 
         clone: function(row) {
             this.cleanCurrentCompany();
             this.currentCompany.name = row.name;
             this.currentCompany.logo = row.logo;
-            this.nameUpdate = row.name;
+            this.idUpdate = row._id;
         },
 
         cleanErrors: function() {

@@ -40,7 +40,7 @@ export default {
                 company: {}
             },
             // Email to identify client to update
-            emailUpdate: ''
+            idUpdate: ''
         }
     },
 
@@ -105,7 +105,7 @@ export default {
             if (this.errors.lastname || this.errors.firstname || this.errors.email)
                 return;
 
-            ClientService.updateClient(this.emailUpdate, this.currentClient)
+            ClientService.updateClient(this.idUpdate, this.currentClient)
             .then(() => {
                 this.getClients();
                 this.$refs.editModal.hide();
@@ -126,8 +126,8 @@ export default {
             })
         },
 
-        deleteClient: function(email) {
-            ClientService.deleteClient(email)
+        deleteClient: function(clientId) {
+            ClientService.deleteClient(clientId)
             .then(() => {
                 this.getClients();
                 Notify.create({
@@ -154,7 +154,7 @@ export default {
                 ok: {label: 'Confirm', color: 'negative'},
                 cancel: {label: 'Cancel', color: 'white'}
             })
-            .onOk(() => this.deleteClient(client.email))
+            .onOk(() => this.deleteClient(client._id))
         },
 
         getCompanies: function() {
@@ -170,7 +170,7 @@ export default {
 
         clone: function(row) {
             this.currentClient = this.$_.clone(row);
-            this.emailUpdate = row.email;
+            this.idUpdate = row._id;
         },
 
         cleanErrors: function() {

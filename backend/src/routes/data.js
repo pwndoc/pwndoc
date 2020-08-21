@@ -2,6 +2,7 @@ module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
     var acl = require('../lib/auth').acl;
+    var utils = require('../lib/utils')
     var Language = require('mongoose').model('Language');
     var AuditType = require('mongoose').model('AuditType');
     var VulnerabilityType = require('mongoose').model('VulnerabilityType');
@@ -23,6 +24,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing required parameters: locale, language');
             return;
         }
+        if (!utils.validFilename(req.body.language) || !utils.validFilename(req.body.locale)) {
+            Response.BadParameters(res, 'language and locale value must match /^[a-z0-9 \[\]()\._-]+$/i')
+            return
+        }
         
         var language = {};
         language.locale = req.body.locale;
@@ -34,7 +39,7 @@ module.exports = function(app) {
     });
     
     // Delete Language
-    app.delete("/api/data/languages/:locale", acl.hasPermission('languages:delete'), function(req, res) {
+    app.delete("/api/data/languages/:locale(*)", acl.hasPermission('languages:delete'), function(req, res) {
         Language.delete(req.params.locale)
         .then(msg => {
             Response.Ok(res, 'Language deleted successfully')
@@ -57,6 +62,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing required parameters: name, locale');
             return;
         }
+        if (!utils.validFilename(req.body.name) || !utils.validFilename(req.body.locale)) {
+            Response.BadParameters(res, 'name and locale value must match /^[a-z0-9 \[\]()\._-]+$/i')
+            return
+        }
 
         var auditType = {};
         auditType.name = req.body.name;
@@ -67,7 +76,7 @@ module.exports = function(app) {
     });
     
     // Delete audit type
-    app.delete("/api/data/audit-types/:name", acl.hasPermission('audit-types:delete'), function(req, res) {
+    app.delete("/api/data/audit-types/:name(*)", acl.hasPermission('audit-types:delete'), function(req, res) {
         AuditType.delete(req.params.name)
         .then(msg => {
             Response.Ok(res, 'Audit type deleted successfully')
@@ -90,6 +99,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing required parameters: name, locale');
             return;
         }
+        if (!utils.validFilename(req.body.name) || !utils.validFilename(req.body.locale)) {
+            Response.BadParameters(res, 'name and locale value must match /^[a-z0-9 \[\]()\._-]+$/i')
+            return
+        }
 
         var vulnType = {};
         vulnType.name = req.body.name;
@@ -100,7 +113,7 @@ module.exports = function(app) {
     });
     
     // Delete vulnerability type
-    app.delete("/api/data/vulnerability-types/:name", acl.hasPermission('vulnerability-types:delete'), function(req, res) {
+    app.delete("/api/data/vulnerability-types/:name(*)", acl.hasPermission('vulnerability-types:delete'), function(req, res) {
         VulnerabilityType.delete(req.params.name)
         .then(msg => {
             Response.Ok(res, 'Vulnerability type deleted successfully')
@@ -123,6 +136,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing required parameters: name');
             return;
         }
+        if (!utils.validFilename(req.body.name)) {
+            Response.BadParameters(res, 'name value must match /^[a-z0-9 \[\]()\._-]+$/i')
+            return
+        }
 
         var vulnCat = {};
         vulnCat.name = req.body.name;
@@ -133,7 +150,7 @@ module.exports = function(app) {
     });
 
     // Update vulnerability category
-    app.put("/api/data/vulnerability-categories/:name", acl.hasPermission('vulnerability-categories:update'), function(req, res) {
+    app.put("/api/data/vulnerability-categories/:name(*)", acl.hasPermission('vulnerability-categories:update'), function(req, res) {
         if (!req.body.fields) {
             Response.BadParameters(res, 'Missing required parameters: fields');
             return;
@@ -148,7 +165,7 @@ module.exports = function(app) {
     });
     
     // Delete vulnerability category
-    app.delete("/api/data/vulnerability-categories/:name", acl.hasPermission('vulnerability-categories:delete'), function(req, res) {
+    app.delete("/api/data/vulnerability-categories/:name(*)", acl.hasPermission('vulnerability-categories:delete'), function(req, res) {
         VulnerabilityCategory.delete(req.params.name)
         .then(msg => {
             Response.Ok(res, 'Vulnerability category deleted successfully')
@@ -178,6 +195,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing required parameters: field, name, locale');
             return;
         }
+        if (!utils.validFilename(req.body.field) || !utils.validFilename(req.body.name)) {
+            Response.BadParameters(res, 'name and field value must match /^[a-z0-9 \[\]()\._-]+$/i ')
+            return
+        }
         
         var section = {};
         section.field = req.body.field;
@@ -192,7 +213,7 @@ module.exports = function(app) {
     });
     
     // Delete section
-    app.delete("/api/data/sections/:field/:locale", acl.hasPermission('sections:delete'), function(req, res) {
+    app.delete("/api/data/sections/:field/:locale(*)", acl.hasPermission('sections:delete'), function(req, res) {
         CustomSection.delete(req.params.field, req.params.locale)
         .then(msg => {
             Response.Ok(res, 'Section deleted successfully')

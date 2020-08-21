@@ -3,6 +3,7 @@ module.exports = function(app) {
     var Response = require('../lib/httpResponse.js');
     var User = require('mongoose').model('User');
     var acl = require('../lib/auth').acl;
+    var utils = require('../lib/utils')
 
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('users:read'), function(req, res) {
@@ -131,9 +132,9 @@ module.exports = function(app) {
 
         // Optionals params
         if (req.body.username) user.username = req.body.username;
-        if (req.body.firstname) user.firstname = req.body.firstname;
-        if (req.body.lastname) user.lastname = req.body.lastname;
         if (req.body.newPassword) user.newPassword = req.body.newPassword;
+        user.firstname = req.body.firstname || null;
+        user.lastname = req.body.lastname || null;
 
         User.updateProfile(req.decodedToken.username, user)
         .then(msg => Response.Ok(res, msg))
@@ -141,24 +142,24 @@ module.exports = function(app) {
     });
 
     // Update any user (admin only)
-    app.put("/api/users/:username", acl.hasPermission('users:update'), function(req, res) {
+    app.put("/api/users/:id", acl.hasPermission('users:update'), function(req, res) {
         var user = {};
     
         // Optionals params
         if (req.body.username) user.username = req.body.username;
         if (req.body.password) user.password = req.body.password;
-        if (req.body.firstname) user.firstname = req.body.firstname;
-        if (req.body.lastname) user.lastname = req.body.lastname;
+        user.firstname = req.body.firstname || null;
+        user.lastname = req.body.lastname || null;
         if (req.body.role) user.role = req.body.role;
 
-        User.updateUser(req.params.username, user)
+        User.updateUser(req.params.id, user)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
     // Delete any user (admin only)
-    app.delete("/api/users/:username", acl.hasPermission('users:delete'), function(req, res) {
-        User.deleteOne({username: req.params.username})
+    app.delete("/api/users/:id", acl.hasPermission('users:delete'), function(req, res) {
+        User.deleteOne({_id: req.params.id})
         .then(msg => {
             if (msg.n === 0)
                 throw ({fn: 'NotFound', message: 'User not found'});

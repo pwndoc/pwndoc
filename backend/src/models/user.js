@@ -109,25 +109,16 @@ UserSchema.statics.updateProfile = function (username, user) {
 }
 
 // Update user (for admin usage)
-UserSchema.statics.updateUser = function (username, user) {
+UserSchema.statics.updateUser = function (userId, user) {
     return new Promise((resolve, reject) => {
-        var query = this.findOne({username: username});
+        if (user.password) user.password = bcrypt.hashSync(user.password, 10);
+        var query = this.findOneAndUpdate({_id: userId}, user);
         query.exec()
         .then(function(row) {
-            if (!row)
-                throw({fn: 'NotFound', message: 'User not found'});
-            else {
-                if (user.username) row.username = user.username;
-                if (user.firstname) row.firstname = user.firstname;
-                if (user.lastname) row.lastname = user.lastname;
-                if (user.role) row.role = user.role;
-                if (user.password) row.password = bcrypt.hashSync(user.password, 10);
-
-                return row.save();
-            }
-        })
-        .then(function() {
-            resolve('User updated successfully');
+            if (row)
+                resolve('User updated successfully')
+            else
+                reject({fn: 'NotFound', message: 'User not found'});
         })
         .catch(function(err) {
             if (err.code === 11000)

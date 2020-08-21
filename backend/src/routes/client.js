@@ -14,7 +14,7 @@ module.exports = function(app) {
     // Create client
     app.post("/api/clients", acl.hasPermission('clients:create'), function(req, res) {
         if (!req.body.email) {
-            Response.BadParameters(res, 'Required paramters: email');
+            Response.BadParameters(res, 'Required parameters: email');
             return;
         }
 
@@ -37,26 +37,26 @@ module.exports = function(app) {
     });
 
     // Update client
-    app.put("/api/clients/:email", acl.hasPermission('clients:update'), function(req, res) {
+    app.put("/api/clients/:id", acl.hasPermission('clients:update'), function(req, res) {
         var client = {};
         // Optional parameters
         if (req.body.email) client.email = req.body.email;
-        if (req.body.lastname) client.lastname = req.body.lastname;
-        if (req.body.firstname) client.firstname = req.body.firstname;
-        if (req.body.phone) client.phone = req.body.phone;
-        if (req.body.cell) client.cell = req.body.cell;
-        if (req.body.title) client.title = req.body.title;
+        client.lastname = req.body.lastname || null;
+        client.firstname = req.body.firstname || null;
+        client.phone = req.body.phone || null;
+        client.cell = req.body.cell || null;
+        client.title = req.body.title || null;
         var company = null;
         if (req.body.company && req.body.company.name) company = req.body.company.name;
 
-        Client.update(req.params.email, client, company)
+        Client.update(req.params.id, client, company)
         .then(msg => Response.Ok(res, 'Client updated successfully'))
         .catch(err => Response.Internal(res, err))
     });
 
     // Delete client
-    app.delete("/api/clients/:email", acl.hasPermission('clients:delete'), function(req, res) {
-        Client.delete(req.params.email)
+    app.delete("/api/clients/:id", acl.hasPermission('clients:delete'), function(req, res) {
+        Client.delete(req.params.id)
         .then(msg => Response.Ok(res, 'Client deleted successfully'))
         .catch(err => Response.Internal(res, err))
     });

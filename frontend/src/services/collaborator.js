@@ -9,11 +9,11 @@ export default {
     return Vue.prototype.$axios.post('users', collab)
   },
 
-  updateCollab: function(email, collab) {
-    return Vue.prototype.$axios.put(`users/${email}`, collab)
+  updateCollab: function(collabId, collab) {
+    return Vue.prototype.$axios.put(`users/${collabId}`, collab)
   },
 
-  deleteCollab: function(email) {
-    return Vue.prototype.$axios.delete(`users/${email}`)
+  deleteCollab: function(collabId) {
+    return Vue.prototype.$axios.delete(`users/${collabId}`)
   }
 }

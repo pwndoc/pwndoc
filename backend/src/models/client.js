@@ -55,7 +55,7 @@ ClientSchema.statics.create = (client, company) => {
 }
 
 // Update client
-ClientSchema.statics.update = (email, client, company) => {
+ClientSchema.statics.update = (clientId, client, company) => {
     return new Promise(async(resolve, reject) => {
         if (company) {
             var Company = mongoose.model("Company");
@@ -63,13 +63,13 @@ ClientSchema.statics.update = (email, client, company) => {
             companyRow = await query.exec()
             if (companyRow) client.company = companyRow.id;
         }
-        var query = Client.findOneAndUpdate({email: email}, client);
+        var query = Client.findOneAndUpdate({_id: clientId}, client);
         query.exec()
         .then((rows) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'NotFound', message: 'Client email not found'});
+                reject({fn: 'NotFound', message: 'Client Id not found'});
         })
         .catch((err) => {
             if (err.code === 11000)
@@ -81,15 +81,15 @@ ClientSchema.statics.update = (email, client, company) => {
 }
 
 // Delete client
-ClientSchema.statics.delete = (email) => {
+ClientSchema.statics.delete = (clientId) => {
     return new Promise((resolve, reject) => {
-        var query = Client.findOneAndRemove({email: email});
+        var query = Client.findOneAndRemove({_id: clientId});
         query.exec()
         .then((rows) => {
             if (rows)
                 resolve(rows);
             else
-                reject({fn: 'NotFound', message: 'Client email not found'});
+                reject({fn: 'NotFound', message: 'Client Id not found'});
         })
         .catch((err) => {
             reject(err);
