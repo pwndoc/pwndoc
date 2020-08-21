@@ -111,7 +111,7 @@ module.exports = function(app, io) {
     // Add finding to audit
     app.post("/api/audits/:auditId/findings", acl.hasPermission('audits:update'), function(req, res) {
         if (!req.body.title) {
-            Response.BadParameters(res, 'Missing some required paramters: title');
+            Response.BadParameters(res, 'Missing some required parameters: title');
             return;
         }
 
@@ -206,8 +206,8 @@ module.exports = function(app, io) {
 
     // Update audit Summary
     app.put("/api/audits/:auditId/summary", acl.hasPermission('audits:update'), function(req, res) {
-        if (!req.body.summary) {
-            Response.BadParameters(res, 'Missing some required paramters');
+        if (typeof req.body.summary === 'undefined') {
+            Response.BadParameters(res, 'Missing some required parameters: summary');
             return;
         }
         var update = {};
@@ -224,7 +224,7 @@ module.exports = function(app, io) {
     // Add section to audit
     app.post("/api/audits/:auditId/sections", acl.hasPermission('audits:update'), function(req, res) {
         if (!req.body.field || !req.body.name) {
-            Response.BadParameters(res, 'Missing some required paramters: field, name');
+            Response.BadParameters(res, 'Missing some required parameters: field, name');
             return;
         }
 
@@ -252,9 +252,13 @@ module.exports = function(app, io) {
 
     // Update section of audit
     app.put("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
+        if (typeof req.body.text === 'undefined') {
+            Response.BadParameters(res, 'Missing some required parameters: text');
+            return;
+        }
         var section = {};
-        // Optional parameters
-        if (req.body.text) section.text = req.body.text;
+        // Mandatory parameters
+        section.text = req.body.text;
 
         Audit.updateSection(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id, req.params.sectionId, section)
         .then(msg => {
