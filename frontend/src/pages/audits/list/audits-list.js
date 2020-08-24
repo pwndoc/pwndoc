@@ -35,7 +35,7 @@ export default {
                 descending: true
             },
             // Search filter
-            search: {},
+            search: {finding: ''},
             // Errors messages
             errors: {name: '', language: '', template: ''},
             // Selected or New Audit
@@ -89,6 +89,7 @@ export default {
         },
 
         getAudits: function() {
+            console.log('ici')
             AuditService.getAudits({findingTitle: this.search.finding})
             .then((data) => {
                 this.audits = data.data.datas
