@@ -25,8 +25,9 @@
                 v-model="search.finding"
                 @keyup.enter="getAudits"
                 >
-                    <template v-slot:prepend>
-                        <q-icon name="search" />
+                    <template v-slot:append>
+                        <q-btn flat icon="search" @click="getAudits" />
+                        <q-icon v-if="search.finding" name="cancel" @click.stop="search.finding = null; getAudits()" class="cursor-pointer" />
                     </template>
                 </q-input>
                 <q-space />
