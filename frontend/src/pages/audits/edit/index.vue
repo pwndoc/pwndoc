@@ -4,7 +4,20 @@
 		<q-splitter horizontal v-model="splitterRatio" :limits="[50, 80]" style="height: 100%">
 			<template v-slot:before>
 				<q-list class="home-drawer">
-					<q-item-label header>Sections</q-item-label>
+					<q-item>
+						<q-item-section>Sections</q-item-section>
+						<q-item-section side>
+							<q-btn flat dense size="sm" color="info" icon="fa fa-download" @click="generateReport">
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+					</q-item>
+					<!-- <q-item-label header>
+						Sections -->
+					<!-- <q-space /> -->
+					<!-- <q-btn label="Generate" />
+						
+						</q-item-label> -->
 
 					<q-separator />
 
@@ -297,7 +310,55 @@ export default {
 						position: 'top-right'
 					})
 				})
-			}
+			},
+
+			// Convert blob to text
+        BlobReader: function(data) {
+            const fileReader = new FileReader();
+
+            return new Promise((resolve, reject) => {
+                fileReader.onerror = () => {
+                    fileReader.abort()
+                    reject(new Error('Problem parsing blob'));
+                }
+
+                fileReader.onload = () => {
+                    resolve(fileReader.result)
+                }
+
+                fileReader.readAsText(data)
+            })
+        },
+
+        generateReport: function() {
+            AuditService.generateAuditReport(this.auditId)
+            .then(response => {
+                var blob = new Blob([response.data], {type: "application/octet-stream"});
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = response.headers['content-disposition'].split('"')[1];
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              })
+            .catch( async err => {
+                var message = "Error generating template"
+                if (err.response && err.response.data) {
+                    var blob = new Blob([err.response.data], {type: "application/json"})
+                    var blobData = await this.BlobReader(blob)
+                    message = JSON.parse(blobData).datas
+                }
+                Notify.create({
+                    message: message,
+                    type: 'negative',
+                    textColor:'white',
+                    position: 'top',
+                    closeBtn: true,
+                    timeout: 0,
+                    classes: "text-pre-wrap"
+                })
+            })
+        },
 		}
 }
 </script>
