@@ -189,6 +189,8 @@ import CustomImage from './editor-image'
 
 const Diff = require('diff')
 
+import Utils from '@/services/utils'
+
 export default {
     name: 'BasicEditor',
     props: {
@@ -245,18 +247,19 @@ export default {
             json: '',
             html: '',
             imageValue: '',
-            toggleDiff: true
+            toggleDiff: true,
+
+            htmlEncode: Utils.htmlEncode
         }
     },
 
     watch: {
        value (value) {
-           if (value === this.editor.getHTML()) {
+            if (value === this.editor.getHTML()) {
                 return;
             }
-           this.editor.setContent(value)
-
-           
+            var content = this.htmlEncode(this.value)
+            this.editor.setContent(content)
        }
     },
 
@@ -264,7 +267,8 @@ export default {
         if (typeof this.value === "undefined" || this.value === this.editor.getHTML()) {
             return;
         }
-        this.editor.setContent(this.value)
+        var content = this.htmlEncode(this.value)
+        this.editor.setContent(content)
         this.editor.setOptions({editable: this.editable})
     },
 
@@ -296,7 +300,8 @@ export default {
                 HtmlDiff.tokenize = function(value) {
                     return value.split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
                 }
-                var diff = HtmlDiff.diff(this.diff, this.value)
+                var value = this.value || ""
+                var diff = HtmlDiff.diff(this.diff, value)
                 diff.forEach(part => {
                     const diffclass = part.added ? 'diffadd' : part.removed ? 'diffrem' : 'diffeq'
                     var value = part.value.replace(/<p><\/p>/g, '<p><br></p>')

@@ -5,6 +5,7 @@ import Breadcrumb from 'components/breadcrumb';
 import VulnService from '@/services/vulnerability';
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
+import Utils from '@/services/utils'
 
 export default {
     data: () => {
@@ -36,7 +37,9 @@ export default {
             currentExpand: -1,
 
             // Vulnerability categories
-            vulnCategories: []
+            vulnCategories: [],
+
+            htmlEncode: Utils.htmlEncode
         }
     },
 

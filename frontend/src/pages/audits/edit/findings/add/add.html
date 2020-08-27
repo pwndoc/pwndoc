@@ -106,7 +106,7 @@
                 </q-tr>
                 <q-tr v-show="props.expand" :props="props">
                     <q-td colspan="100%" class="bg-grey-4">
-                        <div class="text-left" style="white-space: initial">{{props.row.detail.description}}</div>
+                        <div class="editor__content" style="white-space: initial" v-html="htmlEncode(props.row.detail.description)"></div>
                     </q-td>
                 </q-tr>
             </template>
