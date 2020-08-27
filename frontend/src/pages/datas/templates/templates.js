@@ -1,4 +1,4 @@
-import { Dialog, Notify } from 'quasar';
+import { Dialog, Notify, exportFile } from 'quasar';
 
 import Breadcrumb from 'components/breadcrumb'
 
@@ -49,6 +49,18 @@ export default {
             TemplateService.getTemplates()
             .then((data) => {
                 this.templates = data.data.datas
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
+        downloadTemplate: function(row) {
+            TemplateService.downloadTemplate(row._id)
+            .then((data) => {
+                status = exportFile(`${row.name}.docx`, data.data, {type: "application/octet-stream"})
+                if (!status)
+                    throw (status)
             })
             .catch((err) => {
                 console.log(err)

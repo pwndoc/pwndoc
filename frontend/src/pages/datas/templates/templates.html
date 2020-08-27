@@ -35,6 +35,9 @@
                     <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
                     </q-btn>
+                    <q-btn size="sm" flat color="info" icon="fa fa-download" @click="downloadTemplate(props.row)">
+                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download</q-tooltip>
+                    </q-btn>
                     <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteTemplate(props.row)">
                         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
                     </q-btn>
