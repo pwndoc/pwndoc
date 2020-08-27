@@ -88,4 +88,14 @@ module.exports = function(app) {
         
         })
     });
+
+     // Download template file
+     app.get("/api/templates/download/:templateId", acl.hasPermission('templates:read'), function(req, res) {
+        Template.getOne(req.params.templateId)
+        .then(data => {
+            var file = `${__basedir}/../report-templates/${data.name}.docx`
+            res.download(file, `${data.name}.docx`)
+        })
+        .catch(err => Response.Internal(res, err))
+    })
 }

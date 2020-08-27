@@ -25,6 +25,21 @@ TemplateSchema.statics.getAll = () => {
     });
 }
 
+// Get one template
+TemplateSchema.statics.getOne = (templateId) => {
+    return new Promise((resolve, reject) => {
+        var query = Template.findById(templateId);
+        query.select('name')
+        query.exec()
+        .then((rows) => {
+            resolve(rows);
+        })
+        .catch((err) => {
+            reject(err);
+        })
+    });
+}
+
 // Create template
 TemplateSchema.statics.create = (template) => {
     return new Promise(async(resolve, reject) => {

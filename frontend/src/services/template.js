@@ -15,5 +15,9 @@ export default {
 
   deleteTemplate: function(templateId) {
     return Vue.prototype.$axios.delete(`templates/${templateId}`)
+  },
+
+  downloadTemplate: function(templateId) {
+    return Vue.prototype.$axios.get(`templates/download/${templateId}`, {responseType: 'blob'})
   }
 }
