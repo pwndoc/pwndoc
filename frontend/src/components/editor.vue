@@ -159,7 +159,8 @@
     </affix>
     <q-separator />
     <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor" />
-    <div v-else class="editor__content q-pa-sm" style="min-height:200px" v-html="diffContent">
+    <div v-else class="editor__content q-pa-sm">
+        <div class="ProseMirror" v-html="diffContent"></div>
     </div>
 </q-card>
 </template>
@@ -239,6 +240,9 @@ export default {
                 onUpdate: ({ getJSON, getHTML }) => {
                     this.json = getJSON()
                     this.html = getHTML()
+                    if (Array.isArray(this.json.content) && this.json.content.length === 1 && !this.json.content[0].hasOwnProperty("content")) {
+                        this.html = ""
+                    }
                     this.$emit('input', this.html)
                 },
                 disableInputRules: true,
