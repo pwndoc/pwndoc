@@ -1,9 +1,9 @@
 export default {
   htmlEncode(html) {
-    return html
+    var result = html
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/&lt;img.+src="(.+?)".+alt="(.+?)".*&gt;/g, '<img src="$1" alt="$2">')
+    .replace(/&lt;img.+?src="(.*?)".+?alt="(.*?)".*?&gt;/g, '<img src="$1" alt="$2">')
     .replace(/&lt;p&gt;/g, '<p>')
     .replace(/&lt;\/p&gt;/g, '</p>')
     .replace(/&lt;pre&gt;/g, '<pre>')
@@ -37,5 +37,7 @@ export default {
     .replace(/&lt;\/h5&gt;/g, '</h5>')
     .replace(/&lt;h6&gt;/g, '<h6>')
     .replace(/&lt;\/h6&gt;/g, '</h6>')
+
+    return result
   }
 }
