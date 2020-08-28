@@ -87,6 +87,5 @@ export default {
 
   generateAuditReport: function(auditId) {
     return Vue.prototype.$axios.get(`audits/${auditId}/generate`, {responseType: 'blob'})
-    // window.open(`${window.location.protocol}//${window.location.hostname}:${process.env.API_PORT}/api/audits/${auditId}/generate`)
   }
 }

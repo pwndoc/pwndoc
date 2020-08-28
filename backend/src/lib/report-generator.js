@@ -124,7 +124,7 @@ expressions.filters.convertHTML = function(input) {
     if (typeof input === 'undefined')
         var result = html2ooxml('')
     else
-        var result = html2ooxml(input)
+        var result = html2ooxml(input.replace(/(<p><\/p>)+$/, ''))
     return result;
 }
 
@@ -331,7 +331,7 @@ function splitHTMLParagraphs(data) {
     if (!data)
         return result
 
-    var splitted = data.split(/(<img.+?>)/)
+    var splitted = data.split(/(<img.+?src=".*?".+?alt=".*?".*?>)/)
 
     splitted.forEach((value, index) => {
         if (value.startsWith("<img")) {
