@@ -137,7 +137,6 @@ export default {
 
         // Update Finding
         updateFinding: function() {
-            if (this.finding.poc) this.finding.poc = this.finding.poc.replace(/(<p><\/p>)+$/, '')
             AuditService.updateFinding(this.auditId, this.findingId, this.finding)
             .then(() => {
                 this.findingOrig = this.$_.cloneDeep(this.finding);
