@@ -14,7 +14,8 @@ export default {
             finding: {},
             findingOrig: {},
             selectedTab: "definition",
-            vulnTypes: []
+            vulnTypes: [],
+            referencesString: ""
         }
     },
 
@@ -111,6 +112,11 @@ export default {
                 this.finding = data.data.datas;
                 if (this.finding.paragraphs.length > 0 && !this.finding.poc)
                     this.finding.poc = this.convertParagraphsToHTML(this.finding.paragraphs)
+                
+                this.referencesString = ""
+                if (this.finding.references && this.finding.references.length > 0)
+                    this.referencesString = this.finding.references.join('\n')
+                
                 this.findingOrig = this.$_.cloneDeep(this.finding);                
             })
             .catch((err) => {
@@ -137,6 +143,7 @@ export default {
 
         // Update Finding
         updateFinding: function() {
+            this.finding.references = this.referencesString.split('\n').filter(e => e !== '')
             AuditService.updateFinding(this.auditId, this.findingId, this.finding)
             .then(() => {
                 this.findingOrig = this.$_.cloneDeep(this.finding);
@@ -195,6 +202,7 @@ export default {
 
          // Backup Finding to vulnerability database
          backupFinding: function() {
+            this.finding.references = this.referencesString.split('\n')
             VulnService.backupFinding(this.$parent.audit.language, this.finding)
             .then((data) => {
                 Notify.create({

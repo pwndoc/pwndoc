@@ -28,7 +28,7 @@ var Finding = {
     cvssSeverity:           String,
     paragraphs:             [Paragraph],
     poc:                    String,
-    scope:                  [String],
+    scope:                  String,
     status:                 {type: Number, enum: [0,1], default: 1}, // 0: done, 1: redacting
     category:               String,
     customFields:           [customField]
@@ -340,7 +340,7 @@ AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFin
                 Object.keys(newFinding).forEach((key) => {
                     finding[key] = newFinding[key]
                 })
-                return row.save()
+                return row.save({ validateBeforeSave: false }) // Disable schema validation since scope changed from Array to String
             } 
         })
         .then(() => {

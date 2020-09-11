@@ -253,17 +253,11 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-select
-            label="References"
+            <q-input
+            label="References (One per line)"
             stack-label
-            class="col-md-12 q-chip-one-line"
-            v-model="currentVulnerability.references"
-            multiple
-            use-chips
-            hide-dropdown-icon
-            use-input
-            new-value-mode="add-unique"
-            options-sanitize
+            v-model="referencesString"
+            type="textarea"
             />
         </q-card-section>
 
@@ -423,17 +417,11 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-select
-            label="References"
+            <q-input
+            label="References (One per line)"
             stack-label
-            class="col-md-12 q-chip-one-line"
-            v-model="currentVulnerability.references"
-            multiple
-            use-chips
-            hide-dropdown-icon
-            use-input
-            new-value-mode="add-unique"
-            options-sanitize
+            v-model="referencesString"
+            type="textarea"
             />
         </q-card-section>
 
@@ -581,17 +569,11 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <q-select
-                        label="References"
+                        <q-input
+                        label="References (One per line)"
                         stack-label
-                        class="q-chip-one-line"
-                        v-model="currentVulnerability.references"
-                        multiple
-                        use-chips
-                        hide-dropdown-icon
-                        use-input
-                        new-value-mode="add-unique"
-                        options-sanitize
+                        v-model="referencesString"
+                        type="textarea"
                         />
                     </q-card-section>
 
@@ -760,19 +742,13 @@
                                 />
                             </q-card-section>
                             <q-card-section>
-                                <q-select
-                                :bg-color="!($_.isEqual(currentVulnerability.references, update.references))?'red-1':''"
-                                label="References"
+                                <q-input
+                                :bg-color="!($_.isEqual(referencesString, update.references.join('\n')))?'red-1':''"
+                                label="References (One per line)"
                                 stack-label
-                                class="q-chip-one-line"
-                                v-model="update.references"
-                                multiple
-                                use-chips
-                                hide-dropdown-icon
-                                use-input
-                                new-value-mode="add-unique"
+                                :value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"
+                                type="textarea"
                                 readonly
-                                options-sanitize
                                 />
                             </q-card-section>
 
