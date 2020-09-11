@@ -54,6 +54,7 @@ export default {
             currentUpdate: '',
             currentUpdateLocale: '',
             vulnTypes: [],
+            referencesString: '',
             // Merge languages
             mergeLanguageLeft: '',
             mergeLanguageRight: '',
@@ -171,6 +172,7 @@ export default {
             if (this.errors.title)
                 return;
 
+            this.finding.references = this.referencesString.split('\n').filter(e => e !== '')
             VulnerabilityService.createVulnerabilities([this.currentVulnerability])
             .then(() => {
                 this.getVulnerabilities();
@@ -201,6 +203,7 @@ export default {
             if (this.errors.title)
                 return;
 
+            this.currentVulnerability.references = this.referencesString.split('\n').filter(e => e !== '')
             VulnerabilityService.updateVulnerability(this.vulnerabilityId, this.currentVulnerability)
             .then(() => {
                 this.getVulnerabilities();
@@ -272,6 +275,9 @@ export default {
             this.cleanCurrentVulnerability();
             
             this.currentVulnerability = this.$_.cloneDeep(row)
+            this.referencesString = ""
+            if (this.currentVulnerability.references && this.currentVulnerability.references.length > 0)
+                this.referencesString = this.currentVulnerability.references.join('\n')
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;
@@ -316,6 +322,8 @@ export default {
                 this.currentVulnerability.category = this.currentCategory.name
             else
                 this.currentVulnerability.category = null
+
+            this.referencesString = ''
             this.setCurrentDetails();
         },
 

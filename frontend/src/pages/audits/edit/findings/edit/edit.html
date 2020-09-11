@@ -55,17 +55,12 @@
                                 <basic-editor v-model="finding.observation" :toolbar="['format', 'marks', 'list', 'code']" />
                             </template>
                         </q-field>
-                        <q-select 
+                        <q-input
                         class="col-md-12"
-                        label="References"
+                        label="References (One per line)"
                         stack-label
-                        v-model="finding.references"
-                        multiple
-                        use-chips
-                        hide-dropdown-icon
-                        use-input
-                        new-value-mode="add-unique"
-                        options-sanitize
+                        v-model="referencesString"
+                        type="textarea"
                         />
                 </q-card-section>
 
@@ -105,20 +100,14 @@
         </q-tab-panel>
         <q-tab-panel name="details">
             <q-card>
-                <q-card-section>Select assets from scope to add</q-card-section>
+                <q-card-section>Affected Assets</q-card-section>
                 <q-separator />
                 <q-card-section>
-                    <q-select 
-                    label="Scope"
-                    stack-label
-                    v-model="finding.scope"
-                    multiple
-                    use-chips
-                    hide-dropdown-icon
-                    use-input
-                    new-value-mode="add-unique"
-                    options-sanitize
-                    />
+                    <q-field borderless>
+                        <template v-slot="control">
+                            <basic-editor v-model="finding.scope" :toolbar="['format', 'marks', 'list']" />
+                        </template>
+                    </q-field>
                 </q-card-section>
             </q-card>
             <q-card class="q-mt-md">
