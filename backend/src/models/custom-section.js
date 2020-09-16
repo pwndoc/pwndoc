@@ -47,7 +47,7 @@ CustomSectionSchema.statics.getAllByLanguage = (locale) => {
 
 // Create Section
 CustomSectionSchema.statics.create = (section) => {
-    return new Promise(async(resolve, reject) => {
+    return new Promise((resolve, reject) => {
         var query = new CustomSection(section);
         query.save()
         .then((row) => {
@@ -58,6 +58,22 @@ CustomSectionSchema.statics.create = (section) => {
                 reject({fn: 'BadParameters', message: 'Custom Section already exists'});
             else
                 reject(err);
+        })
+    })
+}
+
+// Update Sections
+CustomSectionSchema.statics.updateAll = (sections) => {
+    return new Promise((resolve, reject) => {
+        CustomSection.deleteMany()
+        .then((row) => {
+            CustomSection.insertMany(sections)
+        })
+        .then((row) => {
+            resolve("Sections updated successfully")
+        })
+        .catch((err) => {
+            reject(err);
         })
     })
 }

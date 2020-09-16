@@ -29,7 +29,7 @@ AuditTypeSchema.statics.getAll = () => {
 
 // Create auditType
 AuditTypeSchema.statics.create = (auditType) => {
-    return new Promise(async(resolve, reject) => {
+    return new Promise((resolve, reject) => {
         var query = new AuditType(auditType);
         query.save()
         .then((row) => {
@@ -40,6 +40,22 @@ AuditTypeSchema.statics.create = (auditType) => {
                 reject({fn: 'BadParameters', message: 'Audit Type already exists'});
             else
                 reject(err);
+        })
+    })
+}
+
+// Update Audit Types
+AuditTypeSchema.statics.updateAll = (auditTypes) => {
+    return new Promise((resolve, reject) => {
+        AuditType.deleteMany()
+        .then((row) => {
+            AuditType.insertMany(auditTypes)
+        })
+        .then((row) => {
+            resolve("Audit Types updated successfully")
+        })
+        .catch((err) => {
+            reject(err);
         })
     })
 }

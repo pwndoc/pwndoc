@@ -2,4 +2,9 @@
 
 <script src='./custom.js'></script>
 
-<style></style>
+<style lang="scss">
+.drag-ghost {
+  opacity: 0.5;
+  background: $grey-4;
+}
+</style>

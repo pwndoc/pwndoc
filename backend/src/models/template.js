@@ -42,7 +42,7 @@ TemplateSchema.statics.getOne = (templateId) => {
 
 // Create template
 TemplateSchema.statics.create = (template) => {
-    return new Promise(async(resolve, reject) => {
+    return new Promise((resolve, reject) => {
         var query = new Template(template);
         query.save()
         .then((row) => {
@@ -59,7 +59,7 @@ TemplateSchema.statics.create = (template) => {
 
 // Update template
 TemplateSchema.statics.update = (templateId, template) => {
-    return new Promise(async(resolve, reject) => {
+    return new Promise((resolve, reject) => {
         var query = Template.findByIdAndUpdate(templateId, template);
         query.exec()
         .then((rows) => {
