@@ -28,7 +28,7 @@ LanguageSchema.statics.getAll = () => {
 
 // Create language
 LanguageSchema.statics.create = (language) => {
-    return new Promise(async(resolve, reject) => {
+    return new Promise((resolve, reject) => {
         var query = new Language(language);
         query.save()
         .then((row) => {
@@ -39,6 +39,22 @@ LanguageSchema.statics.create = (language) => {
                 reject({fn: 'BadParameters', message: 'Language already exists'});
             else
                 reject(err);
+        })
+    })
+}
+
+// Update languages
+LanguageSchema.statics.updateAll = (languages) => {
+    return new Promise((resolve, reject) => {
+        Language.deleteMany()
+        .then((row) => {
+            Language.insertMany(languages)
+        })
+        .then((row) => {
+            resolve("Languages updated successfully")
+        })
+        .catch((err) => {
+            reject(err);
         })
     })
 }

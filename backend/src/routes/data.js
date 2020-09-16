@@ -47,6 +47,30 @@ module.exports = function(app) {
         .catch(err => Response.Internal(res, err))
     });
 
+    // Update Languages
+    app.put("/api/data/languages", acl.hasPermission('languages:update'), function(req, res) {
+        for (var i=0; i<req.body.length; i++) {
+            var language = req.body[i]
+            if (!language.locale || !language.language) {
+                Response.BadParameters(res, 'Missing required parameters: locale, language')
+                return
+            }
+            if (!utils.validFilename(language.language) || !utils.validFilename(language.locale)) {
+                Response.BadParameters(res, 'language and locale value must match /^[a-z0-9 \[\]()\._-]+$/i')
+                return
+            }
+        }
+
+        var languages = []
+        req.body.forEach(e => {
+            languages.push({language: e.language, locale: e.locale})
+        })
+
+        Language.updateAll(languages)
+        .then(msg => Response.Created(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
 /* ===== AUDIT TYPES ===== */
 
     // Get audit types list
@@ -81,6 +105,30 @@ module.exports = function(app) {
         .then(msg => {
             Response.Ok(res, 'Audit type deleted successfully')
         })
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Update Audit Types
+    app.put("/api/data/audit-types", acl.hasPermission('audit-types:update'), function(req, res) {
+        for (var i=0; i<req.body.length; i++) {
+            var auditType = req.body[i]
+            if (!auditType.name || !auditType.locale) {
+                Response.BadParameters(res, 'Missing required parameters: name, locale')
+                return
+            }
+            if (!utils.validFilename(auditType.name) || !utils.validFilename(auditType.locale)) {
+                Response.BadParameters(res, 'name and locale value must match /^[a-z0-9 \[\]()\._-]+$/i')
+                return
+            }
+        }
+
+        var auditTypes = []
+        req.body.forEach(e => {
+            auditTypes.push({name: e.name, locale: e.locale})
+        })
+
+        AuditType.updateAll(auditTypes)
+        .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
@@ -121,6 +169,30 @@ module.exports = function(app) {
         .catch(err => Response.Internal(res, err))
     });
 
+    // Update Vulnerability Types
+    app.put("/api/data/vulnerability-types", acl.hasPermission('vulnerability-types:update'), function(req, res) {
+        for (var i=0; i<req.body.length; i++) {
+            var vulnType = req.body[i]
+            if (!vulnType.name || !vulnType.locale) {
+                Response.BadParameters(res, 'Missing required parameters: name, locale')
+                return
+            }
+            if (!utils.validFilename(vulnType.name) || !utils.validFilename(vulnType.locale)) {
+                Response.BadParameters(res, 'name and locale value must match /^[a-z0-9 \[\]()\._-]+$/i')
+                return
+            }
+        }
+
+        var vulnTypes = []
+        req.body.forEach(e => {
+            vulnTypes.push({name: e.name, locale: e.locale})
+        })
+
+        VulnerabilityType.updateAll(vulnTypes)
+        .then(msg => Response.Created(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
 /* ===== VULNERABILITY CATEGORY ===== */
 
      // Get vulnerability category list
@@ -149,17 +221,38 @@ module.exports = function(app) {
         .catch(err => Response.Internal(res, err))
     });
 
-    // Update vulnerability category
-    app.put("/api/data/vulnerability-categories/:name(*)", acl.hasPermission('vulnerability-categories:update'), function(req, res) {
-        if (!req.body.fields) {
-            Response.BadParameters(res, 'Missing required parameters: fields');
-            return;
+    // Update Vulnerability Category
+    app.put("/api/data/vulnerability-categories", acl.hasPermission('vulnerability-categories:update'), function(req, res) {
+        for (var i=0; i<req.body.length; i++) {
+            var vulnCat = req.body[i]
+            if (!vulnCat.name) {
+                Response.BadParameters(res, 'Missing required parameters: name')
+                return
+            }
+            if (!utils.validFilename(vulnCat.name)) {
+                Response.BadParameters(res, 'name value must match /^[a-z0-9 \[\]()\._-]+$/i')
+                return
+            }
+
+            for (var j=0; j<vulnCat.fields.length; j++) {
+                var field = vulnCat.fields[j]
+                if (!field.fieldType || !field.label) {
+                    Response.BadParameters(res, 'Missing required parameters: fields.fieldType, fields.label')
+                    return
+                }
+                if (!utils.validFilename(field.fieldType) || !utils.validFilename(field.label) ) {
+                    Response.BadParameters(res, 'fieldType and label value must match /^[a-z0-9 \[\]()\._-]+$/i')
+                    return
+                }
+            }
         }
 
-        var vulnCat = {};
-        vulnCat.fields = req.body.fields;
-        if (req.params.name) vulnCat.name = req.params.name;
-        VulnerabilityCategory.update(req.params.name, vulnCat)
+        var vulnCategories = []
+        req.body.forEach(e => {
+            vulnCategories.push({name: e.name, fields: e.fields})
+        })
+
+        VulnerabilityCategory.updateAll(vulnCategories)
         .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
@@ -218,6 +311,30 @@ module.exports = function(app) {
         .then(msg => {
             Response.Ok(res, 'Section deleted successfully')
         })
+        .catch(err => Response.Internal(res, err))
+    });
+
+     // Update sections
+     app.put("/api/data/sections", acl.hasPermission('sections:update'), function(req, res) {
+        for (var i=0; i<req.body.length; i++) {
+            var section = req.body[i]
+            if (!section.name || !section.field || !section.locale) {
+                Response.BadParameters(res, 'Missing required parameters: name, field')
+                return
+            }
+            if (!utils.validFilename(section.name) || !utils.validFilename(section.field) || !utils.validFilename(section.locale)) {
+                Response.BadParameters(res, 'name and field value must match /^[a-z0-9 \[\]()\._-]+$/i')
+                return
+            }
+        }
+
+        var sections = []
+        req.body.forEach(e => {
+            sections.push({locale: e.locale, name: e.name, field: e.field, text: e.text || ""})
+        })
+
+        CustomSection.updateAll(sections)
+        .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 }

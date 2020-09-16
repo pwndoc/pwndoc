@@ -246,7 +246,12 @@ export default {
                     this.$emit('input', this.html)
                 },
                 disableInputRules: true,
-                disablePasteRules: true
+                disablePasteRules: true,
+                editorProps: { handleDOMEvents: {
+                    drop: (view, e) => { e.preventDefault(); },
+                } },
+                // hide the drop position indicator
+                dropCursor: { width: 0, color: 'transparent' },
             }),
             json: '',
             html: '',

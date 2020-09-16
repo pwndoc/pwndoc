@@ -1,4 +1,5 @@
 import { Dialog, Notify } from 'quasar';
+import draggable from 'vuedraggable'
 import BasicEditor from 'components/editor';
 
 import DataService from '@/services/data'
@@ -8,26 +9,37 @@ export default {
         return {
             languages: [],
             newLanguage: {locale: "", language: ""},
+            editLanguages: [],
+            editLanguage: false,
 
             auditTypes: [],
             newAuditType: {name: "", locale: ""},
+            editAuditTypes: [],
+            editAuditType: false,
 
             vulnTypes: [],
             newVulnType: {name: "", locale: ""},
+            editVulnTypes: [],
+            editVulnType: false,
 
             vulnCategories: [],
             newVulnCat: {name: "", fields: []},
             newVulnCatField: {label: "", fieldType: ""},
+            editCategories: [],
+            editCategory: false,
 
             sections: [],
             newSection: {field: "", name: "", locale: ""},
+            editSections: [],
+            editSection: false,
 
             errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: ''}
         }
     },
 
     components: {
-        BasicEditor
+        BasicEditor,
+        draggable
     },
 
     mounted: function() {
@@ -39,6 +51,8 @@ export default {
     },
 
     methods: {
+/* ===== LANGUAGES ===== */
+
         // Get available languages
         getLanguages: function() {
             DataService.getLanguages()
@@ -88,13 +102,14 @@ export default {
             })
         },
 
-        // Delete Language
-        deleteLanguage: function(locale) {
-            DataService.deleteLanguage(locale)
+         // Update Languages
+         updateLanguages: function() {
+            DataService.updateLanguages(this.editLanguages)
             .then((data) => {
-                this.getLanguages();
+                this.getLanguages()
+                this.editLanguage = false
                 Notify.create({
-                    message: 'Language deleted successfully',
+                    message: 'Languages updated successfully',
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -109,6 +124,13 @@ export default {
                 })
             })
         },
+
+        // Remove Language
+        removeLanguage: function(locale) {
+            this.editLanguages = this.editLanguages.filter(e => e.locale !== locale)
+        },
+
+/* ===== AUDIT TYPES ===== */
 
         // Get available audit types
         getAuditTypes: function() {
@@ -151,13 +173,14 @@ export default {
             })
         },
 
-        // Delete Audit type
-        deleteAuditType: function(name) {
-            DataService.deleteAuditType(name)
+        // Update Audit Types
+        updateAuditTypes: function() {
+            DataService.updateAuditTypes(this.editAuditTypes)
             .then((data) => {
-                this.getAuditTypes();
+                this.getAuditTypes()
+                this.editAuditType = false
                 Notify.create({
-                    message: 'Audit type deleted successfully',
+                    message: 'Audit Types updated successfully',
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -172,6 +195,13 @@ export default {
                 })
             })
         },
+
+        // Remove Audit Type
+        removeAuditType: function(auditType) {
+            this.editAuditTypes = this.editAuditTypes.filter(e => e.name !== auditType.name || e.locale !== auditType.locale)
+        },
+
+/* ===== VULNERABILITY TYPES ===== */
 
         // Get available vulnerability types
         getVulnerabilityTypes: function() {
@@ -214,13 +244,14 @@ export default {
             })
         },
 
-        // Delete vulnerability type
-        deleteVulnerabilityType: function(name) {
-            DataService.deleteVulnerabilityType(name)
+        // Update Audit Types
+        updateVulnTypes: function() {
+            DataService.updateVulnTypes(this.editVulnTypes)
             .then((data) => {
-                this.getVulnerabilityTypes();
+                this.getVulnerabilityTypes()
+                this.editVulnType = false
                 Notify.create({
-                    message: 'Vulnerability type deleted successfully',
+                    message: 'Vulnerability Types updated successfully',
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -235,6 +266,13 @@ export default {
                 })
             })
         },
+
+        // Remove vulnerability type
+        removeVulnType: function(vulnType) {
+            this.editVulnTypes = this.editVulnTypes.filter(e => e.name !== vulnType.name || e.locale !== vulnType.locale)
+        },
+
+/* ===== CATEGORIES ===== */
 
         // Get available vulnerability categories
         getVulnerabilityCategories: function() {
@@ -277,27 +315,14 @@ export default {
             })
         },
 
-         // Update vulnerability category
-        updateVulnerabilityCategory: function(vulnCat, indexDelete) {
-            this.cleanErrors();
-            if ((!this.newVulnCatField.label || !this.newVulnCatField.fieldType) && indexDelete === null)
-                this.errors.vulnCatField = "Label and type required";
-            
-            if (this.errors.vulnCatField)
-                return;
-
-            if (indexDelete !== null) {
-                vulnCat.fields.splice(indexDelete, 1)
-                var updateCat = vulnCat
-            }
-            else
-                var updateCat = {name: vulnCat.name, fields: vulnCat.fields.concat(this.newVulnCatField)}
-            DataService.updateVulnerabilityCategory(vulnCat.name, updateCat)
+         // Update Vulnerability Categories
+         updateVulnCategories: function() {
+            DataService.updateVulnerabilityCategories(this.editCategories)
             .then((data) => {
-                this.newVulnCatField = {label: "", type: ""};
-                this.getVulnerabilityCategories();
+                this.getVulnerabilityCategories()
+                this.editCategory = false
                 Notify.create({
-                    message: 'Vulnerability category updated successfully',
+                    message: 'Vulnerability Categories updated successfully',
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -312,28 +337,26 @@ export default {
                 })
             })
         },
-
-        // Delete vulnerability category
-        deleteVulnerabilityCategory: function(name) {
-            DataService.deleteVulnerabilityCategory(name)
-            .then((data) => {
-                this.getVulnerabilityCategories();
-                Notify.create({
-                    message: 'Vulnerability category deleted successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
-                })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor: 'white',
-                    position: 'top-right'
-                })
-            })
+        
+        // Remove Category
+        removeCategory: function(vulnCat) {
+            this.editCategories = this.editCategories.filter(e => e.name !== vulnCat.name)
         },
+        
+        // Add Category Field
+        addCategoryField: function(vulnCat) {
+            vulnCat.fields.push(this.newVulnCatField)
+            this.newVulnCatField = {}
+        },
+
+        // Remove Category Field
+        removeCategoryField: function(indexCat, indexField) {
+            console.log(indexCat)
+            console.log(indexField)
+            this.editCategories[indexCat].fields.splice(indexField, 1)
+        },
+
+/* ===== SECTIONS ===== */
 
         // Get available sections
         getSections: function() {
@@ -362,6 +385,7 @@ export default {
             .then((data) => {
                 this.newSection.field = "";
                 this.newSection.name = "";
+                this.newSection.text = ""
                 this.getSections();
                 Notify.create({
                     message: 'Section created successfully',
@@ -380,13 +404,14 @@ export default {
             })
         },
 
-        // Delete section
-        deleteSection: function(field, locale) {
-            DataService.deleteSection(field, locale)
+         // Update Sections
+         updateSections: function() {
+            DataService.updateSections(this.editSections)
             .then((data) => {
-                this.getSections();
+                this.getSections()
+                this.editSection = false
                 Notify.create({
-                    message: 'Section deleted successfully',
+                    message: 'Sections updated successfully',
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -400,6 +425,11 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        // Remove section
+        removeSection: function(index) {
+            this.editSections.splice(index, 1)
         },
 
         cleanErrors: function() {
