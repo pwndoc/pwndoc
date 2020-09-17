@@ -198,14 +198,14 @@
         <q-card-section>
             <q-field borderless label="Description" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" :toolbar="['format', 'marks', 'list', 'code']" />
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
             <q-field borderless label="Observation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" :toolbar="['format', 'marks', 'list', 'code']" />
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -224,7 +224,7 @@
         <q-card-section>
             <q-field borderless label="Remediation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" :toolbar="['format', 'marks', 'list', 'code']" />
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -270,7 +270,7 @@
             <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
                 <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
                     <template v-slot="control">
-                        <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                        <basic-editor v-model="field.text" />
                     </template>
                 </q-field>
                 <q-input
@@ -362,14 +362,14 @@
         <q-card-section>
             <q-field borderless label="Description" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" :toolbar="['format', 'marks', 'list', 'code']" />
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
             <q-field borderless label="Observation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" :toolbar="['format', 'marks', 'list', 'code']" />
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -388,7 +388,7 @@
         <q-card-section>
             <q-field borderless label="Remediation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" :toolbar="['format', 'marks', 'list', 'code']" />
+                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -434,7 +434,7 @@
             <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
                 <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
                     <template v-slot="control">
-                        <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                        <basic-editor v-model="field.text" />
                     </template>
                 </q-field>
                 <q-input
@@ -518,14 +518,14 @@
                     <q-card-section>
                         <q-field borderless label="Description" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" :toolbar="['format', 'marks', 'list', 'code']" />
+                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
                             </template>
                         </q-field>
                     </q-card-section>
                     <q-card-section>
                         <q-field borderless label="Observation" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" :toolbar="['format', 'marks', 'list', 'code']" />
+                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                             </template>
                         </q-field>
                     </q-card-section>
@@ -542,7 +542,7 @@
                     <q-card-section>
                         <q-field borderless label="Remediation" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" :toolbar="['format', 'marks', 'list', 'code']" />
+                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                             </template>
                         </q-field>
                     </q-card-section>
@@ -586,7 +586,7 @@
                             <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
                                 <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
                                     <template v-slot="control">
-                                        <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                                        <basic-editor v-model="field.text" />
                                     </template>
                                 </q-field>
                                 <q-input
@@ -667,7 +667,6 @@
                                         <basic-editor 
                                         v-model="update.description" 
                                         :diff="currentVulnerability.details[currentDetailsIndex].description || ''" 
-                                        :toolbar="['format', 'marks', 'list', 'code']" 
                                         :editable=false />
                                     </template>
                                 </q-field>
@@ -683,7 +682,6 @@
                                         <basic-editor 
                                         v-model="update.observation"
                                         :diff="currentVulnerability.details[currentDetailsIndex].observation || ''"
-                                        :toolbar="['format', 'marks', 'list', 'code']" 
                                         :editable=false />
                                     </template>
                                 </q-field>
@@ -710,7 +708,6 @@
                                         <basic-editor 
                                         v-model="update.remediation" 
                                         :diff="currentVulnerability.details[currentDetailsIndex].remediation || ''"
-                                        :toolbar="['format', 'marks', 'list', 'code']" 
                                         :editable=false />
                                     </template>
                                 </q-field>
@@ -770,7 +767,6 @@
                                                 <basic-editor 
                                                 v-model="field.text" 
                                                 :diff="currentVulnerability.details[currentDetailsIndex].customFields[idx].text || ''"
-                                                :toolbar="['format', 'marks', 'list', 'code']" 
                                                 :editable=false />
                                             </template>
                                         </q-field>

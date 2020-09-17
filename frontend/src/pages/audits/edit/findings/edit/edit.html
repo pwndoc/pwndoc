@@ -47,12 +47,12 @@
                         />
                         <q-field class="col-md-12" borderless label="Description" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="finding.description" :toolbar="['format', 'marks', 'list', 'code']" />
+                                <basic-editor v-model="finding.description" />
                             </template>
                         </q-field>
                         <q-field class="col-md-12" borderless label="Observation" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="finding.observation" :toolbar="['format', 'marks', 'list', 'code']" />
+                                <basic-editor v-model="finding.observation" />
                             </template>
                         </q-field>
                         <q-input
@@ -73,7 +73,7 @@
                     <q-card-section v-for="field of finding.customFields" :key="field.label">
                         <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="field.text" :toolbar="['format', 'marks', 'list', 'code']" />
+                                <basic-editor v-model="field.text" />
                             </template>
                         </q-field>
                         <q-input
@@ -152,7 +152,7 @@
             <q-card-section>
                 <q-field class="col-md-12" borderless label="Remediation" stack-label>
                     <template v-slot="control">
-                        <basic-editor v-model="finding.remediation" :toolbar="['format', 'marks', 'list', 'code']" />
+                        <basic-editor v-model="finding.remediation" />
                     </template>
                 </q-field>
             </q-card-section>
