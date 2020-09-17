@@ -1,6 +1,6 @@
 // Filename whitelist validation for template creation
 function validFilename(filename) {
-    const regex = /^[a-z0-9 \[\]()_-]+$/i;
+    const regex = /^[A-zÀ-ú0-9 \[\]()_-]+$/i;
     
     return (regex.test(filename));
 }
