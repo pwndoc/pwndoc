@@ -538,7 +538,7 @@
                                 </q-btn>
                             </q-toolbar>
                             <q-separator />
-                            <div v-for="(section, idx) of sections" :key="section.field" v-if="section.locale === newSection.locale">
+                            <div v-for="(section, idx) of sections" :key="idx" v-if="section.locale === newSection.locale">
                                 <q-item>
                                     <q-item-section>
                                         <q-input
@@ -574,7 +574,7 @@
                             <q-separator />
                             <q-card-section>
                                 <draggable v-model="editSections" handle=".handle" ghost-class="drag-ghost" direction="horizontal">
-                                    <div v-for="(section, idx) of editSections" :key="section.field" v-if="section.locale === newSection.locale">
+                                    <div v-for="(section, idx) of editSections" :key="idx" v-if="section.locale === newSection.locale">
                                         <q-item>
                                             <q-item-section avatar>
                                                 <q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
