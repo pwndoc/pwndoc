@@ -287,12 +287,12 @@ function prepAuditData(data) {
         var tmpFinding = {
             title: finding.title || "",
             vulnType: finding.vulnType || "",
-            description: finding.description || "",
-            observation: finding.observation || "",
-            remediation: finding.remediation || "",
+            description: splitHTMLParagraphs(finding.description),
+            observation: splitHTMLParagraphs(finding.observation),
+            remediation: splitHTMLParagraphs(finding.remediation),
             remediationComplexity: finding.remediationComplexity || "",
             priority: finding.priority || "",
-            references: finding.references || "",
+            references: finding.references || [],
             cvssv3: finding.cvssv3 || "",
             cvssScore: finding.cvssScore || "",
             cvssSeverity: finding.cvssSeverity || "",
@@ -303,7 +303,7 @@ function prepAuditData(data) {
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
-                tmpFinding[_.deburr(field.label.toLowerCase()).replace(/\s/g, '')] = field.text
+                tmpFinding[_.deburr(field.label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
             })
         }
         result.findings.push(tmpFinding)
