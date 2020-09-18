@@ -210,7 +210,11 @@ export default {
             type: Boolean,
             default: false
         },
-        diff: String
+        diff: String,
+        disableDrop: {
+            type: Boolean,
+            default: false
+        }
     },
     components: {
         EditorContent,
@@ -246,12 +250,7 @@ export default {
                     this.$emit('input', this.html)
                 },
                 disableInputRules: true,
-                disablePasteRules: true,
-                editorProps: { handleDOMEvents: {
-                    drop: (view, e) => { e.preventDefault(); },
-                } },
-                // hide the drop position indicator
-                dropCursor: { width: 0, color: 'transparent' },
+                disablePasteRules: true
             }),
             json: '',
             html: '',
