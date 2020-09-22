@@ -172,7 +172,7 @@ export default {
             if (this.errors.title)
                 return;
 
-            this.finding.references = this.referencesString.split('\n').filter(e => e !== '')
+            this.currentVulnerability.references = this.referencesString.split('\n').filter(e => e !== '')
             VulnerabilityService.createVulnerabilities([this.currentVulnerability])
             .then(() => {
                 this.getVulnerabilities();
