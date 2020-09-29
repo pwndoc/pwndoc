@@ -4,11 +4,11 @@ PwnDoc is a pentest reporting application making it simple and easy to write you
 The main goal is to have more time to **Pwn** and less time to **Doc** by mutualizing data like vulnerabilities between users.
 
 # Documentation
-- [Installation](/installation)
-- [Data](/data)
-- [Vulnerabilities](/vulnerabilities)
-- [Audits](/audits)
-- [Templating](/docxtemplate)
+- [Installation](installation.md)
+- [Data](data.md)
+- [Vulnerabilities](vulnerabilities.md)
+- [Audits](audits.md)
+- [Templating](docxtemplate.md)
 
 
 # Features
