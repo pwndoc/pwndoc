@@ -128,6 +128,22 @@ expressions.filters.convertHTML = function(input) {
     return result;
 }
 
+// Count vulnerability by severity
+// Example: {findings | count: 'Critical'}
+expressions.filters.count = function(input, severity) {
+    if(!input) return input;
+    var count = 0;
+
+    for(var i = 0; i < input.length; i++){
+
+        if(input[i].cvssSeverity === severity){
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
 // Compile all angular expressions
 var angularParser = function(tag) {
     expressions = {...expressions, ...customGenerator.expressions};
