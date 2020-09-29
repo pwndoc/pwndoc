@@ -33,6 +33,7 @@ function html2ooxml(html) {
                 cParagraph = new docx.Paragraph({heading: 'Heading6'})
             }
             else if (tag === "div" || tag === "p") {
+                cParagraphProperties.style = 'HTMLTextStyle'
                 cParagraph = new docx.Paragraph(cParagraphProperties)
             }
             else if (tag === "pre") {
