@@ -136,7 +136,7 @@ expressions.filters.count = function(input, severity) {
 
     for(var i = 0; i < input.length; i++){
 
-        if(input[i].cvssSeverity == severity){
+        if(input[i].cvssSeverity === severity){
             count += 1;
         }
     }
