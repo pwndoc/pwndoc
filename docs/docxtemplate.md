@@ -217,6 +217,12 @@ Description
 {/findings}
 >```
 
+#### Count parser
+You can count the number of vulnerability by severity. Simply add this line for counting 'Critical' vulnerability for example:
+```
+{findings | count: 'Critical'}
+```
+
 ### Custom Sections
 
 Additional Sections can be added to an Audit. They are accessible in the docx template with the specific Field defined in [Custom Sections](/data?id=custom-sections)
