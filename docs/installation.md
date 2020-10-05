@@ -29,10 +29,10 @@ Remove containers
 docker-compose down
 ```
 
-Update:
+Update
 
 ```
-docker-compose stop
+docker-compose down
 git pull
 docker-compose up -d --build
 ```
