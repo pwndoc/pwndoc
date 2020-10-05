@@ -29,6 +29,14 @@ Remove containers
 docker-compose down
 ```
 
+Update
+
+```
+docker-compose down
+git pull
+docker-compose up -d --build
+```
+
 Application is accessible through https://localhost:8443  
 API is accessible through https://localhost:4242/api
 
