@@ -29,10 +29,18 @@ module.exports = function(app) {
         // Required parameters
         template.name = req.body.name;
 
+        var filename = req.body.filename;
+        template.ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
+        
+        if (!utils.validFilename(template.ext)) {
+            Response.BadParameters(res, 'Bad extension format');
+            return;
+        }
+
         Template.create(template)
         .then(data => {
             var fileBuffer = Buffer.from(req.body.file, 'base64');
-            fs.writeFileSync(`${__basedir}/../report-templates/${template.name}.docx`, fileBuffer);
+            fs.writeFileSync(`${__basedir}/../report-templates/${template.name}.${template.ext}`, fileBuffer);
             Response.Created(res, 'Template created successfully');
         })
         .catch(err => Response.Internal(res, err))

@@ -2,7 +2,8 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var TemplateSchema = new Schema({
-    name:      {type: String, required: true, unique: true}
+    name:      {type: String, required: true, unique: true},
+    ext:      {type: String, required: true, unique: false}
 
 }, {timestamps: true});
 

@@ -188,6 +188,7 @@ export default {
                 this.currentTemplate.file = fileReader.result.split(",")[1];
             }
 
+            this.currentTemplate.filename = file.name
             fileReader.readAsDataURL(file);
         }
     }
