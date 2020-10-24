@@ -22,7 +22,7 @@ module.exports = function(request) {
       })
 
       it('Create 2 templates', async done => {
-        var template = {name: "Template 1", file: "VGVzdCB0ZW1wbGF0ZQ=="}
+        var template = {name: "Template 1", filename: "File.docx", file: "VGVzdCB0ZW1wbGF0ZQ=="}
         var response = await request.post('/api/templates', template, options)
         expect(response.status).toBe(201)
 
@@ -41,7 +41,7 @@ module.exports = function(request) {
       })
 
       it('Should not create template with existing name', async done => {
-        var template = {name: "Template 1", file: "VGVzdCB0ZW1wbGF0ZQ=="}
+        var template = {name: "Template 1", filename: "File.docx", file: "VGVzdCB0ZW1wbGF0ZQ=="}
         var response = await request.post('/api/templates', template, options)
 
         expect(response.status).toBe(422)
