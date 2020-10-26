@@ -1,5 +1,7 @@
 export default {
   htmlEncode(html) {
+    if(typeof(html) !== "string")  return "";
+    
     var result = html
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
