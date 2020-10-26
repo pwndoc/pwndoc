@@ -16,6 +16,7 @@ TemplateSchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = Template.find();
         query.select('name')
+        query.select('ext')
         query.exec()
         .then((rows) => {
             resolve(rows);
@@ -31,6 +32,7 @@ TemplateSchema.statics.getOne = (templateId) => {
     return new Promise((resolve, reject) => {
         var query = Template.findById(templateId);
         query.select('name')
+        query.select('ext')
         query.exec()
         .then((rows) => {
             resolve(rows);
