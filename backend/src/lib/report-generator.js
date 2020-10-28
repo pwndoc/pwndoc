@@ -299,6 +299,7 @@ function prepAuditData(data) {
     result.scope = data.scope || []
 
     result.findings = []
+    var idAcumulator = 1;
     data.findings.forEach(finding => {
         var tmpFinding = {
             title: finding.title || "",
@@ -315,7 +316,8 @@ function prepAuditData(data) {
             poc: splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
             status: finding.status || "",
-            category: finding.category || ""
+            category: finding.category || "",
+            identifier: result.name.substring(0, 3).toUpperCase() + "-" + lPad(idAcumulator)
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
@@ -323,6 +325,7 @@ function prepAuditData(data) {
             })
         }
         result.findings.push(tmpFinding)
+        idAcumulator++
     })
 
     result.creator = {}
@@ -340,6 +343,11 @@ function prepAuditData(data) {
         }
     })
     return result
+}
+
+function lPad(number) {
+    if (number <= 999) { number = ("00" + number).slice(-4); }
+    return number;
 }
 
 function splitHTMLParagraphs(data) {
