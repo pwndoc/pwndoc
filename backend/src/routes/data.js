@@ -6,8 +6,10 @@ module.exports = function(app) {
     var Language = require('mongoose').model('Language');
     var AuditType = require('mongoose').model('AuditType');
     var VulnerabilityType = require('mongoose').model('VulnerabilityType');
+    var Resolution = require('mongoose').model('Resolution');
     var VulnerabilityCategory = require('mongoose').model('VulnerabilityCategory');
     var CustomSection = require('mongoose').model('CustomSection');
+    
 
 /* ===== LANGUAGES ===== */
 
@@ -191,6 +193,67 @@ module.exports = function(app) {
         VulnerabilityType.updateAll(vulnTypes)
         .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
+    });
+
+/* ===== RESOLUTIONS ===== */
+
+    // Get resolution list
+    app.get("/api/data/resolutions", acl.hasPermission('resolutions:read'), function (req, res) {
+        Resolution.getAll()
+            .then(msg => Response.Ok(res, msg))
+            .catch(err => Response.Internal(res, err))
+    });
+
+    // Create resolution
+    app.post("/api/data/resolutions", acl.hasPermission('resolutions:create'), function (req, res) {
+        if (!req.body.name || !req.body.locale) {
+            Response.BadParameters(res, 'Missing required parameters: name, locale');
+            return;
+        }
+        if (!utils.validFilename(req.body.name) || !utils.validFilename(req.body.locale)) {
+            Response.BadParameters(res, 'name and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+            return
+        }
+
+        var resolution = {};
+        resolution.name = req.body.name;
+        resolution.locale = req.body.locale;
+        Resolution.create(resolution)
+            .then(msg => Response.Created(res, msg))
+            .catch(err => Response.Internal(res, err))
+    });
+
+    // Delete resolution
+    app.delete("/api/data/resolutions/:name(*)", acl.hasPermission('resolutions:delete'), function (req, res) {
+        Resolution.delete(req.params.name)
+            .then(msg => {
+                Response.Ok(res, 'Resolution type deleted successfully')
+            })
+            .catch(err => Response.Internal(res, err))
+    });
+
+    // Update resolutions
+    app.put("/api/data/resolutions", acl.hasPermission('resolutions:update'), function (req, res) {
+        for (var i = 0; i < req.body.length; i++) {
+            var resolution = req.body[i]
+            if (!resolution.name || !resolution.locale) {
+                Response.BadParameters(res, 'Missing required parameters: name, locale')
+                return
+            }
+            if (!utils.validFilename(resolution.name) || !utils.validFilename(resolution.locale)) {
+                Response.BadParameters(res, 'name and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+                return
+            }
+        }
+
+        var resolutions = []
+        req.body.forEach(e => {
+            resolutions.push({ name: e.name, locale: e.locale })
+        })
+
+        Resolution.updateAll(resolutions)
+            .then(msg => Response.Created(res, msg))
+            .catch(err => Response.Internal(res, err))
     });
 
 /* ===== VULNERABILITY CATEGORY ===== */

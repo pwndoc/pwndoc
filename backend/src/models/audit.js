@@ -31,6 +31,7 @@ var Finding = {
     scope:                  String,
     status:                 {type: Number, enum: [0,1], default: 1}, // 0: done, 1: redacting
     category:               String,
+    resolution:             String,
     customFields:           [customField]
 }
 
@@ -283,7 +284,7 @@ AuditSchema.statics.getFindings = (isAdmin, auditId, userId) => {
         var query = Audit.findById(auditId)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
-        query.select('-_id findings._id findings.title findings.cvssSeverity findings.cvssScore');
+        query.select('-_id findings._id findings.title findings.cvssSeverity findings.cvssScore findings.resolution');
         query.sort({'findings.cvssScore': -1})
         query.exec()
         .then((row) => {

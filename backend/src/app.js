@@ -30,6 +30,7 @@ require('./models/vulnerability-update');
 require('./models/language');
 require('./models/audit-type');
 require('./models/vulnerability-type');
+require('./models/resolution');
 require('./models/vulnerability-category');
 require('./models/custom-section');
 

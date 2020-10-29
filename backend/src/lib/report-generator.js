@@ -315,7 +315,8 @@ function prepAuditData(data) {
             poc: splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
             status: finding.status || "",
-            category: finding.category || ""
+            category: finding.category || "",
+            resolution: finding.resolution || "undefined"
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
@@ -339,6 +340,7 @@ function prepAuditData(data) {
             text: splitHTMLParagraphs(section.text) 
         }
     })
+
     return result
 }
 

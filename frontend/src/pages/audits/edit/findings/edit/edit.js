@@ -15,6 +15,7 @@ export default {
             findingOrig: {},
             selectedTab: "definition",
             vulnTypes: [],
+            resolutions: [],
             referencesString: ""
         }
     },
@@ -28,8 +29,10 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.findingId = this.$route.params.findingId;
+        this.getResolutions();
         this.getFinding();
         this.getVulnTypes();
+        
 
         this.$socket.emit('menu', {menu: 'editFinding', finding: this.findingId, room: this.auditId});
 
@@ -78,6 +81,10 @@ export default {
             return this.vulnTypes.filter(type => type.locale === this.$parent.audit.language);
         },
 
+        resolutionsLang: function() {
+            return this.resolutions.filter(r => r.locale === this.$parent.audit.language);
+        },
+
         screenshotsSize: function() {
             return ((JSON.stringify(this.uploadedImages).length) / 1024).toFixed(2)
         }
@@ -105,6 +112,17 @@ export default {
             })
         },
 
+        // Get resolutions
+        getResolutions: function () {
+            DataService.getResolutions()
+                .then((data) => {
+                    this.resolutions = data.data.datas;
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+        },
+
         // Get Finding
         getFinding: function() {
             AuditService.getFinding(this.auditId, this.findingId)
@@ -117,7 +135,8 @@ export default {
                 if (this.finding.references && this.finding.references.length > 0)
                     this.referencesString = this.finding.references.join('\n')
                 
-                this.findingOrig = this.$_.cloneDeep(this.finding);                
+                this.findingOrig = this.$_.cloneDeep(this.finding);   
+
             })
             .catch((err) => {
                 if (err.response.status === 403)

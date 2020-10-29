@@ -196,6 +196,7 @@ List of findings. Array of Objects:
 * **findings[i].affected** (HTML without images)
 * **findings[i].status** (Number 0:done, 1:redacting)
 * **findings[i].category**
+* **findings[i].resolution**
 
 Additional fields specific to the Category will also be added to the findings Array. The key will be lowercase + strip sapces of the label.  
 Eg. if Category label is `Aggravating Factors` it will be added to the array as `findings[i].aggravatingfactors`.

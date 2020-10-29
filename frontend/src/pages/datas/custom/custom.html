@@ -211,6 +211,107 @@
             </q-card>
         </div>
 
+        <!-- vulnerability Resolutions -->
+        <div class="col-md-10 offset-md-1 q-mt-md">
+            <q-card>
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                    <div class="text-h6">Vulnerability Resolutions</div>
+                </q-card-section>
+                <q-separator />
+        
+                <q-card-section>
+                    <div class="text-grey-8">Create a resolution status to be used in the audit reports (Ex: 'Open', 'Solved', 'Won't Fix')</div>
+                </q-card-section>
+                <q-card-section v-if="languages.length > 0" class="row">
+                    <div class="col-md-6">
+                        <q-item class="row">
+                            <q-item-section class="col-md-4">
+                                <q-select 
+                                v-model="newResolution.locale" 
+                                label="Language" 
+                                :options="languages"
+                                option-value="locale" 
+                                option-label="language" 
+                                emit-value 
+                                map-options 
+                                options-sanitize 
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input 
+                                label="Name" 
+                                v-model="newResolution.name" 
+                                clearable 
+                                :error="!!errors.resolution"
+                                :error-message="errors.resolution" 
+                                @keyup.enter="createResolution" 
+                                />
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn color="secondary" unelevated label="+" size="md" @click="createResolution" />
+                            </q-item-section>
+                        </q-item>
+                    </div>
+        
+                    <div v-if="!editResolution" class="col-md-6">
+                        <q-card flat bordered v-if="resolutions.length > 0">
+                            <q-toolbar>
+                                <div class="text-grey-8">List of Resolutions</div>
+                                <q-space />
+                                <q-btn flat color="primary" icon="fa fa-edit"
+                                    @click="editResolution = true; editResolutions = $_.cloneDeep(resolutions)">
+                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+                                        Edit</q-tooltip>
+                                </q-btn>
+                            </q-toolbar>
+                            <q-separator />
+                            <q-item v-for="r of resolutions" :key="r.name"
+                                v-if="r.locale === newResolution.locale">
+                                <q-item-section>
+                                    <q-input label="Name" v-model="r.name" readonly />
+                                </q-item-section>
+                            </q-item>
+                        </q-card>
+                    </div>
+                    <div v-else class="col-md-6">
+                        <q-card flat bordered>
+                            <q-toolbar>
+                                <div class="text-grey-8">Edit Resolution</div>
+                            </q-toolbar>
+                            <q-separator />
+                            <q-card-section>
+                                <draggable v-model="editResolutions" handle=".handle" ghost-class="drag-ghost">
+                                    <q-item v-for="(r,index) of editResolutions" :key="index"
+                                        v-if="r.locale === r.locale">
+                                        <q-item-section avatar>
+                                            <q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle"
+                                                color="grey" />
+                                        </q-item-section>
+                                        <q-item-section>
+                                            <q-input label="Name" v-model="r.name" />
+                                        </q-item-section>
+                                        <q-item-section side>
+                                            <q-btn color="red" unelevated label="x" size="md" class="q-mt-md"
+                                                @click="removeResolution(r)" />
+                                        </q-item-section>
+                                    </q-item>
+                                </draggable>
+                            </q-card-section>
+                            <q-card-actions align="right" class="q-mr-lg">
+                                <q-btn color="primary" outline @click="editResolutions = false">Cancel</q-btn>
+                                <q-btn color="secondary" unelevated @click="updateResolutions">Save</q-btn>
+                            </q-card-actions>
+                        </q-card>
+                    </div>
+                </q-card-section>
+                <q-card-section v-else>
+                    <p>Please create at least one Language</p>
+                </q-card-section>
+            </q-card>
+        </div>
+
         <!-- VULNERABILITY TYPES -->
         <div class="col-md-10 offset-md-1 q-mt-md">
             <q-card>

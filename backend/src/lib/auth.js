@@ -103,6 +103,8 @@ var roles = {
             'audit-types:read',
             // Vulnerability Types
             'vulnerability-types:read',
+            // Resolution statuses
+            'resolution:read',
             // Vulnerability Categories
             'vulnerability-categories:read',
             // Sections Data

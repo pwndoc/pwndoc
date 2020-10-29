@@ -22,6 +22,11 @@ export default {
             editVulnTypes: [],
             editVulnType: false,
 
+            resolutions: [],
+            newResolution: { name: "", locale: "" },
+            editResolutions: [],
+            editResolution: false,
+
             vulnCategories: [],
             newVulnCat: {name: "", fields: []},
             newVulnCatField: {label: "", fieldType: ""},
@@ -33,7 +38,7 @@ export default {
             editSections: [],
             editSection: false,
 
-            errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: ''}
+            errors: {locale: '', language: '', auditType: '', resolution: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: ''}
         }
     },
 
@@ -45,6 +50,7 @@ export default {
     mounted: function() {
         this.getLanguages();
         this.getAuditTypes();
+        this.getResolutions();
         this.getVulnerabilityTypes();
         this.getVulnerabilityCategories();
         this.getSections();
@@ -62,6 +68,7 @@ export default {
                     this.newAuditType.locale = this.languages[0].locale;
                     this.newVulnType.locale = this.languages[0].locale;
                     this.newSection.locale = this.languages[0].locale;
+                    this.newResolution.locale = this.languages[0].locale;
                 }
             })
             .catch((err) => {
@@ -130,74 +137,146 @@ export default {
             this.editLanguages = this.editLanguages.filter(e => e.locale !== locale)
         },
 
-/* ===== AUDIT TYPES ===== */
+/* ===== RESOLUTION ===== */
 
-        // Get available audit types
-        getAuditTypes: function() {
-            DataService.getAuditTypes()
+        // Get available resolutions
+        getResolutions: function() {
+            DataService.getResolutions()
             .then((data) => {
-                this.auditTypes = data.data.datas;
+                this.resolutions = data.data.datas;
             })
             .catch((err) => {
                 console.log(err)
             })
         },
 
+        // Create resolution 
+        createResolution: function() {
+            this.cleanErrors();
+            if (!this.newResolution.name)
+                this.errors.resolution = "Name required";
+            
+            if (this.errors.resolution)
+                return;
+
+            DataService.createResolution(this.newResolution)
+            .then((data) => {
+                this.newResolution.name = "";
+                this.getResolutions();
+                Notify.create({
+                    message: 'Resolution created successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+        // Update Resolutions
+        updateResolutions: function() {
+            DataService.updateResolutions(this.editResolutions)
+            .then((data) => {
+                this.getResolutions()
+                this.editResolution = false
+                Notify.create({
+                    message: 'Resolution Type updated successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+        // Remove Resolution
+        removeResolution: function (resolution) {
+            console.log(resolution)
+            this.editResolutions = this.editResolutions.filter(e => e.name !== resolution.name || e.locale !== resolution.locale)
+        },
+
+        /* ===== AUDIT TYPES ===== */
+
+        // Get available audit types
+        getAuditTypes: function () {
+            DataService.getAuditTypes()
+                .then((data) => {
+                    this.auditTypes = data.data.datas;
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+        },
+
         // Create Audit type
-        createAuditType: function() {
+        createAuditType: function () {
             this.cleanErrors();
             if (!this.newAuditType.name)
                 this.errors.auditType = "Name required";
-            
+
             if (this.errors.auditType)
                 return;
 
             DataService.createAuditType(this.newAuditType)
-            .then((data) => {
-                this.newAuditType.name = "";
-                this.getAuditTypes();
-                Notify.create({
-                    message: 'Audit type created successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+                .then((data) => {
+                    this.newAuditType.name = "";
+                    this.getAuditTypes();
+                    Notify.create({
+                        message: 'Audit type created successfully',
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor: 'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
         },
 
         // Update Audit Types
-        updateAuditTypes: function() {
+        updateAuditTypes: function () {
             DataService.updateAuditTypes(this.editAuditTypes)
-            .then((data) => {
-                this.getAuditTypes()
-                this.editAuditType = false
-                Notify.create({
-                    message: 'Audit Types updated successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+                .then((data) => {
+                    this.getAuditTypes()
+                    this.editAuditType = false
+                    Notify.create({
+                        message: 'Audit Types updated successfully',
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor: 'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
                 })
-            })
         },
 
         // Remove Audit Type
-        removeAuditType: function(auditType) {
+        removeAuditType: function (auditType) {
             this.editAuditTypes = this.editAuditTypes.filter(e => e.name !== auditType.name || e.locale !== auditType.locale)
         },
 

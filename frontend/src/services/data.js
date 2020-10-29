@@ -49,6 +49,22 @@ export default {
         return Vue.prototype.$axios.put(`data/vulnerability-types`, vulnTypes)
     },
 
+    getResolutions: function () {
+        return Vue.prototype.$axios.get(`data/resolutions`)
+    },
+
+    createResolution: function (resolutionStatus) {
+        return Vue.prototype.$axios.post(`data/resolutions`, resolutionStatus)
+    },
+
+    deleteResolution: function (name) {
+        return Vue.prototype.$axios.delete(`data/rresolutions/${name}`)
+    },
+
+    updateResolutions: function (resolutionStatuses) {
+        return Vue.prototype.$axios.put(`data/resolutions`, resolutionStatuses)
+    },
+
     getVulnerabilityCategories: function() {
         return Vue.prototype.$axios.get(`data/vulnerability-categories`)
     },

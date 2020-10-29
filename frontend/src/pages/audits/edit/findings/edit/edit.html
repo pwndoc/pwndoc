@@ -130,7 +130,7 @@
                     <q-select
                     label="Remediation Difficulty"
                     stack-label
-                    class="col-md-6"
+                    class="col-md-4"
                     v-model="finding.remediationComplexity"
                     :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
                     map-options
@@ -140,10 +140,21 @@
                     <q-select
                     label="Priority"
                     stack-label
-                    class="col-md-6"
+                    class="col-md-4"
                     v-model="finding.priority"
                     :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
                     map-options
+                    emit-value
+                    options-sanitize
+                    />
+                    <q-select
+                    label="Resolution"
+                    stack-label
+                    class="col-md-4"
+                    v-model="finding.resolution"
+                    :options="resolutionsLang"
+                    option-value="name" 
+                    option-label="name" 
                     emit-value
                     options-sanitize
                     />
