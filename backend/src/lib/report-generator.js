@@ -299,7 +299,6 @@ function prepAuditData(data) {
     result.scope = data.scope || []
 
     result.findings = []
-    var idAcumulator = 1;
     data.findings.forEach(finding => {
         var tmpFinding = {
             title: finding.title || "",
@@ -325,7 +324,6 @@ function prepAuditData(data) {
             })
         }
         result.findings.push(tmpFinding)
-        idAcumulator++
     })
 
     result.creator = {}
