@@ -2,7 +2,7 @@ var fs = require('fs');
 var Docxtemplater = require('docxtemplater');
 var JSZip = require('jszip');
 var expressions = require('angular-expressions');
-var ImageModule = require('docxtemplater-image-module');
+var ImageModule = require('docxtemplater-image-module-free');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
@@ -53,7 +53,7 @@ function generateDoc(audit) {
         return [width,height];
     }
     var imageModule = new ImageModule(opts);
-    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser});
+    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
     cvssHandle(preppedAudit);
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
