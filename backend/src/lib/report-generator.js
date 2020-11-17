@@ -53,7 +53,7 @@ function generateDoc(audit) {
         return [width,height];
     }
     var imageModule = new ImageModule(opts);
-    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser});
+    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
     cvssHandle(preppedAudit);
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
