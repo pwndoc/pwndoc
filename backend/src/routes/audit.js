@@ -30,7 +30,7 @@ module.exports = function(app, io) {
         audit.template = req.body.template;
 
         Audit.create(audit, req.decodedToken.id)
-        .then(msg => Response.Created(res, 'Audit created successfully'))
+        .then(inserted => Response.Created(res, {message: 'Audit created successfully', audit: inserted}))
         .catch(err => Response.Internal(res, err))
     });
 
