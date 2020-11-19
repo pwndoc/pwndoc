@@ -2,7 +2,8 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var TemplateSchema = new Schema({
-    name:      {type: String, required: true, unique: true}
+    name:      {type: String, required: true, unique: true},
+    ext:      {type: String, required: true, unique: false}
 
 }, {timestamps: true});
 
@@ -15,6 +16,7 @@ TemplateSchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = Template.find();
         query.select('name')
+        query.select('ext')
         query.exec()
         .then((rows) => {
             resolve(rows);
@@ -30,6 +32,7 @@ TemplateSchema.statics.getOne = (templateId) => {
     return new Promise((resolve, reject) => {
         var query = Template.findById(templateId);
         query.select('name')
+        query.select('ext')
         query.exec()
         .then((rows) => {
             resolve(rows);

@@ -58,7 +58,7 @@ export default {
         downloadTemplate: function(row) {
             TemplateService.downloadTemplate(row._id)
             .then((data) => {
-                status = exportFile(`${row.name}.docx`, data.data, {type: "application/octet-stream"})
+                status = exportFile(`${row.name}.${row.ext}`, data.data, {type: "application/octet-stream"})
                 if (!status)
                     throw (status)
             })
@@ -188,6 +188,7 @@ export default {
                 this.currentTemplate.file = fileReader.result.split(",")[1];
             }
 
+            this.currentTemplate.filename = file.name
             fileReader.readAsDataURL(file);
         }
     }

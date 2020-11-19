@@ -29,10 +29,18 @@ module.exports = function(app) {
         // Required parameters
         template.name = req.body.name;
 
+        var filename = req.body.filename;
+        template.ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
+        
+        if (!utils.validFilename(template.ext)) {
+            Response.BadParameters(res, 'Bad extension format');
+            return;
+        }
+
         Template.create(template)
         .then(data => {
             var fileBuffer = Buffer.from(req.body.file, 'base64');
-            fs.writeFileSync(`${__basedir}/../report-templates/${template.name}.docx`, fileBuffer);
+            fs.writeFileSync(`${__basedir}/../report-templates/${template.name}.${template.ext}`, fileBuffer);
             Response.Created(res, 'Template created successfully');
         })
         .catch(err => Response.Internal(res, err))
@@ -48,20 +56,30 @@ module.exports = function(app) {
         var template = {};
         // Optional parameters
         if (req.body.name) template.name = req.body.name;
+        if (req.body.file){
+          var filename = req.body.filename;
+          var ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
+          template.ext = ext;
+        }
 
         Template.update(req.params.templateId, template)
         .then(data => {
             if (!req.body.name && req.body.file) {
+                var filename = req.body.filename;
+                var ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
                 var fileBuffer = Buffer.from(req.body.file, 'base64');
-                fs.writeFileSync(`${__basedir}/../report-templates/${data.name}.docx`, fileBuffer);
+                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext}`)} catch {}
+                fs.writeFileSync(`${__basedir}/../report-templates/${data.name}.${ext}`, fileBuffer);
             }
             else if (req.body.name && !req.body.file) {
-                fs.renameSync(`${__basedir}/../report-templates/${data.name}.docx`, `${__basedir}/../report-templates/${req.body.name}.docx`);
+                fs.renameSync(`${__basedir}/../report-templates/${data.name}.${data.ext}`, `${__basedir}/../report-templates/${req.body.name}.${data.ext}`);
             }
             else if (req.body.name && req.body.file) {
+                var filename = req.body.filename;
+                var ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
                 var fileBuffer = Buffer.from(req.body.file, 'base64');
-                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.docx`)} catch {}
-                fs.writeFileSync(`${__basedir}/../report-templates/${req.body.name}.docx`, fileBuffer);
+                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext}`)} catch {}
+                fs.writeFileSync(`${__basedir}/../report-templates/${req.body.name}.${ext}`, fileBuffer);
             }
             Response.Ok(res, 'Template updated successfully');
         })
@@ -77,7 +95,7 @@ module.exports = function(app) {
     app.delete("/api/templates/:templateId", acl.hasPermission('templates:delete'), function(req, res) {
         Template.delete(req.params.templateId)
         .then(data => {
-            fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.docx`);
+            fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext}`);
             Response.Ok(res, 'Template deleted successfully');
         })
         .catch(err => {
@@ -93,8 +111,8 @@ module.exports = function(app) {
      app.get("/api/templates/download/:templateId", acl.hasPermission('templates:read'), function(req, res) {
         Template.getOne(req.params.templateId)
         .then(data => {
-            var file = `${__basedir}/../report-templates/${data.name}.docx`
-            res.download(file, `${data.name}.docx`)
+            var file = `${__basedir}/../report-templates/${data.name}.${data.ext}`
+            res.download(file, `${data.name}.${data.ext}`)
         })
         .catch(err => Response.Internal(res, err))
     })

@@ -11,7 +11,7 @@ var _ = require('lodash');
 
 // Generate document with docxtemplater
 function generateDoc(audit) {
-    var templatePath = `${__basedir}/../report-templates/${audit.template.name}.docx`
+    var templatePath = `${__basedir}/../report-templates/${audit.template.name}.${audit.template.ext}`
     var preppedAudit = prepAuditData(audit)
     var content = fs.readFileSync(templatePath, "binary");
 
