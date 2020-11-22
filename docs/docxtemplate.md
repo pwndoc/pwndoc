@@ -281,6 +281,14 @@ There should now be abstractNum definition for each one.
 
 Filters allow to apply functions on Audit data values.
 
+### changeID
+
+Replaces the default identifier prefox (IDX-) by the supplied prefix
+> Use in template document
+>```
+{identifier | changeID: 'PROJ1-'}
+```
+
 ### convertDate
 
 Convert Date to proper format. Must be used on values with date format.
