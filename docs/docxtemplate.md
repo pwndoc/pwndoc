@@ -8,14 +8,14 @@ Check the [Default Template](https://github.com/pwndoc/pwndoc/tree/master/backen
 
 There can be different tags depending on the value. In the following examples `data` is the object passed to the docxtemplater engine.
 
-**Value**
+### Value
 
 ```
 data = {key1: value1, key2: value2, key3: value3}
 -> {key1} {key2} {key3}
 ```
 
-**Array**
+### Array
 
 ```
 // Simple Array
@@ -27,7 +27,7 @@ data = { array: [{name: 'value1'}, {name: 'value2'}, {name: 'value3'}]}
 -> {#array}{name}{/array}
 ```
 
-**Condition**
+### Condition
 
 ```
 data = {findings: [{title: 'vuln1', cvssSeverity: 'Critical'}, {title: 'vuln2', cvssSeverity: 'High'}, {title: 'vuln3', cvssSeverity: 'Medium'}]}
@@ -39,7 +39,7 @@ data = {findings: [{title: 'vuln1', cvssSeverity: 'Critical'}, {title: 'vuln2', 
 {/findings}
 ```
 
-**HTML values (from text editors)**
+### HTML values (from text editors)
 
 There is a tag filter *convertHTML* that convert HTML to open office XML for direct use in the docx template.  
 To handle images, HTML values with images are converted into an array of text and images
@@ -157,7 +157,7 @@ Array of Objects:
 >```
 Audit Scope:
 {-w:p scope}{name}{/scope}
-
+>  
 Network Scan:
 {#scope}{#hosts}
 {hostname} {ip} {os} :
@@ -192,6 +192,7 @@ List of findings. Array of Objects:
 * **findings[i].cvssv3**
 * **findings[i].cvssScore**
 * **findings[i].cvssSeverity**
+* **findings[i].cvssObj** (Object of cvss Criterias)
 * **findings[i].poc** (HTML with images)
 * **findings[i].affected** (HTML without images)
 * **findings[i].status** (Number 0:done, 1:redacting)
@@ -215,6 +216,10 @@ List of Findings{#findings}
 {title}     {vulnType}
 >  
 Severity: {cvssSeverity}    Score: {cvssScore}
+Attack Vector: cvssObj.AV               Scope: cvssObj.S
+Attack Complexity: cvssObj.AC           Confidentiality: cvssObj.C
+Required Privileges: cvssObj.PR         Integrity: cvssObj.I
+User Interaction: cvssObj.UI            Availability: cvssObj.A
 >  
 Affected Scope 
 {@affected | convertHTML}
@@ -233,10 +238,10 @@ Additional Sections can be added to an Audit. They are accessible in the docx te
 > Use in template document
 > ```
 // Example with a Cleanup Section: {name: 'Cleanup', field: 'cleanup', text: 'Default text for Cleanup Section'}
-CLEANUP SECTION
-{-w:p cleanup}{@text | convertHTML}
+CLEANUP SECTION (or use {cleanup.name} as title)
+{-w:p cleanup.text}{@text | convertHTML}
                                             {-w:p images}{%images}
-                                    Image 1 - {caption}{/images}{/cleanup}
+                                    Image 1 - {caption}{/images}{/cleanup.text}
 > ```
 
 ## Styles
@@ -271,3 +276,60 @@ Pwndoc uses `numId="1"` for `bullet list` and `numId="2"` for `ordered list`. So
 
 If there is no abstractNum definitions, this means that no numbering has been used in the document: open the document with Word, add bullet and ordered list, save, delete bullet and ordered list, save.  
 There should now be abstractNum definition for each one.
+
+## Filters
+
+Filters allow to apply functions on Audit data values.
+
+### convertDate
+
+Convert Date to proper format. Must be used on values with date format.
+
+> Use in template document
+>```
+// Example with {date_start: '2020-10-29'}
+{date_start | convertDate: 'short'} -> 10/29/2020
+{date_start | convertDate: 'full'} -> Thursday, October 29, 2020
+>```
+
+### convertHTML
+
+Convert HTML values to OOXML format. See [HTML values](docxtemplate.md?id=html-values-from-text-editors) for usage.
+
+> Use in template document
+>```
+{@value | convertHTML}
+>```
+
+### count 
+
+Count the number of vulnerabilities by CVSS severity.
+
+> Use in template document
+>```
+// Example counting 'Critical' vulnerabilities
+{findings | count: 'Critical'}
+>```
+
+Custom filters can also be created in `backend/src/lib/custom-generator.js`. As an example there are 2 filters defined for french reports.
+
+### convertDateFR (custom)
+
+Convert Date to proper format in French. Must be used on values with date format.
+
+> Use in template document
+>```
+// Example with {date_start: '2020-10-29'}
+{date_start | convertDateFR: 'short'} -> 29/10/2020
+{date_start | convertDateFR: 'full'} -> Jeudi 29 Octobre 2020
+>```
+
+### criteriaFR (custom)
+
+Convert cvss Criteria to French.
+
+> Use in template document
+>```
+// Example with cvssObj.AV === 'Network'
+{cvssObj.AV | criteriaFR} -> Réseau
+>```

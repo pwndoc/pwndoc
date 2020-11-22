@@ -112,15 +112,9 @@ export default {
                 return;
 
             AuditService.createAudit(this.currentAudit)
-            .then(() => {
-                this.getAudits();
+            .then((response) => {
                 this.$refs.createModal.hide();
-                Notify.create({
-                    message: 'Audit created successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
-                })
+                this.$router.push("/audits/" + response.data.datas.audit._id)
             })
             .catch((err) => {
                 Notify.create({
