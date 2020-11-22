@@ -292,7 +292,7 @@ AuditSchema.statics.getLastFindingIdentifier = (auditId) => {
                 if (!row)
                     throw ({ fn: 'NotFound', message: 'Audit not found' })
 
-                var identifier = row.findings.length == 0 ? 0: Math.max(...row.findings.map(r => r.identifier))
+                var identifier = row.findings.length == 0 ? 0: Math.max(...row.findings.map(r =>  {return r.identifier || 0}))
                 resolve(identifier);
             })
             .catch((err) => {
