@@ -344,7 +344,7 @@ function prepAuditData(data) {
 }
 
 function lPad(number) {
-    if (number <= 999) { number = ("00" + number).slice(-4); }
+    if (number <= 999) { number = ("00" + number).slice(-3); }
     return number;
 }
 
