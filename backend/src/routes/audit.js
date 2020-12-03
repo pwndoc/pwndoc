@@ -282,7 +282,7 @@ module.exports = function(app, io) {
         Audit.getAudit(acl.isAdmin(req.decodedToken.role, 'audits:update'), req.params.auditId, req.decodedToken.id)
         .then( audit => {
             var reportDoc = reportGenerator.generateDoc(audit);
-            Response.SendFile(res, `${audit.name}.docx`, reportDoc);
+            Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
         })
         .catch(err => Response.Internal(res, err));
     });
