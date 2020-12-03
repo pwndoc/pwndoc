@@ -14,6 +14,7 @@ export default {
             // Datatable headers
             dtHeaders: [
                 {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+                {name: 'ext', label: 'Extension', field: 'ext', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -30,7 +31,7 @@ export default {
             currentTemplate: {
                 name: '',
                 file: '',
-                filename: ''
+                ext: ''
             },
             templateId: ''
         }
@@ -58,12 +59,21 @@ export default {
         downloadTemplate: function(row) {
             TemplateService.downloadTemplate(row._id)
             .then((data) => {
-                status = exportFile(`${row.name}.${row.ext}`, data.data, {type: "application/octet-stream"})
+                status = exportFile(`${row.name}.${row.ext || 'docx'}`, data.data, {type: "application/octet-stream"})
                 if (!status)
                     throw (status)
             })
             .catch((err) => {
-                console.log(err)
+                if (err.response.status === 404) {
+                    Notify.create({
+                        message: 'Template Not Found',
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                }
+                else
+                    console.log(err.response)
             })
         },
 
@@ -129,10 +139,10 @@ export default {
 
         deleteTemplate: function(templateId) {
             TemplateService.deleteTemplate(templateId)
-            .then(() => {
+            .then((data) => {
                 this.getTemplates();
                 Notify.create({
-                    message: 'Template deleted successfully',
+                    message: data.data.datas,
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -175,7 +185,7 @@ export default {
             this.currentTemplate = {
                 name: '',
                 file: '',
-                filename: ''
+                ext: ''
             };
             this.templateId = ''
         },
@@ -188,7 +198,7 @@ export default {
                 this.currentTemplate.file = fileReader.result.split(",")[1];
             }
 
-            this.currentTemplate.filename = file.name
+            this.currentTemplate.ext = file.name.split('.').pop()
             fileReader.readAsDataURL(file);
         }
     }

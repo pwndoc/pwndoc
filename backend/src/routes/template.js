@@ -15,27 +15,20 @@ module.exports = function(app) {
 
     // Create template
     app.post("/api/templates", acl.hasPermission('templates:create'), function(req, res) {
-        if (!req.body.name || !req.body.file) {
-            Response.BadParameters(res, 'Missing required parameters');
+        if (!req.body.name || !req.body.file || !req.body.ext) {
+            Response.BadParameters(res, 'Missing required parameters: name, ext, file');
             return;
         }
 
-        if (!utils.validFilename(req.body.name)) {
-            Response.BadParameters(res, 'Bad name format');
+        if (!utils.validFilename(req.body.name) || !utils.validFilename(req.body.ext)) {
+            Response.BadParameters(res, 'Bad name or ext format');
             return;
         }
 
         var template = {};
         // Required parameters
         template.name = req.body.name;
-
-        var filename = req.body.filename;
-        template.ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
-        
-        if (!utils.validFilename(template.ext)) {
-            Response.BadParameters(res, 'Bad extension format');
-            return;
-        }
+        template.ext = req.body.ext
 
         Template.create(template)
         .then(data => {
@@ -56,30 +49,25 @@ module.exports = function(app) {
         var template = {};
         // Optional parameters
         if (req.body.name) template.name = req.body.name;
-        if (req.body.file){
-          var filename = req.body.filename;
-          var ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
-          template.ext = ext;
-        }
+        if (req.body.file && req.body.ext) template.ext = req.body.ext;
 
         Template.update(req.params.templateId, template)
         .then(data => {
-            if (!req.body.name && req.body.file) {
-                var filename = req.body.filename;
-                var ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
+            // Update file only
+            if (!req.body.name && req.body.file && req.body.ext) {
                 var fileBuffer = Buffer.from(req.body.file, 'base64');
-                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext}`)} catch {}
-                fs.writeFileSync(`${__basedir}/../report-templates/${data.name}.${ext}`, fileBuffer);
+                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext || 'docx'}`)} catch {}
+                fs.writeFileSync(`${__basedir}/../report-templates/${data.name}.${req.body.ext}`, fileBuffer);
             }
+            // Update name only
             else if (req.body.name && !req.body.file) {
-                fs.renameSync(`${__basedir}/../report-templates/${data.name}.${data.ext}`, `${__basedir}/../report-templates/${req.body.name}.${data.ext}`);
+                fs.renameSync(`${__basedir}/../report-templates/${data.name}.${data.ext || 'docx'}`, `${__basedir}/../report-templates/${req.body.name}.${data.ext || 'docx'}`);
             }
-            else if (req.body.name && req.body.file) {
-                var filename = req.body.filename;
-                var ext = filename.includes(".") ? filename.split(".").slice(-1)[0] : filename
+            // Update both name and file
+            else if (req.body.name && req.body.file && req.body.ext) {
                 var fileBuffer = Buffer.from(req.body.file, 'base64');
-                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext}`)} catch {}
-                fs.writeFileSync(`${__basedir}/../report-templates/${req.body.name}.${ext}`, fileBuffer);
+                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext || 'docx'}`)} catch {}
+                fs.writeFileSync(`${__basedir}/../report-templates/${req.body.name}.${req.body.ext}`, fileBuffer);
             }
             Response.Ok(res, 'Template updated successfully');
         })
@@ -95,7 +83,7 @@ module.exports = function(app) {
     app.delete("/api/templates/:templateId", acl.hasPermission('templates:delete'), function(req, res) {
         Template.delete(req.params.templateId)
         .then(data => {
-            fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext}`);
+            fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext || 'docx'}`)
             Response.Ok(res, 'Template deleted successfully');
         })
         .catch(err => {
@@ -111,7 +99,7 @@ module.exports = function(app) {
      app.get("/api/templates/download/:templateId", acl.hasPermission('templates:read'), function(req, res) {
         Template.getOne(req.params.templateId)
         .then(data => {
-            var file = `${__basedir}/../report-templates/${data.name}.${data.ext}`
+            var file = `${__basedir}/../report-templates/${data.name}.${data.ext || 'docx'}`
             res.download(file, `${data.name}.${data.ext}`)
         })
         .catch(err => Response.Internal(res, err))
