@@ -7,6 +7,7 @@ import CvssCalculator from 'components/cvsscalculator'
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import VulnService from '@/services/vulnerability';
+import Utils from '@/services/utils';
 
 export default {
     data: () => {
@@ -42,9 +43,8 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
-        if (this.$_.isEqualWith(this.finding, this.findingOrig, (value1, value2, key) => {
-            return (key === "cvssv3" || (key === "cvssScore" && parseFloat(value1) == parseFloat(value2))) ? true : undefined
-        }))
+        Utils.syncEditors(this.$refs)
+        if (this.$_.isEqual(this.$_.omit(this.finding, ['cvssScore', 'cvssSeverity']), this.$_.omit(this.findingOrig, ['cvssScore', 'cvssSeverity'])))
             next();
         else {
             Dialog.create({
@@ -58,9 +58,8 @@ export default {
     },
 
     beforeRouteUpdate (to, from , next) {
-        if (this.$_.isEqualWith(this.finding, this.findingOrig, (value1, value2, key) => {
-            return (key === "cvssv3" || (key === "cvssScore" && parseFloat(value1) == parseFloat(value2))) ? true : undefined
-        }))
+        Utils.syncEditors(this.$refs)
+        if (this.$_.isEqual(this.$_.omit(this.finding, ['cvssScore', 'cvssSeverity']), this.$_.omit(this.findingOrig, ['cvssScore', 'cvssSeverity'])))
             next();
         else {
             Dialog.create({
@@ -143,6 +142,7 @@ export default {
 
         // Update Finding
         updateFinding: function() {
+            Utils.syncEditors(this.$refs)
             this.finding.references = this.referencesString.split('\n').filter(e => e !== '')
             AuditService.updateFinding(this.auditId, this.findingId, this.finding)
             .then(() => {
@@ -201,7 +201,8 @@ export default {
         },
 
          // Backup Finding to vulnerability database
-         backupFinding: function() {
+        backupFinding: function() {
+            Utils.syncEditors(this.$refs)
             this.finding.references = this.referencesString.split('\n')
             VulnService.backupFinding(this.$parent.audit.language, this.finding)
             .then((data) => {
@@ -220,6 +221,10 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        syncEditors: function() {
+            Utils.syncEditors(this.$refs)
         }
     }
 }

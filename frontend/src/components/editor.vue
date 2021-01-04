@@ -214,6 +214,10 @@ export default {
         disableDrop: {
             type: Boolean,
             default: false
+        },
+        noSync: {
+            type: Boolean,
+            default: false
         }
     },
     components: {
@@ -242,12 +246,9 @@ export default {
                     new TrailingNode({node: 'paragraph', notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']})
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
-                    this.json = getJSON()
-                    this.html = getHTML()
-                    if (Array.isArray(this.json.content) && this.json.content.length === 1 && !this.json.content[0].hasOwnProperty("content")) {
-                        this.html = ""
-                    }
-                    this.$emit('input', this.html)
+                    if (this.noSync)
+                        return
+                    this.updateHTML()
                 },
                 disableInputRules: true,
                 disablePasteRules: true
@@ -338,6 +339,15 @@ export default {
             }
 
             fileReader.readAsDataURL(file);
+        },
+
+        updateHTML() {
+            this.json = this.editor.getJSON()
+            this.html = this.editor.getHTML()
+            if (Array.isArray(this.json.content) && this.json.content.length === 1 && !this.json.content[0].hasOwnProperty("content")) {
+                this.html = ""
+            }
+            this.$emit('input', this.html)
         }
     }
 }

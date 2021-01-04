@@ -4,6 +4,7 @@ import Breadcrumb from 'components/breadcrumb';
 import BasicEditor from 'components/editor';
 
 import AuditService from '@/services/audit';
+import Utils from '@/services/utils';
 
 export default {
     data: () => {
@@ -36,6 +37,7 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
+        Utils.syncEditors(this.$refs)
         if (this.$_.isEqual(this.section, this.sectionOrig))
             next();
         else {
@@ -50,6 +52,7 @@ export default {
     },
 
     beforeRouteUpdate (to, from , next) {
+        Utils.syncEditors(this.$refs)
         if (this.$_.isEqual(this.section, this.sectionOrig))
             next();
         else {
@@ -86,6 +89,7 @@ export default {
 
         // Update Section
         updateSection: function() {
+            Utils.syncEditors(this.$refs)
             AuditService.updateSection(this.auditId, this.sectionId, this.section)
             .then(() => {
                 this.sectionOrig = this.$_.cloneDeep(this.section);

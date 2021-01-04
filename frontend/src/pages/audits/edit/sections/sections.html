@@ -16,7 +16,7 @@
     <div class="col-md-8 offset-md-2">
         <q-card class="affix-relative-element">
             <q-card-section>
-                <basic-editor affix v-model="section.text" />
+                <basic-editor ref="basiceditor_section" noSync affix v-model="section.text" />
             </q-card-section>
         </q-card>
     </div>

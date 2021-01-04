@@ -47,5 +47,13 @@ export default {
     .replace(/&lt;\/h6&gt;/g, '</h6>')
 
     return result
+  },
+
+  syncEditors: function(refs) {
+    // Update all basic-editor when noSync is necessary for performance (text with images). 
+    Object.keys(refs).forEach(key => {
+        if (key.startsWith('basiceditor_') && refs[key]) // ref must start with 'basiceditor_'
+            (Array.isArray(refs[key]))? refs[key].forEach(elt => elt.updateHTML()) : refs[key].updateHTML()
+    })
   }
 }

@@ -3,6 +3,7 @@ import draggable from 'vuedraggable'
 import BasicEditor from 'components/editor';
 
 import DataService from '@/services/data'
+import Utils from '@/services/utils'
 
 export default {
     data: () => {
@@ -380,6 +381,8 @@ export default {
             if (this.errors.sectionName || this.errors.sectionField)
                 return;
 
+            Utils.syncEditor(this.$refs)
+
             if (this.newSection.text) this.newSection.text = this.newSection.text.replace(/(<p><\/p>)+$/, '')
             DataService.createSection(this.newSection)
             .then((data) => {
@@ -406,9 +409,10 @@ export default {
 
          // Update Sections
          updateSections: function() {
+            Utils.syncEditor(this.$refs)
             DataService.updateSections(this.editSections)
             .then((data) => {
-                this.getSections()
+                this.sections = this.editSections
                 this.editSection = false
                 Notify.create({
                     message: 'Sections updated successfully',

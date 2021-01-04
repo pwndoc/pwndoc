@@ -4,6 +4,7 @@ import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
 
 import AuditService from '@/services/audit';
+import Utils from '@/services/utils';
 
 export default {
     data: () => {
@@ -36,6 +37,7 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
+        Utils.syncEditors(this.$refs)
         if (this.$_.isEqual(this.audit, this.auditOrig))
             next();
         else {
@@ -71,6 +73,7 @@ export default {
 
         // Save Audit Summary
         updateAuditSummary: function() {
+            Utils.syncEditors(this.$refs)
             AuditService.updateAuditSummary(this.auditId, this.audit)
             .then(() => {
                 this.auditOrig = this.$_.cloneDeep(this.audit);
