@@ -63,9 +63,11 @@ exports.Forbidden = Forbidden;
 
 function Internal(res, error){
     if (error.fn) var fn = exports[error.fn];
-    var message = 'Internal Error';
     if (typeof(fn) === 'function')
         fn(res, error.message);
+    else if (error.errmsg) {
+        res.status(500).json({"status": "error", "datas": error.errmsg});
+    }   
     else {
         res.status(500).json({"status": "error", "datas": error});
     }
