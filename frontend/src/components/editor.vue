@@ -333,9 +333,11 @@ export default {
             var fileReader = new FileReader();
 
             fileReader.onloadend = (e) => {
-                var src = fileReader.result
-                this.editor.commands.image({ src })
-                this.imageValue = ''
+                // var src = fileReader.result
+                Utils.resizeImg(fileReader.result).then(src => {
+                    this.editor.commands.image({ src })
+                    this.imageValue = ''
+                })
             }
 
             fileReader.readAsDataURL(file);

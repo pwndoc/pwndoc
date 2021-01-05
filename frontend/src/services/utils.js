@@ -55,5 +55,38 @@ export default {
         if (key.startsWith('basiceditor_') && refs[key]) // ref must start with 'basiceditor_'
             (Array.isArray(refs[key]))? refs[key].forEach(elt => elt.updateHTML()) : refs[key].updateHTML()
     })
+  },
+
+  // Compress images to allow more storage in database since limit in a mongo document is 16MB
+  resizeImg: function(imageB64) {
+    return new Promise((resolve, reject) => {
+      var oldSize = JSON.stringify(imageB64).length
+      var max_width = 1920
+
+      var img = new Image()
+      img.src = imageB64
+      img.onload = function() {
+        //scale the image and keep aspect ratio
+        var resize_width = (this.width > max_width) ? max_width : this.width
+        var scaleFactor =  resize_width / this.width
+        var resize_height = this.height * scaleFactor
+
+        // Create a temporary canvas to draw the downscaled image on.
+        var canvas = document.createElement("canvas")
+        canvas.width = resize_width
+        canvas.height = resize_height
+
+        //draw in canvas
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(this, 0, 0, resize_width, resize_height)
+
+        var result = canvas.toDataURL('image/jpeg')
+        var newSize = JSON.stringify(result).length
+        if (newSize >= oldSize)
+          resolve(imageB64)
+        else
+          resolve(result)
+      }
+    })
   }
 }
