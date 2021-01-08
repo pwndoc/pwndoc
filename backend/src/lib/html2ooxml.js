@@ -2,7 +2,7 @@ var docx = require("docx")
 var xml = require("xml")
 var htmlparser = require("htmlparser2")
 
-function html2ooxml(html) {
+function html2ooxml(html, style = '') {
     if (!html.match(/^<.+>/))
         html = `<p>${html}</p>`
     var doc = new docx.Document();
@@ -33,7 +33,8 @@ function html2ooxml(html) {
                 cParagraph = new docx.Paragraph({heading: 'Heading6'})
             }
             else if (tag === "div" || tag === "p") {
-                cParagraphProperties.style = 'HTMLTextStyle'
+                if (style && typeof style === 'string')
+                    cParagraphProperties.style = style
                 cParagraph = new docx.Paragraph(cParagraphProperties)
             }
             else if (tag === "pre") {

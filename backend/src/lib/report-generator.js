@@ -100,7 +100,7 @@ expressions.filters.convertDate = function(input, s) {
     }
 }
 
-// Rplace newlines in office XML format: {@input | NewLines}
+// Replace newlines in office XML format: {@input | NewLines}
 expressions.filters.NewLines = function(input) {
     var pre = '<w:p><w:r><w:t>';
     var post = '</w:t></w:r></w:p>';
@@ -120,11 +120,12 @@ expressions.filters.NewLines = function(input) {
 }
 
 
-expressions.filters.convertHTML = function(input) {
+// Convert HTML data to Open Office XML format: {@input | convertHTML: 'customStyle'}
+expressions.filters.convertHTML = function(input, style) {
     if (typeof input === 'undefined')
         var result = html2ooxml('')
     else
-        var result = html2ooxml(input.replace(/(<p><\/p>)+$/, ''))
+        var result = html2ooxml(input.replace(/(<p><\/p>)+$/, ''), style)
     return result;
 }
 
