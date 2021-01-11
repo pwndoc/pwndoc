@@ -6,6 +6,7 @@ services:
     container_name: mongo-pwndoc-dev
     volumes:
       - ./mongo-data-dev:/data/db
+    restart: always
     ports:
       - 127.0.0.1:27017:27017
     environment:
@@ -23,6 +24,8 @@ services:
       - ./src:/app/src
       - ./ssl:/app/ssl
       - ./report-templates:/app/report-templates
+    depends_on:
+      - mongodb
     restart: always
     ports:
       - 5252:5252
