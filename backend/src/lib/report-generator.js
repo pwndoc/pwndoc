@@ -320,7 +320,10 @@ function prepAuditData(data) {
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
-                tmpFinding[_.deburr(field.label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
+                if (field.fieldType === 'input')
+                    tmpFinding[_.deburr(field.label.toLowerCase()).replace(/\s/g, '')] = field.text
+                else
+                    tmpFinding[_.deburr(field.label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
             })
         }
         result.findings.push(tmpFinding)
