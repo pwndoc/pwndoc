@@ -316,7 +316,8 @@ function prepAuditData(data) {
             poc: splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
             status: finding.status || "",
-            category: finding.category || ""
+            category: finding.category || "",
+            identifier: "IDX-" + utils.lPad(finding.identifier)
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
