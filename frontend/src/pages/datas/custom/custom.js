@@ -409,7 +409,7 @@ export default {
 
          // Update Sections
          updateSections: function() {
-            Utils.syncEditor(this.$refs)
+            Utils.syncEditors(this.$refs)
             DataService.updateSections(this.editSections)
             .then((data) => {
                 this.sections = this.editSections
