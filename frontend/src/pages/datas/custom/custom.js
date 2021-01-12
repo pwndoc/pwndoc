@@ -381,7 +381,7 @@ export default {
             if (this.errors.sectionName || this.errors.sectionField)
                 return;
 
-            Utils.syncEditor(this.$refs)
+            Utils.syncEditors(this.$refs)
 
             if (this.newSection.text) this.newSection.text = this.newSection.text.replace(/(<p><\/p>)+$/, '')
             DataService.createSection(this.newSection)
