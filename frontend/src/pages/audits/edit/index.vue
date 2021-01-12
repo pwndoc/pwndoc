@@ -86,7 +86,7 @@
 									>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
 								</q-item-section>
 								<q-item-section>
-									<span>{{finding.title}}</span>
+									<span>{{audit.idPrefix}}{{formatVulnIdentifier(finding.identifier)}} {{finding.title}}</span>
 								</q-item-section>
 								<q-item-section side v-if="finding.status === 0">
 									<q-icon name="check" color="green" />
