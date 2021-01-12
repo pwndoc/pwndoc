@@ -260,46 +260,47 @@ AuditSchema.statics.updateNetwork = (isAdmin, auditId, userId, scope) => {
 // Create finding
 AuditSchema.statics.createFinding = (isAdmin, auditId, userId, finding) => {
     return new Promise((resolve, reject) => { 
-            Audit.getLastFindingIdentifier(auditId).then(identifier => {
-                finding.identifier = ++identifier;
-                
-                var query = Audit
-                    .findByIdAndUpdate(auditId, {$push: {findings: {$each: [finding], $sort: {cvssScore: -1}}}})
-                    .collation({locale: "en_US", numericOrdering: true})
-                if (!isAdmin)
-                    query.or([{creator: userId}, {collaborators: userId}])
-                query.exec()
-                .then(row => {
-                    if (!row)
-                        throw({fn: 'NotFound', message: 'Audit not found'})
+        Audit.getLastFindingIdentifier(auditId)
+        .then(identifier => {
+            finding.identifier = ++identifier
+            
+            var query = Audit
+                .findByIdAndUpdate(auditId, {$push: {findings: {$each: [finding], $sort: {cvssScore: -1}}}})
+                .collation({locale: "en_US", numericOrdering: true})
+            if (!isAdmin)
+                query.or([{creator: userId}, {collaborators: userId}])
+            return query.exec()
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found'})
 
-                    resolve("Audit Finding created successfully")
-                })
-                .catch((err) => {
-                    reject(err)
-                })
-            })
+            resolve("Audit Finding created successfully")
+        })
+        .catch((err) => {
+            reject(err)
+        })
     })
+})
 }
 
 AuditSchema.statics.getLastFindingIdentifier = (auditId) => {
     return new Promise((resolve, reject) => {
-        Audit.findById(auditId)
-            .select('findings.identifier', )
-            .sort({'findings.identifier': -1})
-            .exec()
-            .then(row => {
-                if (!row)
-                    throw ({ fn: 'NotFound', message: 'Audit not found' })
-
-                var identifier = row.findings.length == 0 ? 0: Math.max(...row.findings.map(r =>  {return r.identifier || 0}))
-                resolve(identifier);
-            })
-            .catch((err) => {
-                reject(err);
-            })
-
-    });
+        var query = Audit.aggregate([{ $match: {_id: mongoose.Types.ObjectId(auditId)} }])
+        query.unwind('findings')
+        query.sort({'findings.identifier': -1})
+        query.exec()
+        .then(row => {
+            if (!row)
+                throw ({ fn: 'NotFound', message: 'Audit not found' })
+            else if (row.length === 0)
+                resolve(0)
+            else
+                resolve(row[0].findings.identifier);
+        })
+        .catch((err) => {
+            reject(err)
+        })
+    })
 };
 
 
@@ -364,7 +365,6 @@ AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFin
                 reject({fn: 'NotFound', message: 'Finding not found'})         
             else {
                 Object.keys(newFinding).forEach((key) => {
-                    if(key !== "identifier") // identifier field should not be updatable
                     finding[key] = newFinding[key]
                 })
                 return row.save({ validateBeforeSave: false }) // Disable schema validation since scope changed from Array to String

@@ -317,7 +317,7 @@ function prepAuditData(data) {
             affected: finding.scope || "",
             status: finding.status || "",
             category: finding.category || "",
-            identifier: "IDX-" + lPad(finding.identifier)
+            identifier: "IDX-" + utils.lPad(finding.identifier)
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
@@ -345,11 +345,6 @@ function prepAuditData(data) {
         }
     })
     return result
-}
-
-function lPad(number) {
-    if (number <= 999) { number = ("00" + number).slice(-3); }
-    return number;
 }
 
 function splitHTMLParagraphs(data) {

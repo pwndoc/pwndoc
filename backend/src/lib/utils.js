@@ -13,3 +13,10 @@ function escapeXMLEntities(input) {
     return standardEncode;
 }
 exports.escapeXMLEntities = escapeXMLEntities;
+
+// Convert number to 3 digits format if under 100
+function lPad(number) {
+    if (number <= 99) { number = ("00" + number).slice(-3); }
+    return `${number}`;
+}
+exports.lPad = lPad;
