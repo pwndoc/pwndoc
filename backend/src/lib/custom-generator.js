@@ -54,6 +54,7 @@ expressions.filters.convertDateFR = function(input, s) {
 }
 
 // Convert identifier prefix to a user defined prefix: {identifier | changeID: 'PRJ-'}
+// TODO: REMOVE ME
 expressions.filters.changeID = function (input, prefix) {
     return input.replace("IDX-", prefix);
 }

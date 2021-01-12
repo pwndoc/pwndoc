@@ -105,16 +105,15 @@
                 map-options
                 options-sanitize
                 />
-                <q-select
-                label="Template"
-                v-model="audit.template"
-                :options="templates"
-                option-value="_id"
-                option-label="name"
-                emit-value
-                map-options
-                options-sanitize
-                /> 
+                <div class="row">
+                    <div class="col-md-6">
+                        <q-select label="Template" v-model="audit.template" :options="templates" option-value="_id" option-label="name"
+                            emit-value map-options options-sanitize />
+                    </div>
+                    <div class="col-md-6">
+                        <q-input label="ID Prefix" v-model="audit.idPrefix" />
+                    </div>
+                </div>
             </q-card-section>
         </q-card>
     </div>

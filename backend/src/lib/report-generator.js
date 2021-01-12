@@ -317,7 +317,8 @@ function prepAuditData(data) {
             affected: finding.scope || "",
             status: finding.status || "",
             category: finding.category || "",
-            identifier: "IDX-" + utils.lPad(finding.identifier)
+            identifier: data.idPrefix + lPad(finding.identifier),
+            resolution: finding.resolution || "undefined"
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
