@@ -258,6 +258,10 @@ export default {
 				return "light-blue";
 			},
 
+			formatVulnIdentifier: function(identifier) {
+				return identifier <= 999 ?  ("00" + identifier).slice(-3) : identifier;
+			},
+
 			// Sockets handle
 			handleSocket: function() {
 				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
