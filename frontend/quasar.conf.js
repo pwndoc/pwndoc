@@ -40,7 +40,7 @@ module.exports = function (ctx) {
           API_PORT: 5252 
         }
         : { // prod environnment (build)
-          API_PORT: 4242,
+          API_PORT: 8443,
         }
     },
     devServer: {
