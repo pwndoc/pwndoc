@@ -1,5 +1,8 @@
-// Secret for JWT tokens creation (make it dynamic for production)
-var jwtSecret = "ASy4FVjsXNLQl09LbieroWsjO5UXjvX5";
+require("dotenv").config(); //to load env variables from .env file
+var utils = require("./utils");
+
+var jwtSecret = process.env.SECRET || utils.createSecret();
+
 exports.jwtSecret = jwtSecret;
 
 class ACL {

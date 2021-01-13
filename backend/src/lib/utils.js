@@ -1,3 +1,13 @@
+var fs = require('fs');
+
+function createSecret() {
+    const secret = require('crypto').randomBytes(32).toString('hex');
+    fs.writeFile(".env", "SECRET=" + secret, () => { }); //no need for the callback
+    return secret;
+}
+exports.createSecret = createSecret;
+
+
 // Filename whitelist validation for template creation
 function validFilename(filename) {
     const regex = /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i;
