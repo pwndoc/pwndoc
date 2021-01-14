@@ -27,30 +27,33 @@ function generateDoc(audit) {
         // return fs.readFileSync(tagValue, {encoding: 'base64'});
     }
     opts.getSize = function(img, tagValue, tagName) {
-        var sizeObj = sizeOf(img);
-        var width = sizeObj.width;
-        var height = sizeObj.height;
-        if (tagName === "company.logo_small") {
-            var divider = sizeObj.height / 37;
-            height = 37;
-            width = Math.floor(sizeObj.width / divider);
-        }
-        else if (tagName === "company.logo") {
-            var divider = sizeObj.height / 250;
-            height = 250;
-            width = Math.floor(sizeObj.width / divider);
-            if (width > 400) {
-                divider = sizeObj.width / 400;
-                height = Math.floor(sizeObj.height / divider);
-                width = 400;
+        if (img) {
+            var sizeObj = sizeOf(img);
+            var width = sizeObj.width;
+            var height = sizeObj.height;
+            if (tagName === "company.logo_small") {
+                var divider = sizeObj.height / 37;
+                height = 37;
+                width = Math.floor(sizeObj.width / divider);
             }
+            else if (tagName === "company.logo") {
+                var divider = sizeObj.height / 250;
+                height = 250;
+                width = Math.floor(sizeObj.width / divider);
+                if (width > 400) {
+                    divider = sizeObj.width / 400;
+                    height = Math.floor(sizeObj.height / divider);
+                    width = 400;
+                }
+            }
+            else if (sizeObj.width > 600) {
+                var divider = sizeObj.width / 600;
+                width = 600;
+                height = Math.floor(sizeObj.height / divider);
+            }
+            return [width,height];
         }
-        else if (sizeObj.width > 600) {
-            var divider = sizeObj.width / 600;
-            width = 600;
-            height = Math.floor(sizeObj.height / divider);
-        }
-        return [width,height];
+        return [0,0]
     }
     var imageModule = new ImageModule(opts);
     var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
@@ -61,6 +64,7 @@ function generateDoc(audit) {
         doc.render();
     }
     catch (error) {
+        console.log(error)
         if (error.properties && error.properties.errors instanceof Array) {
             const errorMessages = error.properties.errors.map(function (error) {
                 return error.properties.explanation;
