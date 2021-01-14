@@ -291,7 +291,6 @@ AuditSchema.statics.getLastFindingIdentifier = (auditId) => {
         query.sort({'findings.identifier': -1})
         query.exec()
         .then(row => {
-            console.log(row[0].findings.identifier)
             if (!row)
                 throw ({ fn: 'NotFound', message: 'Audit not found' })
             else if (row.length === 0 || !row[0].findings.identifier)
