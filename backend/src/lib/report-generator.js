@@ -331,6 +331,7 @@ function prepAuditData(data) {
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
+                console.log(field)
                 // For retrocompatibility of findings with old customFields 
                 // or if custom field has been deleted, last saved custom fields will be available
                 if (field.customField) {
@@ -343,7 +344,7 @@ function prepAuditData(data) {
                 }
                 if (fieldType === 'input')
                     tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
-                else
+                else if (fieldType === 'text')
                     tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
             })
         }
