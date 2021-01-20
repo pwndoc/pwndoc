@@ -172,11 +172,13 @@ var angularParser = function(tag) {
 // For each finding, add cvssColor, cvssObj and criteria colors parameters
 function cvssHandle(data) {
     // Header title colors
+    var noneColor = "4A86E8"; //blue
     var lowColor = "008000"; //green
     var mediumColor = "f9a009"; //yellow
     var highColor = "fe0000"; //red
     var criticalColor = "212121"; //black
 
+    var cellNoneColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + noneColor + '"/></w:tcPr>';
     var cellLowColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColor+'"/></w:tcPr>';
     var cellMediumColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+mediumColor+'"/></w:tcPr>';
     var cellHighColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+highColor+'"/></w:tcPr>';
@@ -188,7 +190,8 @@ function cvssHandle(data) {
             if (data.findings[i].cvssSeverity === "Low") { data.findings[i].cvssColor = cellLowColor}
             else if (data.findings[i].cvssSeverity === "Medium") { data.findings[i].cvssColor = cellMediumColor}
             else if (data.findings[i].cvssSeverity === "High") { data.findings[i].cvssColor = cellHighColor}
-            else if (data.findings[i].cvssSeverity === "Critical") { data.findings[i].cvssColor = cellCriticalColor};
+            else if (data.findings[i].cvssSeverity === "Critical") { data.findings[i].cvssColor = cellCriticalColor}
+            else { data.findings[i].cvssColor = cellNoneColor} ;
 
             // Convert CVSS string to object in cvssObj parameter
             var cvssObj = cvssStrToObject(data.findings[i].cvssv3);
