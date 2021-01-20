@@ -317,7 +317,7 @@ function prepAuditData(data) {
             affected: finding.scope || "",
             status: finding.status || "",
             category: finding.category || "",
-            identifier: data.idPrefix + lPad(finding.identifier),
+            identifier: data.idPrefix + utils.lPad(finding.identifier),
             resolution: finding.resolution || "undefined"
         }
         if (finding.customFields) {
