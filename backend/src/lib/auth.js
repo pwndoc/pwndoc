@@ -112,7 +112,9 @@ var roles = {
             // Users
             'users:read',
             // Vulnerabilities
-            'vulnerabilities:read'
+            'vulnerabilities:read',
+            // Custom Fields
+            'custom-fields:read'
         ]
     },
     report: {

@@ -64,7 +64,13 @@ function generateDoc(audit) {
         doc.render();
     }
     catch (error) {
-        console.log(error)
+        if (error.properties.id === 'multi_error') {
+            error.properties.errors.forEach(function(err) {
+                console.log(err);
+            });
+        }
+        else
+            console.log(error)
         if (error.properties && error.properties.errors instanceof Array) {
             const errorMessages = error.properties.errors.map(function (error) {
                 return error.properties.explanation;
@@ -325,10 +331,20 @@ function prepAuditData(data) {
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
-                if (field.fieldType === 'input')
-                    tmpFinding[_.deburr(field.label.toLowerCase()).replace(/\s/g, '')] = field.text
+                // For retrocompatibility of findings with old customFields 
+                // or if custom field has been deleted, last saved custom fields will be available
+                if (field.customField) {
+                    var fieldType = field.customField.fieldType
+                    var label = field.customField.label
+                }
+                else {
+                    var fieldType = field.fieldType
+                    var label = field.label
+                }
+                if (fieldType === 'input')
+                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
                 else
-                    tmpFinding[_.deburr(field.label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
+                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
             })
         }
         result.findings.push(tmpFinding)

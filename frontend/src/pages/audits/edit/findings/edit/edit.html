@@ -65,12 +65,15 @@
                 </q-card-section>
 
                 <q-expansion-item 
-                label="Custom Fields of the category"
+                label="Custom Fields"
                 v-if="finding.customFields && finding.customFields.length > 0"
                 default-opened
                 header-class="bg-blue-grey-5 text-white" 
                 expand-icon-class="text-white">
-                    <q-card-section v-for="field of finding.customFields" :key="field.label">
+                    <q-card-section 
+                    v-for="field of finding.customFields" 
+                    :key="field.label" 
+                    v-if="field.displayFinding || field.displayVuln || (field.displayCategory && field.displayCategory.includes(finding.category))">
                         <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
                             <template v-slot="control">
                                 <basic-editor ref="basiceditor_custom" noSync v-model="field.text" />

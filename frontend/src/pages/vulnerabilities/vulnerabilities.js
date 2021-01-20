@@ -62,7 +62,9 @@ export default {
             mergeVulnRight: '',
             // Vulnerability categories
             vulnCategories: [],
-            currentCategory: null
+            currentCategory: null,
+            // Custom Fields
+            customFields: []
         }
     },
 
@@ -73,10 +75,11 @@ export default {
     },
 
     mounted: function() {
-        this.getLanguages();
-        this.getVulnTypes();
-        this.getVulnerabilities();
+        this.getLanguages()
+        this.getVulnTypes()
+        this.getVulnerabilities()
         this.getVulnerabilityCategories()
+        this.getCustomFields()
     },
 
     watch: {
@@ -125,6 +128,17 @@ export default {
                     this.dtLanguage = this.languages[0].locale;
                     this.cleanCurrentVulnerability();
                 }
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
+         // Get available custom fields
+         getCustomFields: function() {
+            DataService.getCustomFields()
+            .then((data) => {
+                this.customFields = data.data.datas
             })
             .catch((err) => {
                 console.log(err)
@@ -287,20 +301,18 @@ export default {
         editChangeCategory: function(category) {
             Dialog.create({
                 title: 'Confirm Category change',
-                message: `All present custom fields will be lost once vulnerability is updated`,
+                message: `Custom Fields display could be impacted when changing Category`,
                 ok: {label: 'Confirm', color: 'negative'},
                 cancel: {label: 'Cancel', color: 'white'}
             })
             .onOk(() => {
                 if (category){
                     this.currentVulnerability.category = category.name
-                    this.currentVulnerability.details[this.currentDetailsIndex].customFields = category.fields
                 }
                 else {
                     this.currentVulnerability.category = null
-                    this.currentVulnerability.details[this.currentDetailsIndex].customFields = []
                 }
-                // this.updateVulnerability()
+                this.setCurrentDetails()
             })
         },
 
@@ -339,19 +351,44 @@ export default {
                     observation: '',
                     remediation: ''
                 }
-                if (this.currentCategory && this.currentCategory.fields && this.currentCategory.fields.length > 0) {
-                    details.customFields = []
-                    this.currentCategory.fields.forEach(field => {
-                        details.customFields.push({
-                            label: field.label,
-                            fieldType: field.fieldType,
-                            text: ''
-                        })
+                details.customFields = []
+                this.customFields.forEach(field => {
+                    details.customFields.push({
+                        customField: field._id,
+                        label: field.label,
+                        fieldType: field.fieldType,
+                        displayVuln: field.displayVuln,
+                        displayFinding: field.displayFinding,
+                        displayCategory: field.displayCategory,
+                        text: ''
                     })
-                }
+                })
                 
                 this.currentVulnerability.details.push(details)
                 index = this.currentVulnerability.details.length - 1;
+            }
+            else {
+                var cFields = []
+                this.customFields.forEach(field => {
+                    var fieldText = ''
+                    var vulnFields = this.currentVulnerability.details[index].customFields || []
+                    for (var i=0;i<vulnFields.length; i++) {
+                        if (vulnFields[i].customField === field._id) {
+                            fieldText = vulnFields[i].text
+                            break
+                        }  
+                    }
+                    cFields.push({
+                        customField: field._id,
+                        label: field.label,
+                        fieldType: field.fieldType,
+                        displayVuln: field.displayVuln,
+                        displayFinding: field.displayFinding,
+                        displayCategory: field.displayCategory,
+                        text: fieldText
+                    })
+                })
+                this.currentVulnerability.details[index].customFields = cFields
             }
             this.currentDetailsIndex = index;
         },

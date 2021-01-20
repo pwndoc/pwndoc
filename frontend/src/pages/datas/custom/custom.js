@@ -24,17 +24,21 @@ export default {
             editVulnType: false,
 
             vulnCategories: [],
-            newVulnCat: {name: "", fields: []},
-            newVulnCatField: {label: "", fieldType: ""},
+            newVulnCat: {name: ""},
             editCategories: [],
             editCategory: false,
+
+            customFields: [],
+            newCustomField: {label: "", fieldType: "", vulnerability: false, finding: false, categories: []},
+            editCustomFields: [],
+            editCustomField: false,
 
             sections: [],
             newSection: {field: "", name: "", locale: ""},
             editSections: [],
             editSection: false,
 
-            errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: ''}
+            errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: '', fieldLabel: '', fieldType: ''}
         }
     },
 
@@ -44,11 +48,12 @@ export default {
     },
 
     mounted: function() {
-        this.getLanguages();
-        this.getAuditTypes();
-        this.getVulnerabilityTypes();
-        this.getVulnerabilityCategories();
-        this.getSections();
+        this.getLanguages()
+        this.getAuditTypes()
+        this.getVulnerabilityTypes()
+        this.getVulnerabilityCategories()
+        this.getSections()
+        this.getCustomFields()
     },
 
     methods: {
@@ -343,19 +348,126 @@ export default {
         removeCategory: function(vulnCat) {
             this.editCategories = this.editCategories.filter(e => e.name !== vulnCat.name)
         },
-        
-        // Add Category Field
-        addCategoryField: function(vulnCat) {
-            vulnCat.fields.push(this.newVulnCatField)
-            this.newVulnCatField = {}
+
+/* ===== CUSTOM FIELDS ===== */
+
+        // Get available custom fields
+        getCustomFields: function() {
+            DataService.getCustomFields()
+            .then((data) => {
+                this.customFields = data.data.datas
+            })
+            .catch((err) => {
+                console.log(err)
+            })
         },
 
-        // Remove Category Field
-        removeCategoryField: function(indexCat, indexField) {
-            console.log(indexCat)
-            console.log(indexField)
-            this.editCategories[indexCat].fields.splice(indexField, 1)
+        // Create custom field
+        createCustomField: function() {
+            this.cleanErrors();
+            if (!this.newCustomField.label)
+                this.errors.fieldLabel = "Label required"
+            if (!this.newCustomField.fieldType)
+                this.errors.fieldType = "Field Type required"
+            
+            if (this.errors.fieldLabel || this.errors.fieldType)
+                return;
+
+            DataService.createCustomField(this.newCustomField)
+            .then((data) => {
+                this.newCustomField.label = ""
+                this.getCustomFields()
+                Notify.create({
+                    message: 'Custom Field created successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
         },
+
+        // Update Custom Fields
+        updateCustomFields: function() {
+            var position = 0
+            this.editCustomFields.forEach(e => e.position = position++)
+            DataService.updateCustomFields(this.editCustomFields)
+            .then((data) => {
+                this.getCustomFields()
+                this.editCustomField = false
+                Notify.create({
+                    message: 'Custom Fields updated successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+         // Delete custom field
+         deleteCustomField: function(customField) {
+            Dialog.create({
+                title: 'Confirm Suppression',
+                message: `
+                <div class="row">
+                    <div class="col-md-2">
+                        <i class="material-icons text-warning" style="font-size:42px">warning</i>
+                    </div>
+                    <div class="col-md-10">
+                        Custom Field <strong>${customField.label}</strong> will be permanently deleted.<br>
+                        This field will be removed from <strong>ALL</strong> Vulnerablities and associated data
+                        will be permanently <strong>LOST</strong>!
+                    </div>
+                </div>
+                `,
+                ok: {label: 'Confirm', color: 'negative'},
+                cancel: {label: 'Cancel', color: 'white'},
+                html: true,
+                style: "width: 600px"
+            })
+            .onOk(() => {
+                DataService.deleteCustomField(customField._id)
+                .then((data) => {
+                    this.getCustomFields()
+                    this.editCustomField = false
+                    Notify.create({
+                        message: `
+                        Custom Field <strong>${customField.label}</strong> deleted successfully.<br>
+                        <strong>${data.data.datas.vulnCount}</strong> Vulnerabilities were affected.`,
+                        color: 'positive',
+                        textColor:'white',
+                        position: 'top-right',
+                        html: true
+                    })
+                })
+                .catch((err) => {
+                    console.log(err)
+                    Notify.create({
+                        message: err.response.data.datas.msg,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                })
+            })
+        },
+
+        test:function(scope) {console.log(scope)},
 
 /* ===== SECTIONS ===== */
 
@@ -437,13 +549,15 @@ export default {
         },
 
         cleanErrors: function() {
-            this.errors.locale = '';
-            this.errors.language = '';
-            this.errors.auditType = '';
-            this.errors.vulnType = '';
-            this.errors.vulnCat = '';
-            this.errors.sectionField = '';
-            this.errors.sectionName = '';
+            this.errors.locale = ''
+            this.errors.language = ''
+            this.errors.auditType = ''
+            this.errors.vulnType = ''
+            this.errors.vulnCat = ''
+            this.errors.fieldLabel = ''
+            this.errors.fieldType = ''
+            this.errors.sectionField = ''
+            this.errors.sectionName = ''
         }
     }
 }

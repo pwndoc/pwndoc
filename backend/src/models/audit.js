@@ -8,6 +8,7 @@ var Paragraph = {
 
 var customField = {
     _id:        false,
+    customField:  {type: Schema.Types.ObjectId, ref: 'CustomField'},
     label:      String,
     fieldType:  String,
     text:       String
@@ -105,6 +106,13 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
         query.populate('company')
         query.populate('client')
         query.populate('collaborators', 'username firstname lastname role')
+        query.populate({
+            path: 'findings',
+            populate: {
+                path: 'customFields.customField',
+                select: 'label fieldType text displayFinding displayCategory'
+            }
+        })
         query.exec()
         .then((row) => {
             if (!row)

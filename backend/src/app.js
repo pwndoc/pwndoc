@@ -32,6 +32,7 @@ require('./models/audit-type');
 require('./models/vulnerability-type');
 require('./models/vulnerability-category');
 require('./models/custom-section');
+require('./models/custom-field');
 
 // Socket IO configuration
 var getSockets = function(room) {

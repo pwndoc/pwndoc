@@ -228,7 +228,7 @@ export default {
 
         convertParticipants: function(row) {
             var collabs = (row.collaborators)? row.collaborators: [];
-            var result = [row.creator.username];
+            var result = (row.creator)? [row.creator.username]: [];
             collabs.forEach(collab => result.push(collab.username));
             return result.join(', '); 
         },

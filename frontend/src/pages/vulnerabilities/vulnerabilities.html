@@ -262,12 +262,14 @@
         </q-card-section>
 
         <q-expansion-item 
-        label="Custom Fields of the category"
-        v-if="currentVulnerability.details[currentDetailsIndex].customFields && currentVulnerability.details[currentDetailsIndex].customFields.length > 0"
+        label="Custom Fields"
         default-opened
         header-class="bg-blue-grey-5 text-white" 
         expand-icon-class="text-white">
-            <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
+            <q-card-section 
+            v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" 
+            :key="field.customFieldId"
+            v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)">
                 <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
                     <template v-slot="control">
                         <basic-editor v-model="field.text" />
@@ -426,12 +428,14 @@
         </q-card-section>
 
         <q-expansion-item 
-        label="Custom Fields of the category"
-        v-if="currentVulnerability.details[currentDetailsIndex].customFields && currentVulnerability.details[currentDetailsIndex].customFields.length > 0"
+        label="Custom Fields"
         default-opened
         header-class="bg-blue-grey-5 text-white" 
         expand-icon-class="text-white">
-            <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
+            <q-card-section 
+            v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" 
+            :key="field.customFieldId"
+            v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)">
                 <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
                     <template v-slot="control">
                         <basic-editor v-model="field.text" />
@@ -578,12 +582,16 @@
                     </q-card-section>
 
                     <q-expansion-item 
-                    label="Custom Fields of the category"
+                    label="Custom Fields"
                     default-opened
                     header-class="bg-blue-grey-5 text-white" 
                     expand-icon-class="text-white">
                         <div v-if="currentVulnerability.details[currentDetailsIndex].customFields">
-                            <q-card-section v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" :key="field.label">
+                            <q-card-section 
+                            v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" 
+                            :key="field.label"
+                            v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)"
+                            >
                                 <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
                                     <template v-slot="control">
                                         <basic-editor v-model="field.text" />
@@ -631,7 +639,7 @@
                                 />
                                 <q-select 
                                 class="col-md-2"
-                                :bg-color="(currentVulnerability.details[currentDetailsIndex].vulnType !== update.vulnType)?'red-1':''"
+                                :bg-color="(currentVulnerability.details[currentDetailsIndex].vulnType != update.vulnType)?'red-1':''"
                                 label="Type"
                                 v-model="update.vulnType" 
                                 :options="vulnTypesLang" 
@@ -661,7 +669,7 @@
                                 borderless 
                                 label="Description" 
                                 stack-label
-                                :class="(currentVulnerability.details[currentDetailsIndex].description !== update.description)?'bg-red-1':''"
+                                :class="(currentVulnerability.details[currentDetailsIndex].description != update.description)?'bg-red-1':''"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
@@ -676,7 +684,7 @@
                                 borderless 
                                 label="Observation" 
                                 stack-label
-                                :class="(currentVulnerability.details[currentDetailsIndex].observation !== update.observation)?'bg-red-1':''"
+                                :class="(currentVulnerability.details[currentDetailsIndex].observation != update.observation)?'bg-red-1':''"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
@@ -702,7 +710,7 @@
                                 borderless 
                                 label="Remediation" 
                                 stack-label
-                                :class="(currentVulnerability.details[currentDetailsIndex].remediation !== update.remediation)?'bg-red-1':''"
+                                :class="(currentVulnerability.details[currentDetailsIndex].remediation != update.remediation)?'bg-red-1':''"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
@@ -750,16 +758,20 @@
                             </q-card-section>
 
                             <q-expansion-item 
-                            label="Custom Fields of the category" 
+                            label="Custom Fields" 
                             default-opened
                             header-class="bg-blue-grey-5 text-white" 
                             expand-icon-class="text-white">
                                 <div v-if="update.customFields">
-                                    <q-card-section v-for="(field,idx) of update.customFields" :key="field.label">
+                                    <q-card-section 
+                                    v-for="(field,idx) of update.customFields" 
+                                    :key="field.label"
+                                    v-if="field.customField.displayVuln || field.customField.displayCategory.includes(currentVulnerability.category)"
+                                    >
                                         <q-field 
-                                        v-if="field.fieldType === 'text'" 
+                                        v-if="field.customField.fieldType === 'text'" 
                                         borderless 
-                                        :label="field.label" 
+                                        :label="field.customField.label" 
                                         stack-label
                                         :class="(isTextInCustomFields(field.text))?'bg-red-1':''"
                                         >
@@ -771,8 +783,8 @@
                                             </template>
                                         </q-field>
                                         <q-input
-                                        v-if="field.fieldType === 'input'"
-                                        :label='field.label'
+                                        v-if="field.customField.fieldType === 'input'"
+                                        :label='field.customField.label'
                                         stack-label
                                         v-model="field.text"
                                         readonly

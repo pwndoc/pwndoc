@@ -8,6 +8,7 @@ module.exports = function(app) {
     var VulnerabilityType = require('mongoose').model('VulnerabilityType');
     var VulnerabilityCategory = require('mongoose').model('VulnerabilityCategory');
     var CustomSection = require('mongoose').model('CustomSection');
+    var CustomField = require('mongoose').model('CustomField');
 
 /* ===== LANGUAGES ===== */
 
@@ -318,7 +319,6 @@ module.exports = function(app) {
      app.put("/api/data/sections", acl.hasPermission('sections:update'), function(req, res) {
         for (var i=0; i<req.body.length; i++) {
             var section = req.body[i]
-            console.log(section)
             if (!section.name || !section.field || !section.locale) {
                 Response.BadParameters(res, 'Missing required parameters: name, field')
                 return
@@ -336,6 +336,73 @@ module.exports = function(app) {
 
         CustomSection.updateAll(sections)
         .then(msg => Response.Created(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+/* ===== CUSTOM FIELDS ===== */
+
+    // Get custom fields
+    app.get("/api/data/custom-fields", acl.hasPermission('custom-fields:read'), function(req, res) {
+        CustomField.getAll()
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    })
+
+    // Create custom field
+    app.post("/api/data/custom-fields", acl.hasPermission('custom-fields:create'), function(req, res) {
+        if (!req.body.fieldType || !req.body.label) {
+            Response.BadParameters(res, 'Missing required parameters: fieldType, label')
+            return
+        }
+        if (!utils.validFilename(req.body.fieldType) || !utils.validFilename(req.body.fieldLabel)) {
+            Response.BadParameters(res, 'name and field value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i ')
+            return
+        }
+        
+        var customField = {}
+        customField.fieldType = req.body.fieldType
+        customField.label = req.body.label
+
+        CustomField.create(customField)
+        .then(msg => Response.Created(res, msg))
+        .catch(err => Response.Internal(res, err))
+    })
+
+     // Update custom fields
+     app.put("/api/data/custom-fields", acl.hasPermission('custom-fields:update'), function(req, res) {
+        for (var i=0; i<req.body.length; i++) {
+            var customField = req.body[i]
+            if (!customField.label || !customField._id) {
+                Response.BadParameters(res, 'Missing required parameters: _id, label')
+                return
+            }
+            if (!utils.validFilename(customField.label)) {
+                Response.BadParameters(res, 'label and fieldType value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+                return
+            }
+        }
+
+        var customFields = []
+        req.body.forEach(e => {
+            var field = {_id: e._id, label: e.label}
+            if (typeof e.displayVuln === 'boolean') field.displayVuln = e.displayVuln
+            if (typeof e.displayFinding === 'boolean') field.displayFinding = e.displayFinding
+            if (Array.isArray(e.displayCategory)) field.displayCategory = e.displayCategory
+            if (typeof e.position === 'number') field.position = e.position
+            customFields.push(field)
+        })
+
+        CustomField.updateAll(customFields)
+        .then(msg => Response.Created(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Delete custom field
+    app.delete("/api/data/custom-fields/:fieldId", acl.hasPermission('custom-fields:delete'), function(req, res) {
+        CustomField.delete(req.params.fieldId)
+        .then(msg => {
+            Response.Ok(res, msg)
+        })
         .catch(err => Response.Internal(res, err))
     });
 }

@@ -16,7 +16,8 @@ export default {
             findingOrig: {},
             selectedTab: "definition",
             vulnTypes: [],
-            referencesString: ""
+            referencesString: "",
+            customFields: []
         }
     },
 
@@ -106,7 +107,11 @@ export default {
 
         // Get Finding
         getFinding: function() {
-            AuditService.getFinding(this.auditId, this.findingId)
+            DataService.getCustomFields()
+            .then((data) => {
+                this.customFields = data.data.datas
+                return AuditService.getFinding(this.auditId, this.findingId)
+            })
             .then((data) => {
                 this.finding = data.data.datas;
                 if (this.finding.paragraphs.length > 0 && !this.finding.poc)
@@ -115,6 +120,28 @@ export default {
                 this.referencesString = ""
                 if (this.finding.references && this.finding.references.length > 0)
                     this.referencesString = this.finding.references.join('\n')
+
+                var cFields = []
+                this.customFields.forEach(field => {
+                    var fieldText = ''
+                    var findingFields = this.finding.customFields || []
+                    for (var i=0;i<findingFields.length; i++) {
+                        if (findingFields[i].customField && findingFields[i].customField === field._id) {
+                            fieldText = findingFields[i].text
+                            break
+                        }  
+                    }
+                    cFields.push({
+                        customField: field._id,
+                        label: field.label,
+                        fieldType: field.fieldType,
+                        displayVuln: field.displayVuln,
+                        displayFinding: field.displayFinding,
+                        displayCategory: field.displayCategory,
+                        text: fieldText
+                    })
+                })
+                this.finding.customFields = cFields
                 
                 this.findingOrig = this.$_.cloneDeep(this.finding);                
             })
