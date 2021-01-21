@@ -669,7 +669,11 @@
                                 borderless 
                                 label="Description" 
                                 stack-label
-                                :class="(currentVulnerability.details[currentDetailsIndex].description != update.description)?'bg-red-1':''"
+                                :class="
+                                    (currentVulnerability.details[currentDetailsIndex].description || update.description) &&
+                                    (currentVulnerability.details[currentDetailsIndex].description != update.description)
+                                    ?'bg-red-1':''
+                                "
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
@@ -684,7 +688,11 @@
                                 borderless 
                                 label="Observation" 
                                 stack-label
-                                :class="(currentVulnerability.details[currentDetailsIndex].observation != update.observation)?'bg-red-1':''"
+                                :class="
+                                (currentVulnerability.details[currentDetailsIndex].observation || update.observation) &&
+                                (currentVulnerability.details[currentDetailsIndex].observation != update.observation)
+                                ?'bg-red-1':''
+                                "
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
@@ -710,7 +718,11 @@
                                 borderless 
                                 label="Remediation" 
                                 stack-label
-                                :class="(currentVulnerability.details[currentDetailsIndex].remediation != update.remediation)?'bg-red-1':''"
+                                :class="
+                                (currentVulnerability.details[currentDetailsIndex].remediation || update.remediation) &&
+                                (currentVulnerability.details[currentDetailsIndex].remediation != update.remediation)
+                                ?'bg-red-1':''
+                                "
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor 
@@ -773,12 +785,12 @@
                                         borderless 
                                         :label="field.customField.label" 
                                         stack-label
-                                        :class="(isTextInCustomFields(field.text))?'bg-red-1':''"
+                                        :class="(isTextInCustomFields(field))?'bg-red-1':''"
                                         >
                                             <template v-slot="control">
                                                 <basic-editor 
                                                 v-model="field.text" 
-                                                :diff="currentVulnerability.details[currentDetailsIndex].customFields[idx].text || ''"
+                                                :diff="getTextDiffInCustomFields(field)"
                                                 :editable=false />
                                             </template>
                                         </q-field>
@@ -788,7 +800,7 @@
                                         stack-label
                                         v-model="field.text"
                                         readonly
-                                        :bg-color="(isTextInCustomFields(field.text))?'red-1':''"
+                                        :bg-color="(isTextDiffInCustomFields(field))?'red-1':''"
                                         />
                                     </q-card-section>
                                 </div>

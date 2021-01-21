@@ -393,10 +393,23 @@ export default {
             this.currentDetailsIndex = index;
         },
 
-        isTextInCustomFields: function(text) {
-            var result = false
+        isTextInCustomFields: function(field) {
+
             if (this.currentVulnerability.details[this.currentDetailsIndex].customFields) {
-                result = typeof this.currentVulnerability.details[this.currentDetailsIndex].customFields.find(f => f.text === text) === 'undefined'
+                return typeof this.currentVulnerability.details[this.currentDetailsIndex].customFields.find(f => {
+                    return f.customField === field.customField._id && f.text === field.text
+                }) === 'undefined'
+            }
+            return false
+        },
+
+        getTextDiffInCustomFields: function(field) {
+            var result = ''
+            if (this.currentVulnerability.details[this.currentDetailsIndex].customFields) {
+                this.currentVulnerability.details[this.currentDetailsIndex].customFields.find(f => {
+                    if (f.customField === field.customField._id)
+                        result = f.text
+                })
             }
             return result
         },
