@@ -4,6 +4,7 @@ module.exports = function(app, io) {
     var Audit = require('mongoose').model('Audit');
     var acl = require('../lib/auth').acl;
     var reportGenerator = require('../lib/report-generator');
+    var _ = require('lodash');
 
     /* ### AUDITS LIST ### */
 
@@ -164,17 +165,17 @@ module.exports = function(app, io) {
         // Optional parameters
         if (req.body.title) finding.title = req.body.title;
         if (req.body.vulnType) finding.vulnType = req.body.vulnType;
-        if (req.body.description) finding.description = req.body.description;
-        if (req.body.observation) finding.observation = req.body.observation;
-        if (req.body.remediation) finding.remediation = req.body.remediation;
+        if (!_.isNil(req.body.description)) finding.description = req.body.description;
+        if (!_.isNil(req.body.observation)) finding.observation = req.body.observation;
+        if (!_.isNil(req.body.remediation)) finding.remediation = req.body.remediation;
         if (req.body.remediationComplexity) finding.remediationComplexity = req.body.remediationComplexity;
         if (req.body.priority) finding.priority = req.body.priority;
         if (req.body.references) finding.references = req.body.references;
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
         if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
         if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
-        if (req.body.poc !== undefined) finding.poc = req.body.poc;
-        if (req.body.scope) finding.scope = req.body.scope;
+        if (!_.isNil(req.body.poc)) finding.poc = req.body.poc;
+        if (!_.isNil(req.body.scope)) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
         if (req.body.category) finding.category = req.body.category
         if (req.body.customFields) finding.customFields = req.body.customFields
