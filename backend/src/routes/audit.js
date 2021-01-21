@@ -173,7 +173,7 @@ module.exports = function(app, io) {
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
         if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
         if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
-        if (req.body.poc) finding.poc = req.body.poc;
+        if (req.body.poc !== undefined) finding.poc = req.body.poc;
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
         if (req.body.category) finding.category = req.body.category

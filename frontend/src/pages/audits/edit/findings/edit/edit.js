@@ -45,32 +45,33 @@ export default {
 
     beforeRouteLeave (to, from , next) {
         Utils.syncEditors(this.$refs)
-        if (this.$_.isEqual(this.$_.omit(this.finding, ['cvssScore', 'cvssSeverity']), this.$_.omit(this.findingOrig, ['cvssScore', 'cvssSeverity'])))
-            next();
-        else {
+        if (this.unsavedChanges()) {
             Dialog.create({
-                title: 'There are unsaved changes !',
-                message: `Do you really want to leave ?`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+            title: 'There are unsaved changes !',
+            message: `Do you really want to leave ?`,
+            ok: {label: 'Confirm', color: 'negative'},
+            cancel: {label: 'Cancel', color: 'white'}
             })
             .onOk(() => next())
         }
+        else
+            next()
     },
 
     beforeRouteUpdate (to, from , next) {
         Utils.syncEditors(this.$refs)
-        if (this.$_.isEqual(this.$_.omit(this.finding, ['cvssScore', 'cvssSeverity']), this.$_.omit(this.findingOrig, ['cvssScore', 'cvssSeverity'])))
-            next();
-        else {
+
+        if (this.unsavedChanges()) {
             Dialog.create({
-                title: 'There are unsaved changes !',
-                message: `Do you really want to leave ?`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+            title: 'There are unsaved changes !',
+            message: `Do you really want to leave ?`,
+            ok: {label: 'Confirm', color: 'negative'},
+            cancel: {label: 'Cancel', color: 'white'}
             })
             .onOk(() => next())
         }
+        else
+            next()
     },
 
     computed: {
@@ -252,6 +253,41 @@ export default {
 
         syncEditors: function() {
             Utils.syncEditors(this.$refs)
+        },
+
+        unsavedChanges: function() {
+            if (this.finding.title !== this.findingOrig.title)
+                return true
+            if ((this.finding.vulnType || this.findingOrig.vulnType) && this.finding.vulnType !== this.findingOrig.vulnType)
+                return true
+            if ((this.finding.description || this.findingOrig.description) && this.finding.description !== this.findingOrig.description)
+                return true
+            if ((this.finding.observation || this.findingOrig.observation) && this.finding.observation !== this.findingOrig.observation)
+                return true
+            var findingReferences = this.referencesString.split('\n').filter(e => e !== '')
+            if (!this.$_.isEqual(findingReferences, this.finding.references))
+                return true
+            if (!this.$_.isEqual(this.finding.customFields, this.findingOrig.customFields))
+                return true
+
+            if ((this.finding.poc || this.findingOrig.poc) && this.finding.poc !== this.findingOrig.poc)
+                return true
+            
+            if ((this.finding.scope || this.findingOrig.scope) && this.finding.scope !== this.findingOrig.scope)
+                return true
+            if ((this.finding.cvssv3 || this.findingOrig.cvssv3) && this.finding.cvssv3 !== this.findingOrig.cvssv3)
+                return true
+            if ((this.finding.remediationComplexity || this.findingOrig.remediationComplexity) && this.finding.remediationComplexity !== this.findingOrig.remediationComplexity)
+                return true
+            if ((this.finding.priority || this.findingOrig.priority) && this.finding.priority !== this.findingOrig.priority)
+                return true
+            if ((this.finding.remediation || this.findingOrig.remediation) && this.finding.remediation !== this.findingOrig.remediation)
+                return true
+
+            if (this.finding.status !== this.findingOrig.status)
+                return true
+
+            return false
         }
     }
 }
