@@ -32,14 +32,15 @@ Update
 
 ```
 docker-compose down
-git pull
+git pull origin master
 docker-compose up -d --build
 ```
 
 Application is accessible through https://localhost:8443  
-API is accessible through https://localhost:4242/api
+API is accessible through https://localhost:8443/api
 
-!> When using Firefox, a certificate exception must be added for the backend. For that go to https://localhost:4242/api/users/init
+
+
 
 ## Developpment
 
