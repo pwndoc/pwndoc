@@ -146,7 +146,6 @@ export default {
                 })
                 this.finding.customFields = cFields
                 this.$nextTick(() => {
-                    console.log('nextTick')
                     Utils.syncEditors(this.$refs)
                     this.findingOrig = this.$_.cloneDeep(this.finding); 
                 })
