@@ -6,7 +6,6 @@
 
 All 3 containers can be run at once using the docker-compose file in the root directory.
 
-!> For production usage make sure to change the JWT secret in «src/lib/auth.js» and certificates in «ssl» folder
 
 Build and run Docker containers
 ```
