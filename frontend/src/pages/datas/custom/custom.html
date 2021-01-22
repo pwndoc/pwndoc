@@ -653,6 +653,7 @@
                                 clearable
                                 :error="!!errors.sectionName"
                                 :error-message="errors.sectionName"
+                                hide-bottom-space
                                 @keyup.enter="createSection"
                                 />
                             </q-item-section>
@@ -663,8 +664,22 @@
                                 clearable
                                 :error="!!errors.sectionField"
                                 :error-message="errors.sectionField"
+                                hide-bottom-space
                                 @keyup.enter="createSection"
                                 />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-input
+                                label="Icon (Material/Font Awesome)"
+                                v-model="newSection.icon"
+                                @keyup.enter="createSection"
+                                >
+                                    <template v-slot:append>
+                                        <q-avatar>
+                                            <q-icon size='sm' :name="newSection.icon" />
+                                        </q-avatar>
+                                    </template>
+                                </q-input>
                             </q-item-section>
                             <q-item-section side>
                                 <q-btn color="secondary" unelevated label="+" size="md" @click="createSection" />
@@ -705,6 +720,20 @@
                                         readonly
                                         />
                                     </q-item-section>
+                                    <q-item-section>
+                                        <q-input
+                                        label="Icon (Material/Font Awesome)"
+                                        stack-label
+                                        v-model="section.icon"
+                                        readonly
+                                        >
+                                            <template v-slot:append>
+                                                <q-avatar>
+                                                    <q-icon size='sm' :name="section.icon" />
+                                                </q-avatar>
+                                            </template>
+                                        </q-input>
+                                    </q-item-section>
                                 </q-item>
                                 <q-item>
                                     <q-field class="col-md-12" borderless label="Default Text" stack-label>
@@ -741,6 +770,19 @@
                                                 label="Field"
                                                 v-model="section.field"
                                                 />
+                                            </q-item-section>
+                                            <q-item-section>
+                                                <q-input
+                                                label="Icon (Material/Font Awesome)"
+                                                stack-label
+                                                v-model="section.icon"
+                                                >
+                                                    <template v-slot:append>
+                                                        <q-avatar>
+                                                            <q-icon size='sm' :name="section.icon" />
+                                                        </q-avatar>
+                                                    </template>
+                                                </q-input>
                                             </q-item-section>
                                             <q-item-section side >
                                                 <q-btn color="red" unelevated label="x" size="md" class="q-mt-md" @click="removeSection(idx)"/>

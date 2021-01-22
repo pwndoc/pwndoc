@@ -5,7 +5,8 @@ var CustomSectionSchema = new Schema({
     field:  String,
     name:   String,
     locale: String,
-    text:   String
+    text:   String,
+    icon:   String
 }, {timestamps: true});
 
 CustomSectionSchema.index({"field": 1, "locale": 1}, {name: "unique_field_locale", unique: true})
@@ -19,7 +20,7 @@ CustomSectionSchema.index({"name": 1, "locale": 1}, {name: "unique_name_locale",
 CustomSectionSchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = CustomSection.find();
-        query.select('-_id field name locale text')
+        query.select('-_id field name locale text icon')
         query.exec()
         .then((rows) => {
             resolve(rows);
@@ -34,7 +35,7 @@ CustomSectionSchema.statics.getAll = () => {
 CustomSectionSchema.statics.getAllByLanguage = (locale) => {
     return new Promise((resolve, reject) => {
         var query = CustomSection.find({locale: locale});
-        query.select('-_id field name locale text')
+        query.select('-_id field name locale text icon')
         query.exec()
         .then((rows) => {
             resolve(rows);

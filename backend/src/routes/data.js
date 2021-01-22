@@ -10,6 +10,8 @@ module.exports = function(app) {
     var CustomSection = require('mongoose').model('CustomSection');
     var CustomField = require('mongoose').model('CustomField');
 
+    var _ = require('lodash')
+
 /* ===== LANGUAGES ===== */
 
     // Get languages list
@@ -300,6 +302,7 @@ module.exports = function(app) {
         section.locale = req.body.locale;
         // Optional parameters
         if (req.body.text) section.text = req.body.text
+        if (req.body.icon) section.icon = req.body.icon
 
         CustomSection.create(section)
         .then(msg => Response.Created(res, msg))
@@ -331,7 +334,7 @@ module.exports = function(app) {
 
         var sections = []
         req.body.forEach(e => {
-            sections.push({locale: e.locale, name: e.name, field: e.field, text: e.text || ""})
+            sections.push({locale: e.locale, name: e.name, field: e.field, text: e.text || "", icon: e.icon || ""})
         })
 
         CustomSection.updateAll(sections)

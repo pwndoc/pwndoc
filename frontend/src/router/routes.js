@@ -11,7 +11,6 @@ export default [
         {path: 'network', component: () => import('pages/audits/edit/network')},
         {path: 'findings/add', component: () => import('pages/audits/edit/findings/add')},
         {path: 'findings/:findingId', component: () => import('pages/audits/edit/findings/edit')},
-        {path: 'summary', component: () => import('pages/audits/edit/summary')},
         {path: 'sections/:sectionId', component: () => import('pages/audits/edit/sections')}
       ]}
     ]},

@@ -12,12 +12,6 @@
 							</q-btn>
 						</q-item-section>
 					</q-item>
-					<!-- <q-item-label header>
-						Sections -->
-					<!-- <q-space /> -->
-					<!-- <q-btn label="Generate" />
-						
-						</q-item-label> -->
 
 					<q-separator />
 
@@ -100,26 +94,7 @@
 
 					<q-separator class="q-mt-lg" />
 
-					<q-item
-					:to="'/audits/'+auditId+'/summary'"
-					class="q-py-lg"
-					>
-						<q-item-section avatar>
-							<q-icon name="fa fa-chess-king"></q-icon>
-						</q-item-section>
-						<q-item-section>Executive Summary</q-item-section>
-					</q-item>
-
-					<div class="row">
-						<div v-for="(user,idx) in summaryUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
-					</div>
-
-					<q-separator />
-
 					<q-item class="q-py-lg">
-						<q-item-section avatar>
-							<q-icon name="fa fa-list"></q-icon>
-						</q-item-section>
 						<q-item-section>Custom Sections</q-item-section>
 						<q-item-section avatar>
 							<q-btn
@@ -145,10 +120,11 @@
 					</q-item>
 					<q-list v-for="section of audit.sections" :key="section._id">
 						<q-item
-						dense
-						class="cursor-pointer"
 						:to="'/audits/'+auditId+'/sections/'+section._id"
 						>
+							<q-item-section avatar>
+								<q-icon :name="getSectionIcon(section)"></q-icon>
+							</q-item-section>
 							<q-item-section>
 								<span>{{section.name}}</span>
 							</q-item-section>
@@ -156,6 +132,7 @@
 						<div class="row">
 							<div v-for="(user,idx) in sectionUsers" :key="idx" v-if="user.section === section._id" class="col multi-colors-bar" :style="{background:user.color}" />
 						</div>
+						<q-separator />
 					</q-list>
 				</q-list>
 			</template>
@@ -224,7 +201,6 @@ export default {
 		computed: {
 			generalUsers: function() {return this.users.filter(user => user.menu === 'general')},
 			networkUsers: function() {return this.users.filter(user => user.menu === 'network')},
-			summaryUsers: function() {return this.users.filter(user => user.menu === 'summary')},
 			findingUsers: function() {return this.users.filter(user => user.menu === 'editFinding')},
 			sectionUsers: function() {return this.users.filter(user => user.menu === 'editSection')},
 
@@ -306,6 +282,13 @@ export default {
 				.catch((err) => {
 					console.log(err);
 				})
+			},
+
+			getSectionIcon: function(section) {
+				var section = this.sections.find(e => e.field === section.field)
+				if (section)
+					return section.icon || 'notes'
+				return 'notes'
 			},
 
 			createSection: function(section) {

@@ -34,7 +34,7 @@ export default {
             editCustomField: false,
 
             sections: [],
-            newSection: {field: "", name: "", locale: ""},
+            newSection: {field: "", name: "", locale: "", icon: ""},
             editSections: [],
             editSection: false,
 
@@ -501,6 +501,7 @@ export default {
                 this.newSection.field = "";
                 this.newSection.name = "";
                 this.newSection.text = ""
+                this.newSection.icon = ""
                 this.getSections();
                 Notify.create({
                     message: 'Section created successfully',

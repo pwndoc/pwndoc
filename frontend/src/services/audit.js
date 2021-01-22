@@ -57,14 +57,6 @@ export default {
     return Vue.prototype.$axios.delete(`audits/${auditId}/findings/${findingId}`)
   },
 
-  getAuditSummary: function(auditId) {
-    return Vue.prototype.$axios.get(`audits/${auditId}/summary`)
-  },
-
-  updateAuditSummary: function(auditId, audit) {
-    return Vue.prototype.$axios.put(`audits/${auditId}/summary`, audit)
-  },
-
   createSection: function(auditId, section) {
     return Vue.prototype.$axios.post(`audits/${auditId}/sections`, section)
   },

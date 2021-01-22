@@ -73,8 +73,8 @@ function generateDoc(audit) {
             console.log(error)
         if (error.properties && error.properties.errors instanceof Array) {
             const errorMessages = error.properties.errors.map(function (error) {
-                return error.properties.explanation;
-            }).join("\n");
+                return `Explanation: ${error.properties.explanation}\nScope: ${JSON.stringify(error.properties.scope).substring(0,142)}...`
+            }).join("\n\n");
             // errorMessages is a humanly readable message looking like this :
             // 'The tag beginning with "foobar" is unopened'
             throw `Template Error:\n${errorMessages}`;
@@ -277,9 +277,6 @@ function prepAuditData(data) {
     result.date_start = data.date_start || "undefined"
     result.date_end = data.date_end || "undefined"
 
-    result.summary = []
-    if (data.summary) result.summary = splitHTMLParagraphs(data.summary)
-
     result.company = {}
     if (data.company) {
         result.company.name = data.company.name || "undefined"
@@ -331,7 +328,6 @@ function prepAuditData(data) {
         }
         if (finding.customFields) {
             finding.customFields.forEach(field => {
-                console.log(field)
                 // For retrocompatibility of findings with old customFields 
                 // or if custom field has been deleted, last saved custom fields will be available
                 if (field.customField) {
