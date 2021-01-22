@@ -22,14 +22,14 @@
 <div class="row q-col-gutter-md q-pt-md">
     <q-tabs v-model="selectedTab" align="left" indicator-color="primary" class="bg-white full-width">
         <q-tab name="definition" default label="Definition" />
-        <q-tab ref="proofs" name="proofs" label="Proofs"/>
+        <q-tab name="proofs" label="Proofs"/>
         <q-tab name="details" label="Details" />
         <q-separator vertical />
         <q-toggle label="Completed" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
         <q-space />
     </q-tabs>
 
-    <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 offset-md-2" @before-transition="syncEditors" >
+    <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 offset-md-2" @before-transition="syncEditors" @transition="updateOrig" >
         <q-tab-panel name="definition">
             <q-card>
                 <q-card-section class="row q-col-gutter-md">
