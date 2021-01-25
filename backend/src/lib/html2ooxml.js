@@ -3,6 +3,8 @@ var xml = require("xml")
 var htmlparser = require("htmlparser2")
 
 function html2ooxml(html, style = '') {
+    if (html === '')
+        return html
     if (!html.match(/^<.+>/))
         html = `<p>${html}</p>`
     var doc = new docx.Document();
