@@ -79,7 +79,10 @@ export default {
             AuditService.getSection(this.auditId, this.sectionId)
             .then((data) => {
                 this.section = data.data.datas;
-                this.sectionOrig = this.$_.cloneDeep(this.section);                
+                this.$nextTick(() => {
+                    Utils.syncEditors(this.$refs)
+                    this.sectionOrig = this.$_.cloneDeep(this.section);                
+                })
             })
             .catch((err) => {
                 console.log(err)

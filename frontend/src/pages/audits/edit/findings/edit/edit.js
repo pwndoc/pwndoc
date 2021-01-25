@@ -15,6 +15,8 @@ export default {
             finding: {},
             findingOrig: {},
             selectedTab: "definition",
+            proofsTabVisited: false,
+            detailsTabVisited: false,
             vulnTypes: [],
             referencesString: "",
             customFields: []
@@ -143,11 +145,15 @@ export default {
                     })
                 })
                 this.finding.customFields = cFields
-                
-                this.findingOrig = this.$_.cloneDeep(this.finding);                
+                this.$nextTick(() => {
+                    Utils.syncEditors(this.$refs)
+                    this.findingOrig = this.$_.cloneDeep(this.finding); 
+                })
             })
             .catch((err) => {
-                if (err.response.status === 403)
+                if (!err.response)
+                    console.log(err)
+                else if (err.response.status === 403)
                     this.$router.push({name: '403', params: {error: err.response.data.datas}})
                 else if (err.response.status === 404)
                     this.$router.push({name: '404', params: {error: err.response.data.datas}})
@@ -253,6 +259,19 @@ export default {
 
         syncEditors: function() {
             Utils.syncEditors(this.$refs)
+        },
+
+        updateOrig: function() {
+            if (this.selectedTab === 'proofs' && !this.proofsTabVisited){
+                Utils.syncEditors(this.$refs)
+                this.findingOrig.poc = this.finding.poc
+                this.proofsTabVisited = true
+            }
+            else if (this.selectedTab === 'details' && !this.detailsTabVisited){
+                Utils.syncEditors(this.$refs)
+                this.findingOrig.remediation = this.finding.poc
+                this.detailsTabVisited = true
+            }
         },
 
         unsavedChanges: function() {
