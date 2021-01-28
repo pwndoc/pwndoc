@@ -1,5 +1,7 @@
 FROM node:10.15.2-alpine
 
+RUN npm install --unsafe-perm -g full-icu
+ENV NODE_ICU_DATA="/usr/local/lib/node_modules/full-icu"
 RUN mkdir -p /app
 WORKDIR /app
 COPY package*.json ./

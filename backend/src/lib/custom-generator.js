@@ -53,6 +53,28 @@ expressions.filters.convertDateFR = function(input, s) {
     }
 }
 
+expressions.filters.convertDateLocale = function(input, s) {
+    var date = new Date(input);
+    var styleAndLocale = s.split("|");
+
+    if(date !== "Invalid Date" && styleAndLocale && styleAndLocale.length == 2) {
+        var style = styleAndLocale[0];
+        var locale = styleAndLocale[1];
+        var options = {};
+
+        if(style === "full") {
+            options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
+            console.log(date.toLocaleString("de-DE", options))
+            return date.toLocaleDateString(locale, options);
+        }
+
+        if(style === "short") {
+            options = { year: 'numeric', month: 'numeric', day: 'numeric'};
+            return date.toLocaleDateString(locale, options);
+        }
+    }
+}
+
 // Convert identifier prefix to a user defined prefix: {identifier | changeID: 'PRJ-'}
 expressions.filters.changeID = function (input, prefix) {
     return input.replace("IDX-", prefix);
