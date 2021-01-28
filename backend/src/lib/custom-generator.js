@@ -64,7 +64,6 @@ expressions.filters.convertDateLocale = function(input, s) {
 
         if(style === "full") {
             options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
-            console.log(date.toLocaleString("de-DE", options))
             return date.toLocaleDateString(locale, options);
         }
 

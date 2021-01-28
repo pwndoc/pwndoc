@@ -314,7 +314,7 @@ Count the number of vulnerabilities by CVSS severity.
 {findings | count: 'Critical'}
 >```
 
-Custom filters can also be created in `backend/src/lib/custom-generator.js`. As an example there are 2 filters defined for french reports.
+Custom filters can also be created in `backend/src/lib/custom-generator.js`. As an example there are 2 filters defined for french reports and one for global loclization
 
 ### convertDateFR (custom)
 
@@ -335,4 +335,15 @@ Convert cvss Criteria to French.
 >```
 // Example with cvssObj.AV === 'Network'
 {cvssObj.AV | criteriaFR} -> Réseau
+>```
+
+### convertDateLocale (custom)
+
+Convert Date to proper format any language. Must be used on values with date format.
+
+> Use in template document
+>```
+// Example with {date_start: '2020-10-29'}
+{date_start | convertDateFR: 'short|de-DE'} -> 29.10.2020
+{date_start | convertDateFR: 'full|fr-FR'} -> Jeudi 29 Octobre 2020
 >```
