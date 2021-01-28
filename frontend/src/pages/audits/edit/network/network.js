@@ -19,7 +19,7 @@ export default {
             currentHost: null,
             // Datatable headers for displaying host
             dtHostHeaders: [
-                {name: 'port', label: 'Port', field: 'port', align: 'left', sortable: true},
+                {name: 'port', label: 'Port', field: 'port', align: 'left', sortable: true, sort: (a, b) => parseInt(a, 10) - parseInt(b, 10)},
                 {name: 'protocol', label: 'Protocol', field: 'protocol', align: 'left', sortable: true},
                 {name: 'name', label: 'Service', field: 'name', align: 'left', sortable: true},
                 {name: 'version', label: 'Version', field: 'version', align: 'left', sortable: true}
