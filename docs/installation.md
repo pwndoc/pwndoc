@@ -42,9 +42,9 @@ API is accessible through https://localhost:4242/api
 
 !> When using Firefox, a certificate exception must be added for the backend. For that go to https://localhost:4242/api/users/init
 
-## Developpment
+## Development
 
-For developpment purposes, specific docker-compose file can be used in each folder (backend/frontend).
+For development purposes, specific docker-compose file can be used in each folder (backend/frontend).
 
 > *Source code can be modified live and application will automatically reload on changes.*
 
