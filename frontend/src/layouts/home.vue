@@ -24,7 +24,7 @@
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-database" />
             </q-item-section>
-            <q-item-section>Datas</q-item-section>
+            <q-item-section>Data</q-item-section>
             </q-item>
 
             <q-space />
