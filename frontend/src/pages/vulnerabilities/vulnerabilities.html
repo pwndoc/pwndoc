@@ -281,6 +281,8 @@
                 stack-label
                 v-model="field.text"
                 />
+                <q-select v-if="field.fieldType === 'List'" :label="field.label" v-model="field.text"
+                    :options="optionsForCustomField(field.label)" stack-label map-options options-sanitize />
             </q-card-section>
         </q-expansion-item>
 
