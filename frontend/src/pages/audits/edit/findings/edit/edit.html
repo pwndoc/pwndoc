@@ -140,7 +140,7 @@
     <q-tab-panel name="customFields">
         <q-card>
             <q-card-section v-for="field of finding.customFields" :key="field.label"
-                v-if="field.displayFinding || field.displayVuln || (field.displayCategory && field.displayCategory.includes(finding.category))">
+                v-if="field.displayFinding || (field.displayCategory && field.displayCategory.includes(finding.category))">
                 <q-field v-if="field.fieldType === 'Text'" borderless :label="field.label" stack-label>
                     <template v-slot="control">
                         <basic-editor ref="basiceditor_custom" noSync v-model="field.text" />
