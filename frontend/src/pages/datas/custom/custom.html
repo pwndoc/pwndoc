@@ -413,7 +413,7 @@
                                 <q-select
                                 label="Type"
                                 v-model="newCustomField.fieldType"
-                                :options="['input', 'text']"
+                                :options="['Input', 'Text', 'List']"
                                 :error="!!errors.fieldType"
                                 :error-message="errors.fieldType"
                                 options-sanitize
@@ -472,8 +472,8 @@
                                             <q-item>
                                                 <q-item-section>
                                                     <div>
-                                                        <q-checkbox v-model="customField.displayVuln" left-label label="Display in Vulnerability" disable />
-                                                        <q-checkbox v-model="customField.displayFinding" left-label label="Display in Finding" disable />
+                                                        <q-checkbox v-model="customField.displayVuln" right-label label="Display in Vulnerability" disable />
+                                                        <q-checkbox v-model="customField.displayFinding" right-label label="Display in Finding" disable />
                                                     </div>
                                                 </q-item-section>
                                                 <q-item-section>
@@ -511,6 +511,16 @@
                                                     </q-select>
                                                 </q-item-section>
                                             </q-item>
+                                            <q-item>
+                                                <q-item-section>
+                                                    <b>List Values</b>
+                                                    <q-item v-for="value, index of customField.values" :key="index">
+                                                        <q-item-section>
+                                                            <q-input label="List Value" v-model="customField.values[index]" readonly />
+                                                        </q-item-section>
+                                                    </q-item>
+                                                </q-item-section>
+                                            </q-item>
                                         </q-list>
                                     </q-item-section>
                                 </q-item>
@@ -526,9 +536,7 @@
                            <q-card-section>
                                 <draggable v-model="editCustomFields" handle=".handle" ghost-class="drag-ghost">
                                     <q-item v-for="(customField,index) of editCustomFields" :key="index">
-                                        <q-item-section avatar>
-                                            <q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
-                                        </q-item-section>
+                                       
                                         <q-item-section>
                                             <q-list bordered>
                                                 <q-item>
@@ -549,8 +557,8 @@
                                                 <q-item>
                                                     <q-item-section>
                                                         <div>
-                                                            <q-checkbox v-model="customField.displayVuln" left-label label="Vulnerability" />
-                                                            <q-checkbox v-model="customField.displayFinding" left-label label="Finding" />
+                                                            <q-checkbox v-model="customField.displayVuln" right-label label="Vulnerability" />
+                                                            <q-checkbox v-model="customField.displayFinding" right-label label="Finding" />
                                                         </div>
                                                     </q-item-section>
                                                     <q-item-section>
@@ -601,6 +609,25 @@
                                                         </q-select>
                                                     </q-item-section>
                                                 </q-item>
+                                                <q-item>
+                                                    <q-item-section>
+                                                        <q-toolbar>
+                                                            <b>List Values</b>
+                                                            </q-toolbar>
+                                                            <q-list v-if="customField.fieldType == 'List'">
+                                                                <q-item v-for="(value, fieldIndex) of customField.values" :key="fieldIndex">
+                                                                    <q-item-section>
+                                                                        <q-input label="List Value" v-model="customField.values[fieldIndex]" />
+                                                                    </q-item-section>
+                                                                    <q-item-section side>
+                                                                        <q-btn color="red" unelevated label="x" size="md" @click="customField.values.splice(fieldIndex, 1)" />
+                                                                    </q-item-section>
+                                                                </q-item>
+                                                                <q-btn color="secondary" unelevated label="Add More" size="md" @click="customField.values.push('')" />
+                                                            </q-list>
+                                                    </q-item-section>
+                                                </q-item>
+                                                
                                             </q-list>
                                         </q-item-section>
                                         <q-item-section side>

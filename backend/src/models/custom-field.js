@@ -7,7 +7,8 @@ var CustomFieldSchema = new Schema({
     position:           Number,
     displayVuln:        {type: Boolean, default: true},
     displayFinding:     {type: Boolean, default: true},
-    displayCategory:    [String]
+    displayCategory:    [String],
+    values: [String]
 }, {timestamps: true})
 
 /*
@@ -18,7 +19,7 @@ var CustomFieldSchema = new Schema({
 CustomFieldSchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = CustomField.find().sort('position')
-        query.select('fieldType label displayVuln displayFinding displayCategory')
+        query.select('fieldType label displayVuln displayFinding displayCategory values')
         query.exec()
         .then((rows) => {
             resolve(rows);

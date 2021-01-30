@@ -391,6 +391,7 @@ module.exports = function(app) {
             if (typeof e.displayVuln === 'boolean') field.displayVuln = e.displayVuln
             if (typeof e.displayFinding === 'boolean') field.displayFinding = e.displayFinding
             if (Array.isArray(e.displayCategory)) field.displayCategory = e.displayCategory
+            if (Array.isArray(e.values)) field.values = e.values
             if (typeof e.position === 'number') field.position = e.position
             customFields.push(field)
         })
