@@ -270,13 +270,13 @@
             v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" 
             :key="field.customFieldId"
             v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)">
-                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
+                <q-field v-if="field.fieldType === 'Text'" borderless :label="field.label" stack-label>
                     <template v-slot="control">
                         <basic-editor v-model="field.text" />
                     </template>
                 </q-field>
                 <q-input
-                v-if="field.fieldType === 'input'"
+                v-if="field.fieldType === 'Input'"
                 :label='field.label'
                 stack-label
                 v-model="field.text"
@@ -436,17 +436,19 @@
             v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" 
             :key="field.customFieldId"
             v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)">
-                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
+                <q-field v-if="field.fieldType === 'Text'" borderless :label="field.label" stack-label>
                     <template v-slot="control">
                         <basic-editor v-model="field.text" />
                     </template>
                 </q-field>
                 <q-input
-                v-if="field.fieldType === 'input'"
+                v-if="field.fieldType === 'Input'"
                 :label='field.label'
                 stack-label
                 v-model="field.text"
                 />
+                <q-select v-if="field.fieldType === 'List'" :label="field.label" v-model="field.text"
+                    :options="optionsForCustomField(field.label)" stack-label map-options options-sanitize />
             </q-card-section>
         </q-expansion-item>
 
@@ -592,17 +594,19 @@
                             :key="field.label"
                             v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)"
                             >
-                                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
+                                <q-field v-if="field.fieldType === 'Text'" borderless :label="field.label" stack-label>
                                     <template v-slot="control">
                                         <basic-editor v-model="field.text" />
                                     </template>
                                 </q-field>
                                 <q-input
-                                v-if="field.fieldType === 'input'"
+                                v-if="field.fieldType === 'Input'"
                                 :label='field.label'
                                 stack-label
                                 v-model="field.text"
                                 />
+                                <q-select v-if="field.fieldType === 'List'" :label="field.label" v-model="field.text"
+                                    :options="optionsForCustomField(field.label)" stack-label map-options options-sanitize />
                             </q-card-section>
                         </div>
                     </q-expansion-item>
@@ -781,7 +785,7 @@
                                     v-if="field.customField.displayVuln || field.customField.displayCategory.includes(currentVulnerability.category)"
                                     >
                                         <q-field 
-                                        v-if="field.customField.fieldType === 'text'" 
+                                        v-if="field.customField.fieldType === 'Text'" 
                                         borderless 
                                         :label="field.customField.label" 
                                         stack-label
@@ -795,13 +799,15 @@
                                             </template>
                                         </q-field>
                                         <q-input
-                                        v-if="field.customField.fieldType === 'input'"
+                                        v-if="field.customField.fieldType === 'Input'"
                                         :label='field.customField.label'
                                         stack-label
                                         v-model="field.text"
                                         readonly
                                         :bg-color="(isTextDiffInCustomFields(field))?'red-1':''"
                                         />
+                                        <q-select v-if="field.fieldType === 'List'" :label="field.label" v-model="field.text"
+                                            :options="optionsForCustomField(field.label)" stack-label map-options options-sanitize />
                                     </q-card-section>
                                 </div>
                             </q-expansion-item>

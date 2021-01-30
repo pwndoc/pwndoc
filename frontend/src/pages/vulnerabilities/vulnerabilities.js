@@ -134,6 +134,11 @@ export default {
             })
         },
 
+        // find a custom field by its label name
+        optionsForCustomField: function (label) {
+            return this.customFields.find(f => f.label === label).values
+        },
+
          // Get available custom fields
          getCustomFields: function() {
             DataService.getCustomFields()
