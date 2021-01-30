@@ -338,9 +338,9 @@ function prepAuditData(data) {
                     var fieldType = field.fieldType
                     var label = field.label
                 }
-                if (fieldType === 'input')
+                if (fieldType === 'Input' || fieldType === 'List')
                     tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
-                else if (fieldType === 'text')
+                else if (fieldType === 'Text')
                     tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
             })
         }
