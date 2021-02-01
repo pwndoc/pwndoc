@@ -1,5 +1,6 @@
 var fs = require('fs');
 
+// Create JWT secret if none is set via .env file
 function createSecret() {
     const secret = require('crypto').randomBytes(32).toString('hex');
     fs.writeFile(".env", "SECRET=" + secret, () => { }); //no need for the callback
