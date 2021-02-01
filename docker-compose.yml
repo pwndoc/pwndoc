@@ -4,7 +4,7 @@ services:
     image: mongo
     container_name: mongo-pwndoc
     volumes:
-      - ./backend/mongo-data:/data/db
+      - mongo-data:/data/db
     restart: always
     environment:
       - MONGO_DB:pwndoc
@@ -16,7 +16,7 @@ services:
     image: yeln4ts/pwndoc:backend
     container_name: pwndoc-backend
     volumes:
-      - ./backend/report-templates:/app/report-templates
+      - report-templates:/app/report-templates
     depends_on:
       - mongodb
     restart: always
@@ -38,3 +38,7 @@ services:
 networks:
   backend:
       driver: bridge
+
+volumes:
+  mongo-data:
+  report-templates:
