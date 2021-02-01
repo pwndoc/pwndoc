@@ -70,13 +70,13 @@ A Template is defined by:
 
 ## Custom Data
 
-Custom Data represent a way to fully customize Audits and Vulnerabilities. They are editable and their order can be changed to personnalize how they will be displayed for users.
+Custom Data represent a way to fully customize Audits and Vulnerabilities. They are editable and their order can be changed to personalize how they will be displayed for users.
 
 !> Values must match this regex:  `/^[A-zÀ-ú0-9 \[\]\'()_-]+$/`
 
 ### Languages
 
-Pwndoc can handle multiple Languages when it comes to Custom Data or Vulnerabilities. It's one of the first thing to create before being able to start an Audit.
+Pwndoc can handle multiple Languages when it comes to Custom Data or Vulnerabilities. It's one of the first things to create before being able to start an Audit.
 
 A Language is defined by:
 
