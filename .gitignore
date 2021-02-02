@@ -9,6 +9,7 @@ mongo-data*
 .quasar
 report-templates
 custom-generator.js
+roles.json
 
 # Editor directories and files
 .idea
