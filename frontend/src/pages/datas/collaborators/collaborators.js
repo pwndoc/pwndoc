@@ -3,6 +3,7 @@ import Vue from 'vue'
 
 import CollabService from '@/services/collaborator'
 import UserService from '@/services/user'
+import DataService from '@/services/data'
 
 export default {
     data: () => {
@@ -36,12 +37,15 @@ export default {
                 role: ''
             },
             // Username to identify collab to update
-            idUpdate: ''
+            idUpdate: '',
+            // List of roles
+            roles: []
         }
     },
 
     mounted: function() {
         this.getCollabs()
+        this.getRoles()
     },
 
     methods: {
@@ -141,6 +145,16 @@ export default {
                     textColor:'white',
                     position: 'top-right'
                 })
+            })
+        },
+
+        getRoles: function() {
+            DataService.getRoles()
+            .then((data) => {
+                this.roles = data.data.datas
+            })
+            .catch((err) => {
+                console.log(err)
             })
         },
 

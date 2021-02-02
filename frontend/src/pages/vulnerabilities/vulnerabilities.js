@@ -174,6 +174,12 @@ export default {
             })
             .catch((err) => {
                 console.log(err)
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
             })
         },
 
@@ -295,7 +301,8 @@ export default {
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;
-            this.getVulnUpdates(this.vulnerabilityId);
+            if (this.UserService.isAllowed('vulnerabilities:update'))
+                this.getVulnUpdates(this.vulnerabilityId);
         },
 
         editChangeCategory: function(category) {

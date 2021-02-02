@@ -20,7 +20,7 @@
                 />
             </div>
 
-            <div slot="top-right" slot-scope="props" v-if="UserService.isAdmin()">
+            <div slot="top-right" slot-scope="props" v-if="UserService.isAllowed('templates:create')">
                 <q-btn 
                 unelevated
                 label="Create Template"
@@ -31,17 +31,15 @@
             </div>
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                <div v-if="UserService.isAdmin()">
-                    <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
-                    </q-btn>
-                    <q-btn size="sm" flat color="info" icon="fa fa-download" @click="downloadTemplate(props.row)">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download</q-tooltip>
-                    </q-btn>
-                    <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteTemplate(props.row)">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
-                    </q-btn>
-                </div>
+                <q-btn v-if="UserService.isAllowed('templates:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
+                </q-btn>
+                <q-btn size="sm" flat color="info" icon="fa fa-download" @click="downloadTemplate(props.row)">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download</q-tooltip>
+                </q-btn>
+                <q-btn v-if="UserService.isAllowed('templates:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteTemplate(props.row)">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
+                </q-btn>
             </q-td>
 
             <div slot="bottom" slot-scope="props" class="row fit">

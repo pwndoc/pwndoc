@@ -30,7 +30,7 @@
                 <q-toggle label="New" color="light-blue" v-model="search.new" :true-value=1 />
                 <q-toggle label="Updates" color="orange" v-model="search.updates" :true-value=2 />
                 <q-btn 
-                v-if="UserService.isAdmin()"
+                v-if="UserService.isAllowed('vulnerabilities:update')"
                 class="q-ml-md"
                 label="Merge Vulnerabilities"
                 outline
@@ -40,7 +40,7 @@
                 />
                 <q-space />
                 <q-btn-dropdown 
-                v-if="UserService.isAdmin()"
+                v-if="UserService.isAllowed('vulnerabilities:create')"
                 unelevated
                 color="secondary"
                 no-caps
@@ -110,23 +110,18 @@
                     <q-td key="type" :props="props">
                         {{getDtType(props.row)}}
                     </q-td>
-                    <q-td key="action" :props="props" style="width:1px" v-if="UserService.isAdmin()">
-                        <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
+                    <q-td key="action" :props="props" style="width:1px">
+                        <q-btn v-if="UserService.isAllowed('vulnerabilities:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>                                                    
+                        </q-btn>
+                        <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); $refs.editModal.show()">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">View</q-tooltip>                            
                         </q-btn>
                         <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Find Audits</q-tooltip>                            
                         </q-btn>
-                        <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
+                        <q-btn v-if="UserService.isAllowed('vulnerabilities:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>                            
-                        </q-btn>
-                    </q-td>
-                    <q-td key="action" :props="props" style="width:1px" v-else>
-                        <q-btn size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); $refs.editModal.show()">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">View</q-tooltip>                            
-                        </q-btn>
-                        <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Find Audits</q-tooltip>    
                         </q-btn>
                     </q-td>
                 </q-tr>
@@ -452,7 +447,7 @@
 
         <q-separator />
 
-        <q-card-actions align="right" v-if="UserService.isAdmin()">
+        <q-card-actions align="right" v-if="UserService.isAllowed('vulnerabilities:update')">
             <q-btn color="primary" outline @click="$refs.editModal.hide()">Cancel</q-btn>
             <q-btn v-if="currentVulnerability.status === 1" label="Approve" color="light-blue" unelevated @click="updateVulnerability()" />
             <q-btn v-else color="secondary" unelevated @click="updateVulnerability()">Update</q-btn>
@@ -778,7 +773,7 @@
                                     <q-card-section 
                                     v-for="(field,idx) of update.customFields" 
                                     :key="field.label"
-                                    v-if="field.customField.displayVuln || field.customField.displayCategory.includes(currentVulnerability.category)"
+                                    v-if="field.customField && (field.customField.displayVuln || field.customField.displayCategory.includes(currentVulnerability.category))"
                                     >
                                         <q-field 
                                         v-if="field.customField.fieldType === 'text'" 

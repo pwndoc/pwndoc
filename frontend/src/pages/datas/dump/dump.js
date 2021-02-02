@@ -26,7 +26,12 @@ export default {
                 this.downloadVulnerabilities();
             })
             .catch((err) => {
-                console.log(err)
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor:'white',
+                    position: 'top-right'
+                })
             })
         },
 

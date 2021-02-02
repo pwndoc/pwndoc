@@ -33,7 +33,7 @@
 
             <q-separator spaced />
 
-            <q-item v-if="UserService.isAdmin()" to='/datas/custom'>
+            <q-item to='/datas/custom'>
                 <q-item-section avatar>
                     <q-icon name="fa fa-table" />
                 </q-item-section>

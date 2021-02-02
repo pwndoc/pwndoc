@@ -6,7 +6,7 @@
                 <div class="text-h6">Vulnerabilities</div>
             </q-card-section>
             <q-separator />
-            <div v-if=UserService.isAdmin()>
+            <div v-if="UserService.isAllowed('vulnerabilities:create')">
                 <q-card-section>
                     <div class="text-bold">Import Vulnerabilities</div>
                 </q-card-section>
@@ -52,7 +52,7 @@
                     />
                 </q-card-section>
                 <q-separator />
-                <div v-if=UserService.isAdmin()>
+                <div v-if="UserService.isAllowed('vulnerabilities:delete-all')">
                     <q-card-section>
                         <div class="text-bold">Delete All Vulnerabilities</div>
                     </q-card-section>
