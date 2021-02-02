@@ -58,7 +58,11 @@ var builtInRoles = {
     }
 }
 
-var customRoles = require('./roles.json')
+try {
+    var customRoles = require('./roles.json')}
+catch(error) {
+    var customRoles = []
+}
 var roles = {...customRoles, ...builtInRoles}
 
 class ACL {
