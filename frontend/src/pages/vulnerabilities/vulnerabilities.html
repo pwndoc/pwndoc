@@ -288,7 +288,7 @@
     </q-card>
 </q-dialog>
 
-<q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" persistent @hide="cleanCurrentVulnerability()">
+<q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="UserService.isAllowed('vulnerabilities:update')" @hide="cleanCurrentVulnerability()">
     <q-card style="width: 50vw">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
