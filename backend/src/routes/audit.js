@@ -5,16 +5,19 @@ module.exports = function(app, io) {
     var acl = require('../lib/auth').acl;
     var reportGenerator = require('../lib/report-generator');
     var _ = require('lodash');
+    var utils = require('../lib/utils');
 
     /* ### AUDITS LIST ### */
 
     // Get audits list of user (all for admin) with regex filter on findings
     app.get("/api/audits", acl.hasPermission('audits:read'), function(req, res) {
         var filters = {};
-        if (req.query.findingTitle) filters['findings.title'] = new RegExp(req.query.findingTitle, 'i')
-            Audit.getAudits(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.decodedToken.id, filters)
-            .then(msg => Response.Ok(res, msg))
-            .catch(err => Response.Internal(res, err))
+        if (req.query.findingTitle) 
+            filters['findings.title'] = new RegExp(utils.escapeRegex(req.query.findingTitle), 'i')
+            
+        Audit.getAudits(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.decodedToken.id, filters)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
     });
 
     // Create audit with name, template, language and username provided
