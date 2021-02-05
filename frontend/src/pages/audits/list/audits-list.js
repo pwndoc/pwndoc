@@ -6,12 +6,16 @@ import AuditService from '@/services/audit'
 import DataService from '@/services/data'
 import TemplateService from '@/services/template'
 import CompanyService from '@/services/company'
+import UserService from '@/services/user'
 
 export default {
     data: () => {
         return {
+            UserService: UserService,
             // Audits list
             audits: [],
+            // Loading state
+            loading: true,
             // Templates list
             templates: [],
             // Companies list
@@ -30,12 +34,19 @@ export default {
             // Datatable pagination
             pagination: {
                 page: 1,
-                rowsPerPage: 20,
+                rowsPerPage: 25,
                 sortBy: 'date',
                 descending: true
             },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
             // Search filter
-            search: {finding: ''},
+            search: {finding: '', name: '', language: '', company: '', users: '', date: ''},
+            myAudits: false,
             // Errors messages
             errors: {name: '', language: '', template: ''},
             // Selected or New Audit
@@ -89,9 +100,11 @@ export default {
         },
 
         getAudits: function() {
+            this.loading = true
             AuditService.getAudits({findingTitle: this.search.finding})
             .then((data) => {
                 this.audits = data.data.datas
+                this.loading = false
             })
             .catch((err) => {
                 console.log(err)
@@ -234,28 +247,35 @@ export default {
         },
 
         customFilter: function(rows, terms, cols, getCellValue) {
+            var username = this.UserService.user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+
             return rows && rows.filter(row => {
-                var auditName = (row.name)? row.name.toLowerCase(): "";
-                var auditTerm = (terms.name)? terms.name.toLowerCase(): "";
+                var name = (row.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
-                var language = (row.language)? this.convertLocale(row.language).toLowerCase(): "";
-                var languageTerm = (terms.language)? terms.language.toLowerCase(): "";
+                var language = (row.language)? this.convertLocale(row.language).toLowerCase(): ""
+                var languageTerm = (terms.language)? terms.language.toLowerCase(): ""
 
-                var companyName = (row.company)? row.company.name.toLowerCase(): "";
-                var companyTerm = (terms.company)? terms.company.toLowerCase(): "";
+                var companyName = (row.company)? row.company.name.toLowerCase(): ""
+                var companyTerm = (terms.company)? terms.company.toLowerCase(): ""
 
-                var users = this.convertParticipants(row).toLowerCase();
-                var usersTerm = (terms.users)? terms.users.toLowerCase(): "";
+                var users = this.convertParticipants(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                var usersTerm = (terms.users || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
-                var dateName = (row.createdAt)? row.createdAt.split('T')[0]: "";
+                var date = (row.createdAt)? row.createdAt.split('T')[0]: "";
                 var dateTerm = (terms.date)? terms.date.toLowerCase(): ""
 
-                return auditName.indexOf(auditTerm) > -1 &&
+                return name.indexOf(nameTerm) > -1 &&
                     language.indexOf(languageTerm) > -1 &&
                     companyName.indexOf(companyTerm) > -1 &&
                     users.indexOf(usersTerm) > -1 &&
-                    dateName.indexOf(dateTerm) > -1
+                    date.indexOf(dateTerm) > -1 &&
+                    ((this.myAudits && users.indexOf(username) > -1) || !this.myAudits)
             })
+        },
+
+        dblClick: function(evt, row) {
+            this.$router.push('/audits/'+row._id)      
         }
     }
 }

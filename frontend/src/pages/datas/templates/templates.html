@@ -2,33 +2,50 @@
 <div class="row">
     <div class="col-md-10 offset-md-1 q-mt-md">
         <q-table
+            class="sticky-header-table"
             :columns="dtHeaders"
             :data="templates"
             :filter="search"
+            :filter-method="customFilter"
             :pagination.sync="pagination"
             row-key="name"
-            style="background-color: white"
+            :loading="loading"
+            @row-dblclick="dblClick"
         >
-            <div slot="top-left" slot-scope="props">
-                <q-input
-                style="width: 300px"
-                color="secondary"
-                label="Search"
-                clearable
-                autofocus
-                v-model="search"
-                />
-            </div>
-
-            <div slot="top-right" slot-scope="props" v-if="UserService.isAllowed('templates:create')">
+            <template v-slot:top>
+                <q-space />
                 <q-btn 
                 unelevated
                 label="Create Template"
                 color="secondary" 
                 no-caps
                 @click="cleanCurrentTemplate; $refs.createModal.show()"
-                />          
-            </div>
+                />     
+            </template>
+
+            <template v-slot:top-row="props">
+                <q-tr>
+                    <q-td style="width: 50%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.name"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td style="width: 50%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.ext"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td></q-td>
+                </q-tr>
+            </template>
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                 <q-btn v-if="UserService.isAllowed('templates:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
@@ -41,16 +58,25 @@
                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
                 </q-btn>
             </q-td>
-
-            <div slot="bottom" slot-scope="props" class="row fit">
-                <div class="q-table-control">
-                    <span v-if="templates.length === 1">1 Template</span>                
-                    <span v-else>{{templates.length}} Templates</span>                
-                </div>
-                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
-                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
-                </div>
-            </div>    
+            
+            <template v-slot:bottom="scope">
+                <span v-if="templates.length === 1">1 Template</span>                
+                <span v-else>{{templates.length}} Templates</span>     
+                <q-space />
+                <span>Results per page:</span>
+                <q-select
+                class="q-px-md"
+                v-model="pagination.rowsPerPage"
+                :options="rowsPerPageOptions"
+                emit-value
+                map-options
+                dense
+                options-dense
+                options-cover
+                borderless
+                />
+                <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />            
+            </template> 
     
         </q-table>
     </div>

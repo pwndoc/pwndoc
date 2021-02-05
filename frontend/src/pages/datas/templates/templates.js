@@ -4,6 +4,7 @@ import Breadcrumb from 'components/breadcrumb'
 
 import TemplateService from '@/services/template'
 import UserService from '@/services/user'
+import Utils from '@/services/utils'
 
 export default {
     data: () => {
@@ -11,6 +12,8 @@ export default {
             UserService: UserService,
             // Templates list
             templates: [],
+            // Loading state
+            loading: true,
             // Datatable headers
             dtHeaders: [
                 {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
@@ -20,11 +23,18 @@ export default {
             // Datatable pagination
             pagination: {
                 page: 1,
-                rowsPerPage: 20,
+                rowsPerPage: 25,
                 sortBy: 'name'
             },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
             // Search filter
-            search: '',
+            search: {name: '', ext: ''},
+            customFilter: Utils.customFilter,
             // Errors messages
             errors: {name: '', file: ''},
             // Selected or New Vulnerability
@@ -47,9 +57,11 @@ export default {
 
     methods: {
         getTemplates: function() {
+            this.loading = true
             TemplateService.getTemplates()
             .then((data) => {
                 this.templates = data.data.datas
+                this.loading = false
             })
             .catch((err) => {
                 console.log(err)
@@ -200,6 +212,13 @@ export default {
 
             this.currentTemplate.ext = file.name.split('.').pop()
             fileReader.readAsDataURL(file);
+        },
+
+        dblClick: function(evt, row) {
+            if (this.UserService.isAllowed('templates:update')) {
+                this.clone(row)
+                this.$refs.editModal.show()
+            }     
         }
     }
 }
