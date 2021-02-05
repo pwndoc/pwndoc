@@ -5,6 +5,7 @@
     </div>
     <div v-else class="col-8 offset-2 q-mt-md">
         <q-table
+            class="sticky-header-table"
             :columns="dtHeaders"
             :data="computedVulnerabilities"
             :filter="search"
@@ -12,7 +13,9 @@
             :pagination.sync="pagination"
             :sort-method="customSort"
             separator="none"
-            row-key="name"
+            row-key="_id"
+            :loading="loading"
+            @row-dblclick="dblClick"
         >
             <template v-slot:top>
                 <q-select 
@@ -100,7 +103,7 @@
             </template>
 
             <template v-slot:body="props">
-                <q-tr v-if="getDtTitle(props.row) !== 'Not defined for this language yet'" :props="props" :class="(props.row.status === 1)?'bg-light-blue-2':(props.row.status === 2)?'bg-orange-2':''">
+                <q-tr @dblclick="dblClick(props.row)" v-if="getDtTitle(props.row) !== 'Not defined for this language yet'" :props="props" :class="(props.row.status === 1)?'bg-light-blue-2':(props.row.status === 2)?'bg-orange-2':''">
                     <q-td key="title" :props="props">
                         {{getDtTitle(props.row)}}
                     </q-td>
@@ -125,17 +128,26 @@
                         </q-btn>
                     </q-td>
                 </q-tr>
-            </template>
-
-            <div slot="bottom" slot-scope="props" class="row fit">
-                <div class="q-table-control">
-                    <span v-if="computedVulnerabilities.length === 1">{{filteredRowsCount}} / 1 Vulnerability (Total: {{vulnerabilities.length}})</span>                
-                    <span v-else>{{filteredRowsCount}} / {{computedVulnerabilities.length}} Vulnerabilities (Total: {{vulnerabilities.length}})</span>                
-                </div>
-                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
-                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
-                </div>
-            </div>    
+            </template>          
+            
+            <template v-slot:bottom="scope">
+                <span v-if="computedVulnerabilities.length === 1">{{filteredRowsCount}} / 1 Vulnerability (Total: {{vulnerabilities.length}})</span>                
+                <span v-else>{{filteredRowsCount}} / {{computedVulnerabilities.length}} Vulnerabilities (Total: {{vulnerabilities.length}})</span>    
+                <q-space />
+                <span>Results per page:</span>
+                <q-select
+                class="q-px-md"
+                v-model="pagination.rowsPerPage"
+                :options="rowsPerPageOptions"
+                emit-value
+                map-options
+                dense
+                options-dense
+                options-cover
+                borderless
+                />
+                <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />            
+            </template> 
     
         </q-table>
     </div>

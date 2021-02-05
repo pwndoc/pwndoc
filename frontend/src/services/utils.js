@@ -1,3 +1,5 @@
+var _ = require('lodash')
+
 export default {
   htmlEncode(html) {
     if(typeof(html) !== "string")  return "";
@@ -88,5 +90,19 @@ export default {
           resolve(result)
       }
     })
+  },
+
+  customFilter: function(rows, terms) {
+    var result = rows && rows.filter(row => {
+        for (const [key, value] of Object.entries(terms)) { // for each search term
+          var searchString = (_.get(row, key) || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          var termString = (value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          if (searchString.indexOf(termString) < 0) {
+              return false
+          }
+        }
+        return true
+    })
+    return result
   }
 }

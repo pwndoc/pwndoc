@@ -14,6 +14,8 @@ export default {
             UserService: UserService,
             // Vulnerabilities list
             vulnerabilities: [],
+            // Loading state
+            loading: true,
             // Datatable headers
             dtHeaders: [
                 {name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true},
@@ -24,9 +26,15 @@ export default {
             // Datatable pagination
             pagination: {
                 page: 1,
-                rowsPerPage: 20,
+                rowsPerPage: 25,
                 sortBy: 'title'
             },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
             filteredRowsCount: 0,
             // Vulnerabilities languages
             languages: [],
@@ -168,9 +176,11 @@ export default {
         },
 
         getVulnerabilities: function() {
+            this.loading = true
             VulnerabilityService.getVulnerabilities()
             .then((data) => {
                 this.vulnerabilities = data.data.datas
+                this.loading = false
             })
             .catch((err) => {
                 console.log(err)
@@ -462,10 +472,10 @@ export default {
 
         customFilter: function(rows, terms, cols, getCellValue) {
             var result = rows && rows.filter(row => {
-                var title = this.getDtTitle(row).toLowerCase()
+                var title = this.getDtTitle(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var type = this.getDtType(row).toLowerCase()
                 var category = (row.category || "No Category").toLowerCase()
-                var termTitle = (terms.title || "").toLowerCase()
+                var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.type || "").toLowerCase()
                 return title.indexOf(termTitle) > -1 && 
@@ -508,6 +518,14 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        dblClick: function(row) {
+            this.clone(row)
+            if (this.UserService.isAllowed('vulnerabilities:update') && row.status === 2)
+                this.$refs.updatesModal.show()
+            else
+                this.$refs.editModal.show()
         }
     }
 }

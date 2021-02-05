@@ -6,8 +6,9 @@
     <div v-if="templates.length === 0" class="col-md-4 offset-md-4 q-mt-md">
         <p>No templates are defined. </br> Please create Templates in <a href="/datas/templates">Datas -> Templates</a></p>
     </div>
-    <div v-else class="col-md-8 offset-md-2 q-mt-md">
+    <div v-if="languages.length > 0 && templates.length > 0" class="col-md-8 offset-md-2 q-mt-md">
         <q-table
+            class="sticky-header-table"
             :columns="dtHeaders"
             :data="audits"
             :filter="search"
@@ -15,6 +16,8 @@
             :pagination.sync="pagination"
             row-key="_id"
             separator="none"
+            :loading="loading"
+            @row-dblclick="dblClick"
         >
             <template v-slot:top>
                 <q-input
@@ -30,6 +33,7 @@
                         <q-icon v-if="search.finding" name="cancel" @click.stop="search.finding = null; getAudits()" class="cursor-pointer" />
                     </template>
                 </q-input>
+                <q-toggle label="My Audits" v-model="myAudits" />
                 <q-space />
                 <q-btn 
                 color="secondary"
@@ -59,6 +63,7 @@
                        <div v-else-if="col.name === 'company'">
                            <q-select
                             dense 
+                            color="secondary"
                             label="Search..." 
                             :options="companies"
                             v-model="search.company"
@@ -73,12 +78,13 @@
                        <div v-else-if="col.name === 'language'">
                            <q-select 
                            dense
+                           color="secondary"
                            label="Search..."
                            :options="languages"
                            v-model="search.language"
-                           option-value="language"
+                           option-value="locale"
                            option-label="language"
-                           map-options 
+                           map-options
                            emit-value
                            clearable
                            options-sanitize
@@ -106,16 +112,24 @@
                 </q-btn>
             </q-td>
 
-            <div slot="bottom" slot-scope="props" class="row fit">
-                <div class="q-table-control">
-                    <span v-if="audits.length === 1">1 Audit</span>                
-                    <span v-else>{{audits.length}} Audits</span>                
-                </div>
-                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
-                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
-                </div>
-            </div>    
-    
+            <template v-slot:bottom="scope">
+                <span v-if="audits.length === 1">1 Audit</span>                
+                <span v-else>{{audits.length}} Audits</span> 
+                <q-space />
+                <span>Results per page:</span>
+                <q-select
+                class="q-px-md"
+                v-model="pagination.rowsPerPage"
+                :options="rowsPerPageOptions"
+                emit-value
+                map-options
+                dense
+                options-dense
+                options-cover
+                borderless
+                />
+                <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />            
+            </template>
         </q-table>
     </div>
 </div>
