@@ -1,5 +1,6 @@
 - [Installation](installation.md)
 - [Data](data.md)
+- [Roles](roles.md)
 - [Vulnerabilities](vulnerabilities.md)
 - [Audits](audits.md)
 - [Docx Template](docxtemplate.md)

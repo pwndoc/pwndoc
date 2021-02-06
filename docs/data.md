@@ -132,17 +132,34 @@ Vulnerability Categories are used to categorize a Vulnerability. It can add cust
 A Vulnerability Category is defined by:
 
 - Name
-- Fields (after creating the category)
-    - Type: [input = simple string], [text = editor]
-    - Label: displayed value in the GUI (lowercase + strip spaces to use in the docx template)
 
 > Example
 >```
 Name: Nessus Scan
-Fields: 
-    Type: text
-    Label: Nessus Score (nessusscore in the docx template)
 > ```
+
+### Custom Fields
+
+Custom Sections allow to have additionnal Sections in the Audit. They are multilingual.
+
+A Section is defined by:
+
+- Type: [input = simple string], [text = editor]
+- Label: displayed value in the GUI (lowercase + strip spaces to use in the docx template)
+- Display in Vulnerability: Custom Field will be displayed in Vulnerabilities AND Findings
+- Display in Finding: Custom Field will be displayed only in Findings
+- Display for Categories: Custom Field will be displayed only for selected Categories
+
+> Example
+> ```
+Type: input
+Label: Id
+Display in Vulnerability: true
+Display in Finding: false
+Display for Categories: false
+>  
+-> This will display an additional «Id» field in vulnerabilities that will also be displayed in findings
+>```
 
 ### Custom Sections
 
@@ -153,6 +170,7 @@ A Section is defined by:
 - Name
 - Field (used in docx template)
 - Default Text
+- icon
 
 > Example
 > ```
@@ -160,4 +178,5 @@ Name: Cleanup
 Field: cleanup
 Default Text: "This is the cleanup part.
                Here are all elements impacted during the test"
+icon: mdi-broom
 >```

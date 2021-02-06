@@ -55,10 +55,6 @@ The ![Propose Creation / Update in Vulnerability Database](/_images/finding_upd
 
 Saving can be done with the upper right button or by the most acclaimed feature: <kbd>Ctrl</kbd>+<kbd>S</kbd> or <kbd>&#8984;</kbd>+<kbd>S</kbd>
 
-## Executive Summary
-
-Executive Summary of the Audit
-
 ## Custom Sections
 
 Add any Custom Section previously defined in [Custom Data](/data?id=custom-sections).
