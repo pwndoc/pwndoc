@@ -110,6 +110,25 @@ expressions.filters.convertDate = function(input, s) {
     }
 }
 
+// Convert input date with parameter s (full,short): {input | convertDateLocale: 'locale':'style'}
+expressions.filters.convertDateLocale = function(input, locale, style) {
+    var date = new Date(input);
+    if (date != "Invalid Date") {
+        var options = { year: 'numeric', month: 'numeric', day: 'numeric'}
+
+        if (style === "full")
+            options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}
+
+        return date.toLocaleDateString(locale, options)
+       
+    }
+}
+
+// Convert identifier prefix to a user defined prefix: {identifier | changeID: 'PRJ-'}
+expressions.filters.changeID = function (input, prefix) {
+    return input.replace("IDX-", prefix);
+}
+
 // Replace newlines in office XML format: {@input | NewLines}
 expressions.filters.NewLines = function(input) {
     var pre = '<w:p><w:r><w:t>';

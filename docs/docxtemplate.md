@@ -283,6 +283,17 @@ Convert Date to proper format. Must be used on values with date format.
 {date_start | convertDate: 'full'} -> Thursday, October 29, 2020
 >```
 
+### convertDateLocale
+
+Convert Date to proper format using locale. Must be used on values with date format.
+
+> Use in template document
+>```
+// Example with {date_start: '2020-10-29'}
+{date_start | convertDateLocale: 'de-DE':'short'} -> 29.10.2020
+{date_start | convertDateLocale: 'fr':'full'} -> Jeudi 29 Octobre 2020
+>```
+
 ### convertHTML
 
 Convert HTML values to OOXML format. See [HTML values](docxtemplate.md?id=html-values-from-text-editors) for usage.
