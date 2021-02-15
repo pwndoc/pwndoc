@@ -29,8 +29,10 @@ export default {
                 {name: 'company', label: 'Company', field: row => (row.company)?row.company.name:'', align: 'left', sortable: true},
                 {name: 'users', label: 'Participants', align: 'left', sortable: true},
                 {name: 'date', label: 'Date', field: row => row.createdAt.split('T')[0], align: 'left', sortable: true},
+                {name: 'connected', label: '', align: 'left', sortable: false},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
+            visibleColumns: ['name', 'language', 'company', 'users', 'date', 'action'],
             // Datatable pagination
             pagination: {
                 page: 1,
@@ -47,6 +49,7 @@ export default {
             // Search filter
             search: {finding: '', name: '', language: '', company: '', users: '', date: ''},
             myAudits: false,
+            displayConnected: false,
             // Errors messages
             errors: {name: '', language: '', template: ''},
             // Selected or New Audit
@@ -60,6 +63,9 @@ export default {
 
     mounted: function() {
         this.search.finding = this.$route.params.finding;
+
+        if (this.UserService.isAllowed('audits:users-connected'))
+            this.visibleColumns = ['name', 'language', 'company', 'users', 'date', 'connected', 'action']
 
         this.getAudits();
         this.getLanguages();
@@ -270,7 +276,8 @@ export default {
                     companyName.indexOf(companyTerm) > -1 &&
                     users.indexOf(usersTerm) > -1 &&
                     date.indexOf(dateTerm) > -1 &&
-                    ((this.myAudits && users.indexOf(username) > -1) || !this.myAudits)
+                    ((this.myAudits && users.indexOf(username) > -1) || !this.myAudits) &&
+                    ((this.displayConnected && row.connected && row.connected.length > 0) || !this.displayConnected)
             })
         },
 

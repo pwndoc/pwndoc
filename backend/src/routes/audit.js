@@ -11,12 +11,38 @@ module.exports = function(app, io) {
 
     // Get audits list of user (all for admin) with regex filter on findings
     app.get("/api/audits", acl.hasPermission('audits:read'), function(req, res) {
+        var getSockets = function(room) {
+            return Object.entries(io.sockets.adapter.rooms[room] === undefined ? {} : io.sockets.adapter.rooms[room].sockets)
+            .filter(([id, status]) => status) // get status === true
+            .map(([id]) => io.sockets.connected[id])
+          }
+
+        var getUsersRoom = function(room) {
+            return getSockets(room).map(s => s.username)
+        }
+
         var filters = {};
         if (req.query.findingTitle) 
             filters['findings.title'] = new RegExp(utils.escapeRegex(req.query.findingTitle), 'i')
             
         Audit.getAudits(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.decodedToken.id, filters)
-        .then(msg => Response.Ok(res, msg))
+        .then(msg => {
+                var result = []
+                msg.forEach(audit => {
+                    var a = {}
+                    a._id = audit._id
+                    a.name = audit.name
+                    a.language = audit.language
+                    a.creator = audit.creator
+                    a.collaborators = audit.collaborators
+                    a.company = audit.company
+                    a.createdAt = audit.createdAt
+                    if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected'))
+                        a.connected = getUsersRoom(audit._id)
+                    result.push(a)
+                })
+            Response.Ok(res, result)
+        })
         .catch(err => Response.Internal(res, err))
     });
 
