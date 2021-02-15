@@ -2,54 +2,98 @@
 <div class="row">
     <div class="col-md-10 offset-md-1 q-mt-md">
         <q-table
+            class="sticky-header-table"
             :columns="dtHeaders"
             :data="collabs"
             :filter="search"
+            :filter-method="customFilter"
             :pagination.sync="pagination"
             row-key="username"
-            style="background-color: white"
+            :loading="loading"
+            @row-dblclick="dblClick"
         >
-            <div slot="top-left" slot-scope="props">
-                <q-input
-                style="width: 300px"
-                color="secondary"
-                label="Search"
-                autofocus
-                clearable
-                v-model="search"
-                />
-            </div>
-
-            <div slot="top-right" slot-scope="props" v-if="UserService.isAdmin()">
+            <template v-slot:top>
+                <q-space />
                 <q-btn 
                 unelevated
                 label="Add Collaborator" 
                 color="secondary"
                 no-caps
                 @click="cleanCurrentCollab(); $refs.createModal.show()"
-                />          
-            </div>
+                />
+            </template>
+
+            <template v-slot:top-row="props">
+                <q-tr>
+                    <q-td style="width: 25%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.username"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td style="width: 25%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.firstname"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td style="width: 25%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.lastname"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td style="width: 25%">
+                        <q-select 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.role"
+                        clearable
+                        :options="roles"
+                        options-sanitize
+                        />
+                    </q-td>
+                    <q-td></q-td>
+                </q-tr>
+            </template>
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                <div v-if="UserService.isAdmin()">
-                    <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
-                    </q-btn>
-                    <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCollab(props.row)">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
-                    </q-btn>
-                </div>
-            </q-td>
+                <q-btn v-if="UserService.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
+                </q-btn>
+                <q-btn v-if="UserService.isAllowed('users:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCollab(props.row)">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
+                </q-btn>
+            </q-td>  
 
-            <div slot="bottom" slot-scope="props" class="row">
-                <div class="q-table-control">
-                    <span v-if="collabs.length === 1">1 Collaborator</span>                
-                    <span v-else>{{collabs.length}} Collaborators</span>                
-                </div>
-                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
-                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
-                </div>
-            </div>    
+            <template v-slot:bottom="scope">
+                <span v-if="collabs.length === 1">1 Collaborator</span>                
+                <span v-else>{{collabs.length}} Collaborators</span>   
+                <q-space />
+                <span>Results per page:</span>
+                <q-select
+                class="q-px-md"
+                v-model="pagination.rowsPerPage"
+                :options="rowsPerPageOptions"
+                emit-value
+                map-options
+                dense
+                options-dense
+                options-cover
+                borderless
+                />
+                <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />            
+            </template> 
     
         </q-table>
     </div>
@@ -78,16 +122,6 @@
         </q-card-section>
         <q-card-section>
             <q-input
-            label='Lastname *'
-            class="col-md-12"
-            :error="!!errors.lastname"
-            :error-message="errors.lastname"
-            hide-bottom-space
-            @keyup.enter="createCollab()"
-            v-model="currentCollab.lastname" />
-        </q-card-section>
-        <q-card-section>
-            <q-input
             label='Firstname *'
             class="col-md-12"
             :error="!!errors.firstname"
@@ -97,11 +131,21 @@
             v-model="currentCollab.firstname" />
         </q-card-section>  
         <q-card-section>
+            <q-input
+            label='Lastname *'
+            class="col-md-12"
+            :error="!!errors.lastname"
+            :error-message="errors.lastname"
+            hide-bottom-space
+            @keyup.enter="createCollab()"
+            v-model="currentCollab.lastname" />
+        </q-card-section>
+        <q-card-section>
             <q-select
             label="Role *"
             class="col-md-12"
             v-model="currentCollab.role"
-            :options="['user', 'report', 'admin']"
+            :options=roles
             @keyup.enter="createCollab()"
             options-sanitize
             />
@@ -150,16 +194,6 @@
             </q-card-section>
             <q-card-section>
                 <q-input
-                label='Lastname *'
-                class="col-md-12"
-                :error="!!errors.lastname"
-                :error-message="errors.lastname"
-                hide-bottom-space
-                @keyup.enter="updateCollab()"
-                v-model="currentCollab.lastname" />
-            </q-card-section>
-            <q-card-section>
-                <q-input
                 label='Firstname *'
                 class="col-md-12"
                 :error="!!errors.firstname"
@@ -169,11 +203,21 @@
                 v-model="currentCollab.firstname" />
             </q-card-section>  
             <q-card-section>
+                <q-input
+                label='Lastname *'
+                class="col-md-12"
+                :error="!!errors.lastname"
+                :error-message="errors.lastname"
+                hide-bottom-space
+                @keyup.enter="updateCollab()"
+                v-model="currentCollab.lastname" />
+            </q-card-section>
+            <q-card-section>
                 <q-select
                 label="Role *"
                 class="col-md-12"
                 v-model="currentCollab.role"
-                :options="['user', 'report', 'admin']"
+                :options=roles
                 @keyup.enter="updateCollab()"
                 options-sanitize
                 />

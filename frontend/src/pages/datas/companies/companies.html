@@ -2,33 +2,42 @@
 <div class="row">
     <div class="col-md-10 offset-md-1 q-mt-md">
         <q-table
+            class="sticky-header-table"
             :columns="dtHeaders"
             :data="companies"
             :filter="search"
+            :filter-method="customFilter"
             :pagination.sync="pagination"
             row-key="name"
-            style="background-color: white"
+            :loading="loading"
+            @row-dblclick="dblClick"
         >
-            <div slot="top-left" slot-scope="props">
-                <q-input
-                style="width: 300px"
-                color="secondary"
-                label="Search"
-                autofocus
-                clearable
-                v-model="search"
-                />
-            </div>
-
-            <div slot="top-right" slot-scope="props">
+            <template v-slot:top>
+                <q-space />
                 <q-btn 
                 unelevated 
                 label="Add Company"
                 color="secondary" 
                 no-caps
                 @click="cleanCurrentCompany(); $refs.createModal.show()"
-                />         
-            </div>
+                />    
+            </template>
+
+            <template v-slot:top-row="props">
+                <q-tr>
+                    <q-td style="width: 50%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.name"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td></q-td>
+                    <q-td></q-td>
+                </q-tr>
+            </template>
 
             <q-td slot="body-cell-logo" slot-scope="props">
                 <img v-if="props.row.logo" :src="props.row.logo" style="max-height:42px; max-width:42px" />
@@ -43,15 +52,24 @@
                 </q-btn>
             </q-td>
 
-            <div slot="bottom" slot-scope="props" class="row fit">
-                <div class="q-table-control">
-                    <span v-if="companies.length === 1">1 Company</span>                
-                    <span v-else>{{companies.length}} Companies</span>                
-                </div>
-                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
-                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
-                </div>
-            </div>    
+            <template v-slot:bottom="scope">
+                <span v-if="companies.length === 1">1 Company</span>                
+                <span v-else>{{companies.length}} Companies</span>    
+                <q-space />
+                <span>Results per page:</span>
+                <q-select
+                class="q-px-md"
+                v-model="pagination.rowsPerPage"
+                :options="rowsPerPageOptions"
+                emit-value
+                map-options
+                dense
+                options-dense
+                options-cover
+                borderless
+                />
+                <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />            
+            </template> 
     
         </q-table>
     </div>

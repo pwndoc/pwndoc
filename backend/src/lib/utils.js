@@ -31,3 +31,8 @@ function lPad(number) {
     return `${number}`;
 }
 exports.lPad = lPad;
+
+function escapeRegex(regex) {
+    return regex.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+}
+exports.escapeRegex = escapeRegex

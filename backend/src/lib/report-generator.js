@@ -110,6 +110,25 @@ expressions.filters.convertDate = function(input, s) {
     }
 }
 
+// Convert input date with parameter s (full,short): {input | convertDateLocale: 'locale':'style'}
+expressions.filters.convertDateLocale = function(input, locale, style) {
+    var date = new Date(input);
+    if (date != "Invalid Date") {
+        var options = { year: 'numeric', month: 'numeric', day: 'numeric'}
+
+        if (style === "full")
+            options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}
+
+        return date.toLocaleDateString(locale, options)
+       
+    }
+}
+
+// Convert identifier prefix to a user defined prefix: {identifier | changeID: 'PRJ-'}
+expressions.filters.changeID = function (input, prefix) {
+    return input.replace("IDX-", prefix);
+}
+
 // Replace newlines in office XML format: {@input | NewLines}
 expressions.filters.NewLines = function(input) {
     var pre = '<w:p><w:r><w:t>';
@@ -182,11 +201,13 @@ var angularParser = function(tag) {
 // For each finding, add cvssColor, cvssObj and criteria colors parameters
 function cvssHandle(data) {
     // Header title colors
+    var noneColor = "4A86E8"; //blue
     var lowColor = "008000"; //green
     var mediumColor = "f9a009"; //yellow
     var highColor = "fe0000"; //red
     var criticalColor = "212121"; //black
 
+    var cellNoneColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + noneColor + '"/></w:tcPr>';
     var cellLowColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColor+'"/></w:tcPr>';
     var cellMediumColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+mediumColor+'"/></w:tcPr>';
     var cellHighColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+highColor+'"/></w:tcPr>';
@@ -198,7 +219,8 @@ function cvssHandle(data) {
             if (data.findings[i].cvssSeverity === "Low") { data.findings[i].cvssColor = cellLowColor}
             else if (data.findings[i].cvssSeverity === "Medium") { data.findings[i].cvssColor = cellMediumColor}
             else if (data.findings[i].cvssSeverity === "High") { data.findings[i].cvssColor = cellHighColor}
-            else if (data.findings[i].cvssSeverity === "Critical") { data.findings[i].cvssColor = cellCriticalColor};
+            else if (data.findings[i].cvssSeverity === "Critical") { data.findings[i].cvssColor = cellCriticalColor}
+            else { data.findings[i].cvssColor = cellNoneColor} ;
 
             // Convert CVSS string to object in cvssObj parameter
             var cvssObj = cvssStrToObject(data.findings[i].cvssv3);

@@ -269,7 +269,7 @@ export default {
             }
             else if (this.selectedTab === 'details' && !this.detailsTabVisited){
                 Utils.syncEditors(this.$refs)
-                this.findingOrig.remediation = this.finding.poc
+                this.findingOrig.remediation = this.finding.remediation
                 this.detailsTabVisited = true
             }
         },

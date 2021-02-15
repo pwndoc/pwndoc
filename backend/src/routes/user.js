@@ -6,7 +6,7 @@ module.exports = function(app) {
     var utils = require('../lib/utils')
 
     // Check token validity
-    app.get("/api/users/checktoken", acl.hasPermission('users:read'), function(req, res) {
+    app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
         Response.Ok(res, 'Valid token');
     });
 
@@ -41,7 +41,7 @@ module.exports = function(app) {
     });
 
     // Get user self
-    app.get("/api/users/me", acl.hasPermission('users:read'), function(req, res) {
+    app.get("/api/users/me", acl.hasPermission('validtoken'), function(req, res) {
         User.getByUsername(req.decodedToken.username)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
@@ -113,7 +113,7 @@ module.exports = function(app) {
     });
 
     // Update my profile
-    app.put("/api/users/me", acl.hasPermission('users:read'), function(req, res) {
+    app.put("/api/users/me", acl.hasPermission('validtoken'), function(req, res) {
         if (!req.body.currentPassword ||
             (req.body.newPassword && !req.body.confirmPassword) ||
             (req.body.confirmPassword && !req.body.newPassword)) {

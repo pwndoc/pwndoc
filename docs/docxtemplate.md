@@ -51,7 +51,7 @@ To handle images, HTML values with images are converted into an array of text an
 // HTML with images (eg: poc in a finding)
 -> 
 {-w:p poc}{@text | convertHTML}
-                                            {-w:p images}{%images}
+                                            {-w:p images}{%image}
                                     Image 1 - {caption}{/images}{/poc}
 ```
 
@@ -167,18 +167,6 @@ Network Scan:
 {/hosts}{/scope}
 >```
 
-### summary
-Executive Summary. Array of Objects:
-* **summary[i].text**
-* **summary[i].images** (Array of images in base64)
-
-> Use in template document
->```
-{-w:p summary}{@text | convertHTML}
-                                            {-w:p images}{%images}
-                                    Image 1 - {caption}{/images}{/summary}
->```
-
 ### findings
 List of findings. Array of Objects:
 * **findings[i].title**
@@ -202,8 +190,8 @@ List of findings. Array of Objects:
 Identifier consists on a sequential id for the reported vulnerability pre-pended with 'IDX-'. Ex: IDX-001.
 You can replace the prefix by using the filter ```changeID```
 
-Additional fields specific to the Category will also be added to the findings Array. The key will be lowercase + strip sapces of the label.  
-Eg. if Category label is `Aggravating Factors` it will be added to the array as `findings[i].aggravatingfactors`.
+Additional fields will also be added to the findings Array. The key will be lowercase + strip sapces of the label.  
+Eg. if Custom Field label is `Aggravating Factors` it will be added to the array as `findings[i].aggravatingfactors`.
 
 > Use in template document
 >```
@@ -221,7 +209,7 @@ Affected Scope
 >  
 Description
 {-w:p description}{@text | convertHTML}
-                                            {-w:p images}{%images}
+                                            {-w:p images}{%image}
                                     Image 1 - {caption}{/images}{/description}
 {/findings}
 >```
@@ -235,7 +223,7 @@ Additional Sections can be added to an Audit. They are accessible in the docx te
 // Example with a Cleanup Section: {name: 'Cleanup', field: 'cleanup', text: 'Default text for Cleanup Section'}
 CLEANUP SECTION (or use {cleanup.name} as title)
 {-w:p cleanup.text}{@text | convertHTML}
-                                            {-w:p images}{%images}
+                                            {-w:p images}{%image}
                                     Image 1 - {caption}{/images}{/cleanup.text}
 > ```
 
@@ -293,6 +281,17 @@ Convert Date to proper format. Must be used on values with date format.
 // Example with {date_start: '2020-10-29'}
 {date_start | convertDate: 'short'} -> 10/29/2020
 {date_start | convertDate: 'full'} -> Thursday, October 29, 2020
+>```
+
+### convertDateLocale
+
+Convert Date to proper format using locale. Must be used on values with date format.
+
+> Use in template document
+>```
+// Example with {date_start: '2020-10-29'}
+{date_start | convertDateLocale: 'de-DE':'short'} -> 29.10.2020
+{date_start | convertDateLocale: 'fr':'full'} -> Jeudi 29 Octobre 2020
 >```
 
 ### convertHTML

@@ -3,18 +3,21 @@ import Vue from 'vue'
 
 import ClientService from '@/services/client'
 import CompanyService from '@/services/company'
+import Utils from '@/services/utils'
 
 export default {
     data: () => {
         return {
             // clients list
             clients: [],
+            // Loading state
+            loading: true,
             // Companies list
             companies: [],
             // Datatable headers
             dtHeaders: [
-                {name: 'lastname', label: 'Lastname', field: 'lastname', align: 'left', sortable: true},
                 {name: 'firstname', label: 'Firstname', field: 'firstname', align: 'left', sortable: true},
+                {name: 'lastname', label: 'Lastname', field: 'lastname', align: 'left', sortable: true},
                 {name: 'email', label: 'Email', field: 'email', align: 'left', sortable: true},
                 {name: 'company', label: 'Company', field: row => (row.company)?row.company.name:'', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
@@ -22,11 +25,18 @@ export default {
             // Datatable pagination
             pagination: {
                 page: 1,
-                rowsPerPage: 20,
-                sortBy: 'lastname'
+                rowsPerPage: 25,
+                sortBy: 'firstname'
             },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
             // Search filter
-            search: '',
+            search: {firstname: '', lastname: '', email: '', 'company.name': ''},
+            customFilter: Utils.customFilter,
             // Errors messages
             errors: {lastname: '', firstname: '', email: ''},
             // Selected or New Client
@@ -40,7 +50,7 @@ export default {
                 company: {}
             },
             // Email to identify client to update
-            idUpdate: ''
+            idUpdate: '',
         }
     },
 
@@ -51,9 +61,11 @@ export default {
 
     methods: {
         getClients: function() {
+            this.loading = true
             ClientService.getClients()
             .then((data) => {
                 this.clients = data.data.datas
+                this.loading = false
             })
             .catch((err) => {
                 console.log(err)
@@ -187,6 +199,11 @@ export default {
             this.currentClient.cell = '';            
             this.currentClient.title = '';        
             this.currentClient.company = {name: ''};        
+        },
+
+        dblClick: function(evt, row) {
+            this.clone(row)
+            this.$refs.editModal.show()       
         }
     }
 }

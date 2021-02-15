@@ -42,9 +42,9 @@ API is accessible through https://localhost:8443/api
 
 
 
-## Developpment
+## Development
 
-For developpment purposes, specific docker-compose file can be used in each folder (backend/frontend).
+For development purposes, specific docker-compose file can be used in each folder (backend/frontend).
 
 > *Source code can be modified live and application will automatically reload on changes.*
 
