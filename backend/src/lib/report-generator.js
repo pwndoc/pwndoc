@@ -398,7 +398,7 @@ function splitHTMLParagraphs(data) {
             var src = value.match(/<img.+src="(.*?)"/) || ""
             var alt = value.match(/<img.+alt="(.*?)"/) || ""
             if (src && src.length > 1) src = src[1]
-            if (alt && alt.length > 1) alt = alt[1]
+            if (alt && alt.length > 1) alt = _.unescape(alt[1])
             if (result.length === 0)
                 result.push({text: "", images: []})
             result[result.length-1].images.push({image: src, caption: alt})
