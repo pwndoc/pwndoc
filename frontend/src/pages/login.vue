@@ -1,103 +1,109 @@
 <template>
-<div style="height:100vh;display:flex">
+<div class="login-background" style="height:100vh;display:flex">
     <div v-if="loaded === true" style="margin:auto">
-        <q-banner rounded v-if="errors.alert" class="bg-red-4 text-white">
-            <q-icon name="fa fa-exclamation-circle" />
-            {{errors.alert}}
-        </q-banner>
-        <q-card v-show="init === true" align="center" style="width:350px">
+        <q-card align="center" style="width:350px">
             <q-card-section>
-                PwnDoc Initialization, Register first User
+                <q-img src="statics/pwndoc-logo.png" />
             </q-card-section>
 
-            <q-separator />
-
-            <q-card-section>
-                <q-input
-                label="Username"
-                :error="!!errors.username"
-                :error-message="errors.username"
-                hide-bottom-space
-                v-model="username"
-                autofocus
-                @keyup.enter="initUser()"
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                label="Firstname"
-                :error="!!errors.firstname"
-                :error-message="errors.firstname"
-                hide-bottom-space
-                v-model="firstname"
-                @keyup.enter="initUser()"
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                label="Lastname"
-                :error="!!errors.lastname"
-                :error-message="errors.lastname"
-                hide-bottom-space
-                v-model="lastname"
-                @keyup.enter="initUser()"
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                label="Password"
-                :error="!!errors.password"
-                :error-message="errors.password"
-                hide-bottom-space
-                v-model="password"
-                type="password"
-                @keyup.enter="initUser()"
-                />
+            <q-card-section v-if="errors.alert">
+                <q-banner rounded  class="bg-red-4 text-white">
+                    <q-icon name="fa fa-exclamation-circle" class="q-pr-sm" />
+                    {{errors.alert}}
+                </q-banner>
             </q-card-section>
 
-            <q-separator />
+            <div v-if="init">
+                <q-card-section>
+                    <q-input
+                    label="Username"
+                    stack-label
+                    :error="!!errors.username"
+                    :error-message="errors.username"
+                    hide-bottom-space
+                    v-model="username"
+                    autofocus
+                    for="username"
+                    @keyup.enter="initUser()"
+                    />
+                </q-card-section>
+                <q-card-section>
+                    <q-input
+                    label="Firstname"
+                    stack-label
+                    :error="!!errors.firstname"
+                    :error-message="errors.firstname"
+                    hide-bottom-space
+                    v-model="firstname"
+                    @keyup.enter="initUser()"
+                    />
+                </q-card-section>
+                <q-card-section>
+                    <q-input
+                    label="Lastname"
+                    stack-label
+                    :error="!!errors.lastname"
+                    :error-message="errors.lastname"
+                    hide-bottom-space
+                    v-model="lastname"
+                    @keyup.enter="initUser()"
+                    />
+                </q-card-section>
+                <q-card-section>
+                    <q-input
+                    label="Password"
+                    stack-label
+                    :error="!!errors.password"
+                    :error-message="errors.password"
+                    hide-bottom-space
+                    v-model="password"
+                    type="password"
+                    for="password"
+                    @keyup.enter="initUser()"
+                    />
+                </q-card-section>
+
+                <q-card-section align="center">
+                    <q-btn color="blue" class="full-width" unelevated no-caps @click="initUser()">Register First User</q-btn>
+                </q-card-section>
+            </div>
             
-            <q-card-actions align="center">
-                <q-btn color="secondary" @click="initUser()">Create First User</q-btn>
-            </q-card-actions>
-        </q-card>
-        <q-card v-show="init === false" align="center" style="width:350px">
-            <q-card-section>
-                PwnDoc Login
-            </q-card-section>
+            <div v-else>
 
-            <q-separator />
+                <q-card-section>
+                    <q-input
+                    label="Username"
+                    stack-label
+                    :error="!!errors.username"
+                    :error-message="errors.username"
+                    hide-bottom-space
+                    v-model="username"
+                    autofocus
+                    for="username"
+                    @keyup.enter="getToken()"
+                    >
+                        <template v-slot:prepend><q-icon name="fa fa-user" /></template>
+                    </q-input>
+                </q-card-section>
+                <q-card-section>
+                    <q-input
+                    label="Password"
+                    stack-label
+                    :error="!!errors.password"
+                    :error-message="errors.password"
+                    v-model="password"
+                    for="password"
+                    type="password"
+                    @keyup.enter="getToken()"
+                    >
+                        <template v-slot:prepend><q-icon name="fa fa-key" /></template>
+                    </q-input>
+                </q-card-section>
 
-            <q-card-section>
-                <q-input
-                label="Username"
-                :error="!!errors.username"
-                :error-message="errors.username"
-                v-model="username"
-                autofocus
-                @keyup.enter="getToken()"
-                >
-                    <template v-slot:prepend><q-icon name="fa fa-user" /></template>
-                </q-input>
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                label="Password"
-                :error="!!errors.password"
-                :error-message="errors.password"
-                v-model="password"
-                type="password"
-                @keyup.enter="getToken()"
-                >
-                    <template v-slot:prepend><q-icon name="fa fa-key" /></template>
-                </q-input>
-            </q-card-section>
-
-            <q-separator />
-            
-            <q-card-actions align="center">
-                <q-btn color="secondary" @click="getToken()">Login</q-btn>
-            </q-card-actions>
+                <q-card-section align="center">
+                    <q-btn color="blue" class="full-width" unelevated no-caps @click="getToken()">Login</q-btn>
+                </q-card-section>
+            </div>
         </q-card>
     </div>
 </div>
@@ -175,7 +181,7 @@ export default {
             })
             .catch(err => {
                 console.log(err)
-                this.errors.alert = "Invalid credentials";
+                this.errors.alert = err.response.data.datas;
             })
         },
 
@@ -203,7 +209,7 @@ export default {
 
 <style lang="stylus">
 .login-background {
-    background-color: #e6ecf0;
+    background: linear-gradient(45deg, $blue, transparent)
 }
 
 .loading p {
