@@ -54,7 +54,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('-_id username firstname lastname role');
+        query.select('username firstname lastname role');
         query.exec()
         .then(function(row) {
             if (row)

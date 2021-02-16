@@ -43,7 +43,16 @@ ClientSchema.statics.create = (client, company) => {
         var query = new Client(client);
         query.save(company)
         .then((row) => {
-                resolve(row);
+                resolve({
+                    _id: row._id,
+                    email: row.email,
+                    firstname: row.firstname,
+                    lastname: row.lastname,
+                    title: row.title,
+                    phone: row.phone,
+                    cell: row.cell,
+                    company: row.company
+                });
         })
         .catch((err) => {
             if (err.code === 11000)

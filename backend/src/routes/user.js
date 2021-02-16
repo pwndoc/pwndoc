@@ -133,8 +133,8 @@ module.exports = function(app) {
         // Optionals params
         if (req.body.username) user.username = req.body.username;
         if (req.body.newPassword) user.newPassword = req.body.newPassword;
-        user.firstname = req.body.firstname || null;
-        user.lastname = req.body.lastname || null;
+        if (req.body.firstname) user.firstname = req.body.firstname;
+        if (req.body.lastname) user.lastname = req.body.lastname;
 
         User.updateProfile(req.decodedToken.username, user)
         .then(msg => Response.Ok(res, msg))
@@ -148,8 +148,8 @@ module.exports = function(app) {
         // Optionals params
         if (req.body.username) user.username = req.body.username;
         if (req.body.password) user.password = req.body.password;
-        user.firstname = req.body.firstname || null;
-        user.lastname = req.body.lastname || null;
+        if (req.body.firstname) user.firstname = req.body.firstname;
+        if (req.body.lastname) user.lastname = req.body.lastname;
         if (req.body.role) user.role = req.body.role;
 
         User.updateUser(req.params.id, user)

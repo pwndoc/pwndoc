@@ -34,7 +34,7 @@ module.exports = function(app) {
         .then(data => {
             var fileBuffer = Buffer.from(req.body.file, 'base64');
             fs.writeFileSync(`${__basedir}/../report-templates/${template.name}.${template.ext}`, fileBuffer);
-            Response.Created(res, 'Template created successfully');
+            Response.Created(res, data);
         })
         .catch(err => Response.Internal(res, err))
     });

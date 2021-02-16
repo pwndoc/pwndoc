@@ -13,6 +13,8 @@ module.exports = function(request) {
     })
 
     describe('Template CRUD operations', () => {
+      var template1Id = ""
+      var template2Id = ""
       it('Get templates (no existing templates in db)', async done => {
         var response = await request.get('/api/templates', options)
       
@@ -22,13 +24,16 @@ module.exports = function(request) {
       })
 
       it('Create 2 templates', async done => {
-        var template = {name: "Template 1", filename: "File.docx", file: "VGVzdCB0ZW1wbGF0ZQ=="}
+        var template = {name: "Template 1", ext: 'docx', file: "VGVzdCB0ZW1wbGF0ZQ=="}
         var response = await request.post('/api/templates', template, options)
         expect(response.status).toBe(201)
+        template1Id = response.data.datas._id
 
         template.name = "Template 2"
         var response = await request.post('/api/templates', template, options)
         expect(response.status).toBe(201)
+        template2Id = response.data.datas._id
+
         done()
       })
 
@@ -72,34 +77,23 @@ module.exports = function(request) {
       })
 
       it('Update template with name only', async done => {
-        var response = await request.get('/api/templates', options)
-        expect(response.data.datas).toHaveLength(2)
-        var templateId = response.data.datas[0]._id
         var template = {name: "Template Updated"}
 
-        response = await request.put(`/api/templates/${templateId}`, template, options)
+        var response = await request.put(`/api/templates/${template1Id}`, template, options)
         expect(response.status).toBe(200)
-
-        response = await request.get('/api/templates', options)
-        expect(response.data.datas[0].name).toBe('Template Updated')
         done()
       })
 
       it('Update template with nonexistent ID', async done => {
-        var templateId = 'deadbeefdeadbeefdeadbeef'
         var template = {name: "Template Updated"}
 
-        response = await request.put(`/api/templates/${templateId}`, template, options)
+        var response = await request.put(`/api/templates/deadbeefdeadbeefdeadbeef`, template, options)
         expect(response.status).toBe(404)
         done()
       })
 
       it('Delete template', async done => {
-        var response = await request.get('/api/templates', options)
-        expect(response.data.datas).toHaveLength(2)
-        var templateId = response.data.datas[0]._id
-
-        response = await request.delete(`/api/templates/${templateId}`, options)
+        var response = await request.delete(`/api/templates/${template2Id}`, options)
         expect(response.status).toBe(200)
 
         response = await request.get('/api/templates', options)

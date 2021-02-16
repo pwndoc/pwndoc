@@ -32,7 +32,7 @@ module.exports = function(app) {
         if (req.body.company && req.body.company.name) company = req.body.company.name;
 
         Client.create(client, company)
-        .then(msg => Response.Created(res, 'Client created successfully'))
+        .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
