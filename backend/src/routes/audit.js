@@ -290,6 +290,11 @@ module.exports = function(app, io) {
             var reportDoc = reportGenerator.generateDoc(audit);
             Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
         })
-        .catch(err => Response.Internal(res, err));
+        .catch(err => {
+            if (err.code === "ENOENT")
+                Response.BadParameters(res, 'Template File not found')
+            else
+                Response.Internal(res, err)
+        });
     });
 }
