@@ -260,35 +260,22 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-input
-            label="References (One per line)"
-            stack-label
-            v-model="referencesString"
-            type="textarea"
-            />
+            <textarea-array label="References (One per line)" v-model="currentVulnerability.references" />
         </q-card-section>
 
         <q-expansion-item 
         label="Custom Fields"
         default-opened
         header-class="bg-blue-grey-5 text-white" 
-        expand-icon-class="text-white">
-            <q-card-section 
-            v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" 
-            :key="field.customFieldId"
-            v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)">
-                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
-                    <template v-slot="control">
-                        <basic-editor v-model="field.text" />
-                    </template>
-                </q-field>
-                <q-input
-                v-if="field.fieldType === 'input'"
-                :label='field.label'
-                stack-label
-                v-model="field.text"
-                />
-            </q-card-section>
+        expand-icon-class="text-white"
+        >
+            <custom-fields 
+            ref="customfields" 
+            v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
+            :category="currentVulnerability.category" 
+            custom-element="QCardSection"
+            display="vuln"
+            />
         </q-expansion-item>
 
         <q-separator />
@@ -426,12 +413,7 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-input
-            label="References (One per line)"
-            stack-label
-            v-model="referencesString"
-            type="textarea"
-            />
+            <textarea-array label="References (One per line)" v-model="currentVulnerability.references" />
         </q-card-section>
 
         <q-expansion-item 
@@ -439,22 +421,13 @@
         default-opened
         header-class="bg-blue-grey-5 text-white" 
         expand-icon-class="text-white">
-            <q-card-section 
-            v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" 
-            :key="field.customFieldId"
-            v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)">
-                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
-                    <template v-slot="control">
-                        <basic-editor v-model="field.text" />
-                    </template>
-                </q-field>
-                <q-input
-                v-if="field.fieldType === 'input'"
-                :label='field.label'
-                stack-label
-                v-model="field.text"
-                />
-            </q-card-section>
+            <custom-fields 
+            ref="customfields" 
+            v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
+            :category="currentVulnerability.category" 
+            custom-element="QCardSection"
+            display="vuln"
+            />
         </q-expansion-item>
 
         <q-separator />
@@ -580,12 +553,7 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <q-input
-                        label="References (One per line)"
-                        stack-label
-                        v-model="referencesString"
-                        type="textarea"
-                        />
+                        <textarea-array label="References (One per line)" v-model="currentVulnerability.references" />
                     </q-card-section>
 
                     <q-expansion-item 
@@ -594,23 +562,13 @@
                     header-class="bg-blue-grey-5 text-white" 
                     expand-icon-class="text-white">
                         <div v-if="currentVulnerability.details[currentDetailsIndex].customFields">
-                            <q-card-section 
-                            v-for="field of currentVulnerability.details[currentDetailsIndex].customFields" 
-                            :key="field.label"
-                            v-if="field.displayVuln || field.displayCategory.includes(currentVulnerability.category)"
-                            >
-                                <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
-                                    <template v-slot="control">
-                                        <basic-editor v-model="field.text" />
-                                    </template>
-                                </q-field>
-                                <q-input
-                                v-if="field.fieldType === 'input'"
-                                :label='field.label'
-                                stack-label
-                                v-model="field.text"
-                                />
-                            </q-card-section>
+                            <custom-fields 
+                            ref="customfields" 
+                            v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
+                            :category="currentVulnerability.category" 
+                            custom-element="QCardSection"
+                            display="vuln"
+                            />
                         </div>
                     </q-expansion-item>
 
@@ -767,7 +725,7 @@
                             </q-card-section>
                             <q-card-section>
                                 <q-input
-                                :bg-color="!($_.isEqual(referencesString, update.references.join('\n')))?'red-1':''"
+                                :bg-color="!($_.isEqual(currentVulnerability.references, update.references))?'red-1':''"
                                 label="References (One per line)"
                                 stack-label
                                 :value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"
@@ -807,7 +765,7 @@
                                         stack-label
                                         v-model="field.text"
                                         readonly
-                                        :bg-color="(isTextDiffInCustomFields(field))?'red-1':''"
+                                        :bg-color="(isTextInCustomFields(field))?'red-1':''"
                                         />
                                     </q-card-section>
                                 </div>

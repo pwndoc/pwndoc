@@ -3,6 +3,8 @@ import { Dialog, Notify } from 'quasar';
 import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb'
 import CvssCalculator from 'components/cvsscalculator'
+import TextareaArray from 'components/textarea-array'
+import CustomFields from 'components/custom-fields'
 
 import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
@@ -62,7 +64,6 @@ export default {
             currentUpdate: '',
             currentUpdateLocale: '',
             vulnTypes: [],
-            referencesString: '',
             // Merge languages
             mergeLanguageLeft: '',
             mergeLanguageRight: '',
@@ -79,7 +80,9 @@ export default {
     components: {
         BasicEditor,
         Breadcrumb,
-        CvssCalculator
+        CvssCalculator,
+        TextareaArray,
+        CustomFields
     },
 
     mounted: function() {
@@ -202,7 +205,6 @@ export default {
             if (this.errors.title)
                 return;
 
-            this.currentVulnerability.references = this.referencesString.split('\n').filter(e => e !== '')
             VulnerabilityService.createVulnerabilities([this.currentVulnerability])
             .then(() => {
                 this.getVulnerabilities();
@@ -233,7 +235,6 @@ export default {
             if (this.errors.title)
                 return;
 
-            this.currentVulnerability.references = this.referencesString.split('\n').filter(e => e !== '')
             VulnerabilityService.updateVulnerability(this.vulnerabilityId, this.currentVulnerability)
             .then(() => {
                 this.getVulnerabilities();
@@ -305,9 +306,6 @@ export default {
             this.cleanCurrentVulnerability();
             
             this.currentVulnerability = this.$_.cloneDeep(row)
-            this.referencesString = ""
-            if (this.currentVulnerability.references && this.currentVulnerability.references.length > 0)
-                this.referencesString = this.currentVulnerability.references.join('\n')
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;
@@ -352,7 +350,6 @@ export default {
             else
                 this.currentVulnerability.category = null
 
-            this.referencesString = ''
             this.setCurrentDetails();
         },
 

@@ -470,6 +470,11 @@ export default {
             })
         },
 
+        checkDisplay: function(customField) {
+            if (customField.displayVuln && !customField.displayFinding)
+                customField.displayFinding = true
+        },
+
 /* ===== SECTIONS ===== */
 
         // Get available sections

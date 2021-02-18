@@ -439,8 +439,7 @@
                         <q-card flat bordered v-if="customFields.length > 0">
                             <q-toolbar>
                                 <div class="text-grey-8">
-                                    <span>List of Custom Fields</span><br>
-                                    <i>Display in Vulnerability implies display in Finding</i>
+                                    <span>List of Custom Fields</span>
                                 </div>
                                 
                                 <q-space />
@@ -520,7 +519,10 @@
                     <div v-else class="col-md-6">
                         <q-card flat bordered>
                             <q-toolbar>
-                                <div class="text-grey-8">Edit Custom Fields</div>
+                                <div class="text-grey-8">
+                                    <span>Edit Custom Fields</span><br />
+                                    <i>Display in Vulnerability implies display in Finding</i>
+                                </div>
                            </q-toolbar>
                            <q-separator />
                            <q-card-section>
@@ -549,8 +551,8 @@
                                                 <q-item>
                                                     <q-item-section>
                                                         <div>
-                                                            <q-checkbox v-model="customField.displayVuln" left-label label="Vulnerability" />
-                                                            <q-checkbox v-model="customField.displayFinding" left-label label="Finding" />
+                                                            <q-checkbox v-model="customField.displayVuln" left-label label="Vulnerability" @input="checkDisplay(customField)" />
+                                                            <q-checkbox v-model="customField.displayFinding" left-label label="Finding" @input="checkDisplay(customField)" />
                                                         </div>
                                                     </q-item-section>
                                                     <q-item-section>

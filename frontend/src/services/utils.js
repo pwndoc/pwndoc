@@ -51,11 +51,13 @@ export default {
     return result
   },
 
+  // Update all basic-editor when noSync is necessary for performance (text with images). 
   syncEditors: function(refs) {
-    // Update all basic-editor when noSync is necessary for performance (text with images). 
     Object.keys(refs).forEach(key => {
-        if (key.startsWith('basiceditor_') && refs[key]) // ref must start with 'basiceditor_'
-            (Array.isArray(refs[key]))? refs[key].forEach(elt => elt.updateHTML()) : refs[key].updateHTML()
+      if (key.startsWith('basiceditor_') && refs[key]) // ref must start with 'basiceditor_'
+        (Array.isArray(refs[key]))? refs[key].forEach(elt => elt.updateHTML()) : refs[key].updateHTML()
+      else if (refs[key] && refs[key].$refs) // check for editors in child components
+        this.syncEditors(refs[key].$refs)
     })
   },
 
