@@ -303,6 +303,18 @@ Convert HTML values to OOXML format. See [HTML values](docxtemplate.md?id=html-v
 {@value | convertHTML}
 >```
 
+### sortFindings
+
+Sort findings by supplied field. See [Findings](docxtemplate.md?id=findings) for available fields.
+Order can be 1 for ascending, or -1 for descending
+
+> Use in template document
+>```
+{#findings | sortFindings: 'identifier':1}
+{identifier}
+{/}
+>```
+
 ### count 
 
 Count the number of vulnerabilities by CVSS severity.
