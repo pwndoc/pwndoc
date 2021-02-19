@@ -58,3 +58,45 @@
 .text-pre-wrap {
     white-space: pre-wrap;
 }
+
+.sticky-header-table
+    /* height or max-height is important */
+    max-height: calc(100vh - 82px)
+
+    thead tr:first-child th
+        background-color: white
+        border-bottom: 0
+        // border-bottom: 1px solid rgba(0,0,0,0.12)
+    
+    thead tr:first-child th
+        position: sticky
+        z-index: 1
+        top: 0
+
+    /* this is when the loading indicator appears */
+    &.q-table--loading thead tr:last-child th
+        z-index: 2
+
+    tr
+        cursor: initial !important
+
+.sticky-header-table-addfinding
+    /* height or max-height is important */
+    max-height: calc(100vh - 132px)
+
+    thead tr:first-child th
+        background-color: white
+        border-bottom: 0
+        // border-bottom: 1px solid rgba(0,0,0,0.12)
+    
+    thead tr:first-child th
+        position: sticky
+        z-index: 1
+        top: 0
+
+    /* this is when the loading indicator appears */
+    &.q-table--loading thead tr:last-child th
+        z-index: 2
+
+    tr
+        cursor: initial !important

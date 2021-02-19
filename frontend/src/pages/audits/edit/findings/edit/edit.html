@@ -55,13 +55,7 @@
                                 <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" />
                             </template>
                         </q-field>
-                        <q-input
-                        class="col-md-12"
-                        label="References (One per line)"
-                        stack-label
-                        v-model="referencesString"
-                        type="textarea"
-                        />
+                        <textarea-array class="col-md-12" label="References (One per line)" v-model="finding.references" />
                 </q-card-section>
 
                 <q-expansion-item 
@@ -70,22 +64,14 @@
                 default-opened
                 header-class="bg-blue-grey-5 text-white" 
                 expand-icon-class="text-white">
-                    <q-card-section 
-                    v-for="field of finding.customFields" 
-                    :key="field.label" 
-                    v-if="field.displayFinding || field.displayVuln || (field.displayCategory && field.displayCategory.includes(finding.category))">
-                        <q-field v-if="field.fieldType === 'text'" borderless :label="field.label" stack-label>
-                            <template v-slot="control">
-                                <basic-editor ref="basiceditor_custom" noSync v-model="field.text" />
-                            </template>
-                        </q-field>
-                        <q-input
-                        v-if="field.fieldType === 'input'"
-                        :label='field.label'
-                        stack-label
-                        v-model="field.text"
-                        />
-                    </q-card-section>
+                    <custom-fields 
+                    ref="customfields" 
+                    v-model="finding.customFields" 
+                    :category="finding.category" 
+                    custom-element="QCardSection" 
+                    no-sync-editor
+                    display="finding"
+                    />
                 </q-expansion-item>
 
             </q-card>

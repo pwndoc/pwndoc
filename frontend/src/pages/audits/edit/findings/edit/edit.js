@@ -3,6 +3,8 @@ import { Notify, Dialog } from 'quasar';
 import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
 import CvssCalculator from 'components/cvsscalculator'
+import TextareaArray from 'components/textarea-array'
+import CustomFields from 'components/custom-fields'
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
@@ -18,7 +20,6 @@ export default {
             proofsTabVisited: false,
             detailsTabVisited: false,
             vulnTypes: [],
-            referencesString: "",
             customFields: []
         }
     },
@@ -26,7 +27,9 @@ export default {
     components: {
         BasicEditor,
         Breadcrumb,
-        CvssCalculator
+        CvssCalculator,
+        TextareaArray,
+        CustomFields
     },
 
     mounted: function() {
@@ -119,10 +122,6 @@ export default {
                 this.finding = data.data.datas;
                 if (this.finding.paragraphs.length > 0 && !this.finding.poc)
                     this.finding.poc = this.convertParagraphsToHTML(this.finding.paragraphs)
-                
-                this.referencesString = ""
-                if (this.finding.references && this.finding.references.length > 0)
-                    this.referencesString = this.finding.references.join('\n')
 
                 var cFields = []
                 this.customFields.forEach(field => {
@@ -177,7 +176,6 @@ export default {
         // Update Finding
         updateFinding: function() {
             Utils.syncEditors(this.$refs)
-            this.finding.references = this.referencesString.split('\n').filter(e => e !== '')
             AuditService.updateFinding(this.auditId, this.findingId, this.finding)
             .then(() => {
                 this.findingOrig = this.$_.cloneDeep(this.finding);
@@ -237,7 +235,6 @@ export default {
          // Backup Finding to vulnerability database
         backupFinding: function() {
             Utils.syncEditors(this.$refs)
-            this.finding.references = this.referencesString.split('\n')
             VulnService.backupFinding(this.$parent.audit.language, this.finding)
             .then((data) => {
                 Notify.create({
@@ -269,7 +266,7 @@ export default {
             }
             else if (this.selectedTab === 'details' && !this.detailsTabVisited){
                 Utils.syncEditors(this.$refs)
-                this.findingOrig.remediation = this.finding.poc
+                this.findingOrig.remediation = this.finding.remediation
                 this.detailsTabVisited = true
             }
         },
@@ -283,8 +280,7 @@ export default {
                 return true
             if ((this.finding.observation || this.findingOrig.observation) && this.finding.observation !== this.findingOrig.observation)
                 return true
-            var findingReferences = this.referencesString.split('\n').filter(e => e !== '')
-            if (!this.$_.isEqual(findingReferences, this.finding.references))
+            if (!this.$_.isEqual(this.finding.references, this.findingOrig.references))
                 return true
             if (!this.$_.isEqual(this.finding.customFields, this.findingOrig.customFields))
                 return true

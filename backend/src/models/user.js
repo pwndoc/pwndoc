@@ -4,14 +4,13 @@ var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 
 var auth = require('../lib/auth.js');
-var auditSchema = require('./audit.js').schema;
 
 var UserSchema = new Schema({
     username:       {type: String, unique: true, required: true},
     password:       {type: String, required: true},
     firstname:      {type: String, required: true},
     lastname:       {type: String, required: true},
-    role:           {type: String, enum: ['admin', 'report', 'user'], default: 'user'},
+    role:           {type: String, default: 'user'},
 }, {timestamps: true});
 
 /*
@@ -55,7 +54,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('-_id username firstname lastname role');
+        query.select('username firstname lastname role');
         query.exec()
         .then(function(row) {
             if (row)
@@ -84,10 +83,12 @@ UserSchema.statics.updateProfile = function (username, user) {
                 if (user.lastname) row.lastname = user.lastname;
                 if (user.newPassword) row.password = bcrypt.hashSync(user.newPassword, 10);
 
+                payload.id = row._id;
                 payload.username = row.username;
                 payload.role = row.role;
                 payload.firstname = row.firstname;
                 payload.lastname = row.lastname;
+                payload.roles = auth.acl.getRoles(payload.role)
 
                 return row.save();
             }
@@ -147,6 +148,7 @@ UserSchema.methods.getToken = function () {
                 payload.role = row.role;
                 payload.firstname = row.firstname;
                 payload.lastname = row.lastname;
+                payload.roles = auth.acl.getRoles(payload.role)
 
                 var token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '3 days'});
                 resolve({token: `JWT ${token}`});

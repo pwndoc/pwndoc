@@ -6,7 +6,7 @@ module.exports = function(app) {
     var utils = require('../lib/utils')
 
     // Check token validity
-    app.get("/api/users/checktoken", acl.hasPermission('users:read'), function(req, res) {
+    app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
         Response.Ok(res, 'Valid token');
     });
 
@@ -41,7 +41,7 @@ module.exports = function(app) {
     });
 
     // Get user self
-    app.get("/api/users/me", acl.hasPermission('users:read'), function(req, res) {
+    app.get("/api/users/me", acl.hasPermission('validtoken'), function(req, res) {
         User.getByUsername(req.decodedToken.username)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
@@ -113,7 +113,7 @@ module.exports = function(app) {
     });
 
     // Update my profile
-    app.put("/api/users/me", acl.hasPermission('users:read'), function(req, res) {
+    app.put("/api/users/me", acl.hasPermission('validtoken'), function(req, res) {
         if (!req.body.currentPassword ||
             (req.body.newPassword && !req.body.confirmPassword) ||
             (req.body.confirmPassword && !req.body.newPassword)) {
@@ -133,8 +133,8 @@ module.exports = function(app) {
         // Optionals params
         if (req.body.username) user.username = req.body.username;
         if (req.body.newPassword) user.newPassword = req.body.newPassword;
-        user.firstname = req.body.firstname || null;
-        user.lastname = req.body.lastname || null;
+        if (req.body.firstname) user.firstname = req.body.firstname;
+        if (req.body.lastname) user.lastname = req.body.lastname;
 
         User.updateProfile(req.decodedToken.username, user)
         .then(msg => Response.Ok(res, msg))
@@ -148,8 +148,8 @@ module.exports = function(app) {
         // Optionals params
         if (req.body.username) user.username = req.body.username;
         if (req.body.password) user.password = req.body.password;
-        user.firstname = req.body.firstname || null;
-        user.lastname = req.body.lastname || null;
+        if (req.body.firstname) user.firstname = req.body.firstname;
+        if (req.body.lastname) user.lastname = req.body.lastname;
         if (req.body.role) user.role = req.body.role;
 
         User.updateUser(req.params.id, user)

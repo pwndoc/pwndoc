@@ -47,7 +47,7 @@ TemplateSchema.statics.create = (template) => {
         var query = new Template(template);
         query.save()
         .then((row) => {
-                resolve(row);
+                resolve({_id: row._id, name: row.name, ext: row.ext});
         })
         .catch((err) => {
             if (err.code === 11000)

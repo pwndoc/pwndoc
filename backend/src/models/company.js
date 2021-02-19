@@ -32,7 +32,7 @@ CompanySchema.statics.create = (company) => {
         var query = new Company(company);
         query.save(company)
         .then((row) => {
-                resolve(row);
+                resolve({_id: row._id, name: row.name});
         })
         .catch((err) => {
             if (err.code === 11000)

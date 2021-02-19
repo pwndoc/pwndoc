@@ -2,10 +2,8 @@
   <q-layout ref="layout" view="hHr LpR lFf" class="home-background">
     <q-header>
         <q-toolbar color="primary">
-            <div class="text-h5 q-mr-sm">PwnDoc</div>
+            <img src="statics/pwndoc-logo-white.png" style="max-height:50px;" />
             
-            <q-separator vertical dark spaced />
-
             <q-item to='/audits' active-class="text-green">
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-fingerprint" />

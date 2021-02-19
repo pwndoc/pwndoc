@@ -5,14 +5,15 @@
 <div class="row q-col-gutter-md q-pa-md">
     <div class="col-md-10 offset-md-1">
         <q-table
+        class="sticky-header-table-addfinding"
         :columns="dtVulnHeaders"
         :data="vulnerabilities"
         :filter="search"
         :filter-method="customFilter"
         :pagination.sync="vulnPagination"
         row-key="_id"
-        style="background-color: white"
         separator="none"
+        :loading="loading"
         >
             <template v-slot:top>
                 <q-select 
@@ -111,15 +112,24 @@
                 </q-tr>
             </template>
 
-            <div slot="bottom" slot-scope="props" class="row fit">
-                <div class="q-table-control">
-                    <span v-if="vulnerabilities.length === 1">{{filteredRowsCount}} / 1 Vulnerability</span>                
-                    <span v-else>{{filteredRowsCount}} / {{vulnerabilities.length}} Vulnerabilities</span>                
-                </div>
-                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
-                    <q-pagination input v-model="vulnPagination.page" :max="props.pagesNumber" />            
-                </div>
-            </div>    
+            <template v-slot:bottom="scope">
+                <span v-if="vulnerabilities.length === 1">{{filteredRowsCount}} / 1 Vulnerability</span>                
+                <span v-else>{{filteredRowsCount}} / {{vulnerabilities.length}} Vulnerabilities</span>  
+                <q-space />
+                <span>Results per page:</span>
+                <q-select
+                class="q-px-md"
+                v-model="vulnPagination.rowsPerPage"
+                :options="rowsPerPageOptions"
+                emit-value
+                map-options
+                dense
+                options-dense
+                options-cover
+                borderless
+                />
+                <q-pagination input v-model="vulnPagination.page" :max="scope.pagesNumber" />            
+            </template> 
     
         </q-table>
     </div>

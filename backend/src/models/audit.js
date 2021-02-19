@@ -116,7 +116,7 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             resolve(row)
         })
@@ -164,7 +164,7 @@ AuditSchema.statics.delete = (isAdmin, auditId, userId) => {
         return query.exec()               
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             
             resolve(row)
         })
@@ -193,7 +193,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'});
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'});
 
             var formatScope = row.scope.map(item => {return item.name})
             for (var i=0;i<formatScope.length;i++) {
@@ -216,7 +216,7 @@ AuditSchema.statics.updateGeneral = (isAdmin, auditId, userId, update) => {
         query.exec()
         .then(row => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             
             resolve("Audit General updated successfully")
         })
@@ -236,7 +236,7 @@ AuditSchema.statics.getNetwork = (isAdmin, auditId, userId) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             
             resolve(row)
         })
@@ -255,7 +255,7 @@ AuditSchema.statics.updateNetwork = (isAdmin, auditId, userId, scope) => {
         query.exec()
         .then(row => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             resolve("Audit Network updated successfully")
         })
@@ -280,7 +280,7 @@ AuditSchema.statics.createFinding = (isAdmin, auditId, userId, finding) => {
             return query.exec()
         .then(row => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             resolve("Audit Finding created successfully")
         })
@@ -323,7 +323,7 @@ AuditSchema.statics.getFindings = (isAdmin, auditId, userId) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             resolve(row)
         })
@@ -343,7 +343,7 @@ AuditSchema.statics.getFinding = (isAdmin, auditId, userId, findingId) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             var finding = row.findings.id(findingId)
             if (finding === null) 
@@ -366,7 +366,7 @@ AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFin
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             var finding = row.findings.id(findingId)
             if (finding === null)
@@ -402,7 +402,7 @@ AuditSchema.statics.deleteFinding = (isAdmin, auditId, userId, findingId) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             var finding = row.findings.id(findingId)
             if (finding === null) reject({fn: 'NotFound', message: 'Finding not found'})
@@ -420,45 +420,6 @@ AuditSchema.statics.deleteFinding = (isAdmin, auditId, userId, findingId) => {
     })
 }
 
-// Get audit Summary
-AuditSchema.statics.getSummary = (isAdmin, auditId, userId) => {
-    return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId)
-        if (!isAdmin)
-            query.or([{creator: userId}, {collaborators: userId}])
-        query.select('id summary')
-        query.exec()
-        .then((row) => {
-            if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
-
-            resolve(row)
-        })
-        .catch((err) => {
-            reject(err)
-        })
-    })
-}
-
-// Update audit Summary
-AuditSchema.statics.updateSummary = (isAdmin, auditId, userId, update) => {
-    return new Promise((resolve, reject) => { 
-        var query = Audit.findByIdAndUpdate(auditId, update)
-        if (!isAdmin)
-            query.or([{creator: userId}, {collaborators: userId}])
-        query.exec()
-        .then((row) => {
-            if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
-
-            resolve(row)
-        })
-        .catch((err) => {
-            reject(err)
-        })
-    })
-}
-
 // Create section
 AuditSchema.statics.createSection = (isAdmin, auditId, userId, section) => {
     return new Promise((resolve, reject) => { 
@@ -468,7 +429,7 @@ AuditSchema.statics.createSection = (isAdmin, auditId, userId, section) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found or Section already exists'})
+                throw({fn: 'NotFound', message: 'Audit not found or Section already exists or Insufficient Privileges'})
             
             resolve('Audit Section created successfully')
         })
@@ -488,7 +449,7 @@ AuditSchema.statics.getSection = (isAdmin, auditId, userId, sectionId) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             var section = row.sections.id(sectionId);
             if (section === null) 
@@ -511,7 +472,7 @@ AuditSchema.statics.updateSection = (isAdmin, auditId, userId, sectionId, newSec
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             
             var section = row.sections.id(sectionId)
             if (section === null)
@@ -542,7 +503,7 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
         query.exec()
         .then((row) => {
             if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found'})
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             var section = row.sections.id(sectionId)
             if (section === null) throw({fn: 'NotFound', message: 'Section not found'})
