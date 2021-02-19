@@ -283,6 +283,29 @@ Convert Date to proper format. Must be used on values with date format.
 {date_start | convertDate: 'full'} -> Thursday, October 29, 2020
 >```
 
+### formatDate
+
+format date gives you more control on how to display a date.
+It provides a set of placeholder that can be used for formatting a date value:
+
+%YY   - year (2 digits)
+%YYYY - year (4 digits)
+%M    - month
+%MM   - month (2 digits always)
+%m    - english month description
+%D    - day, 
+%DD   - day (2 digits always)
+%w    - english day of week
+%W    - day of week (number)
+
+You can supply as a parameter a string with the format you want. The placeholder will be replaced by the respective values.
+
+> Use in template document
+// Example with {date_start: '2020-10-29'}
+{date_start | formatDate: '%MM/%DD/%YYYY'} -> 10/29/2020
+{date_start | formatDate: '%w, %m %DD, %YYYY'} -> Thursday, October 29, 2020
+>```
+
 ### convertDateLocale
 
 Convert Date to proper format using locale. Must be used on values with date format.

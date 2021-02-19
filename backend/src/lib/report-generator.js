@@ -92,22 +92,22 @@ exports.generateDoc = generateDoc;
 // *** Angular parser filters ***
 
 // Convert input date with parameter s (full,short): {input | convertDate: 's'}
-expressions.filters.convertDate = function(input, s) {
+expressions.filters.convertDate = function (input, s) {
     var date = new Date(input);
     if (date != "Invalid Date") {
-        var monthsFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        var monthsShort = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
-        var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        var day = date.getUTCDate();
-        var month = date.getUTCMonth();
-        var year = date.getUTCFullYear();
         if (s === "full") {
-            return days[date.getUTCDay()] + ", " + monthsFull[month] + " " + (day<10 ? '0'+day: day) + ", " + year;
+            return utils.formatDate(date, "%w, %m %DD, %YYYY")
         }
         if (s === "short") {
-            return monthsShort[month] + "/" + (day<10 ? '0'+day: day) + "/" + year;
+            return utils.formatDate(date, "%MM/%DD/%YYYY")
         }
     }
+}
+
+expressions.filters.formatDate = function (input, format) {
+    var date = new Date(input);
+    if (date != "Invalid Date")
+        return utils.formatDate(date, format);
 }
 
 // Convert input date with parameter s (full,short): {input | convertDateLocale: 'locale':'style'}

@@ -25,3 +25,37 @@ function escapeRegex(regex) {
     return regex.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
 }
 exports.escapeRegex = escapeRegex
+
+// format accepts any string and will replace the following placeholders:
+// %YY   - year (2 digits)
+// %YYYY - year (4 digits) 
+// %M    - month
+// %MM   - month (2 digits always), 
+// %m    - english month description
+// %D    - day, 
+// %DD   - day (2 digits always) 
+// %w    - english day of week 
+// %W    - day of week (number)
+function formatDate(date, format) {
+    var day = date.getUTCDate();
+    var dayOfWeek = date.getDay();
+    var month = date.getUTCMonth() + 1;
+    var year = date.getUTCFullYear();
+
+    var monthsFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    var formatedDate = format
+        .replace("%YYYY", year)
+        .replace("%YY", year)
+        .replace("%MM", month < 10 ? `0${month}` : month)
+        .replace("%M", month)
+        .replace("%m", monthsFull[month - 1])
+        .replace("%DD", day < 10 ? `0${day}` : day)
+        .replace("%D", day)
+        .replace("%W", dayOfWeek)
+        .replace("%w", days[dayOfWeek]);;
+
+    return formatedDate
+}
+exports.formatDate = formatDate;
