@@ -78,6 +78,15 @@ module.exports = function(app, io) {
         if (req.body.collaborators) update.collaborators = req.body.collaborators;
         if (req.body.language) update.language = req.body.language;
         if (req.body.idPrefix) update.idPrefix = req.body.idPrefix;
+        if (req.body.idStart) {
+            try{
+                update.idStart = parseInt(req.body.idStart);
+            }
+            catch(e){
+                update.idStart = 1;
+            }            
+        }
+
         if (req.body.scope && typeof(req.body.scope === "array")) {
             update.scope = req.body.scope.map(item => {return {name: item}});
         }

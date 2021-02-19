@@ -63,6 +63,7 @@ var AuditSchema = new Schema({
     collaborators:      [{type: Schema.Types.ObjectId, ref: 'User'}],
     language:           {type: String, required: true},
     idPrefix:           {type:String, default: "#"},
+    idStart:            {type: Number, default: 1},
     scope:              [{_id: false, name: String, hosts: [Host]}],
     findings:           [Finding],
     template:           {type: Schema.Types.ObjectId, ref: 'Template'},
@@ -182,7 +183,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
             });
         query.populate('collaborators', 'username firstname lastname')
         query.populate('company')
-        query.select('id name auditType location date date_start date_end client collaborators language scope.name template idPrefix')
+        query.select('id name auditType location date date_start date_end client collaborators language scope.name template idPrefix idStart')
         query.exec()
         .then((row) => {
             if (!row)

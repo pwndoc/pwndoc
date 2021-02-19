@@ -110,8 +110,12 @@
                         <q-select label="Template" v-model="audit.template" :options="templates" option-value="_id" option-label="name"
                             emit-value map-options options-sanitize />
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <q-input label="ID Prefix" v-model="audit.idPrefix" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <q-input label="ID starts at" v-model="audit.idStart" />
                     </div>
                 </div>
             </q-card-section>
