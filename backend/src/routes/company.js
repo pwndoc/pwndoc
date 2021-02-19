@@ -26,7 +26,7 @@ module.exports = function(app) {
         if (req.body.logo) company.logo = req.body.logo;
 
         Company.create(company)
-        .then(msg => Response.Created(res, 'Company created successfully'))
+        .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 

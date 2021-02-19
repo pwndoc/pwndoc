@@ -4,10 +4,13 @@ import BasicEditor from 'components/editor';
 
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
+import UserService from '@/services/user'
 
 export default {
     data: () => {
         return {
+            UserService: UserService,
+
             languages: [],
             newLanguage: {locale: "", language: ""},
             editLanguages: [],
@@ -464,7 +467,7 @@ export default {
                 .catch((err) => {
                     console.log(err)
                     Notify.create({
-                        message: err.response.data.datas.msg,
+                        message: err.response.data.datas.msg || err.response.data.datas,
                         color: 'negative',
                         textColor: 'white',
                         position: 'top-right'
@@ -473,7 +476,10 @@ export default {
             })
         },
 
-        test:function(scope) {console.log(scope)},
+        checkDisplay: function(customField) {
+            if (customField.displayVuln && !customField.displayFinding)
+                customField.displayFinding = true
+        },
 
 /* ===== SECTIONS ===== */
 

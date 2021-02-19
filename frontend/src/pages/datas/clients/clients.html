@@ -2,25 +2,19 @@
 <div class="row">
     <div class="col-md-10 offset-md-1 q-mt-md">
         <q-table
+            class="sticky-header-table"
             :columns="dtHeaders"
             :data="clients"
             :filter="search"
+            :filter-method="customFilter"
             :pagination.sync="pagination"
             row-key="email"
-            style="background-color: white"
+            :loading="loading"
+            @row-dblclick="dblClick"
         >
-            <div slot="top-left" slot-scope="props">
-                <q-input
-                style="width:300px"
-                color="secondary"
-                label="Search"
-                autofocus
-                clearable
-                v-model="search"
-                />
-            </div>
 
-            <div slot="top-right" slot-scope="props">
+            <template v-slot:top>
+                <q-space />
                 <q-btn 
                 unelevated 
                 label="Add Client"
@@ -28,7 +22,55 @@
                 no-caps
                 @click="cleanCurrentClient(); $refs.createModal.show()"
                 />          
-            </div>
+            </template>
+
+            <template v-slot:top-row="props">
+                <q-tr>
+                    <q-td style="width: 25%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.firstname"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td style="width: 25%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.lastname"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td style="width: 25%">
+                        <q-input 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search.email"
+                        clearable
+                        />
+                    </q-td>
+                    <q-td style="width: 25%">
+                        <q-select 
+                        dense
+                        color="secondary"
+                        label="Search..."
+                        v-model="search['company.name']"
+                        clearable
+                        :options="companies"
+                        option-value="name"
+                        option-label="name"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        />
+                    </q-td>
+                    <q-td></q-td>
+                </q-tr>
+            </template>
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                 <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
@@ -39,21 +81,30 @@
                 </q-btn>
             </q-td>
 
-            <div slot="bottom" slot-scope="props" class="row fit">
-                <div class="q-table-control">
-                    <span v-if="clients.length === 1">1 Client</span>                
-                    <span v-else>{{clients.length}} Clients</span>                
-                </div>
-                <div class="q-table-control" style="position: absolute; right: 24px; height: 24px">
-                    <q-pagination input v-model="pagination.page" :max="props.pagesNumber" />            
-                </div>
-            </div>    
+            <template v-slot:bottom="scope">
+                <span v-if="clients.length === 1">1 Client</span>                
+                <span v-else>{{clients.length}} Clients</span>  
+                <q-space />
+                <span>Results per page:</span>
+                <q-select
+                class="q-px-md"
+                v-model="pagination.rowsPerPage"
+                :options="rowsPerPageOptions"
+                emit-value
+                map-options
+                dense
+                options-dense
+                options-cover
+                borderless
+                />
+                <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />            
+            </template> 
     
         </q-table>
     </div>
 </div>
 
-<q-dialog ref="createModal" persistent @hide="cleanErrors()" @show="$refs.lastnameInput.focus()">
+<q-dialog ref="createModal" persistent @hide="cleanErrors()">
     <q-card persistent style="width:800px">
         <q-bar class="bg-primary text-white">
             <span>Add Client</span>
@@ -75,23 +126,23 @@
         </q-card-section>
         <q-card-section>
             <q-input
-            label='Lastname *'
-            :error="!!errors.lastname"
-            :error-message="errors.lastname"
-            hide-bottom-space
-            ref="lastnameInput"
-            @keyup.enter="createClient()"
-            v-model="currentClient.lastname"
-            />
-        </q-card-section>
-        <q-card-section>
-            <q-input
+            autofocus
             label='Firstname *'
             :error="!!errors.firstname"
             :error-message="errors.firstname"
             hide-bottom-space
             @keyup.enter="createClient()"
             v-model="currentClient.firstname" 
+            />
+        </q-card-section>
+        <q-card-section>
+            <q-input
+            label='Lastname *'
+            :error="!!errors.lastname"
+            :error-message="errors.lastname"
+            hide-bottom-space
+            @keyup.enter="createClient()"
+            v-model="currentClient.lastname"
             />
         </q-card-section>
         <q-card-section>
@@ -157,6 +208,16 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                label='Firstname *'
+                :error="!!errors.firstname"
+                :error-message="errors.firstname"
+                hide-bottom-space
+                @keyup.enter="updateClient()"
+                v-model="currentClient.firstname" 
+                />
+            </q-card-section>
+            <q-card-section>
+                <q-input
                 label='Lastname *'
                 :error="!!errors.lastname"
                 :error-message="errors.lastname"
@@ -164,16 +225,6 @@
                 ref="lastnameInput"
                 @keyup.enter="updateClient()"
                 v-model="currentClient.lastname"
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                label='Firstname *'
-                :error="!!errors.firstname"
-                :error-message="errors.firstname"
-                hide-bottom-space
-                @keyup.enter="updateClient()"
-                v-model="currentClient.firstname" 
                 />
             </q-card-section>
             <q-card-section>

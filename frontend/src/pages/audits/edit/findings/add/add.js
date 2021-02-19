@@ -14,6 +14,8 @@ export default {
             findingTitle: '',
             // List of vulnerabilities from knowledge base
             vulnerabilities: [],
+            // Loading state
+            loading: true,
             // Headers for vulnerabilities datatable
             dtVulnHeaders: [
                 {name: 'title', label: 'Title', field: row => row.detail.title, align: 'left', sortable: true},
@@ -24,9 +26,15 @@ export default {
             // Pagination for vulnerabilities datatable
             vulnPagination: {
                 page: 1,
-                rowsPerPage: 20,
+                rowsPerPage: 25,
                 sortBy: 'title'
             },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
             filteredRowsCount: 0,
             // Search filter
             search: {title: '', vulnType: '', category: ''},
@@ -85,9 +93,11 @@ export default {
 
         // Get vulnerabilities by language
         getVulnerabilities: function() {
+            this.loading = true
             VulnService.getVulnByLanguage(this.dtLanguage)
             .then((data) => {
                 this.vulnerabilities = data.data.datas;
+                this.loading = false
             })
             .catch((err) => {
                 console.log(err)
@@ -115,10 +125,10 @@ export default {
 
         customFilter: function(rows, terms, cols, getCellValue) {
             var result = rows && rows.filter(row => {
-                var title = (row.detail.title || "Not defined for this language").toLowerCase()
+                var title = (row.detail.title || "Not defined for this language").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var type = (row.detail.vulnType || "Undefined").toLowerCase()
                 var category = (row.category || "No Category").toLowerCase()
-                var termTitle = (terms.title || "").toLowerCase()
+                var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.vulnType || "").toLowerCase()
                 return title.indexOf(termTitle) > -1 && 

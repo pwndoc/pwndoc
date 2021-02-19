@@ -84,17 +84,7 @@
                         </q-icon>
                     </template>
                 </q-input>
-                <q-select 
-                label="Scope"
-                stack-label
-                v-model="audit.scope"
-                multiple
-                use-chips
-                hide-dropdown-icon
-                use-input
-                new-value-mode="add-unique"
-                options-sanitize
-                />
+                <textarea-array label="Scope (One per line)" v-model="audit.scope" no-empty-line />
                 <q-select 
                 label="Language"
                 v-model="audit.language" 

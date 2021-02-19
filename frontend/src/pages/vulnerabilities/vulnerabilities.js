@@ -3,6 +3,8 @@ import { Dialog, Notify } from 'quasar';
 import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb'
 import CvssCalculator from 'components/cvsscalculator'
+import TextareaArray from 'components/textarea-array'
+import CustomFields from 'components/custom-fields'
 
 import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
@@ -14,6 +16,8 @@ export default {
             UserService: UserService,
             // Vulnerabilities list
             vulnerabilities: [],
+            // Loading state
+            loading: true,
             // Datatable headers
             dtHeaders: [
                 {name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true},
@@ -24,9 +28,15 @@ export default {
             // Datatable pagination
             pagination: {
                 page: 1,
-                rowsPerPage: 20,
+                rowsPerPage: 25,
                 sortBy: 'title'
             },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
             filteredRowsCount: 0,
             // Vulnerabilities languages
             languages: [],
@@ -54,7 +64,6 @@ export default {
             currentUpdate: '',
             currentUpdateLocale: '',
             vulnTypes: [],
-            referencesString: '',
             // Merge languages
             mergeLanguageLeft: '',
             mergeLanguageRight: '',
@@ -71,7 +80,9 @@ export default {
     components: {
         BasicEditor,
         Breadcrumb,
-        CvssCalculator
+        CvssCalculator,
+        TextareaArray,
+        CustomFields
     },
 
     mounted: function() {
@@ -134,11 +145,6 @@ export default {
             })
         },
 
-        // find a custom field by its label name
-        optionsForCustomField: function (label) {
-            return this.customFields.find(f => f.label === label).values
-        },
-
          // Get available custom fields
          getCustomFields: function() {
             DataService.getCustomFields()
@@ -173,12 +179,20 @@ export default {
         },
 
         getVulnerabilities: function() {
+            this.loading = true
             VulnerabilityService.getVulnerabilities()
             .then((data) => {
                 this.vulnerabilities = data.data.datas
+                this.loading = false
             })
             .catch((err) => {
                 console.log(err)
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
             })
         },
 
@@ -191,7 +205,6 @@ export default {
             if (this.errors.title)
                 return;
 
-            this.currentVulnerability.references = this.referencesString.split('\n').filter(e => e !== '')
             VulnerabilityService.createVulnerabilities([this.currentVulnerability])
             .then(() => {
                 this.getVulnerabilities();
@@ -222,7 +235,6 @@ export default {
             if (this.errors.title)
                 return;
 
-            this.currentVulnerability.references = this.referencesString.split('\n').filter(e => e !== '')
             VulnerabilityService.updateVulnerability(this.vulnerabilityId, this.currentVulnerability)
             .then(() => {
                 this.getVulnerabilities();
@@ -294,13 +306,11 @@ export default {
             this.cleanCurrentVulnerability();
             
             this.currentVulnerability = this.$_.cloneDeep(row)
-            this.referencesString = ""
-            if (this.currentVulnerability.references && this.currentVulnerability.references.length > 0)
-                this.referencesString = this.currentVulnerability.references.join('\n')
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;
-            this.getVulnUpdates(this.vulnerabilityId);
+            if (this.UserService.isAllowed('vulnerabilities:update'))
+                this.getVulnUpdates(this.vulnerabilityId);
         },
 
         editChangeCategory: function(category) {
@@ -340,7 +350,6 @@ export default {
             else
                 this.currentVulnerability.category = null
 
-            this.referencesString = ''
             this.setCurrentDetails();
         },
 
@@ -460,10 +469,10 @@ export default {
 
         customFilter: function(rows, terms, cols, getCellValue) {
             var result = rows && rows.filter(row => {
-                var title = this.getDtTitle(row).toLowerCase()
+                var title = this.getDtTitle(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var type = this.getDtType(row).toLowerCase()
                 var category = (row.category || "No Category").toLowerCase()
-                var termTitle = (terms.title || "").toLowerCase()
+                var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.type || "").toLowerCase()
                 return title.indexOf(termTitle) > -1 && 
@@ -506,6 +515,14 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        dblClick: function(row) {
+            this.clone(row)
+            if (this.UserService.isAllowed('vulnerabilities:update') && row.status === 2)
+                this.$refs.updatesModal.show()
+            else
+                this.$refs.editModal.show()
         }
     }
 }

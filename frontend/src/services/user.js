@@ -81,8 +81,8 @@ export default {
         return (this.user !== null);
     },
 
-    isAdmin() {
-        return (this.user && this.user.role && this.user.role === "admin");
+    isAllowed(role) {
+        return (this.user.roles && (this.user.roles.includes(role) || this.user.roles === '*'))
     },
 
     getProfile: function() {

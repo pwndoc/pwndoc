@@ -56,13 +56,7 @@
                                 <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" />
                             </template>
                         </q-field>
-                        <q-input
-                        class="col-md-12"
-                        label="References (One per line)"
-                        stack-label
-                        v-model="referencesString"
-                        type="textarea"
-                        />
+                        <textarea-array class="col-md-12" label="References (One per line)" v-model="finding.references" />
                 </q-card-section>
             </q-card>
         </q-tab-panel>
@@ -139,17 +133,17 @@
     </q-tab-panel>
     <q-tab-panel name="customFields">
         <q-card>
-            <q-card-section v-for="field of finding.customFields" :key="field.label"
-                v-if="field.displayFinding || (field.displayCategory && field.displayCategory.includes(finding.category))">
-                <q-field v-if="field.fieldType === 'Text'" borderless :label="field.label" stack-label>
-                    <template v-slot="control">
-                        <basic-editor ref="basiceditor_custom" noSync v-model="field.text" />
-                    </template>
-                </q-field>
-                <q-input v-if="field.fieldType === 'Input'" :label='field.label' stack-label v-model="field.text" />
-                <q-select v-if="field.fieldType === 'List'" :label="field.label" v-model="field.text"
-                    :options="optionsForCustomField(field.label)" stack-label map-options options-sanitize />
-            </q-card-section>
+            <q-card-section>
+                <custom-fields 
+                    ref="customfields" 
+                    v-model="finding.customFields" 
+                    :category="finding.category" 
+                    custom-element="QCardSection" 
+                    :custom-fields="customFields"
+                    no-sync-editor
+                    display="finding"
+                    />
+           </q-card-section>
         </q-card>
     </q-tab-panel>
     </q-tab-panels>

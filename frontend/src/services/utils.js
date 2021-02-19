@@ -1,3 +1,5 @@
+var _ = require('lodash')
+
 export default {
   htmlEncode(html) {
     if(typeof(html) !== "string")  return "";
@@ -49,11 +51,13 @@ export default {
     return result
   },
 
+  // Update all basic-editor when noSync is necessary for performance (text with images). 
   syncEditors: function(refs) {
-    // Update all basic-editor when noSync is necessary for performance (text with images). 
     Object.keys(refs).forEach(key => {
-        if (key.startsWith('basiceditor_') && refs[key]) // ref must start with 'basiceditor_'
-            (Array.isArray(refs[key]))? refs[key].forEach(elt => elt.updateHTML()) : refs[key].updateHTML()
+      if (key.startsWith('basiceditor_') && refs[key]) // ref must start with 'basiceditor_'
+        (Array.isArray(refs[key]))? refs[key].forEach(elt => elt.updateHTML()) : refs[key].updateHTML()
+      else if (refs[key] && refs[key].$refs) // check for editors in child components
+        this.syncEditors(refs[key].$refs)
     })
   },
 
@@ -88,5 +92,19 @@ export default {
           resolve(result)
       }
     })
+  },
+
+  customFilter: function(rows, terms) {
+    var result = rows && rows.filter(row => {
+        for (const [key, value] of Object.entries(terms)) { // for each search term
+          var searchString = (_.get(row, key) || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          var termString = (value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          if (searchString.indexOf(termString) < 0) {
+              return false
+          }
+        }
+        return true
+    })
+    return result
   }
 }

@@ -2,12 +2,15 @@ import { Dialog, Notify } from 'quasar';
 import Vue from 'vue'
 
 import CompanyService from '@/services/company'
+import Utils from '@/services/utils'
 
 export default {
     data: () => {
         return {
             // Companies list
             companies: [],
+            // Loading state
+            loading: true,
             // Datatable headers
             dtHeaders: [
                 {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
@@ -17,11 +20,18 @@ export default {
             // Datatable pagination
             pagination: {
                 page: 1,
-                rowsPerPage: 20,
+                rowsPerPage: 25,
                 sortBy: 'name'
             },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
             // Search filter
-            search: '',
+            search: {name: ''},
+            customFilter: Utils.customFilter,
             // Errors messages
             errors: {name: ''},
             // Company to create or update
@@ -40,15 +50,17 @@ export default {
 
     methods: {
         getCompanies: function() {
+            this.loading = true
             CompanyService.getCompanies()
             .then((data) => {
                 this.companies = data.data.datas
+                this.loading = false
             })
             .catch((err) => {
                 console.log(err)
             })
         },
-
+            
         createCompany: function() {
             this.cleanErrors();
             if (!this.currentCompany.name)
@@ -164,6 +176,11 @@ export default {
             }
 
             fileReader.readAsDataURL(file);
+        },
+
+        dblClick: function(evt, row) {
+                this.clone(row)
+                this.$refs.editModal.show()       
         }
     }
 }

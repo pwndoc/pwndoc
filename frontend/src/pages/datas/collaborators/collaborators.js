@@ -3,6 +3,8 @@ import Vue from 'vue'
 
 import CollabService from '@/services/collaborator'
 import UserService from '@/services/user'
+import DataService from '@/services/data'
+import Utils from '@/services/utils'
 
 export default {
     data: () => {
@@ -10,22 +12,31 @@ export default {
             UserService: UserService,
             // Collaborators list
             collabs: [],
+            // Loading state
+            loading: true,
             // Datatable headers
             dtHeaders: [
                 {name: 'username', label: 'Username', field: 'username', align: 'left', sortable: true},
-                {name: 'lastname', label: 'Lastname', field: 'lastname', align: 'left', sortable: true},
                 {name: 'firstname', label: 'Firstname', field: 'firstname', align: 'left', sortable: true},
+                {name: 'lastname', label: 'Lastname', field: 'lastname', align: 'left', sortable: true},
                 {name: 'role', label: 'Role', field: 'role', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
             pagination: {
                 page: 1,
-                rowsPerPage: 20,
+                rowsPerPage: 25,
                 sortBy: 'username'
             },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
             // Search filter
-            search: '',
+            search: {username: '', firstname: '', lastname: '', role: ''},
+            customFilter: Utils.customFilter,
             // Errors messages
             errors: {lastname: '', firstname: '', username: ''},
             // Collab to create or update
@@ -36,19 +47,24 @@ export default {
                 role: ''
             },
             // Username to identify collab to update
-            idUpdate: ''
+            idUpdate: '',
+            // List of roles
+            roles: []
         }
     },
 
     mounted: function() {
         this.getCollabs()
+        this.getRoles()
     },
 
     methods: {
         getCollabs: function() {
+            this.loading = true
             CollabService.getCollabs()
             .then((data) => {
                 this.collabs = data.data.datas
+                this.loading = false
             })
             .catch((err) => {
                 console.log(err)
@@ -144,6 +160,16 @@ export default {
             })
         },
 
+        getRoles: function() {
+            DataService.getRoles()
+            .then((data) => {
+                this.roles = data.data.datas
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
         confirmDeleteCollab: function(collab) {
             Dialog.create({
                 title: 'Confirm Suppression',
@@ -172,6 +198,13 @@ export default {
             this.currentCollab.username = '';
             this.currentCollab.role = 'user';
             this.currentCollab.password = '';
+        },
+
+        dblClick: function(evt, row) {
+            if (this.UserService.isAllowed('users:updates')) {
+                this.clone(row)
+                this.$refs.editModal.show()  
+            }     
         }
     }
 }

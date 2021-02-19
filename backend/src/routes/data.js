@@ -12,6 +12,19 @@ module.exports = function(app) {
 
     var _ = require('lodash')
 
+/* ===== ROLES ===== */
+
+    // Get Roles list
+    app.get("/api/data/roles", acl.hasPermission('roles:read'), function(req, res) {
+        try {
+            var result = Object.keys(acl.roles)
+            Response.Ok(res, result)
+        }
+        catch (error) {
+            Response.Internal(res, error)
+        }
+    })
+
 /* ===== LANGUAGES ===== */
 
     // Get languages list

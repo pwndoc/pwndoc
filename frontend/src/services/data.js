@@ -1,6 +1,10 @@
 import Vue from 'vue'
 
 export default {
+    getRoles: function() {
+        return Vue.prototype.$axios.get(`data/roles`)
+    },
+
     getLanguages: function() {
         return Vue.prototype.$axios.get(`data/languages`)
     },

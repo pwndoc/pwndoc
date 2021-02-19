@@ -26,7 +26,12 @@ export default {
                 this.downloadVulnerabilities();
             })
             .catch((err) => {
-                console.log(err)
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor:'white',
+                    position: 'top-right'
+                })
             })
         },
 
@@ -176,8 +181,8 @@ export default {
 
             var res = str
             // Headers (used as bold in Serpico)
-            res = res.replace(/<paragraph><h4>/g, '<b>')
-            res = res.replace(/<\/h4><\/paragraph>/g, '</b>')
+            res = res.replace(/<h4>/g, '<b>')
+            res = res.replace(/<\/h4>/g, '</b>')
             // First level bullets
             res = res.replace(/<paragraph><bullet>/g, '<li><p>')
             res = res.replace(/<\/bullet><\/paragraph>/g, '</p></li>')

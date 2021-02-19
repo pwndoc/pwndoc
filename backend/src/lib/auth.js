@@ -2,6 +2,69 @@
 var jwtSecret = "ASy4FVjsXNLQl09LbieroWsjO5UXjvX5";
 exports.jwtSecret = jwtSecret;
 
+/*  ROLES LOGIC
+
+    role_name: {
+        allows: [],
+        inherits: []
+    }
+    allows: allowed permissions to access | use * for all
+    inherits: inherits other users "allows"
+*/
+
+var builtInRoles = {
+    user: {
+        allows: [
+            // Audits
+            'audits:create',
+            'audits:read',
+            'audits:update',
+            'audits:delete',
+            // Clients
+            'clients:create',
+            'clients:read',
+            'clients:update',
+            'clients:delete',
+            // Companies
+            'companies:create',
+            'companies:read',
+            'companies:update',
+            'companies:delete',
+            // Languages
+            'languages:read',
+            // Audit Types
+            'audit-types:read',
+            // Vulnerability Types
+            'vulnerability-types:read',
+            // Vulnerability Categories
+            'vulnerability-categories:read',
+            // Sections Data
+            'sections:read',
+            // Templates
+            'templates:read',
+            // Users
+            'users:read',
+            // Roles
+            'roles:read',
+            // Vulnerabilities
+            'vulnerabilities:read',
+            'vulnerability-updates:create',
+            // Custom Fields
+            'custom-fields:read'
+        ]
+    },
+    admin: {
+        allows: "*"
+    }
+}
+
+try {
+    var customRoles = require('./roles.json')}
+catch(error) {
+    var customRoles = []
+}
+var roles = {...customRoles, ...builtInRoles}
+
 class ACL {
     constructor(roles) {
         if(typeof roles !== 'object') {
@@ -10,18 +73,13 @@ class ACL {
         this.roles = roles
     }
 
-    isAdmin(role, permission) {
-        return (this.roles[role].admin && 
-            (this.roles[role].admin === "*" || this.roles[role].admin.indexOf(permission) !== -1))
-    }
-
     isAllowed(role, permission) {
         // Check if role exists
-        if(!this.roles[role]) {
+        if(!this.roles[role] && !this.roles['user']) {
             return false
         }
 
-        let $role = this.roles[role]
+        let $role = this.roles[role] || this.roles['user'] // Default to user role in case of inexistant role
         // Check if role is allowed with permission
         if ($role.allows && ($role.allows === "*" || $role.allows.indexOf(permission) !== -1)) {
             return true
@@ -61,8 +119,8 @@ class ACL {
                         Response.Unauthorized(res, 'Invalid token')
                     return
                 }
-
-                if (this.isAllowed(decoded.role, permission)) {
+                
+                if ( permission === "validtoken" || this.isAllowed(decoded.role, permission)) {
                     req.decodedToken = decoded
                     return next()
                 }
@@ -73,65 +131,28 @@ class ACL {
             })
         }
     }
-}
 
-/*  allows: can access route | use * for all
-    admin: can access all data, not only its own (admin access) | use * for all
-    inherits: inherits other users "allows"
-*/
-var roles = {
-    user: {
-        allows: [
-            // Audits
-            'audits:create',
-            'audits:read',
-            'audits:update',
-            'audits:delete',
-            // Clients
-            'clients:create',
-            'clients:read',
-            'clients:update',
-            'clients:delete',
-            // Companies
-            'companies:create',
-            'companies:read',
-            'companies:update',
-            'companies:delete',
-            // Languages
-            'languages:read',
-            // Audit Types
-            'audit-types:read',
-            // Vulnerability Types
-            'vulnerability-types:read',
-            // Vulnerability Categories
-            'vulnerability-categories:read',
-            // Sections Data
-            'sections:read',
-            // Templates
-            'templates:read',
-            // Users
-            'users:read',
-            // Vulnerabilities
-            'vulnerabilities:read',
-            // Custom Fields
-            'custom-fields:read'
-        ]
-    },
-    report: {
-        allows: [
-            
-        ],
-        admin: [
-            // Audits List
-            'audits:read',
-            'audits:update',
-            'audits:delete',
-        ],
-        inherits: ['user']
-    },
-    admin: {
-        allows: "*",
-        admin: "*"
+    buildRoles(role) {
+        var currentRole = this.roles[role] || this.roles['user'] // Default to user role in case of inexistant role
+
+        var result = currentRole.allows || []
+
+        if (currentRole.inherits) {
+            currentRole.inherits.forEach(element => {
+                result = [...new Set([...result, ...this.buildRoles(element)])]
+            })
+        }
+
+        return result
+    }
+
+    getRoles(role) {
+        var result = this.buildRoles(role)
+
+        if (result.includes('*'))
+            return '*'
+        
+        return result
     }
 }
 

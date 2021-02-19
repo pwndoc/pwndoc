@@ -36,6 +36,9 @@ module.exports = function(request) {
     })
 
     describe('Client CRUD operations', () => {
+      var client1Id = ""
+      var client2Id = ""
+      var client3Id = ""
       it('Get clients (no existing clients in db)', async done => {
         var response = await request.get('/api/clients', options)
       
@@ -48,6 +51,7 @@ module.exports = function(request) {
         var client = {email: "client1@example.com"}
         var response = await request.post('/api/clients', client, options)
         expect(response.status).toBe(201)
+        client1Id = response.data.datas._id
         done()
       })
 
@@ -63,6 +67,7 @@ module.exports = function(request) {
         }
         var response = await request.post('/api/clients', client, options)
         expect(response.status).toBe(201)
+        client2Id = response.data.datas._id
         done()
       })
 
@@ -73,6 +78,7 @@ module.exports = function(request) {
         }
         var response = await request.post('/api/clients', client, options)
         expect(response.status).toBe(201)
+        client3Id = response.data.datas._id
         done()
       })
 
@@ -135,24 +141,21 @@ module.exports = function(request) {
           company: {name: 'New Updated Company'}
         }
 
-        response = await request.put(`/api/clients/client1@example.com`, client, options)
+        var response = await request.put(`/api/clients/${client1Id}`, client, options)
         expect(response.status).toBe(200)
-
-        response = await request.get('/api/clients', options)
-        expect(response.data.datas[0].email).toBe('client_updated@example.com')
         done()
       })
 
-      it('Update client with nonexistent email', async done => {
+      it('Update client with nonexistent id', async done => {
         var client = {firstname: "Client"}
 
-        response = await request.put(`/api/clients/nonexistentclient@example.com`, client, options)
+        var response = await request.put(`/api/clients/deadbeefdeadbeefdeadbeef`, client, options)
         expect(response.status).toBe(404)
         done()
       })
 
       it('Delete client', async done => {
-        var response = await request.delete(`/api/clients/client3@example.com`, options)
+        var response = await request.delete(`/api/clients/${client3Id}`, options)
         expect(response.status).toBe(200)
 
         response = await request.get('/api/clients', options)
@@ -161,7 +164,7 @@ module.exports = function(request) {
       })
 
       it('Delete client with nonexistent email', async done => {
-        var response = await request.delete(`/api/clients/nonexistentclient@example.com`, options)
+        var response = await request.delete(`/api/clients/deadbeefdeadbeefdeadbeef`, options)
         expect(response.status).toBe(404)
         done()
       })
