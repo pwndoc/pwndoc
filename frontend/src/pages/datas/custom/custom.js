@@ -10,6 +10,7 @@ export default {
     data: () => {
         return {
             UserService: UserService,
+            Utils: Utils,
 
             languages: [],
             newLanguage: {locale: "", language: ""},
@@ -41,7 +42,9 @@ export default {
             editSections: [],
             editSection: false,
 
-            errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: '', fieldLabel: '', fieldType: ''}
+            errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: '', fieldLabel: '', fieldType: ''},
+
+            selectedTab: "languages",
         }
     },
 
