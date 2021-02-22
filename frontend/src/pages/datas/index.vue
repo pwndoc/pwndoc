@@ -4,7 +4,7 @@
         <q-list class="home-drawer">
             <q-item-label header>Handle Audit Data</q-item-label>
         
-            <q-separator spaced />
+            <q-separator />
         
             <q-item to='/datas/collaborators'>
                 <q-item-section avatar>

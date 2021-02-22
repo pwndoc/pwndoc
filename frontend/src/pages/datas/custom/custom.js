@@ -10,6 +10,7 @@ export default {
     data: () => {
         return {
             UserService: UserService,
+            Utils: Utils,
 
             languages: [],
             newLanguage: {locale: "", language: ""},
