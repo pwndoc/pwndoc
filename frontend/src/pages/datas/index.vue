@@ -2,7 +2,7 @@
 <div>
     <q-drawer side="left" :value="true">
         <q-list class="home-drawer">
-            <q-item-label header>Handle Audit Datas</q-item-label>
+            <q-item-label header>Handle Audit Data</q-item-label>
         
             <q-separator spaced />
         
@@ -37,7 +37,7 @@
                 <q-item-section avatar>
                     <q-icon name="fa fa-table" />
                 </q-item-section>
-                <q-item-section>Custom datas</q-item-section>
+                <q-item-section>Custom data</q-item-section>
             </q-item>
             <q-item to='/datas/dump'>
                 <q-item-section avatar>

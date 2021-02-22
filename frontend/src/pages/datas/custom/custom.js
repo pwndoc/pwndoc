@@ -41,7 +41,9 @@ export default {
             editSections: [],
             editSection: false,
 
-            errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: '', fieldLabel: '', fieldType: ''}
+            errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: '', fieldLabel: '', fieldType: ''},
+
+            selectedTab: "languages",
         }
     },
 
