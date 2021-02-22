@@ -44,11 +44,11 @@ export default {
                     message = `All <strong>${data.data.datas.created}</strong> vulnerabilities created`;
                 }
                 else if (data.data.datas.created === 0 && data.data.datas.duplicates > 0) {
-                    message = `All <strong>${data.data.datas.duplicates}</strong> vulnerabilities title already exist`;
+                    message = `All <strong>${data.data.datas.duplicates.length}</strong> vulnerabilities title already exist`;
                     color = "negative";
                 }
                 else {
-                    message = `<strong>${data.data.datas.created}</strong> vulnerabilities created<br /><strong>${data.data.datas.duplicates}</strong> vulnerabilities title already exist`;
+                    message = `<strong>${data.data.datas.created}</strong> vulnerabilities created<br /><strong>${data.data.datas.duplicates.length}</strong> vulnerabilities title already exist`;
                     color = "orange";
                 }
                 Notify.create({
