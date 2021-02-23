@@ -3,7 +3,7 @@
     <div v-if="loaded === true" style="margin:auto">
         <q-card align="center" style="width:350px">
             <q-card-section>
-                <q-img src="statics/pwndoc-logo.png" />
+                <q-img src="pwndoc-logo.png" />
             </q-card-section>
 
             <q-card-section v-if="errors.alert">

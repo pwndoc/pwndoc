@@ -10,6 +10,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./ssl:/app/ssl
+      - ./public:/app/public
       - ./.postcssrc.js:/app/.postcssrc.js
       - ./babel.config.js:/app/babel.config.js
       - ./quasar.conf.js:/app/quasar.conf.js

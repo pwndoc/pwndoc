@@ -1,7 +1,7 @@
 import { Notify, Dialog } from 'quasar';
 
-import Breadcrumb from 'components/breadcrumb';
 import BasicEditor from 'components/editor';
+import Breadcrumb from 'components/breadcrumb';
 
 import AuditService from '@/services/audit';
 import Utils from '@/services/utils';
