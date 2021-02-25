@@ -398,10 +398,6 @@ export default {
     word-wrap: break-word;
     word-break: break-word;
 
-    * {
-      caret-color: currentColor;
-    }
-
     .ProseMirror {
         min-height: 200px;
         cursor: auto;
@@ -463,6 +459,11 @@ export default {
     img {
       max-width: 100%;
       border-radius: 3px;
+    }
+
+    .selected {
+        outline-style: solid;
+        outline-color: $blue-4;
     }
 
     table {

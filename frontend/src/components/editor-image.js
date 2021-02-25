@@ -1,11 +1,7 @@
-import { Node, Plugin, TextSelection } from "tiptap";
+import { NodeSelection } from "tiptap";
 import { Image as TipTapImage } from 'tiptap-extensions'
 
 export default class CustomImage extends TipTapImage {
-    get name() {
-        return 'image'
-      }
-
     get schema() {
         return {
             attrs: {
@@ -30,59 +26,9 @@ export default class CustomImage extends TipTapImage {
         }
     }
 
-    commands({ type }) {
-        return (attrs) => (state, dispatch) => dispatch(state.tr.replaceSelectionWith(type.create(attrs)))
-      }
-
-    get plugins() {
-        return [
-            new Plugin({
-                props: {
-                    handleDOMEvents: {
-                        drop(view, event) {
-                            const hasFiles = event.dataTransfer
-                            && event.dataTransfer.files
-                            && event.dataTransfer.files.length
-                
-                            if (!hasFiles) {
-                                return
-                            }
-                
-                            const images = Array
-                                .from(event.dataTransfer.files)
-                                .filter(file => (/image/i).test(file.type))
-                
-                            if (images.length === 0) {
-                                return
-                            }
-                
-                            event.preventDefault()
-                
-                            const { schema } = view.state
-                            const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY })
-                
-                            images.forEach(image => {
-                                const reader = new FileReader()
-                
-                                reader.onload = readerEvent => {
-                                const node = schema.nodes.image.create({
-                                    src: readerEvent.target.result,
-                                })
-                                const transaction = view.state.tr.insert(coordinates.pos, node)
-                                view.dispatch(transaction)
-                                }
-                                reader.readAsDataURL(image)
-                            })
-                        },
-                    },
-                },
-            }),
-        ]
-    }
-
   get view() {
     return {
-      props: ["node", "updateAttrs", "view", "getPos"],
+      props: ["node", "updateAttrs", "view", "getPos", "selected"],
       computed: {
         src: {
           get() {
@@ -106,22 +52,23 @@ export default class CustomImage extends TipTapImage {
         }
       },
       methods: {
-        handleKeyup(event) {
-          let {
-            state: { tr }
-          } = this.view;
-          const pos = this.getPos();
-          if (event.key === "Enter") {
-                let textSelection = TextSelection.create(tr.doc, pos + 1)
-                this.view.dispatch(tr.setSelection(textSelection))
-                this.view.focus()
-          }
+        selectImage() {
+          const { state } = this.view
+          let { tr } = state
+          const selection = NodeSelection.create(state.doc, this.getPos())
+          tr = tr.setSelection(selection)
+          this.view.dispatch(tr)
         }
       },
       template: `
-          <figure class="q-py-md" style="margin: auto; display: table; width:600px">
-            <q-img :src="src" style="max-width:600px" />
-            <q-input input-class="text-center" v-model="alt" placeholder="Caption" @keyup="handleKeyup" />
+          <figure style="margin: auto; display: table; width:600px">
+            <q-img :src="src" :class="{'selected': selected}" style="max-width:600px" @click="selectImage" />
+            <div>
+              <q-input input-class="text-center cursor-pointer" readonly borderless dense v-model="alt" placeholder="Caption" />
+              <q-popup-edit v-model="alt" auto-save>
+                <q-input input-class="text-center" autofocus v-model="alt" placeholder="Caption" />
+              </q-popup-edit>
+            </div>
           </figure>
         `
     };
