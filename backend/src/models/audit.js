@@ -380,7 +380,7 @@ AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFin
         })
         .then(() => {
             return Audit
-            .findByIdAndUpdate(auditId, {$push: {findings: {$each: [], $sort: {cvssScore: -1}}}})
+            .findByIdAndUpdate(auditId, {$push: {findings: {$each: [], $sort: {cvssScore: -1, priority: -1}}}})
             .collation({locale: "en_US", numericOrdering: true})
         })
         .then(() => {
