@@ -298,6 +298,17 @@ function prepAuditData(data) {
     result.date = data.date || "undefined"
     result.date_start = data.date_start || "undefined"
     result.date_end = data.date_end || "undefined"
+    if (data.customFields) {
+        data.customFields.forEach(field => {
+            var fieldType = field.customField.fieldType
+            var label = field.customField.label
+
+            if (fieldType === 'input')
+                result[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
+            else if (fieldType === 'text')
+                result[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
+        })
+    }
 
     result.company = {}
     if (data.company) {
@@ -361,9 +372,9 @@ function prepAuditData(data) {
                     var label = field.label
                 }
                 if (fieldType === 'input')
-                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
+                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
                 else if (fieldType === 'text')
-                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = splitHTMLParagraphs(field.text)
+                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = splitHTMLParagraphs(field.text)
             })
         }
         result.findings.push(tmpFinding)

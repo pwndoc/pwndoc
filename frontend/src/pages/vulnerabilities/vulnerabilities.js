@@ -9,6 +9,7 @@ import CustomFields from 'components/custom-fields'
 import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
 import UserService from '@/services/user'
+import Utils from '@/services/utils'
 
 export default {
     data: () => {
@@ -292,6 +293,9 @@ export default {
             VulnerabilityService.getVulnUpdates(vulnId)
             .then((data) => {
                 this.vulnUpdates = data.data.datas;
+                this.vulnUpdates.forEach(vuln => {
+                    vuln.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, vuln.customFields)
+                })
                 if (this.vulnUpdates.length > 0) {
                     this.currentUpdate = this.vulnUpdates[0]._id || null;
                     this.currentLanguage = this.vulnUpdates[0].locale || null;
@@ -363,46 +367,16 @@ export default {
                     vulnType: '',
                     description: '',
                     observation: '',
-                    remediation: ''
+                    remediation: '',
+                    customFields: []
                 }
-                details.customFields = []
-                this.customFields.forEach(field => {
-                    details.customFields.push({
-                        customField: field._id,
-                        label: field.label,
-                        fieldType: field.fieldType,
-                        displayVuln: field.displayVuln,
-                        displayFinding: field.displayFinding,
-                        displayCategory: field.displayCategory,
-                        text: ''
-                    })
-                })
+                details.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, [])
                 
                 this.currentVulnerability.details.push(details)
                 index = this.currentVulnerability.details.length - 1;
             }
             else {
-                var cFields = []
-                this.customFields.forEach(field => {
-                    var fieldText = ''
-                    var vulnFields = this.currentVulnerability.details[index].customFields || []
-                    for (var i=0;i<vulnFields.length; i++) {
-                        if (vulnFields[i].customField === field._id) {
-                            fieldText = vulnFields[i].text
-                            break
-                        }  
-                    }
-                    cFields.push({
-                        customField: field._id,
-                        label: field.label,
-                        fieldType: field.fieldType,
-                        displayVuln: field.displayVuln,
-                        displayFinding: field.displayFinding,
-                        displayCategory: field.displayCategory,
-                        text: fieldText
-                    })
-                })
-                this.currentVulnerability.details[index].customFields = cFields
+                this.currentVulnerability.details[index].customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, this.currentVulnerability.details[index].customFields)
             }
             this.currentDetailsIndex = index;
         },

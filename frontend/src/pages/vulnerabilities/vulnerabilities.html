@@ -424,9 +424,7 @@
             <custom-fields 
             ref="customfields" 
             v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
-            :category="currentVulnerability.category" 
             custom-element="QCardSection"
-            display="vuln"
             />
         </q-expansion-item>
 
@@ -565,9 +563,7 @@
                             <custom-fields 
                             ref="customfields" 
                             v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
-                            :category="currentVulnerability.category" 
                             custom-element="QCardSection"
-                            display="vuln"
                             />
                         </div>
                     </q-expansion-item>
@@ -740,34 +736,12 @@
                             header-class="bg-blue-grey-5 text-white" 
                             expand-icon-class="text-white">
                                 <div v-if="update.customFields">
-                                    <q-card-section 
-                                    v-for="(field,idx) of update.customFields" 
-                                    :key="field.label"
-                                    v-if="field.customField && (field.customField.displayVuln || field.customField.displayCategory.includes(currentVulnerability.category))"
-                                    >
-                                        <q-field 
-                                        v-if="field.customField.fieldType === 'text'" 
-                                        borderless 
-                                        :label="field.customField.label" 
-                                        stack-label
-                                        :class="(isTextInCustomFields(field))?'bg-red-1':''"
-                                        >
-                                            <template v-slot="control">
-                                                <basic-editor 
-                                                v-model="field.text" 
-                                                :diff="getTextDiffInCustomFields(field)"
-                                                :editable=false />
-                                            </template>
-                                        </q-field>
-                                        <q-input
-                                        v-if="field.customField.fieldType === 'input'"
-                                        :label='field.customField.label'
-                                        stack-label
-                                        v-model="field.text"
-                                        readonly
-                                        :bg-color="(isTextInCustomFields(field))?'red-1':''"
-                                        />
-                                    </q-card-section>
+                                    <custom-fields 
+                                    ref="customfields" 
+                                    v-model="update.customFields" 
+                                    custom-element="QCardSection"
+                                    :diff="currentVulnerability.details[currentDetailsIndex].customFields"
+                                    />
                                 </div>
                             </q-expansion-item>
                         </q-tab-panel>

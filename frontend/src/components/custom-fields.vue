@@ -1,27 +1,56 @@
 <template>
-<div>
-    <component :is="customElement" v-for="field of displayFields" :key="field.label">
+<div class="row">
+    <component :is="customElement" v-for="(field,idx) of value" :key="idx" :class="`col-md-${field.customField.size||12} offset-md-${field.customField.offset||0}`">
         <q-field 
-        v-if="field.fieldType === 'text'" 
-        :label="field.label" 
+        :ref="`field-${idx}`"
+        v-if="field.customField.fieldType === 'text'" 
+        label-slot 
         stack-label 
         borderless
+        :class="(isTextInCustomFields(field))?'bg-red-1':''"
+        :hint="field.customField.description"
+        hide-bottom-space
+        :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
+        lazy-rules="ondemand"
+        :value="field.text"
         >
             <template v-slot:control>
                 <basic-editor 
+                v-if="diff"
+                v-model="field.text"
+                :diff="getTextDiffInCustomFields(field)"
+                :editable=false
+                /> 
+                <basic-editor 
+                v-else
                 ref="basiceditor_custom" 
                 v-model="field.text" 
                 :noSync="noSyncEditor"
                 /> 
             </template>
+
+            <template v-slot:label>
+                {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
+            </template>
         </q-field>
 
         <q-input
-        v-if="field.fieldType === 'input'"
-        :label='field.label'
+        :ref="`field-${idx}`"
+        v-if="field.customField.fieldType === 'input'"
+        :label='field.customField.label'
         stack-label
         v-model="field.text"
-        />
+        :readonly="diff !== null"
+        :bg-color="(isTextInCustomFields(field))?'red-1':''"
+        :hint="field.customField.description"
+        hide-bottom-space
+        :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
+        lazy-rules="ondemand"
+        >
+            <template v-slot:label>
+                {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
+            </template>
+        </q-input>
     </component>
 </div>
 </template>
@@ -35,7 +64,6 @@ export default {
     name: 'custom-fields',
     props: {
         value: Array,
-        category: String,
         customElement: {
             type: String,
             default: 'div'
@@ -44,9 +72,9 @@ export default {
             type: Boolean,
             default: false
         },
-        display: { // value should be 'vuln' or 'finding'
-            type: String,
-            default: ''
+        diff: {
+            type: Array,
+            default: null
         }
     },
 
@@ -60,18 +88,35 @@ export default {
         BasicEditor
     },
 
-    computed: {
-        displayFields() {
-            return this.value.filter(field =>
-                (field.displayFinding && this.display === "finding") || 
-                (field.displayVuln && this.display === "vuln") || 
-                (field.displayCategory && field.displayCategory.includes(this.category))
-            )
-        }
-    },
-
     methods: {
-       
+        isTextInCustomFields: function(field) {
+            if (this.diff) {
+                return typeof this.diff.find(f => {
+                    return f.customField._id === field.customField._id && f.text === field.text
+                }) === 'undefined'
+            }
+            return false
+        },
+
+        getTextDiffInCustomFields: function(field) {
+            var result = ''
+            if (this.diff) {
+                this.diff.find(f => {
+                    if (f.customField._id === field.customField._id)
+                        result = f.text
+                })
+            }
+            return result
+        },
+
+        validate: function() {
+            Object.keys(this.$refs).forEach(key => key.startsWith('field') && this.$refs[key][0].validate())
+        },
+
+        requiredFieldsEmpty: function() {
+            this.validate()
+            return this.value.some(e => e.customField.required && !e.text)
+        }
     }
 }
 

@@ -123,27 +123,7 @@ export default {
                 if (this.finding.paragraphs.length > 0 && !this.finding.poc)
                     this.finding.poc = this.convertParagraphsToHTML(this.finding.paragraphs)
 
-                var cFields = []
-                this.customFields.forEach(field => {
-                    var fieldText = ''
-                    var findingFields = this.finding.customFields || []
-                    for (var i=0;i<findingFields.length; i++) {
-                        if (findingFields[i].customField && findingFields[i].customField === field._id) {
-                            fieldText = findingFields[i].text
-                            break
-                        }  
-                    }
-                    cFields.push({
-                        customField: field._id,
-                        label: field.label,
-                        fieldType: field.fieldType,
-                        displayVuln: field.displayVuln,
-                        displayFinding: field.displayFinding,
-                        displayCategory: field.displayCategory,
-                        text: fieldText
-                    })
-                })
-                this.finding.customFields = cFields
+                this.finding.customFields = Utils.filterCustomFields('finding', this.finding.category, this.customFields, this.finding.customFields)
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.findingOrig = this.$_.cloneDeep(this.finding); 
@@ -176,22 +156,34 @@ export default {
         // Update Finding
         updateFinding: function() {
             Utils.syncEditors(this.$refs)
-            AuditService.updateFinding(this.auditId, this.findingId, this.finding)
-            .then(() => {
-                this.findingOrig = this.$_.cloneDeep(this.finding);
-                Notify.create({
-                    message: 'Finding updated successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+            this.$nextTick(() => {
+                if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
+                    Notify.create({
+                        message: 'Please fill all required Fields',
+                        color: 'negative',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
+                    return
+                }
+                
+                AuditService.updateFinding(this.auditId, this.findingId, this.finding)
+                .then(() => {
+                    this.findingOrig = this.$_.cloneDeep(this.finding);
+                    Notify.create({
+                        message: 'Finding updated successfully',
+                        color: 'positive',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor:'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
                 })
             })
         },

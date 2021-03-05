@@ -395,219 +395,193 @@
             <q-tab-panel name="custom-fields">
                 <q-card>
                     <q-card-section>
-                        <div class="text-grey-8">Create Custom Fields for Vulnerabilities and Findings</div>
+                        <div class="text-grey-8">Create and manage Custom Fields for different Views</div>
                     </q-card-section>
-                    <q-card-section class="row">
-                        <div class="col-md-6" v-if="UserService.isAllowed('custom-fields:create')">
+                    <q-card-section>
+                        <q-item>
+                            <q-item-section>
+                                <q-select
+                                label="Select View"
+                                v-model="newCustomField.display"
+                                :options="cfDisplayOptions"
+                                emit-value
+                                map-options
+                                @input="newCustomField.displaySub = ''"
+                                />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-select
+                                v-if="['finding', 'vulnerability'].includes(newCustomField.display)"
+                                label="Select Category"
+                                v-model="newCustomField.displaySub"
+                                :options="vulnCategories"
+                                option-value="name"
+                                option-label="name"
+                                options-sanitize
+                                emit-value
+                                map-options
+                                stack-label
+                                clearable
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item v-if="UserService.isAllowed('custom-fields:create')">
+                            <q-item-section class="col-md-2">
+                                <q-select
+                                ref="select-component"
+                                label="Select Component"
+                                v-model="newCustomField.fieldType"
+                                :options="cfComponentOptions"
+                                emit-value
+                                map-options
+                                :rules="[val => !!val || 'Field is required']"
+                                lazy-rules="ondemand"
+                                hide-bottom-space
+                                />
+                            </q-item-section>
+                            <q-item-section v-if="newCustomField.fieldType !== 'space'">
+                                <q-input
+                                ref="input-label"
+                                label="Label"
+                                v-model="newCustomField.label"
+                                clearable
+                                @keyup.enter="createCustomField"
+                                :rules="[val => !!val || 'Field is required']"
+                                lazy-rules="ondemand"
+                                hide-bottom-space
+                                />
+                            </q-item-section>
+                            <q-item-section v-if="newCustomField.fieldType !== 'space'">
+                                <q-input
+                                label="Description"
+                                v-model="newCustomField.description"
+                                clearable
+                                @keyup.enter="createCustomField"
+                                />
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <q-select
+                                label="Size"
+                                v-model="newCustomField.size"
+                                :options="[1,2,3,4,5,6,7,8,9,10,11,12]"
+                                />
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <q-select
+                                label="Offset"
+                                v-model="newCustomField.offset"
+                                :options="[0,1,2,3,4,5,6,7,8,9,10,11,12]"
+                                />
+                            </q-item-section>
+                            <q-item-section class="col-md-1" v-if="newCustomField.fieldType !== 'space'">
+                                <q-toggle
+                                label="Required"
+                                v-model="newCustomField.required"
+                                left-label
+                                />
+                            </q-item-section>
+                        </q-item>
+                    </q-card-section>
+                    <q-card-section v-if="UserService.isAllowed('custom-fields:create')">
+                        <q-btn color="secondary" class="q-ml-md" unelevated no-caps style="width:100px" label="Add" @click="createCustomField" />
+                    </q-card-section>
+                </q-card>
+
+                <!-- Preview -->
+                <q-card class="q-mt-md" v-if="canDisplayCustomFields()">
+                    <draggable v-model="customFields" group="cfields" handle=".handle" ghost-class="drag-ghost" direction="horizontal" class="row">
+                        <q-card-section v-for="(field,idx) of customFields" :key="idx" :class="`col-md-${field.size||12} offset-md-${field.offset||0}`" v-if="canDisplayCustomField(field)">
                             <q-item>
-                                <q-item-section>
-                                    <q-select
-                                    label="Type"
-                                    v-model="newCustomField.fieldType"
-                                    :options="['input', 'text']"
-                                    :error="!!errors.fieldType"
-                                    :error-message="errors.fieldType"
-                                    options-sanitize
-                                    />
+                                <q-item-section avatar v-if="UserService.isAllowed('custom-fields:update')">
+                                    <q-btn flat color="grey" icon="mdi-arrow-split-horizontal" class="handle" dense size="sm" />
+                                    <q-btn flat color="primary" icon="mdi-pencil" dense size="sm">
+                                        <q-menu content-style="width: 300px" anchor="top left" self="top end">
+                                            <q-item v-if="field.fieldType !== 'space'">
+                                                <q-item-section>
+                                                    <q-input
+                                                    label="Label"
+                                                    v-model="field.label"
+                                                    clearable
+                                                    />
+                                                </q-item-section>
+                                            </q-item>
+                                            <q-item v-if="field.fieldType !== 'space'">
+                                                <q-item-section>
+                                                    <q-input
+                                                    label="Description"
+                                                    v-model="field.description"
+                                                    clearable
+                                                    @clear="field.description = ''"
+                                                    />
+                                                </q-item-section>
+                                            </q-item>
+                                            <q-item>
+                                                <q-item-section>
+                                                    <q-select
+                                                    label="Size"
+                                                    v-model="field.size"
+                                                    :options="[1,2,3,4,5,6,7,8,9,10,11,12]"
+                                                    />
+                                                </q-item-section>
+                                                <q-item-section>
+                                                    <q-select
+                                                    label="Offset"
+                                                    v-model="field.offset"
+                                                    :options="[0,1,2,3,4,5,6,7,8,9,10,11,12]"
+                                                    />
+                                                </q-item-section>
+                                            </q-item>
+                                            <q-item v-if="field.fieldType !== 'space'">
+                                                <q-item-section>
+                                                    <q-toggle
+                                                    label="Required"
+                                                    v-model="field.required"
+                                                    />
+                                                </q-item-section>
+                                            </q-item>
+                                        </q-menu>
+                                    </q-btn>
+                                    <q-btn flat color="red" icon="mdi-delete" dense size="sm" @click="deleteCustomField(field)" />
                                 </q-item-section>
                                 <q-item-section>
+                                    <q-field 
+                                    v-if="field.fieldType === 'text'" 
+                                    label-slot 
+                                    stack-label 
+                                    borderless
+                                    :hint="field.description"
+                                    hide-bottom-space
+                                    >
+                                        <template v-slot:control>
+                                            <basic-editor 
+                                            ref="basiceditor_custom" 
+                                            v-model="field.text" 
+                                            /> 
+                                        </template>
+
+                                        <template v-slot:label>
+                                            {{field.label}} <span v-if="field.required" class="text-red">*</span>
+                                        </template>
+                                    </q-field>
+
                                     <q-input
-                                    label="Label"
-                                    v-model="newCustomField.label"
-                                    clearable
-                                    :error="!!errors.fieldLabel"
-                                    :error-message="errors.fieldLabel"
-                                    @keyup.enter="createCustomField"
-                                    />
-                                </q-item-section>
-                                <q-item-section side>
-                                    <q-btn color="secondary" unelevated label="+" size="md" @click="createCustomField" />
+                                    v-if="field.fieldType === 'input'"
+                                    :label='field.label'
+                                    stack-label
+                                    v-model="field.text"
+                                    :hint="field.description"
+                                    hide-bottom-space
+                                    >
+                                        <template v-slot:label>
+                                            {{field.label}} <span v-if="field.required" class="text-red">*</span>
+                                        </template>
+                                    </q-input>
                                 </q-item-section>
                             </q-item>
-                        </div>
-
-                        <div v-if="!editCustomField" class="col-md-6">
-                            <q-card flat bordered v-if="customFields.length > 0">
-                                <q-toolbar>
-                                    <div class="text-grey-8">
-                                        <span>List of Custom Fields</span>
-                                    </div>
-                                    
-                                    <q-space />
-                                    <q-btn v-if="UserService.isAllowed('custom-fields:update')" flat color="primary" icon="fa fa-edit" @click="editCustomField = true; editCustomFields = $_.cloneDeep(customFields)">
-                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip> 
-                                    </q-btn>
-                                </q-toolbar>
-                                <q-separator />
-                                <q-card-section>
-                                    <q-item v-for="customField of customFields" :key="customField.label">
-                                        <q-item-section>
-                                            <q-list bordered>
-                                                <q-item>
-                                                    <q-item-section>
-                                                        <q-input
-                                                        label="Type"
-                                                        v-model="customField.fieldType"
-                                                        readonly
-                                                        />
-                                                    </q-item-section>
-                                                    <q-item-section>
-                                                        <q-input
-                                                        label="Label"
-                                                        v-model="customField.label"
-                                                        readonly
-                                                        />
-                                                    </q-item-section>
-                                                </q-item>
-                                                <q-item>
-                                                    <q-item-section>
-                                                        <div>
-                                                            <q-checkbox v-model="customField.displayVuln" left-label label="Display in Vulnerability" disable />
-                                                            <q-checkbox v-model="customField.displayFinding" left-label label="Display in Finding" disable />
-                                                        </div>
-                                                    </q-item-section>
-                                                    <q-item-section>
-                                                        <q-select
-                                                        v-model="customField.displayCategory"
-                                                        multiple
-                                                        :options="vulnCategories"
-                                                        option-value="name"
-                                                        option-label="name"
-                                                        options-sanitize
-                                                        emit-value
-                                                        map-options
-                                                        use-chips
-                                                        stack-label
-                                                        label="Display for Categories"
-                                                        readonly
-                                                        >
-                                                            <template v-slot:selected-item="scope">
-                                                                <q-chip
-                                                                readonly
-                                                                dense
-                                                                @remove="scope.removeAtIndex(scope.index)"
-                                                                :tabindex="scope.tabindex"
-                                                                :color="(scope.opt.name)? 'blue-grey-5': 'blue-grey-3'"
-                                                                text-color="white"
-                                                                >
-                                                                    <span v-if="scope.opt.name">
-                                                                        {{scope.opt.name}}
-                                                                    </span>
-                                                                    <span v-else>
-                                                                        {{scope.opt}} (<i>deleted</i>)
-                                                                    </span>
-                                                                </q-chip>
-                                                            </template>
-                                                        </q-select>
-                                                    </q-item-section>
-                                                </q-item>
-                                            </q-list>
-                                        </q-item-section>
-                                    </q-item>
-                                </q-card-section>
-                            </q-card>
-                        </div>
-                        <div v-else class="col-md-6">
-                            <q-card flat bordered>
-                                <q-toolbar>
-                                    <div class="text-grey-8">
-                                        <span>Edit Custom Fields</span><br />
-                                        <i>Display in Vulnerability implies display in Finding</i>
-                                    </div>
-                            </q-toolbar>
-                            <q-separator />
-                            <q-card-section>
-                                    <draggable v-model="editCustomFields" handle=".handle" ghost-class="drag-ghost">
-                                        <q-item v-for="(customField,index) of editCustomFields" :key="index">
-                                            <q-item-section avatar>
-                                                <q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
-                                            </q-item-section>
-                                            <q-item-section>
-                                                <q-list bordered>
-                                                    <q-item>
-                                                        <q-item-section>
-                                                            <q-input
-                                                            label="Type"
-                                                            v-model="customField.fieldType"
-                                                            readonly
-                                                            />
-                                                        </q-item-section>
-                                                        <q-item-section>
-                                                            <q-input
-                                                            label="Label"
-                                                            v-model="customField.label"
-                                                            />
-                                                        </q-item-section>
-                                                    </q-item>
-                                                    <q-item>
-                                                        <q-item-section>
-                                                            <div>
-                                                                <q-checkbox v-model="customField.displayVuln" left-label label="Vulnerability" @input="checkDisplay(customField)" />
-                                                                <q-checkbox v-model="customField.displayFinding" left-label label="Finding" @input="checkDisplay(customField)" />
-                                                            </div>
-                                                        </q-item-section>
-                                                        <q-item-section>
-                                                            <q-select
-                                                            v-model="customField.displayCategory"
-                                                            multiple
-                                                            :options="vulnCategories"
-                                                            option-value="name"
-                                                            option-label="name"
-                                                            options-sanitize
-                                                            emit-value
-                                                            map-options
-                                                            use-chips
-                                                            stack-label
-                                                            label="Categories"
-                                                            >
-                                                                <template v-slot:selected-item="scope">
-                                                                    <q-chip
-                                                                    removable
-                                                                    dense
-                                                                    @remove="scope.removeAtIndex(scope.index)"
-                                                                    :tabindex="scope.tabindex"
-                                                                    :color="(scope.opt.name)? 'blue-grey-5': 'blue-grey-3'"
-                                                                    text-color="white"
-                                                                    >
-                                                                        <span v-if="scope.opt.name">
-                                                                            {{scope.opt.name}}
-                                                                        </span>
-                                                                        <span v-else>
-                                                                            {{scope.opt}} (<i>deleted</i>)
-                                                                        </span>
-                                                                    </q-chip>
-                                                                </template>
-
-                                                                <template v-slot:option="{ itemProps, itemEvents, opt, selected, toggleOption }">
-                                                                    <q-item
-                                                                    v-bind="itemProps"
-                                                                    v-on="itemEvents"
-                                                                    >
-                                                                    <q-item-section>
-                                                                        <q-item-label v-html="opt.name"></q-item-label>
-                                                                    </q-item-section>
-                                                                    <q-item-section side>
-                                                                        <q-checkbox :value="selected" @input="toggleOption(opt)" />
-                                                                    </q-item-section>
-                                                                    </q-item>
-                                                                </template>
-                                                            </q-select>
-                                                        </q-item-section>
-                                                    </q-item>
-                                                </q-list>
-                                            </q-item-section>
-                                            <q-item-section side>
-                                                <q-btn color="red" unelevated label="x" size="md" @click="deleteCustomField(customField)" />
-                                            </q-item-section>
-                                        </q-item>
-                                    </draggable>
-                                </q-card-section>
-                                <q-card-actions align="right" class="q-mr-lg">
-                                    <q-btn color="primary" outline @click="editCustomField = false; newCustomField = {}">Cancel</q-btn>
-                                    <q-btn color="secondary" unelevated @click="updateCustomFields">Save</q-btn>
-                                </q-card-actions>
-                            </q-card>
-                        </div>
+                        </q-card-section>
+                    </draggable>
+                    <q-card-section v-if="UserService.isAllowed('custom-fields:update')">
+                        <q-btn label="Save" class="q-ml-md" color="secondary" unelevated no-caps style="width:100px" @click="updateCustomFields" />
                     </q-card-section>
                 </q-card>
             </q-tab-panel>

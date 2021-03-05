@@ -1,14 +1,24 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose')//.set('debug', true);
 var Schema = mongoose.Schema;
 
 var CustomFieldSchema = new Schema({
     fieldType:          String,
-    label:              {type: String, unique: true},
+    label:              String,
+    display:            String,
+    displaySub:         {type: String, default: ''},
     position:           Number,
-    displayVuln:        {type: Boolean, default: true},
-    displayFinding:     {type: Boolean, default: true},
-    displayCategory:    [String]
+    size:               {type: Number, enum: [1,2,3,4,5,6,7,8,9,10,11,12], default: 12},
+    offset:             {type: Number, enum: [0,1,2,3,4,5,6,7,8,9,10,11,12], default: 0},
+    required:           {type: Boolean, default: false},
+    description:        {type: String, default: ''},
+    text:               String
 }, {timestamps: true})
+
+CustomFieldSchema.index({"label": 1, "display": 1}, {
+    name: "unique_label_display", 
+    unique: true, 
+    partialFilterExpression: {label: {$exists: true, $gt: ''}}
+})
 
 /*
 *** Statics ***
@@ -18,7 +28,7 @@ var CustomFieldSchema = new Schema({
 CustomFieldSchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = CustomField.find().sort('position')
-        query.select('fieldType label displayVuln displayFinding displayCategory')
+        query.select('fieldType label display displaySub size offset required description text')
         query.exec()
         .then((rows) => {
             resolve(rows);
@@ -101,5 +111,6 @@ CustomFieldSchema.statics.delete = (fieldId) => {
 */
 
 var CustomField = mongoose.model('CustomField', CustomFieldSchema);
+CustomField.syncIndexes()
 module.exports = CustomField;
 

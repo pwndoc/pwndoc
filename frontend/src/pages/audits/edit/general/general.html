@@ -108,5 +108,22 @@
             </q-card-section>
         </q-card>
     </div>
+    <div class="col-md-12">
+        <q-card>
+            <q-expansion-item 
+            label="Custom Fields"
+            v-if="audit.customFields && audit.customFields.length > 0"
+            default-opened
+            header-class="bg-blue-grey-5 text-white" 
+            expand-icon-class="text-white">
+                <custom-fields 
+                ref="customfields" 
+                v-model="audit.customFields" 
+                custom-element="QCardSection" 
+                no-sync-editor
+                />
+            </q-expansion-item>
+        </q-card>
+    </div>
 </div>
 </div>

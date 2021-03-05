@@ -366,11 +366,11 @@ module.exports = function(app) {
 
     // Create custom field
     app.post("/api/data/custom-fields", acl.hasPermission('custom-fields:create'), function(req, res) {
-        if (!req.body.fieldType || !req.body.label) {
-            Response.BadParameters(res, 'Missing required parameters: fieldType, label')
+        if ((!req.body.fieldType || !req.body.label || !req.body.display) && req.body.fieldType !== 'space') {
+            Response.BadParameters(res, 'Missing required parameters: fieldType, label, display')
             return
         }
-        if (!utils.validFilename(req.body.fieldType) || !utils.validFilename(req.body.fieldLabel)) {
+        if ((!utils.validFilename(req.body.fieldType) || !utils.validFilename(req.body.label)) && req.body.fieldType !== 'space') {
             Response.BadParameters(res, 'name and field value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i ')
             return
         }
@@ -378,6 +378,14 @@ module.exports = function(app) {
         var customField = {}
         customField.fieldType = req.body.fieldType
         customField.label = req.body.label
+        customField.display = req.body.display
+        if (req.body.displaySub) customField.displaySub = req.body.displaySub
+        if (req.body.size) customField.size = req.body.size
+        if (req.body.offset) customField.offset = req.body.offset
+        if (typeof req.body.required === 'boolean') customField.required = req.body.required
+        if (req.body.description) customField.description = req.body.description
+        if (req.body.text) customField.text = req.body.text
+        if (typeof req.body.position === 'number') customField.position = req.body.position
 
         CustomField.create(customField)
         .then(msg => Response.Created(res, msg))
@@ -388,11 +396,11 @@ module.exports = function(app) {
      app.put("/api/data/custom-fields", acl.hasPermission('custom-fields:update'), function(req, res) {
         for (var i=0; i<req.body.length; i++) {
             var customField = req.body[i]
-            if (!customField.label || !customField._id) {
-                Response.BadParameters(res, 'Missing required parameters: _id, label')
+            if ((!customField.label || !customField._id || !customField.display) && customField.fieldType !== 'space') {
+                Response.BadParameters(res, 'Missing required parameters: _id, label, display')
                 return
             }
-            if (!utils.validFilename(customField.label)) {
+            if ((!utils.validFilename(customField.label || !utils.validFilename(customField.fieldType))) && customField.fieldType !== 'space') {
                 Response.BadParameters(res, 'label and fieldType value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
                 return
             }
@@ -400,13 +408,17 @@ module.exports = function(app) {
 
         var customFields = []
         req.body.forEach(e => {
-            var field = {_id: e._id, label: e.label}
-            if (typeof e.displayVuln === 'boolean') field.displayVuln = e.displayVuln
-            if (typeof e.displayFinding === 'boolean') field.displayFinding = e.displayFinding
-            if (Array.isArray(e.displayCategory)) field.displayCategory = e.displayCategory
+            var field = {_id: e._id, label: e.label, display: e.display}
+            if (typeof e.size === 'number') field.size = e.size
+            if (typeof e.offset === 'number') field.offset = e.offset
+            if (typeof e.required === 'boolean') field.required = e.required
+            if (!_.isNil(e.description)) field.description = e.description
+            if (!_.isNil(e.text)) field.text = e.text
             if (typeof e.position === 'number') field.position = e.position
             customFields.push(field)
         })
+
+        console.log(customFields)
 
         CustomField.updateAll(customFields)
         .then(msg => Response.Created(res, msg))
