@@ -235,7 +235,6 @@ export default {
                     new Heading({ levels: [1, 2, 3, 4, 5, 6] }),
                     new ListItem(),
                     new OrderedList(),
-                    new Link(),
                     new Bold(),
                     new Code(),
                     new Italic(),
