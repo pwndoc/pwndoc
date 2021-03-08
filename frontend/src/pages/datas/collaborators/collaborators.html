@@ -15,6 +15,7 @@
             <template v-slot:top>
                 <q-space />
                 <q-btn 
+                v-if="UserService.isAllowed('users:create')"
                 unelevated
                 label="Add Collaborator" 
                 color="secondary"

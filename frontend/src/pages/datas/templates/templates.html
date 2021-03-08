@@ -15,6 +15,7 @@
             <template v-slot:top>
                 <q-space />
                 <q-btn 
+                v-if="UserService.isAllowed('templates:create')"
                 unelevated
                 label="Create Template"
                 color="secondary" 
