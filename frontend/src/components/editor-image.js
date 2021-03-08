@@ -1,4 +1,4 @@
-import { NodeSelection } from "tiptap";
+import { NodeSelection, Plugin } from "tiptap";
 import { Image as TipTapImage } from 'tiptap-extensions'
 
 export default class CustomImage extends TipTapImage {
@@ -25,6 +25,58 @@ export default class CustomImage extends TipTapImage {
             toDOM: node => ["img", node.attrs]
         }
     }
+
+  get plugins() {
+      return [
+          new Plugin({
+              props: {
+                  handleDOMEvents: {
+                    drop(view,event){
+                      let hasFiles=false
+                      let reader=new FileReader()
+                      reader.onload=function(event){
+                          let imageUrl=event.target.result;
+                          const node = view.state.schema.nodes.image.create({src: imageUrl})
+                          const transaction = view.state.tr.replaceSelectionWith(node)
+                          view.dispatch(transaction)
+                      };
+                      Array.from(event.dataTransfer.files)
+                          .filter(item=>item.type.startsWith("image"))
+                          .forEach(item=>{
+                              reader.readAsDataURL(item)
+                              hasFiles=true
+                          })
+                      if(hasFiles) {
+                          event.preventDefault()
+                          return true
+                      }
+                    },
+                    paste(view,event){
+                      let hasFiles=false
+                      let reader=new FileReader()
+                      reader.onload=function(event){
+                          let imageUrl=event.target.result
+                          const node = view.state.schema.nodes.image.create({src: imageUrl})
+                          const transaction = view.state.tr.replaceSelectionWith(node)
+                          view.dispatch(transaction)
+                      };
+                      Array.from(event.clipboardData.files)
+                          .filter(item=>item.type.startsWith("image"))
+                          .forEach(item=>{
+                              reader.readAsDataURL(item)
+                              hasFiles=true
+                          })
+                      if(hasFiles) {
+                          event.preventDefault()
+                          return true
+                      }
+                    }
+                  },
+              },
+          }),
+      ]
+  }
+
 
   get view() {
     return {
