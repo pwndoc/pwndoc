@@ -84,6 +84,15 @@ export default {
                                 vulnFile = YAML.safeLoad(fileReader.result);
                                 if (typeof vulnFile === 'object') {
                                     if (Array.isArray(vulnFile)) {
+                                        vulnFile.forEach(vuln => {
+                                            if (Array.isArray(vuln.references) && vuln.references.length > 0) {
+                                                vuln.details.forEach(d => {
+                                                    if (!Array.isArray(d.references) || d.references.length == 0) {
+                                                        d.references = vuln.references
+                                                    }
+                                                })
+                                            }
+                                        })
                                         this.vulnerabilities = vulnFile;
                                     }
                                     else
@@ -154,11 +163,6 @@ export default {
                 tmpVuln.cvssSeverity = vuln.severity || null;
                 tmpVuln.priority = null;
                 tmpVuln.remediationComplexity = null;
-                tmpVuln.references = []
-                if (vuln.references && vuln.references !== "") {
-                    vuln.references = vuln.references.replace(/<paragraph>/g, '')
-                    tmpVuln.references = vuln.references.split('</paragraph>').filter(Boolean)
-                }
                 var details = {};
                 details.locale = this.formatSerpicoText(vuln.language) || 'en';
                 details.title = this.formatSerpicoText(vuln.title);
@@ -166,6 +170,11 @@ export default {
                 details.description = this.formatSerpicoText(vuln.overview);
                 details.observation = this.formatSerpicoText(vuln.poc);
                 details.remediation = this.formatSerpicoText(vuln.remediation);
+                details.references = []
+                if (vuln.references && vuln.references !== "") {
+                    vuln.references = vuln.references.replace(/<paragraph>/g, '')
+                    details.references = vuln.references.split('</paragraph>').filter(Boolean)
+                }
                 tmpVuln.details = [details];
                 
                 result.push(tmpVuln);

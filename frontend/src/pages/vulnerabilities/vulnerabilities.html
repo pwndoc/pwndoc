@@ -281,7 +281,7 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <textarea-array label="References (One per line)" v-model="currentVulnerability.references" />
+            <textarea-array label="References (One per line)" v-model="currentVulnerability.details[currentDetailsIndex].references" />
         </q-card-section>
 
         <q-expansion-item 
@@ -444,7 +444,7 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <textarea-array label="References (One per line)" v-model="currentVulnerability.references" />
+            <textarea-array label="References (One per line)" v-model="currentVulnerability.details[currentDetailsIndex].references" />
         </q-card-section>
 
         <q-expansion-item 
@@ -592,7 +592,7 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <textarea-array label="References (One per line)" v-model="currentVulnerability.references" />
+                        <textarea-array label="References (One per line)" v-model="currentVulnerability.details[currentDetailsIndex].references" />
                     </q-card-section>
 
                     <q-expansion-item 
@@ -769,7 +769,7 @@
                             </q-card-section>
                             <q-card-section>
                                 <q-input
-                                :bg-color="!($_.isEqual(currentVulnerability.references, update.references))?'red-1':''"
+                                :bg-color="!($_.isEqual(currentVulnerability.details[currentDetailsIndex].references, update.references))?'red-1':''"
                                 label="References (One per line)"
                                 stack-label
                                 :value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"

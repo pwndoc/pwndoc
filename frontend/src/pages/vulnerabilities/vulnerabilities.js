@@ -53,7 +53,6 @@ export default {
                 cvssSeverity: '',
                 priority: '',
                 remediationComplexity: '',
-                references: [],
                 details: [] 
             },
             currentLanguage: "",
@@ -346,7 +345,6 @@ export default {
             this.currentVulnerability.cvssSeverity = '';
             this.currentVulnerability.priority = '';
             this.currentVulnerability.remediationComplexity = '';
-            this.currentVulnerability.references = [];
             this.currentVulnerability.details = [];
             this.currentLanguage = this.dtLanguage;
             if (this.currentCategory && this.currentCategory.name) 
@@ -368,6 +366,7 @@ export default {
                     description: '',
                     observation: '',
                     remediation: '',
+                    references: [],
                     customFields: []
                 }
                 details.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, [])

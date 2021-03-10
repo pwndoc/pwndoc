@@ -151,7 +151,7 @@ export default {
                     remediation: vuln.detail.remediation,
                     remediationComplexity: vuln.remediationComplexity,
                     priority: vuln.priority,
-                    references: vuln.references,
+                    references: vuln.detail.references,
                     cvssv3: vuln.cvssv3,
                     cvssScore: (vuln.cvssScore)?vuln.cvssScore:"0",
                     cvssSeverity: (vuln.cvssSeverity)?vuln.cvssSeverity:"None",
