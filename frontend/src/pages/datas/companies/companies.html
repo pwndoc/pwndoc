@@ -1,8 +1,10 @@
 <div>
 <div class="row">
-    <div class="col-md-10 offset-md-1 q-mt-md">
+    <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-table
             class="sticky-header-table"
+            card-class="bg-grey-1"
+            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :data="companies"
             :filter="search"
@@ -32,6 +34,8 @@
                         label="Search..."
                         v-model="search.name"
                         clearable
+                        outlined
+                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>
@@ -76,7 +80,7 @@
 </div>
 
 <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-    <q-card style="width:800px">
+    <q-card style="width:800px" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 Add Company
@@ -94,7 +98,10 @@
                     :error="!!errors.name"
                     :error-message="errors.name"
                     @keyup.enter="createCompany()"
-                    v-model="currentCompany.name" />
+                    v-model="currentCompany.name" 
+                    outlined
+                    bg-color="white"
+                    />
                 <q-uploader
                     ref="addUploader"
                     class="col-md-12"
@@ -115,7 +122,7 @@
 </q-dialog>
 
 <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-    <q-card style="width:800px">
+    <q-card style="width:800px" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 Edit Company
@@ -134,7 +141,10 @@
                     :error-message="errors.name"
                     ref="nameInput"
                     @keyup.enter="updateCompany()"
-                    v-model="currentCompany.name" />
+                    v-model="currentCompany.name"
+                    outlined
+                    bg-color="white"
+                    />
                 <q-uploader
                     ref="addUploader"
                     class="col-md-12"

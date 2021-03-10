@@ -6,9 +6,11 @@
     <div v-if="templates.length === 0" class="col-md-4 offset-md-4 q-mt-md">
         <p>No templates are defined. </br> Please create Templates in <a href="/datas/templates">Datas -> Templates</a></p>
     </div>
-    <div v-if="languages.length > 0 && templates.length > 0" class="col-md-8 offset-md-2 q-mt-md">
+    <div v-if="languages.length > 0 && templates.length > 0" class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
             class="sticky-header-table"
+            card-class="bg-grey-1"
+            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :visible-columns="visibleColumns"
             :data="audits"
@@ -25,9 +27,10 @@
                 class="col-md-3"
                 color="secondary"
                 label="Search Finding"
-                autofocus
                 v-model="search.finding"
                 @keyup.enter="getAudits"
+                outlined
+                bg-color="white"
                 >
                     <template v-slot:append>
                         <q-btn flat icon="search" @click="getAudits" />
@@ -60,6 +63,9 @@
                             label="Search..."
                             v-model="search[col.name]"
                             clearable
+                            :autofocus="col.name === 'name'"
+                            outlined
+                            bg-color="white"
                             />
                         </div>
                         <div v-else-if="col.name === 'company'">
@@ -75,6 +81,8 @@
                                 emit-value
                                 clearable
                                 options-sanitize
+                                outlined
+                                bg-color="white"
                                 />
                         </div>
                         <div v-else-if="col.name === 'language'">
@@ -90,6 +98,8 @@
                             emit-value
                             clearable
                             options-sanitize
+                            outlined
+                            bg-color="white"
                             />
                         </div>
                     </q-td>

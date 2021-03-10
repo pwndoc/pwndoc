@@ -186,6 +186,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
                 path: 'company', 
                 select: 'name'}
             });
+        query.populate('creator', 'username firstname lastname')
         query.populate('collaborators', 'username firstname lastname')
         query.populate('company')
         query.select('id name auditType location date date_start date_end client collaborators language scope.name template customFields')

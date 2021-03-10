@@ -6,6 +6,8 @@
     <div class="col-md-10 offset-md-1">
         <q-table
         class="sticky-header-table-addfinding"
+        card-class="bg-grey-1"
+        table-header-class="bg-grey-1"
         :columns="dtVulnHeaders"
         :data="vulnerabilities"
         :filter="search"
@@ -27,9 +29,11 @@
                 emit-value
                 @input="getVulnerabilities"
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
                 <q-space />
-                <q-input v-model="findingTitle" label="Title" class="q-pl-md col-md-6" @keyup.enter="addFinding()">
+                <q-input v-model="findingTitle" label="Title" class="q-pl-md col-md-6" @keyup.enter="addFinding()" outlined bg-color="white">
                     <template v-slot:append>
                         <q-btn-dropdown label="Create" no-caps flat>
                             <q-list separator>
@@ -59,6 +63,8 @@
                         label="Search..."
                         v-model="search.title"
                         clearable
+                        outlined
+                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -70,6 +76,8 @@
                         clearable
                         :options="vulnCategoriesOptions"
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -81,6 +89,8 @@
                         clearable
                         :options="vulnTypeOptions"
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>

@@ -29,13 +29,13 @@
         <q-space />
     </q-tabs>
 
-    <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 offset-md-2" @before-transition="syncEditors" @transition="updateOrig" >
+    <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 col-12 offset-md-2" @before-transition="syncEditors" @transition="updateOrig" >
         <q-tab-panel name="definition">
-            <q-card>
+            <q-card class="bg-grey-1">
                 <q-card-section class="row q-col-gutter-md">
-                        <q-input class="col-md-8" label="Title *" stack-label v-model="finding.title" />
+                        <q-input class="col-md-8 col-12" label="Title *" stack-label v-model="finding.title" outlined bg-color="white" />
                         <q-select 
-                        class="col-md-4"
+                        class="col-md-4 col-12"
                         label="Type"
                         v-model="finding.vulnType" 
                         :options="vulnTypesLang" 
@@ -44,6 +44,8 @@
                         emit-value 
                         map-options
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                         <q-field class="col-md-12" borderless label="Description" stack-label>
                             <template v-slot="control">
@@ -55,7 +57,7 @@
                                 <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" />
                             </template>
                         </q-field>
-                        <textarea-array class="col-md-12" label="References (One per line)" v-model="finding.references" />
+                        <textarea-array class="col-12" label="References (One per line)" v-model="finding.references" />
                 </q-card-section>
 
                 <q-expansion-item 
@@ -76,8 +78,8 @@
         </q-tab-panel>
         <q-tab-panel name="proofs">
             <div class="q-col-gutter-md row">
-                <div class="col-md-12">
-                    <q-card class="affix-relative-element">
+                <div class="col-12">
+                    <q-card class="affix-relative-element bg-grey-1">
                         <q-card-section>
                             <basic-editor ref="basiceditor_poc" noSync affix v-model="finding.poc" />
                         </q-card-section>
@@ -86,7 +88,7 @@
             </div>
         </q-tab-panel>
         <q-tab-panel name="details">
-            <q-card>
+            <q-card class="bg-grey-1">
                 <q-card-section>Affected Assets</q-card-section>
                 <q-separator />
                 <q-card-section>
@@ -97,8 +99,8 @@
                     </q-field>
                 </q-card-section>
             </q-card>
-            <q-card class="q-mt-md">
-                <div class="col-md-12">
+            <q-card class="q-mt-md bg-grey-1">
+                <div class="col-12">
                     <cvss-calculator 
                     :cvssString="finding.cvssv3"
                     :cvssScore="finding.cvssScore"
@@ -109,7 +111,7 @@
                     />
                 </div>
             </q-card>
-            <q-card class="q-mt-md">
+            <q-card class="q-mt-md bg-grey-1">
             <q-card-section>Course of actions</q-card-section>
             <q-separator />
             <q-card-section>
@@ -117,22 +119,26 @@
                     <q-select
                     label="Remediation Difficulty"
                     stack-label
-                    class="col-md-6"
+                    class="col-md-6 col-12"
                     v-model="finding.remediationComplexity"
                     :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
                     map-options
                     emit-value
                     options-sanitize
+                    outlined
+                    bg-color="white"
                     />
                     <q-select
                     label="Priority"
                     stack-label
-                    class="col-md-6"
+                    class="col-md-6 col-12"
                     v-model="finding.priority"
                     :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
                     map-options
                     emit-value
                     options-sanitize
+                    outlined
+                    bg-color="white"
                     />
                 </div>
             </q-card-section>

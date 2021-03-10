@@ -3,9 +3,11 @@
     <div v-if="languages.length === 0" class="col-md-4 offset-md-4 q-mt-md">
         <p>No languages are defined. </br> Please create Languages in <a href="/datas/custom">Datas -> Custom Datas -> Languages</a></p>
     </div>
-    <div v-else class="col-8 offset-2 q-mt-md">
+    <div v-else class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
             class="sticky-header-table"
+            card-class="bg-grey-1"
+            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :data="computedVulnerabilities"
             :filter="search"
@@ -28,6 +30,8 @@
                 map-options
                 emit-value
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
                 <q-toggle label="Valid" v-model="search.valid" :true-value=0 />
                 <q-toggle label="New" color="light-blue" v-model="search.new" :true-value=1 />
@@ -74,6 +78,9 @@
                         label="Search..."
                         v-model="search.title"
                         clearable
+                        autofocus
+                        outlined
+                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -85,6 +92,8 @@
                         clearable
                         :options="vulnCategoriesOptions"
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -96,6 +105,8 @@
                         clearable
                         :options="vulnTypeOptions"
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>
@@ -154,7 +165,7 @@
 </div>
 
 <q-dialog v-if="languages.length > 0" ref="createModal" maximized position="right" persistent @hide="cleanCurrentVulnerability()">
-    <q-card style="width: 50vw">
+    <q-card :style="($q.screen.gt.md)?'width: 50vw':''" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 <span v-if="currentCategory">Add Vulnerability ({{currentCategory.name}})</span>
@@ -176,6 +187,8 @@
                 hide-bottom-space
                 @keyup.enter="createVulnerability()"
                 v-model="currentVulnerability.details[currentDetailsIndex].title"
+                outlined
+                bg-color="white"
                 />
                 <q-select 
                 class="col-md-2"
@@ -187,6 +200,8 @@
                 emit-value 
                 map-options
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
                 <q-select
                 label='Language'
@@ -199,6 +214,8 @@
                 map-options
                 emit-value
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
             </div>
         </q-card-section>
@@ -246,6 +263,8 @@
                 map-options
                 emit-value
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
                 <q-select
                 label="Remediation Priority"
@@ -256,6 +275,8 @@
                 map-options
                 emit-value
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
             </div>
         </q-card-section>
@@ -288,7 +309,7 @@
 </q-dialog>
 
 <q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="UserService.isAllowed('vulnerabilities:update')" @hide="cleanCurrentVulnerability()">
-    <q-card style="width: 50vw">
+    <q-card :style="($q.screen.gt.md)?'width: 50vw':''" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 <span v-if="currentVulnerability.category">Edit Vulnerability ({{currentVulnerability.category}})</span>
@@ -329,6 +350,8 @@
                 hide-bottom-space
                 @keyup.enter="updateVulnerability()"
                 v-model="currentVulnerability.details[currentDetailsIndex].title"
+                outlined
+                bg-color="white"
                 />
                 <q-select 
                 class="col-md-2"
@@ -340,6 +363,8 @@
                 emit-value 
                 map-options
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
                 <q-select
                 label='Language'
@@ -352,6 +377,8 @@
                 map-options
                 emit-value
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
             </div>
         </q-card-section>
@@ -399,6 +426,8 @@
                 map-options
                 emit-value
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
                 <q-select
                 label="Remediation Priority"
@@ -409,6 +438,8 @@
                 map-options
                 emit-value
                 options-sanitize
+                outlined
+                bg-color="white"
                 />
             </div>
         </q-card-section>
@@ -471,6 +502,8 @@
                         class="col-md-8"
                         v-model="currentVulnerability.details[currentDetailsIndex].title" 
                         readonly
+                        outlined
+                        bg-color="white"
                         />
                         <q-select 
                         class="col-md-2"
@@ -482,6 +515,8 @@
                         emit-value 
                         map-options
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                         <q-select
                         label='Language'
@@ -495,6 +530,8 @@
                         emit-value
                         readonly
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                     </q-card-section>
                     <q-card-section>
@@ -538,6 +575,8 @@
                         map-options
                         emit-value
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                         <q-select
                         label="Remediation Priority"
@@ -548,6 +587,8 @@
                         map-options
                         emit-value
                         options-sanitize
+                        outlined
+                        bg-color="white"
                         />
                     </q-card-section>
                     <q-card-section>
@@ -597,10 +638,12 @@
                                 class="col-md-8"
                                 v-model="update.title"
                                 readonly
+                                outlined
+                                bg-color="white"
                                 />
                                 <q-select 
                                 class="col-md-2"
-                                :bg-color="(currentVulnerability.details[currentDetailsIndex].vulnType != update.vulnType)?'red-1':''"
+                                :bg-color="(currentVulnerability.details[currentDetailsIndex].vulnType != update.vulnType)?'red-1':'white'"
                                 label="Type"
                                 v-model="update.vulnType" 
                                 :options="vulnTypesLang" 
@@ -610,6 +653,7 @@
                                 map-options
                                 readonly
                                 options-sanitize
+                                outlined
                                 />
                                 <q-select
                                 label='Language'
@@ -623,6 +667,8 @@
                                 map-options
                                 readonly
                                 options-sanitize
+                                outlined
+                                bg-color="white"
                                 />
                             </q-card-section>
                             <q-card-section>
@@ -695,7 +741,7 @@
                             </q-card-section>
                             <q-card-section class="q-col-gutter-md row">
                                 <q-select
-                                :bg-color="(currentVulnerability.remediationComplexity != update.remediationComplexity)?'red-1':''"
+                                :bg-color="(currentVulnerability.remediationComplexity != update.remediationComplexity)?'red-1':'white'"
                                 label="Remediation Complexity"
                                 stack-label
                                 class="col-md-6"
@@ -705,9 +751,10 @@
                                 emit-value
                                 readonly
                                 options-sanitize
+                                outlined
                                 />
                                 <q-select
-                                :bg-color="(currentVulnerability.priority != update.priority)?'red-1':''"
+                                :bg-color="(currentVulnerability.priority != update.priority)?'red-1':'white'"
                                 label="Remediation Priority"
                                 stack-label
                                 class="col-md-6"
@@ -717,6 +764,7 @@
                                 emit-value
                                 readonly
                                 options-sanitize
+                                outlined
                                 />
                             </q-card-section>
                             <q-card-section>
@@ -753,7 +801,7 @@
 </q-dialog>
 
 <q-dialog persistent ref="mergeModal">
-    <q-card  style="width: 1000px; max-width: 1000px; height: 60vh">
+    <q-card style="width: 1000px; max-width: 1000px; height: 60vh" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <span>Merge Vulnerabilities</span>
             <q-space />
@@ -767,7 +815,7 @@
             </q-card-section>
         </div>
         <div v-else class="row">
-            <div class="col-md-6">
+            <div class="col-md-6 col-6">
                 <q-card-section class="col-md-6">
                     <q-select
                     label='Language (Add from right)'
@@ -779,6 +827,8 @@
                     emit-value
                     @input="mergeVulnLeft = ''"
                     options-sanitize
+                    outlined
+                    bg-color="white"
                     />
                 </q-card-section>
                 <q-card-section class="card-section-merge">
@@ -809,6 +859,8 @@
                     emit-value
                     @input="mergeVulnRight = ''"
                     options-sanitize
+                    outlined
+                    bg-color="white"
                     />
                 </q-card-section>
                 <q-card-section class="card-section-merge">

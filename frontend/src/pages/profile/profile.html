@@ -1,13 +1,13 @@
 <div>
     <div class="row">
-        <div class="col-md-8 offset-md-2 q-mt-md">
-            <q-card>
+        <div class="col-md-8 col-12 offset-md-2 q-mt-md">
+            <q-card class="bg-grey-1">
                 <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
                     <div class="text-h6">Update User Information</div>
                 </q-card-section>
                 <q-separator />
                 <q-card-section class="row">
-                    <q-list class="col-md-6">
+                    <q-list class="col-md-6 col-12">
                         <q-item>
                             <q-item-section side>Role</q-item-section>
                             <q-item-section side>
@@ -21,7 +21,10 @@
                                 label="Username" 
                                 stack-label 
                                 :error="!!errors.username"
-                                :error-message="errors.username" />
+                                :error-message="errors.username" 
+                                outlined
+                                bg-color="white"
+                                />
                             </q-item-section>
                         </q-item>
                         <q-item>
@@ -32,6 +35,8 @@
                                 stack-label
                                 :error="!!errors.firstname"
                                 :error-message="errors.firstname"
+                                outlined
+                                bg-color="white"
                                 />
                             </q-item-section>
                         </q-item>
@@ -43,6 +48,8 @@
                                 stack-label 
                                 :error="!!errors.lastname"
                                 :error-message="errors.lastname"
+                                outlined
+                                bg-color="white"
                                 />
                             </q-item-section>
                         </q-item>
@@ -50,19 +57,23 @@
                             <q-item-section>
                                 <q-field borderless :error="!!errors.newPassword" :error-message="errors.newPassword">
                                     <q-input 
-                                    class="col-md-6 q-pr-sm" 
+                                    class="col-md-6 col-6 q-pr-sm" 
                                     v-model="user.newPassword" 
                                     label="New Password" 
                                     stack-label 
                                     type="password"
                                     clearable
+                                    outlined
+                                    bg-color="white"
                                     />
                                     <q-input 
-                                    class="col-md-6 q-pl-sm" 
+                                    class="col-md-6 col-6 q-pl-sm" 
                                     v-model="user.confirmPassword" 
                                     label="Confirm Password" 
                                     stack-label 
                                     type="password"
+                                    outlined
+                                    bg-color="white"
                                     clearable
                                     />
                                 </q-field>
@@ -78,6 +89,8 @@
                                 :error="!!errors.currentPassword" 
                                 :error-message="errors.currentPassword"
                                 @keyup.enter="updateProfile"
+                                outlined
+                                bg-color="white"
                                 >
                                     <template v-slot:append>
                                         <q-btn label="Update" unelevated color="secondary" @click="updateProfile" />

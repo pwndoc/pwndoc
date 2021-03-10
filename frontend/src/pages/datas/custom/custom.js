@@ -388,7 +388,7 @@ export default {
         getCustomFields: function() {
             DataService.getCustomFields()
             .then((data) => {
-                this.customFields = data.data.datas
+                this.customFields = data.data.datas.filter(e => e.display)
             })
             .catch((err) => {
                 console.log(err)

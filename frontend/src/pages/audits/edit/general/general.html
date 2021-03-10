@@ -6,110 +6,154 @@
 </breadcrumb>
 
 <div class="row q-col-gutter-md q-pa-md">
-    <div class="col-md-6">
-        <q-card >
+    <div class="col-md-8 offset-md-2 col-12">
+        <q-card class="bg-grey-1">
             <q-card-section>
-                <q-input label="Name *" v-model="audit.name" />
-                <q-input label="Location" v-model="audit.location" />
-                <q-select 
-                label="Assessment Type"
-                v-model="audit.auditType" 
-                :options="auditTypesLang" 
-                option-value="name" 
-                option-label="name" 
-                emit-value 
-                map-options
-                options-sanitize
-                />
-                <q-select
-                label="Company"
-                v-model="audit.company"
-                :options="companies"
-                option-value="_id"
-                option-label="name"
-                @input="filterClients"
-                clearable
-                options-sanitize
-                />
-                <q-select
-                label="Client"
-                v-model="audit.client"
-                :options="selectClients"
-                option-value="email"
-                option-label="email"
-                @input="filterCompany"
-                clearable
-                options-sanitize
-                />
-                <q-select 
-                label="Collaborators"
-                v-model="audit.collaborators"
-                :options="collaborators"
-                option-value="username"
-                :option-label="(item) => item.firstname+' '+item.lastname"
-                multiple
-                use-chips
-                options-sanitize
-                />
+                <div class="row q-col-gutter-md">
+                    <q-input class="col-md-6 col-12" label="Name *" v-model="audit.name" outlined bg-color="white" />
+                    <q-select 
+                    class="col-md-6 col-12"
+                    label="Assessment Type"
+                    v-model="audit.auditType" 
+                    :options="auditTypesLang" 
+                    option-value="name" 
+                    option-label="name" 
+                    emit-value 
+                    map-options
+                    options-sanitize
+                    outlined 
+                    bg-color="white"
+                    />
+                    <q-select 
+                    class="col-md-6 col-12"
+                    label="Language"
+                    v-model="audit.language" 
+                    :options="languages" 
+                    option-value="locale" 
+                    option-label="language" 
+                    emit-value 
+                    map-options
+                    options-sanitize
+                    outlined 
+                    bg-color="white"
+                    />
+                    <q-select
+                    class="col-md-6 col-12"
+                    label="Template"
+                    v-model="audit.template"
+                    :options="templates"
+                    option-value="_id"
+                    option-label="name"
+                    emit-value
+                    map-options
+                    options-sanitize
+                    outlined 
+                    bg-color="white"
+                    /> 
+                </div>
             </q-card-section>
-        </q-card>
-    </div>
-    <div class="col-md-6">
-        <q-card >
+    
+            <q-card-section></q-card-section>
+
             <q-card-section>
-                <q-input label="Redacting Date" v-model="audit.date">
-                    <template v-slot:append>
-                        <q-icon name="event" class="cursor-pointer">
-                        <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                            <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date" @input="() => $refs.qDateProxy.hide()" />
-                        </q-popup-proxy>
-                        </q-icon>
-                    </template>
-                </q-input>
-                <q-input label="Start Date" v-model="audit.date_start">
-                    <template v-slot:append>
-                        <q-icon name="event" class="cursor-pointer">
-                        <q-popup-proxy ref="qDateStartProxy" transition-show="scale" transition-hide="scale">
-                            <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date_start" @input="() => $refs.qDateStartProxy.hide()" />
-                        </q-popup-proxy>
-                        </q-icon>
-                    </template>
-                </q-input>
-                <q-input label="End Date" v-model="audit.date_end">
-                    <template v-slot:append>
-                        <q-icon name="event" class="cursor-pointer">
-                        <q-popup-proxy ref="qDateEndProxy" transition-show="scale" transition-hide="scale">
-                            <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date_end" @input="() => $refs.qDateEndProxy.hide()" />
-                        </q-popup-proxy>
-                        </q-icon>
-                    </template>
-                </q-input>
+                <div class="row q-col-gutter-md">
+                    <q-select
+                    class="col-md-6 col-12"
+                    label="Company"
+                    v-model="audit.company"
+                    :options="companies"
+                    option-value="_id"
+                    option-label="name"
+                    @input="filterClients"
+                    clearable
+                    options-sanitize
+                    outlined 
+                    bg-color="white"
+                    />
+                    <q-select
+                    class="col-md-6 col-12"
+                    label="Client"
+                    stack-label
+                    v-model="audit.client"
+                    :options="selectClients"
+                    option-value="email"
+                    option-label="email"
+                    @input="filterCompany"
+                    clearable
+                    options-sanitize
+                    outlined 
+                    bg-color="white"
+                    />
+                    <q-select 
+                    class="col-md-12 col-12"
+                    label="Collaborators"
+                    stack-label
+                    v-model="audit.collaborators"
+                    :options="collaborators"
+                    option-value="username"
+                    :option-label="(item) => item.firstname+' '+item.lastname"
+                    multiple
+                    use-chips
+                    options-sanitize
+                    outlined 
+                    bg-color="white"
+                    >
+                        <template v-slot:after>
+                            <q-chip class="q-mt-lg" color="blue-grey-5" text-color="white" dense>{{audit.creator.firstname}} {{audit.creator.lastname}}</q-chip>
+                        </template>
+                        <template v-slot:selected-item="scope">
+                            <q-chip
+                            dense
+                            removable
+                            @remove="scope.removeAtIndex(scope.index)"
+                            :tabindex="scope.tabindex"
+                            color="blue-grey-5"
+                            text-color="white"
+                            >
+                                {{scope.opt.firstname}} {{scope.opt.lastname}}
+                            </q-chip>
+                        </template>
+                    </q-select>
+                </div>
+            </q-card-section>
+
+            <q-card-section></q-card-section>
+
+            <q-card-section>
+                <div class="row q-col-gutter-md">
+                    <q-input class="col-md-4 col-12" label="Start Date" v-model="audit.date_start" outlined bg-color="white">
+                        <template v-slot:append>
+                            <q-icon name="event" class="cursor-pointer">
+                            <q-popup-proxy ref="qDateStartProxy" transition-show="scale" transition-hide="scale">
+                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date_start" @input="() => $refs.qDateStartProxy.hide()" />
+                            </q-popup-proxy>
+                            </q-icon>
+                        </template>
+                    </q-input>
+                    <q-input class="col-md-4 col-12" label="End Date" v-model="audit.date_end" outlined bg-color="white">
+                        <template v-slot:append>
+                            <q-icon name="event" class="cursor-pointer">
+                            <q-popup-proxy ref="qDateEndProxy" transition-show="scale" transition-hide="scale">
+                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date_end" @input="() => $refs.qDateEndProxy.hide()" />
+                            </q-popup-proxy>
+                            </q-icon>
+                        </template>
+                    </q-input>
+                    <q-input class="col-md-4 col-12" label="Redacting Date" v-model="audit.date" outlined bg-color="white">
+                        <template v-slot:append>
+                            <q-icon name="event" class="cursor-pointer">
+                            <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date" @input="() => $refs.qDateProxy.hide()" />
+                            </q-popup-proxy>
+                            </q-icon>
+                        </template>
+                    </q-input>
+                </div>
+            </q-card-section>
+
+            <q-card-section>
                 <textarea-array label="Scope (One per line)" v-model="audit.scope" no-empty-line />
-                <q-select 
-                label="Language"
-                v-model="audit.language" 
-                :options="languages" 
-                option-value="locale" 
-                option-label="language" 
-                emit-value 
-                map-options
-                options-sanitize
-                />
-                <q-select
-                label="Template"
-                v-model="audit.template"
-                :options="templates"
-                option-value="_id"
-                option-label="name"
-                emit-value
-                map-options
-                options-sanitize
-                /> 
             </q-card-section>
-        </q-card>
-    </div>
-    <div class="col-md-12">
-        <q-card>
             <q-expansion-item 
             label="Custom Fields"
             v-if="audit.customFields && audit.customFields.length > 0"

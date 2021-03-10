@@ -5,6 +5,8 @@
     v-model="dataString"
     type="textarea"
     @input="updateParent"
+    outlined 
+    bg-color="white"
     />
 </template>
 

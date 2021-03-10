@@ -19,18 +19,20 @@ export default {
             auditId: null,
             // Current editing audit object
             audit: {
-                // name: "",
-                // location: "",
-                // auditType: "",
-                // client: {},
-                // company: {},
-                // collaborators: [],
-                // date: "",
-                // date_start: "",
-                // date_end: "",
-                // scope: [],
-                // language: "",
-                // template: ""
+                creator: {},
+                name: "",
+                location: "",
+                auditType: "",
+                client: {},
+                company: {},
+                collaborators: [],
+                date: "",
+                date_start: "",
+                date_end: "",
+                scope: [],
+                language: "",
+                template: "",
+                customFields: []
             },
             auditOrig: {},
             // List of existing clients
@@ -62,7 +64,6 @@ export default {
         this.auditId = this.$route.params.auditId;
         this.getAuditGeneral();
         this.getClients();
-        this.getCollaborators();
         this.getTemplates();
         this.getLanguages();
         this.getAuditTypes();
@@ -118,6 +119,7 @@ export default {
                 this.audit = data.data.datas;
                 this.audit.customFields = Utils.filterCustomFields('audit-general', '', this.customFields, this.audit.customFields)
                 this.auditOrig = this.$_.cloneDeep(this.audit);
+                this.getCollaborators()
             })
             .catch((err) => {              
                 console.log(err.response)
@@ -187,7 +189,10 @@ export default {
         getCollaborators: function() {
             CollabService.getCollabs()
             .then((data) => {
-                this.collaborators = data.data.datas;
+                var creatorId = ""
+                if (this.audit.creator)
+                    creatorId = this.audit.creator._id
+                this.collaborators = data.data.datas.filter(e => e._id !== creatorId)
             })
             .catch((err) => {
                 console.log(err)
