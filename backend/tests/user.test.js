@@ -84,7 +84,7 @@ module.exports = function(request) {
       
         expect(response.status).toBe(200)
         expect(response.data.datas.token).toBeDefined()
-        options.headers.Authorization = response.data.datas.token // Set header Authentication for next requests
+        options.headers.Cookie = `token=${response.data.datas.token}` // Set header Cookie for next requests
         done()
       })
 
