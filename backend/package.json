@@ -20,7 +20,7 @@
     "npm": "^6.12.0"
   },
   "dependencies": {
-    "angular-expressions": "^1.0.1",
+    "angular-expressions": "^1.1.2",
     "bcrypt": "^3.0.6",
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.5",
