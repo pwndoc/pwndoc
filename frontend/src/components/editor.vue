@@ -122,7 +122,6 @@
 
                 <label class="cursor-pointer" v-if="toolbar.indexOf('image') !== -1">
                     <input
-                    :value=imageValue
                     type="file"
                     accept="image/*"
                     class="hidden"
@@ -191,6 +190,7 @@ import CustomImage from './editor-image'
 const Diff = require('diff')
 
 import Utils from '@/services/utils'
+import ImageService from '@/services/image'
 
 export default {
     name: 'BasicEditor',
@@ -254,7 +254,6 @@ export default {
             }),
             json: '',
             html: '',
-            imageValue: '',
             toggleDiff: true,
 
             htmlEncode: Utils.htmlEncode
@@ -331,12 +330,20 @@ export default {
             var file = files[0];
             var fileReader = new FileReader();
 
+            var auditId = null
+              var path = window.location.pathname.split('/')
+              if (path && path.length > 3 && path[1] === 'audits')
+                auditId = path[2]
+
             fileReader.onloadend = (e) => {
-                // var src = fileReader.result
-                Utils.resizeImg(fileReader.result).then(src => {
-                    this.editor.commands.image({ src })
-                    this.imageValue = ''
+                Utils.resizeImg(fileReader.result)
+                .then(data => {
+                    return ImageService.createImage({value: data, name: file.name, auditId: auditId})
                 })
+                .then((data) => {
+                    this.editor.commands.image({src: data.data.datas._id, alt: file.name })
+                })
+                .catch(err => console.log(err))
             }
 
             fileReader.readAsDataURL(file);

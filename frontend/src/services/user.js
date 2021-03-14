@@ -1,6 +1,8 @@
 var jwtDecode = require('jwt-decode');
 import Vue from 'vue';
 
+import { Cookies } from 'quasar'
+
 export default {
     user: null,
 
@@ -10,9 +12,8 @@ export default {
             Vue.prototype.$axios.post(`users/token`, params)
             .then((response) => {
                 var token = response.data.datas.token;
-                localStorage.setItem('token', token);
                 this.user = jwtDecode(token);
-                // Vue.prototype.$axios.headers.common['Authorization'] = `JWT ${token}`;
+                Cookies.set('token', token, {secure: true, sameSite: 'None'})
                 resolve();
             })
             .catch((error) => {
@@ -23,23 +24,21 @@ export default {
     },
 
     destroyToken() {
-        localStorage.removeItem('token');
+        Cookies.remove('token')
     },
 
     setToken(token) {
-        localStorage.setItem('token', token);
+        Cookies.set('token', token, {secure: true, sameSite: 'None'})
         this.checkToken();
     },
 
     checkToken() {
         return new Promise((resolve, reject) => {
-            var token = localStorage.getItem('token');
-            if (!token)
+            if (!Cookies.has('token'))
                 throw new Error('noToken');
-            //Set Authorization headers each time for hot reload
-            Vue.prototype.$axios.defaults.headers.common['Authorization'] = token;
             Vue.prototype.$axios.get(`users/checktoken`)
             .then(() => {
+                var token = Cookies.get('token')
                 var decoded = jwtDecode(token);
                 if (decoded) {
                     this.user = decoded;
@@ -61,9 +60,8 @@ export default {
             Vue.prototype.$axios.post(`users/init`, params)
             .then((response) => {
                 var token = response.data.datas.token;
-                localStorage.setItem('token', token);
+                Cookies.set('token', token, {secure: true, sameSite: 'None'})
                 this.user = jwtDecode(token);
-                // Vue.prototype.$axios.headers.common['Authorization'] = `JWT ${token}`;
                 resolve();
             })
             .catch((error) => {

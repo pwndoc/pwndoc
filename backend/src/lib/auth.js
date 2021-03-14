@@ -20,6 +20,9 @@ var builtInRoles = {
             'audits:read',
             'audits:update',
             'audits:delete',
+            // Images
+            'images:create',
+            'images:read',
             // Clients
             'clients:create',
             'clients:read',
@@ -99,18 +102,18 @@ class ACL {
         var jwt = require('jsonwebtoken')
 
         return (req, res, next) => {
-            if (!req.header('Authorization')) {
-                Response.Unauthorized(res, 'No Authorization header')
+            if (!req.cookies['token']) {
+                Response.Unauthorized(res, 'No token provided')
                 return;
             }
     
-            var header = req.header('Authorization').split(' ')
-            if (header.length !== 2 || header[0] !== 'JWT') {
-                Response.Unauthorized(res, 'Bad Authorization type')
+            var cookie = req.cookies['token'].split(' ')
+            if (cookie.length !== 2 || cookie[0] !== 'JWT') {
+                Response.Unauthorized(res, 'Bad token type')
                 return
             }
     
-            var token = header[1]
+            var token = cookie[1]
             jwt.verify(token, jwtSecret, (err, decoded) => {
                 if (err) {
                     if (err.name === 'TokenExpiredError')

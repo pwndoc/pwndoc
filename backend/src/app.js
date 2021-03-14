@@ -6,6 +6,7 @@ var https = require('https').Server({
 }, app);
 var io = require('socket.io')(https);
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser')
 
 // Get configuration
 var env = process.env.NODE_ENV || 'dev';
@@ -33,6 +34,7 @@ require('./models/vulnerability-type');
 require('./models/vulnerability-category');
 require('./models/custom-section');
 require('./models/custom-field');
+require('./models/image');
 
 // Socket IO configuration
 var getSockets = function(room) {
@@ -80,10 +82,11 @@ io.on('connection', (socket) => {
 
 // CORS
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
+  // res.header("Access-Control-Allow-Origin", req.headers.origin);
   res.header("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header('Access-Control-Expose-Headers', 'Content-Disposition')
+  // res.header('Access-Control-Allow-Credentials', 'true')
   next();
 });
 
@@ -92,6 +95,8 @@ app.use(bodyParser.urlencoded({
   limit: '10mb',
   extended: false // do not need to take care about images, videos -> false: only strings
 }));
+
+app.use(cookieParser())
 
 // Routes import
 require('./routes/user')(app);
@@ -102,6 +107,7 @@ require('./routes/vulnerability')(app);
 require('./routes/template')(app);
 require('./routes/vulnerability')(app);
 require('./routes/data')(app);
+require('./routes/image')(app);
 
 app.get("*", function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});
