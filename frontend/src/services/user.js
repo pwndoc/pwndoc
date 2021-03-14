@@ -1,6 +1,8 @@
 var jwtDecode = require('jwt-decode');
 import Vue from 'vue';
 
+import Router from '../router'
+
 export default {
     user: null,
 
@@ -10,9 +12,7 @@ export default {
             Vue.prototype.$axios.post(`users/token`, params)
             .then((response) => {
                 var token = response.data.datas.token;
-                localStorage.setItem('token', token);
                 this.user = jwtDecode(token);
-                // Vue.prototype.$axios.headers.common['Authorization'] = `JWT ${token}`;
                 resolve();
             })
             .catch((error) => {
@@ -23,23 +23,18 @@ export default {
     },
 
     destroyToken() {
-        localStorage.removeItem('token');
-    },
-
-    setToken(token) {
-        localStorage.setItem('token', token);
-        this.checkToken();
+        Vue.prototype.$axios.get('users/destroytoken')
+        .then(() => {
+            Router.push('/login');
+        })
+        .catch(err => console.log(err))
     },
 
     checkToken() {
         return new Promise((resolve, reject) => {
-            var token = localStorage.getItem('token');
-            if (!token)
-                throw new Error('noToken');
-            //Set Authorization headers each time for hot reload
-            Vue.prototype.$axios.defaults.headers.common['Authorization'] = token;
             Vue.prototype.$axios.get(`users/checktoken`)
-            .then(() => {
+            .then(data => {
+                var token = data.data.datas
                 var decoded = jwtDecode(token);
                 if (decoded) {
                     this.user = decoded;
@@ -47,9 +42,9 @@ export default {
                 }
                 else
                     reject('InvalidToken');
+                resolve()
             })
             .catch((error) => {
-                console.log(error)
                 reject(error);
             })
         })
@@ -61,9 +56,7 @@ export default {
             Vue.prototype.$axios.post(`users/init`, params)
             .then((response) => {
                 var token = response.data.datas.token;
-                localStorage.setItem('token', token);
                 this.user = jwtDecode(token);
-                // Vue.prototype.$axios.headers.common['Authorization'] = `JWT ${token}`;
                 resolve();
             })
             .catch((error) => {

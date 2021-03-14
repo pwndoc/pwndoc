@@ -287,8 +287,8 @@ module.exports = function(app, io) {
     // Generate Report for specific audit
     app.get("/api/audits/:auditId/generate", acl.hasPermission('audits:read'), function(req, res){
         Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
-        .then( audit => {
-            var reportDoc = reportGenerator.generateDoc(audit);
+        .then( async audit => {
+            var reportDoc = await reportGenerator.generateDoc(audit);
             Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
         })
         .catch(err => {

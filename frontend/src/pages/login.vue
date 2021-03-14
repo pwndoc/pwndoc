@@ -1,7 +1,7 @@
 <template>
 <div class="login-background" style="height:100vh;display:flex">
     <div v-if="loaded === true" style="margin:auto">
-        <q-card align="center" style="width:350px">
+        <q-card align="center" style="width:350px" class="bg-grey-1">
             <q-card-section>
                 <q-img src="pwndoc-logo.png" />
             </q-card-section>
@@ -17,11 +17,12 @@
                 <q-card-section>
                     <q-input
                     label="Username"
-                    stack-label
                     :error="!!errors.username"
                     :error-message="errors.username"
                     hide-bottom-space
                     v-model="username"
+                    outlined
+                    bg-color="white"
                     autofocus
                     for="username"
                     @keyup.enter="initUser()"
@@ -30,33 +31,36 @@
                 <q-card-section>
                     <q-input
                     label="Firstname"
-                    stack-label
                     :error="!!errors.firstname"
                     :error-message="errors.firstname"
                     hide-bottom-space
                     v-model="firstname"
+                    outlined
+                    bg-color="white"
                     @keyup.enter="initUser()"
                     />
                 </q-card-section>
                 <q-card-section>
                     <q-input
                     label="Lastname"
-                    stack-label
                     :error="!!errors.lastname"
                     :error-message="errors.lastname"
                     hide-bottom-space
                     v-model="lastname"
+                    outlined
+                    bg-color="white"
                     @keyup.enter="initUser()"
                     />
                 </q-card-section>
                 <q-card-section>
                     <q-input
                     label="Password"
-                    stack-label
                     :error="!!errors.password"
                     :error-message="errors.password"
                     hide-bottom-space
                     v-model="password"
+                    outlined
+                    bg-color="white"
                     type="password"
                     for="password"
                     @keyup.enter="initUser()"
@@ -73,12 +77,13 @@
                 <q-card-section>
                     <q-input
                     label="Username"
-                    stack-label
                     :error="!!errors.username"
                     :error-message="errors.username"
                     hide-bottom-space
                     v-model="username"
                     autofocus
+                    outlined
+                    bg-color="white"
                     for="username"
                     @keyup.enter="getToken()"
                     >
@@ -88,10 +93,12 @@
                 <q-card-section>
                     <q-input
                     label="Password"
-                    stack-label
                     :error="!!errors.password"
                     :error-message="errors.password"
+                    hide-bottom-space
                     v-model="password"
+                    outlined
+                    bg-color="white"
                     for="password"
                     type="password"
                     @keyup.enter="getToken()"

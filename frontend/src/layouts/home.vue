@@ -62,7 +62,6 @@ export default {
     methods: {
         logout: function() {
             UserService.destroyToken();
-            this.$router.push('/login');
         }
     }
 }

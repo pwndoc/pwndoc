@@ -11,23 +11,23 @@ function usage {
 }
 
 function full_test {
-    sudo docker-compose down
-    sudo rm -rf backend/mongo-data
-    sudo docker-compose build --no-cache
-    sudo docker-compose up -d
-    sudo docker-compose -f backend/docker-compose.test.yml build
-    sudo docker-compose -f backend/docker-compose.test.yml run --rm backend-test
+    docker-compose down
+    rm -rf backend/mongo-data
+    docker-compose build --no-cache
+    docker-compose up -d
+    docker-compose -f backend/docker-compose.test.yml build
+    docker-compose -f backend/docker-compose.test.yml run --rm backend-test
     rc=$?
-    sudo docker-compose down
-    sudo rm -rf backend/mongo-data
+    docker-compose down
+    rm -rf backend/mongo-data
     exit $rc
 }
 
 function quick_test {
-    sudo docker-compose stop
-    sudo rm -rf backend/mongo-data
-    sudo docker-compose start
-    sudo docker-compose -f backend/docker-compose.test.yml run --rm backend-test
+    docker-compose stop
+    rm -rf backend/mongo-data
+    docker-compose start
+    docker-compose -f backend/docker-compose.test.yml run --rm backend-test
     rc=$?
     exit $rc
 }

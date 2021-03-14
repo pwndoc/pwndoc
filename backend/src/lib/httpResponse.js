@@ -28,6 +28,12 @@ function SendFile(res, filename, file){
 }
 exports.SendFile = SendFile;
 
+function SendImage(res, image){
+    res.set({"Content-Type": "image/png", "Content-Length": image.length});
+    res.status(200).send(image);
+}
+exports.SendImage = SendImage;
+
 /*
 *** Codes 4xx ***
 */
