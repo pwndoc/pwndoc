@@ -44,7 +44,7 @@ export default {
 
             UserService.updateProfile(this.user)
             .then((data) => {
-                UserService.setToken(data.data.datas.token);
+                UserService.checkToken()
                 Notify.create({
                     message: 'Profile updated successfully',
                     color: 'positive',

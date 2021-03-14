@@ -7,7 +7,13 @@ module.exports = function(app) {
 
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
-        Response.Ok(res, 'Valid token');
+        Response.Ok(res, req.cookies['token']);
+    });
+
+    // Remove token cookie
+    app.get("/api/users/destroytoken", acl.hasPermission('validtoken'), function(req, res) {
+        res.clearCookie('token')
+        Response.Ok(res, 'Removed token');
     });
 
     // Authenticate user -> return JWT token
@@ -22,7 +28,10 @@ module.exports = function(app) {
         user.password = req.body.password;
 
         user.getToken()
-        .then(msg => Response.Ok(res, msg))
+        .then(msg => {
+            res.cookie('token', msg.token, {secure: true, httpOnly: true})
+            Response.Ok(res, msg)
+        })
         .catch(err => Response.Internal(res, err))
     });
 
@@ -102,7 +111,10 @@ module.exports = function(app) {
                     newUser.password = req.body.password;
 
                     newUser.getToken()
-                    .then(msg => Response.Created(res, msg))
+                    .then(msg => {
+                        res.cookie('token', msg.token, {secure: true, httpOnly: true})
+                        Response.Created(res, msg)
+                    })
                     .catch(err => Response.Internal(res, err))
                 })
                 .catch((err) => Response.Internal(res, err))
@@ -137,7 +149,10 @@ module.exports = function(app) {
         if (req.body.lastname) user.lastname = req.body.lastname;
 
         User.updateProfile(req.decodedToken.username, user)
-        .then(msg => Response.Ok(res, msg))
+        .then(msg => {
+            res.cookie('token', msg.token, {secure: true, httpOnly: true})
+            Response.Ok(res, msg)
+        })
         .catch(err => Response.Internal(res, err))
     });
 

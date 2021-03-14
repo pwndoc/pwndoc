@@ -1,7 +1,7 @@
 var jwtDecode = require('jwt-decode');
 import Vue from 'vue';
 
-import { Cookies } from 'quasar'
+import Router from '../router'
 
 export default {
     user: null,
@@ -13,7 +13,6 @@ export default {
             .then((response) => {
                 var token = response.data.datas.token;
                 this.user = jwtDecode(token);
-                Cookies.set('token', token, {secure: true, sameSite: 'None'})
                 resolve();
             })
             .catch((error) => {
@@ -24,21 +23,18 @@ export default {
     },
 
     destroyToken() {
-        Cookies.remove('token')
-    },
-
-    setToken(token) {
-        Cookies.set('token', token, {secure: true, sameSite: 'None'})
-        this.checkToken();
+        Vue.prototype.$axios.get('users/destroytoken')
+        .then(() => {
+            Router.push('/login');
+        })
+        .catch(err => console.log(err))
     },
 
     checkToken() {
         return new Promise((resolve, reject) => {
-            if (!Cookies.has('token'))
-                throw new Error('noToken');
             Vue.prototype.$axios.get(`users/checktoken`)
-            .then(() => {
-                var token = Cookies.get('token')
+            .then(data => {
+                var token = data.data.datas
                 var decoded = jwtDecode(token);
                 if (decoded) {
                     this.user = decoded;
@@ -46,9 +42,9 @@ export default {
                 }
                 else
                     reject('InvalidToken');
+                resolve()
             })
             .catch((error) => {
-                console.log(error)
                 reject(error);
             })
         })
@@ -60,7 +56,6 @@ export default {
             Vue.prototype.$axios.post(`users/init`, params)
             .then((response) => {
                 var token = response.data.datas.token;
-                Cookies.set('token', token, {secure: true, sameSite: 'None'})
                 this.user = jwtDecode(token);
                 resolve();
             })
