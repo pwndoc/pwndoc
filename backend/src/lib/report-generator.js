@@ -9,6 +9,7 @@ var utils = require('./utils');
 var html2ooxml = require('./html2ooxml')
 var _ = require('lodash');
 var Image = require('mongoose').model('Image')
+const libre = require('libreoffice-convert');
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
@@ -89,6 +90,20 @@ async function generateDoc(audit) {
     return buf;
 }
 exports.generateDoc = generateDoc;
+
+// Generates a PDF from a docx using libreoffice-convert 
+// libreoffice-convert leverages libreoffice to convert office documents to different formats
+// https://www.npmjs.com/package/libreoffice-convert
+async function generatePdf(audit) {
+    var docxReport = await generateDoc(audit);
+    return new Promise((resolve, reject) => 
+        libre.convert(docxReport, ".pdf", undefined, (err, pdf) => {
+            if (err)
+                console.log(err);
+            resolve(pdf);
+    }));
+}
+exports.generatePdf = generatePdf;
 
 // *** Angular parser filters ***
 

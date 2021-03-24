@@ -298,4 +298,24 @@ module.exports = function(app, io) {
                 Response.Internal(res, err)
         });
     });
+
+    // Generate Report as PDF if template is a word document
+    app.get("/api/audits/:auditId/generate/pdf", acl.hasPermission('audits:read'), function(req, res){
+        Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then( async audit => {
+            if(audit.template.ext === "doc" || audit.template.ext === "docx" || audit.template.ext === "docm") {
+                var reportPdf = await reportGenerator.generatePdf(audit);
+                Response.SendFile(res, `${audit.name}.pdf`, reportPdf);
+            } else {
+                Response.BadParameters(res, 'Template not in a Microsoft Word format')
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            if (err.code === "ENOENT")
+                Response.BadParameters(res, 'Template File not found')
+            else
+                Response.Internal(res, err)
+        });
+    });
 }
