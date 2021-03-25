@@ -320,7 +320,6 @@ module.exports = function(app, io) {
         });
     });
 
-
     // Generate Report as csv
     app.get("/api/audits/:auditId/generate/csv", acl.hasPermission('audits:read'), function(req, res){
         Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
@@ -330,10 +329,7 @@ module.exports = function(app, io) {
         })
         .catch(err => {
             console.log(err);
-            if (err.code === "ENOENT")
-                Response.BadParameters(res, 'Template File not found')
-            else
-                Response.Internal(res, err)
+            Response.Internal(res, err)
         });
     });
 
@@ -345,10 +341,7 @@ module.exports = function(app, io) {
         })
         .catch(err => {
             console.log(err);
-            if (err.code === "ENOENT")
-                Response.BadParameters(res, 'Template File not found')
-            else
-                Response.Internal(res, err)
+            Response.Internal(res, err)
         });
     });
 }
