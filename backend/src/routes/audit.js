@@ -44,8 +44,7 @@ module.exports = function(app, io) {
                 })
             Response.Ok(res, result)
         })
-        .catch(err => { console.log(err);
-            Response.Internal(res, err)})
+        .catch(err => { Response.Internal(res, err) })
     });
 
     // Create audit with name, template, language and username provided
