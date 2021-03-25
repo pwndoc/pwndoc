@@ -21,6 +21,12 @@
 										<q-item-label>pdf</q-item-label>
 									</q-item-section>
 									</q-item>
+
+									<q-item clickable v-close-popup @click="generateReport('csv')">
+									<q-item-section>
+										<q-item-label>csv</q-item-label>
+									</q-item-section>
+									</q-item>
 								</q-list>
 							</q-btn-dropdown>
 						</q-item-section>

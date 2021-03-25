@@ -319,4 +319,21 @@ module.exports = function(app, io) {
                 Response.Internal(res, err)
         });
     });
+
+
+    // Generate Report as csv
+    app.get("/api/audits/:auditId/generate/csv", acl.hasPermission('audits:read'), function(req, res){
+        Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then( async audit => {
+            var reportCsv = await reportGenerator.generateCsv(audit);
+            Response.SendFile(res, `${audit.name}.csv`, reportCsv);
+        })
+        .catch(err => {
+            console.log(err);
+            if (err.code === "ENOENT")
+                Response.BadParameters(res, 'Template File not found')
+            else
+                Response.Internal(res, err)
+        });
+    });
 }

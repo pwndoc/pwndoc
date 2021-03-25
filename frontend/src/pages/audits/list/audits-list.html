@@ -139,6 +139,11 @@
                             <q-item-label>pdf</q-item-label>
                           </q-item-section>
                         </q-item>
+                        <q-item clickable v-close-popup @click="generateReport(props.row._id, 'csv')">
+                            <q-item-section>
+                              <q-item-label>csv</q-item-label>
+                            </q-item-section>
+                          </q-item>
                       </q-list>
                 </q-btn-dropdown>
                 <q-btn size="sm" flat color="negative" @click="confirmDeleteAudit(props.row)" icon="fa fa-trash">

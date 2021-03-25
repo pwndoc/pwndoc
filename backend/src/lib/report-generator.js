@@ -10,6 +10,7 @@ var html2ooxml = require('./html2ooxml')
 var _ = require('lodash');
 var Image = require('mongoose').model('Image')
 const libre = require('libreoffice-convert');
+const { parseAsync } = require('json2csv');
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
@@ -104,6 +105,15 @@ async function generatePdf(audit) {
     }));
 }
 exports.generatePdf = generatePdf;
+
+// Generates a csv from the json data
+// Leverages json2csv
+// https://www.npmjs.com/package/json2csv
+async function generateCsv(audit) {
+    console.log(audit);
+    return parseAsync(audit._doc);
+}
+exports.generateCsv = generateCsv;
 
 // *** Angular parser filters ***
 
