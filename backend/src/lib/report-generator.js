@@ -6,9 +6,10 @@ var ImageModule = require('docxtemplater-image-module-free');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
-var html2ooxml = require('./html2ooxml')
+var html2ooxml = require('./html2ooxml');
 var _ = require('lodash');
-var Image = require('mongoose').model('Image')
+var Image = require('mongoose').model('Image');
+var reportConfig = require('./report.json');
 const libre = require('libreoffice-convert');
 const { parseAsync } = require('json2csv');
 
@@ -226,11 +227,11 @@ var angularParser = function(tag) {
 // For each finding, add cvssColor, cvssObj and criteria colors parameters
 function cvssHandle(data) {
     // Header title colors
-    var noneColor = "4A86E8"; //blue
-    var lowColor = "008000"; //green
-    var mediumColor = "f9a009"; //yellow
-    var highColor = "fe0000"; //red
-    var criticalColor = "212121"; //black
+    var noneColor = reportConfig.cvss_colors.none_color; //default of blue ("4A86E8")
+    var lowColor = reportConfig.cvss_colors.low_color; //default of green ("008000")
+    var mediumColor = reportConfig.cvss_colors.medium_color; //default of yellow ("f9a009")
+    var highColor = reportConfig.cvss_colors.high_color; //default of red ("fe0000")
+    var criticalColor = reportConfig.cvss_colors.critical_color; //default of black ("212121")
 
     var cellNoneColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + noneColor + '"/></w:tcPr>';
     var cellLowColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColor+'"/></w:tcPr>';
