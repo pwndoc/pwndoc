@@ -37,6 +37,7 @@ module.exports = function(app, io) {
                     a.collaborators = audit.collaborators
                     a.company = audit.company
                     a.createdAt = audit.createdAt
+                    a.ext = audit.template.ext
                     if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected'))
                         a.connected = getUsersRoom(audit._id)
                     result.push(a)

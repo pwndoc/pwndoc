@@ -83,7 +83,8 @@ AuditSchema.statics.getAudits = (isAdmin, userId, filters) => {
         query.populate('creator', '-_id username')
         query.populate('collaborators', '-_id username')
         query.populate('company', '-_id name')
-        query.select('id name language creator collaborators company createdAt')
+        query.populate('template', '-_id ext')
+        query.select('id name language creator collaborators company createdAt template')
         query.exec()
         .then((rows) => {
             resolve(rows)
