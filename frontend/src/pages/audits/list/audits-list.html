@@ -129,20 +129,27 @@
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
                     <q-list>
                         <q-item clickable v-close-popup @click="generateReport(props.row._id)">
-                          <q-item-section>
-                            <q-item-label>{{ props.row.ext }}</q-item-label>
-                          </q-item-section>
-                        </q-item>
-                
-                        <q-item v-if="props.row.ext === 'docx' || props.row.ext === 'docm' || props.row.ext === 'doc'" clickable v-close-popup @click="generateReport(props.row._id, 'pdf')">
-                          <q-item-section>
-                            <q-item-label>pdf</q-item-label>
-                          </q-item-section>
-                        </q-item>
-                        <q-item clickable v-close-popup @click="generateReport(props.row._id, 'csv')">
                             <q-item-section>
-                              <q-item-label>csv</q-item-label>
+                              <q-item-label>{{ props.row.ext }}</q-item-label>
                             </q-item-section>
+                        </q-item>
+
+                        <q-item v-if="props.row.ext === 'docx' || props.row.ext === 'docm' || props.row.ext === 'doc'" clickable v-close-popup @click="generateReport(props.row._id, 'pdf')">
+                            <q-item-section>
+                              <q-item-label>pdf</q-item-label>
+                            </q-item-section>
+                        </q-item>
+
+                        <q-item clickable v-close-popup @click="generateReport(props.row._id, 'csv')">
+                              <q-item-section>
+                                <q-item-label>csv</q-item-label>
+                              </q-item-section>
+                          </q-item>
+
+                          <q-item clickable v-close-popup @click="generateReport(props.row._id, 'json')">
+                              <q-item-section>
+                                <q-item-label>json</q-item-label>
+                              </q-item-section>
                           </q-item>
                       </q-list>
                 </q-btn-dropdown>

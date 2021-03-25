@@ -11,21 +11,27 @@
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
 								<q-list>
 									<q-item clickable v-close-popup @click="generateReport()">
-									<q-item-section>
-										<q-item-label>{{ audit.template.ext }}</q-item-label>
-									</q-item-section>
+										<q-item-section>
+											<q-item-label>{{ audit.template.ext }}</q-item-label>
+										</q-item-section>
 									</q-item>
 							
 									<q-item v-if="audit.template.ext === 'docx' || audit.template.ext === 'docm' || audit.template.ext === 'doc'" clickable v-close-popup @click="generateReport('pdf')">
-									<q-item-section>
-										<q-item-label>pdf</q-item-label>
-									</q-item-section>
+										<q-item-section>
+											<q-item-label>pdf</q-item-label>
+										</q-item-section>
 									</q-item>
 
 									<q-item clickable v-close-popup @click="generateReport('csv')">
-									<q-item-section>
-										<q-item-label>csv</q-item-label>
-									</q-item-section>
+										<q-item-section>
+											<q-item-label>csv</q-item-label>
+										</q-item-section>
+									</q-item>
+
+									<q-item clickable v-close-popup @click="generateReport('json')">
+										<q-item-section>
+											<q-item-label>json</q-item-label>
+										</q-item-section>
 									</q-item>
 								</q-list>
 							</q-btn-dropdown>

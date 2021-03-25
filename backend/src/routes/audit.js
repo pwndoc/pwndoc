@@ -336,4 +336,19 @@ module.exports = function(app, io) {
                 Response.Internal(res, err)
         });
     });
+
+    // Generate Report as json
+    app.get("/api/audits/:auditId/generate/json", acl.hasPermission('audits:read'), function(req, res){
+        Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then( async audit => {
+            Response.SendFile(res, `${audit.name}.json`, audit);
+        })
+        .catch(err => {
+            console.log(err);
+            if (err.code === "ENOENT")
+                Response.BadParameters(res, 'Template File not found')
+            else
+                Response.Internal(res, err)
+        });
+    });
 }
