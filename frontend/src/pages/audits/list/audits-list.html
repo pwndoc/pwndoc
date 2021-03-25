@@ -128,7 +128,12 @@
                 <q-btn-dropdown size="sm" flat color="info" icon="fa fa-download">
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
                     <q-list>
-                        <q-item clickable v-close-popup @click="generateReport(props.row._id)">
+                        <q-item v-if="props.row.ext !== 'Template error'" clickable v-close-popup @click="generateReport(props.row._id)">
+                            <q-item-section>
+                              <q-item-label>{{ props.row.ext }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item v-if="props.row.ext === 'Template error'" clickable v-close-popup :disable="true">
                             <q-item-section>
                               <q-item-label>{{ props.row.ext }}</q-item-label>
                             </q-item-section>

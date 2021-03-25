@@ -37,14 +37,15 @@ module.exports = function(app, io) {
                     a.collaborators = audit.collaborators
                     a.company = audit.company
                     a.createdAt = audit.createdAt
-                    a.ext = audit.template.ext
+                    a.ext = !!audit.template && !!audit.template.ext ? audit.template.ext : "Template error";
                     if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected'))
                         a.connected = getUsersRoom(audit._id)
                     result.push(a)
                 })
             Response.Ok(res, result)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => { console.log(err);
+            Response.Internal(res, err)})
     });
 
     // Create audit with name, template, language and username provided
