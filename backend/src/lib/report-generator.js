@@ -110,7 +110,6 @@ exports.generatePdf = generatePdf;
 // Leverages json2csv
 // https://www.npmjs.com/package/json2csv
 async function generateCsv(audit) {
-    console.log(audit);
     return parseAsync(audit._doc);
 }
 exports.generateCsv = generateCsv;
