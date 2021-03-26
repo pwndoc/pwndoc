@@ -435,6 +435,4 @@ export default {
 
 }
 
-.inactive {}
-
 </style>
