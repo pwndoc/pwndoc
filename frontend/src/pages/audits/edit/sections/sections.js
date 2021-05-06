@@ -2,8 +2,10 @@ import { Notify, Dialog } from 'quasar';
 
 import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
+import CustomFields from 'components/custom-fields';
 
 import AuditService from '@/services/audit';
+import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
 export default {
@@ -11,14 +13,21 @@ export default {
         return {
             // Set audit ID
             auditId: null,
-            section: {},
+            section: {
+                field: "",
+                name: "",
+                customFields: []
+            },
             sectionOrig: {},
+            // List of CustomFields
+            customFields: []
         }
     },
 
     components: {
         BasicEditor,
-        Breadcrumb
+        Breadcrumb,
+        CustomFields
     },
 
     mounted: function() {
@@ -76,9 +85,14 @@ export default {
 
         // Get Section
         getSection: function() {
-            AuditService.getSection(this.auditId, this.sectionId)
+            DataService.getCustomFields()
+            .then((data) => {
+                this.customFields = data.data.datas
+                return AuditService.getSection(this.auditId, this.sectionId)
+            })
             .then((data) => {
                 this.section = data.data.datas;
+                this.section.customFields = Utils.filterCustomFields('section', this.section.name, this.customFields, this.section.customFields, this.$parent.audit.language)
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.sectionOrig = this.$_.cloneDeep(this.section);                
@@ -93,22 +107,33 @@ export default {
         // Update Section
         updateSection: function() {
             Utils.syncEditors(this.$refs)
-            AuditService.updateSection(this.auditId, this.sectionId, this.section)
-            .then(() => {
-                this.sectionOrig = this.$_.cloneDeep(this.section);
-                Notify.create({
-                    message: 'Section updated successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+            this.$nextTick(() => {
+                if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
+                    Notify.create({
+                        message: 'Please fill all required Fields',
+                        color: 'negative',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
+                    return
+                }
+                AuditService.updateSection(this.auditId, this.sectionId, this.section)
+                .then(() => {
+                    this.sectionOrig = this.$_.cloneDeep(this.section);
+                    Notify.create({
+                        message: 'Section updated successfully',
+                        color: 'positive',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor:'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
                 })
             })
         },
@@ -150,7 +175,7 @@ export default {
         },
 
         unsavedChanges: function() {  
-            if ((this.section.text || this.sectionOrig.text) && this.section.text !== this.sectionOrig.text)
+            if (!this.$_.isEqual(this.section.customFields, this.sectionOrig.customFields))
                 return true
 
             return false

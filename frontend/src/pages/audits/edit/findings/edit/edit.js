@@ -123,7 +123,7 @@ export default {
                 if (this.finding.paragraphs.length > 0 && !this.finding.poc)
                     this.finding.poc = this.convertParagraphsToHTML(this.finding.paragraphs)
 
-                this.finding.customFields = Utils.filterCustomFields('finding', this.finding.category, this.customFields, this.finding.customFields)
+                this.finding.customFields = Utils.filterCustomFields('finding', this.finding.category, this.customFields, this.finding.customFields, this.$parent.audit.language)
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.findingOrig = this.$_.cloneDeep(this.finding); 

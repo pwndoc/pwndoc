@@ -291,17 +291,10 @@ module.exports = function(app) {
         .catch(err => Response.Internal(res, err))
     });
 
-     // Get sections by language
-     app.get("/api/data/sections/:locale", acl.hasPermission('sections:read'), function(req, res) {
-        CustomSection.getAllByLanguage(req.params.locale)
-        .then(msg => Response.Ok(res, msg))
-        .catch(err => Response.Internal(res, err))
-    });
-
     // Create section
     app.post("/api/data/sections", acl.hasPermission('sections:create'), function(req, res) {
-        if (!req.body.field || !req.body.name || !req.body.locale) {
-            Response.BadParameters(res, 'Missing required parameters: field, name, locale');
+        if (!req.body.field || !req.body.name) {
+            Response.BadParameters(res, 'Missing required parameters: field, name');
             return;
         }
         if (!utils.validFilename(req.body.field) || !utils.validFilename(req.body.name)) {
@@ -335,11 +328,11 @@ module.exports = function(app) {
      app.put("/api/data/sections", acl.hasPermission('sections:update'), function(req, res) {
         for (var i=0; i<req.body.length; i++) {
             var section = req.body[i]
-            if (!section.name || !section.field || !section.locale) {
+            if (!section.name || !section.field) {
                 Response.BadParameters(res, 'Missing required parameters: name, field')
                 return
             }
-            if (!utils.validFilename(section.name) || !utils.validFilename(section.field) || !utils.validFilename(section.locale)) {
+            if (!utils.validFilename(section.name) || !utils.validFilename(section.field)) {
                 Response.BadParameters(res, 'name and field value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
                 return
             }
@@ -347,7 +340,7 @@ module.exports = function(app) {
 
         var sections = []
         req.body.forEach(e => {
-            sections.push({locale: e.locale, name: e.name, field: e.field, text: e.text || "", icon: e.icon || ""})
+            sections.push({name: e.name, field: e.field, icon: e.icon || ""})
         })
 
         CustomSection.updateAll(sections)
@@ -417,8 +410,6 @@ module.exports = function(app) {
             if (typeof e.position === 'number') field.position = e.position
             customFields.push(field)
         })
-
-        console.log(customFields)
 
         CustomField.updateAll(customFields)
         .then(msg => Response.Created(res, msg))

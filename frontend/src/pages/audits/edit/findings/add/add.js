@@ -198,7 +198,7 @@ export default {
                     cvssScore: 0,
                     cvssSeverity: "None",
                     category: category.name,
-                    customFields: category.fields || []
+                    customFields: Utils.filterCustomFields('finding', category.name, this.$parent.customFields, [], this.$parent.audit.language)
                 };
             }
             else if (this.findingTitle){
@@ -214,6 +214,7 @@ export default {
                     cvssv3: "",
                     cvssScore: 0,
                     cvssSeverity: "None",
+                    customFields: Utils.filterCustomFields('finding', '', this.$parent.customFields, [], this.$parent.audit.language)
                 };
             }
 

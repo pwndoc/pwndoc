@@ -42,12 +42,15 @@ export default {
                 size: 12,
                 offset: 0,
                 required: false,
-                description: ''
+                description: '',
+                text: []
             },
+            cfLocale: "",
             cfDisplayOptions: [
                 {label: 'Audit General', value: 'general'},
                 {label: 'Audit Finding', value: 'finding'},
-                {label: 'Vulnerability', value: 'vulnerability'}
+                {label: 'Vulnerability', value: 'vulnerability'},
+                {label: 'Section', value: 'section'}
             ],
             cfComponentOptions: [
                 {label: 'Editor', value: 'text'},
@@ -56,7 +59,7 @@ export default {
             ],
 
             sections: [],
-            newSection: {field: "", name: "", locale: "", icon: ""},
+            newSection: {field: "", name: "", icon: ""},
             editSections: [],
             editSection: false,
 
@@ -100,7 +103,7 @@ export default {
                 if (this.languages.length > 0) {
                     this.newAuditType.locale = this.languages[0].locale;
                     this.newVulnType.locale = this.languages[0].locale;
-                    this.newSection.locale = this.languages[0].locale;
+                    this.cfLocale = this.languages[0].locale;
                 }
             })
             .catch((err) => {
@@ -509,6 +512,16 @@ export default {
             return this.customFields.some(field => this.canDisplayCustomField(field))
         },
 
+        getFieldLocaleIndex: function(fieldIdx) {
+            var text = this.customFields[fieldIdx].text
+            for (var i=0; i<text.length; i++) {
+                if (text[i].locale === this.cfLocale)
+                    return i
+            }
+            text.push({locale: this.cfLocale, value: ""})
+            return i
+        },
+
 /* ===== SECTIONS ===== */
 
         // Get available sections
@@ -533,14 +546,10 @@ export default {
             if (this.errors.sectionName || this.errors.sectionField)
                 return;
 
-            Utils.syncEditors(this.$refs)
-
-            if (this.newSection.text) this.newSection.text = this.newSection.text.replace(/(<p><\/p>)+$/, '')
             DataService.createSection(this.newSection)
             .then((data) => {
                 this.newSection.field = "";
                 this.newSection.name = "";
-                this.newSection.text = ""
                 this.newSection.icon = ""
                 this.getSections();
                 Notify.create({

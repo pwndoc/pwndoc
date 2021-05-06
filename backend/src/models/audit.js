@@ -65,7 +65,7 @@ var AuditSchema = new Schema({
     findings:           [Finding],
     template:           {type: Schema.Types.ObjectId, ref: 'Template'},
     creator:            {type: Schema.Types.ObjectId, ref: 'User'},
-    sections:           [{field: String, name: String, text: String}],
+    sections:           [{field: String, name: String, text: String, customFields: [customField]}], // keep text for retrocompatibility
     customFields:       [customField]
 
 }, {timestamps: true});
@@ -110,9 +110,10 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
             path: 'findings',
             populate: {
                 path: 'customFields.customField',
-                select: 'label fieldType text displayFinding displayCategory'
+                select: 'label fieldType text'
             }
         })
+        query.populate('sections.customFields.customField', 'label fieldType')
         query.exec()
         .then((row) => {
             if (!row)

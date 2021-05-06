@@ -117,7 +117,7 @@ export default {
             })
             .then((data) => {
                 this.audit = data.data.datas;
-                this.audit.customFields = Utils.filterCustomFields('audit-general', '', this.customFields, this.audit.customFields)
+                this.audit.customFields = Utils.filterCustomFields('audit-general', '', this.customFields, this.audit.customFields, this.audit.language)
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 this.getCollaborators()
             })

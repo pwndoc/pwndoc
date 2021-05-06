@@ -110,7 +110,7 @@
 								</q-menu>
 								<q-menu v-else anchor="top right" self="top left">
 									<q-list separator>
-										<q-item clickable v-close-popup v-for="section of sections" :key="section.field" @click="createSection(section)">
+										<q-item clickable v-close-popup v-for="(section,idx) of sections" :key="idx" @click="createSection(section)">
 											<q-item-section>{{section.name}}</q-item-section>
 										</q-item>
 									</q-list>
@@ -171,23 +171,26 @@ import { Notify } from 'quasar';
 import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
+import Utils from '@/services/utils';
 
 export default {
 		data () {
 				return {
-						auditId: "",
-						findings: [],
-						users: [],
-						audit: {findings: {}},
-						sections: [],
-						splitterRatio: 80,
-						loading: true,
-						vulnCategories: []
+					auditId: "",
+					findings: [],
+					users: [],
+					audit: {findings: {}},
+					sections: [],
+					splitterRatio: 80,
+					loading: true,
+					vulnCategories: [],
+					customFields: []
 				}
 		},
 
 		created: function() {
 			this.auditId = this.$route.params.auditId;
+			this.getCustomFields();
 			this.getAudit(); // Calls getSections				
 		},
 
@@ -274,8 +277,18 @@ export default {
 				})
 			},
 
+			getCustomFields: function() {
+				DataService.getCustomFields()
+				.then((data) => {
+					this.customFields = data.data.datas;
+				})
+				.catch((err) => {
+					console.log(err);
+				})
+			},
+
 			getSections: function() {
-				DataService.getSectionsByLanguage(this.audit.language)
+				DataService.getSections()
 				.then((data) => {
 					this.sections = data.data.datas;
 				})
@@ -292,6 +305,8 @@ export default {
 			},
 
 			createSection: function(section) {
+				section.customFields = []
+            	section.customFields = Utils.filterCustomFields('section', section.name, this.customFields, section.customFields, this.audit.language)
 				AuditService.createSection(this.auditId, section)
 				.catch((err) => {
 					Notify.create({

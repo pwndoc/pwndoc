@@ -11,7 +11,7 @@ var CustomFieldSchema = new Schema({
     offset:             {type: Number, enum: [0,1,2,3,4,5,6,7,8,9,10,11,12], default: 0},
     required:           {type: Boolean, default: false},
     description:        {type: String, default: ''},
-    text:               String
+    text:               [{_id: false, locale: String, value: String}]
 }, {timestamps: true})
 
 CustomFieldSchema.index({"label": 1, "display": 1}, {

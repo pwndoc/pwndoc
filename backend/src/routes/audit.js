@@ -240,7 +240,7 @@ module.exports = function(app, io) {
         section.name = req.body.name;
         section.field = req.body.field;
         // Optional parameters
-        if (req.body.text) section.text = req.body.text
+        if (req.body.customFields) section.customFields = req.body.customFields
 
         Audit.createSection(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, section)
         .then(msg => {
@@ -259,13 +259,16 @@ module.exports = function(app, io) {
 
     // Update section of audit
     app.put("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
-        if (typeof req.body.text === 'undefined') {
-            Response.BadParameters(res, 'Missing some required parameters: text');
+        if (typeof req.body.customFields === 'undefined') {
+            Response.BadParameters(res, 'Missing some required parameters: customFields');
             return;
         }
         var section = {};
         // Mandatory parameters
-        section.text = req.body.text;
+        section.customFields = req.body.customFields;
+
+        // For retrocompatibility with old section.text usage
+        if (req.body.text) section.text = req.body.text; 
 
         Audit.updateSection(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.sectionId, section)
         .then(msg => {

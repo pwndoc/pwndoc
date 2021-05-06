@@ -461,6 +461,21 @@
                                 outlined
                                 bg-color="white"
                                 />
+                                <q-select
+                                v-if="newCustomField.display === 'section'"
+                                label="Select Section"
+                                v-model="newCustomField.displaySub"
+                                :options="sections"
+                                option-value="name"
+                                option-label="name"
+                                options-sanitize
+                                emit-value
+                                map-options
+                                stack-label
+                                clearable
+                                outlined
+                                bg-color="white"
+                                />
                             </q-item-section>
                         </q-item>
                         <q-item v-if="UserService.isAllowed('custom-fields:create')">
@@ -537,6 +552,22 @@
 
                 <!-- Preview -->
                 <q-card class="q-mt-md bg-grey-1" v-if="canDisplayCustomFields()">
+                    <q-card-section class="row">
+                        <q-select 
+                        v-model="cfLocale"
+                        label="Language (For default text)" 
+                        :options="languages" 
+                        option-value="locale"
+                        option-label="language"
+                        emit-value
+                        map-options 
+                        options-sanitize
+                        outlined
+                        bg-color="white"
+                        class="col-md-2 col-12"
+                        />
+                    </q-card-section>
+                    <q-separator />
                     <q-card-section>
                         <draggable v-model="customFields" group="cfields" handle=".handle" ghost-class="drag-ghost" direction="horizontal" class="row">
                             <q-item v-for="(field,idx) of customFields" :key="idx" :class="`col-md-${field.size||12} col-12 offset-md-${field.offset||0}`" v-if="canDisplayCustomField(field)">
@@ -613,7 +644,7 @@
                                         <template v-slot:control>
                                             <basic-editor 
                                             ref="basiceditor_custom" 
-                                            v-model="field.text" 
+                                            v-model="field.text[getFieldLocaleIndex(idx)].value" 
                                             /> 
                                         </template>
 
@@ -626,7 +657,7 @@
                                     v-if="field.fieldType === 'input'"
                                     :label='field.label'
                                     stack-label
-                                    v-model="field.text"
+                                    v-model="field.text[getFieldLocaleIndex(idx)].value"
                                     :hint="field.description"
                                     hide-bottom-space
                                     outlined
@@ -654,22 +685,6 @@
                     </q-card-section>
                     <q-card-section v-if="languages.length > 0" class="row">
                         <div class="col-md-6 col-12" v-if="UserService.isAllowed('sections:create')">
-                            <q-item class="row">
-                                <q-item-section class="col-md-2">
-                                    <q-select 
-                                    v-model="newSection.locale" 
-                                    label="Language" 
-                                    :options="languages" 
-                                    option-value="locale"
-                                    option-label="language"
-                                    emit-value
-                                    map-options 
-                                    options-sanitize
-                                    outlined
-                                    bg-color="white"
-                                    />
-                                </q-item-section>
-                            </q-item>
                             <q-item>
                                 <q-item-section>
                                     <q-input
@@ -716,13 +731,6 @@
                                     <q-btn color="secondary" unelevated label="+" size="md" @click="createSection" />
                                 </q-item-section>
                             </q-item>
-                            <q-item>
-                                <q-field class="col-12" borderless label="Default Text" stack-label>
-                                    <template v-slot="control">
-                                        <basic-editor ref="basiceditor_newsection" noSync v-model="newSection.text" />
-                                    </template>
-                                </q-field>
-                            </q-item>
                         </div>
 
                         <div v-if="!editSection" class="col-md-6">
@@ -735,7 +743,7 @@
                                     </q-btn>
                                 </q-toolbar>
                                 <q-separator />
-                                <div v-for="(section, idx) of sections" :key="idx" v-if="section.locale === newSection.locale">
+                                <div v-for="(section, idx) of sections" :key="idx">
                                     <q-item>
                                         <q-item-section>
                                             <q-input
@@ -772,14 +780,6 @@
                                             </q-input>
                                         </q-item-section>
                                     </q-item>
-                                    <q-item>
-                                        <q-field class="col-md-12" borderless label="Default Text" stack-label>
-                                            <template v-slot="control">
-                                                <basic-editor v-model="section.text" :editable="false" />
-                                            </template>
-                                        </q-field>
-                                    </q-item>
-                                    <q-separator size="2px" color="blue-grey-5" v-if="idx !== sections.length-1" />
                                 </div>
                             </q-card>
                         </div>
@@ -791,7 +791,7 @@
                                 <q-separator />
                                 <q-card-section>
                                     <draggable v-model="editSections" handle=".handle" ghost-class="drag-ghost" direction="horizontal">
-                                        <div v-for="(section, idx) of editSections" :key="idx" v-if="section.locale === newSection.locale">
+                                        <div v-for="(section, idx) of editSections" :key="idx">
                                             <q-item>
                                                 <q-item-section avatar>
                                                     <q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
@@ -828,17 +828,9 @@
                                                     </q-input>
                                                 </q-item-section>
                                                 <q-item-section side >
-                                                    <q-btn color="red" unelevated label="x" size="md" class="q-mt-md" @click="removeSection(idx)"/>
+                                                    <q-btn color="red" unelevated label="x" size="md" @click="removeSection(idx)"/>
                                                 </q-item-section>
                                             </q-item>
-                                            <q-item>
-                                                <q-field class="col-md-12" borderless label="Default Text" stack-label>
-                                                    <template v-slot="control">
-                                                        <basic-editor ref="basiceditor_updatesection" noSync v-model="section.text" disableDrop />
-                                                    </template>
-                                                </q-field>
-                                            </q-item>
-                                            <q-separator size="2px" color="blue-grey-5" v-if="idx !== editSections.length-1" />
                                         </div>
                                     </draggable>
                                 </q-card-section>
