@@ -18,3 +18,7 @@ roles.json
 *.ntvs*
 *.njsproj
 *.sln
+
+# backup files
+!backup/config/pwndoc.yml
+backup

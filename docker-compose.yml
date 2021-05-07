@@ -12,6 +12,7 @@ services:
       - MONGO_DB:pwndoc
     networks:
       - backend
+    restart: always
 
   pwndoc-backend:
     build: ./backend
@@ -28,6 +29,7 @@ services:
       - mongodb
     networks: 
       - backend
+    restart: always
 
   pwndoc-frontend:
     build: ./frontend
@@ -38,7 +40,24 @@ services:
       - 8443:8443
     networks:
       - backend
+    restart: always
 
+  mgob:
+    image: stefanprodan/mgob
+    container_name: pwndoc_mgob 
+    volumes:
+      - ./backup/config:/config
+      - ./backup/storage:/storage
+      - ./backup/tmp:/tmp
+      - ./backup/data:/data
+    restart: always
+    # ports:
+    #  - 8090:8090
+    links:
+      - mongodb
+    networks:
+      - backend
+   
 networks:
   backend:
       driver: bridge

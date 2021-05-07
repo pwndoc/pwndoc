@@ -1,0 +1,99 @@
+scheduler:
+  # run every day at 6:00 and 18:00 UTC
+  cron: "0 6,18 */1 * *"
+  # number of backups to keep locally
+  retention: 60
+  # backup operation timeout in minutes
+  timeout: 60
+
+target:
+  # mongod IP or host name
+  host: mongo-pwndoc
+  # mongodb port
+  port: 27017
+  # mongodb database name, leave blank to backup all databases
+  database: "pwndoc"
+  # leave blank if auth is not enabled
+  #username: "admin"
+  #password: "secret"
+  # add custom params to mongodump (eg. Auth or SSL support), leave blank if not needed
+  # params: "--authenticationDatabase admin"
+
+# Encryption (optional)
+encryption:
+  # At the time being, only gpg asymmetric encryption is supported
+  # Public key file or at least one recipient is mandatory
+  gpg:
+    # optional path to a public key file, only the first key is used.
+    keyFile: /config/pgp.pub.asc
+    # optional key server, defaults to hkps://keys.openpgp.org
+    # keyServer: hkps://keys.openpgp.org
+    # optional list of recipients, they will be looked up on key server
+    #recipients:
+    #  - luigi.polidorio@softwall.com.br
+
+# S3 upload (optional)
+#s3:
+#  url: "https://s3.amazonaws.com"
+#  bucket: "pwndoc-onedrive"
+# # accessKey and secretKey are optional for AWS, if your Docker image has awscli
+#  accessKey: "AKIAZE6NK64CTTNLAMNYAKIAZE6NK64CTTNLAMNY"
+#  secretKey: "TTzqpVu0b6Oi9m/a9gw2J3SmRUSm1+uEx4T0VNcC"
+  # Optional, only used for AWS (when awscli is present)
+  # The customer-managed AWS Key Management  Service (KMS) key ID that should be used to 
+  # server-side encrypt the backup in S3
+  #kmsKeyId:
+  # Optional, only used for AWS (when awscli is present)
+  # Valid choices are: STANDARD | REDUCED_REDUNDANCY | STANDARD_IA  |  ONE-
+  #     ZONE_IA  |  INTELLIGENT_TIERING  |  GLACIER | DEEP_ARCHIVE. 
+  # Defaults to 'STANDARD'
+  #storageClass: STANDARD
+  # For Minio and AWS use S3v4 for GCP use S3v2
+#  api: "S3v4"
+
+# GCloud upload (optional)
+#cloud:
+# bucket: "backup"
+# keyFilePath: /path/to/service-account.json
+
+# Azure blob storage upload (optional)
+#azure:
+#  containerName: "backup"
+#  connectionString: "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net"
+
+# Rclone upload (optional)
+rclone:
+  bucket: "Backup/pwndoc"
+  # See https://rclone.org/docs/ for details on how to configure rclone
+  configFilePath: /config/rclone.conf
+  configSection: "pwndoc_onedrive"
+
+# SFTP upload (optional)
+#sftp:
+#  host: sftp.company.com
+#  port: 2022
+#  username: user
+#  password: secret
+#  # you can also specify path to a private key and a passphrase
+#  private_key: /etc/ssh/ssh_host_rsa_key
+#  passphrase: secretpassphrase
+#  # dir must exist on the SFTP server
+#  dir: backup
+# Email notifications (optional)
+#smtp:
+#  server: smtp.company.com
+#  port: 465
+#  username: user
+#  password: secret
+#  from: mgob@company.com
+#  to:
+#    - devops@company.com
+#    - alerts@company.com
+# Slack notifications (optional)
+#slack:
+#  url: https://hooks.slack.com/services/xxxx/xxx/xx
+#  channel: devops-alerts
+#  username: mgob
+  # 'true' to notify only on failures
+#  warnOnly: false
+
