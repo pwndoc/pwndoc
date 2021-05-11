@@ -114,12 +114,21 @@ class ACL {
             }
     
             var token = cookie[1]
-            jwt.verify(token, jwtSecret, (err, decoded) => {
+            jwt.verify(token, jwtSecret, async (err, decoded) => {
                 if (err) {
                     if (err.name === 'TokenExpiredError')
                         Response.Unauthorized(res, 'Expired token')
                     else
                         Response.Unauthorized(res, 'Invalid token')
+                    return
+                }
+
+                const database = req.app.get("database");
+                const user = await database.models.User.getByUsername(decoded.username).catch(err => null);
+
+                if( !user || user.role !== decoded.role ){
+                    res.clearCookie("token");
+                    Response.Forbidden(res, 'Role changed');
                     return
                 }
                 

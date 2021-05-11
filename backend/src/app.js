@@ -20,6 +20,8 @@ mongoose.Promise = global.Promise;
 
 mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false});
 
+app.set("database", mongoose);
+
 // Models import
 require('./models/user');
 require('./models/audit');
