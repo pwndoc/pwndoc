@@ -156,7 +156,7 @@ export default {
                     cvssScore: (vuln.cvssScore)?vuln.cvssScore:"0",
                     cvssSeverity: (vuln.cvssSeverity)?vuln.cvssSeverity:"None",
                     category: vuln.category,
-                    customFields: vuln.detail.customFields
+                    customFields: Utils.filterCustomFields('finding', vuln.category, this.$parent.customFields, vuln.detail.customFields, this.$parent.audit.language)
                 };
             }
 

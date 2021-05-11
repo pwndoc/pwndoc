@@ -4,7 +4,6 @@ import Breadcrumb from 'components/breadcrumb'
 
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
-import TemplateService from '@/services/template'
 import CompanyService from '@/services/company'
 import UserService from '@/services/user'
 
@@ -16,8 +15,8 @@ export default {
             audits: [],
             // Loading state
             loading: true,
-            // Templates list
-            templates: [],
+            // AuditTypes list
+            auditTypes: [],
             // Companies list
             companies: [],
             // Languages availbable
@@ -51,9 +50,9 @@ export default {
             myAudits: false,
             displayConnected: false,
             // Errors messages
-            errors: {name: '', language: '', template: ''},
+            errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
-            currentAudit: {name: '', language: '', template: ''}
+            currentAudit: {name: '', language: '', auditType: ''}
         }
     },
 
@@ -69,7 +68,7 @@ export default {
 
         this.getAudits();
         this.getLanguages();
-        this.getTemplates();
+        this.getAuditTypes();
         this.getCompanies();
     },
 
@@ -84,10 +83,10 @@ export default {
             })
         },
 
-        getTemplates: function() {
-            TemplateService.getTemplates()
+        getAuditTypes: function() {
+            DataService.getAuditTypes()
             .then((data) => {
-                this.templates = data.data.datas
+                this.auditTypes = data.data.datas
             })
             .catch((err) => {
                 console.log(err)
@@ -123,11 +122,11 @@ export default {
                 this.errors.name = "Name required";
             if (!this.currentAudit.language)
                 this.errors.language = "Language required";
-            if (!this.currentAudit.template)
-                this.errors.template = "Template required";
+            if (!this.currentAudit.auditType)
+                this.errors.auditType = "Assessment required";
                 
             
-            if (this.errors.name || this.errors.language || this.errors.template)
+            if (this.errors.name || this.errors.language || this.errors.auditType)
                 return;
 
             AuditService.createAudit(this.currentAudit)
@@ -227,14 +226,14 @@ export default {
         cleanErrors: function() {
             this.errors.name = '';
             this.errors.language = '';
-            this.errors.template = '';
+            this.errors.auditType = '';
         },
 
         cleanCurrentAudit: function() {
             this.cleanErrors();
             this.currentAudit.name = '';
             this.currentAudit.language = '';
-            this.currentAudit.template = '';
+            this.currentAudit.auditType = '';
         },
 
         // Convert language locale of audit for table display

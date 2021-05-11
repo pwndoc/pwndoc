@@ -92,7 +92,6 @@ export default {
             })
             .then((data) => {
                 this.section = data.data.datas;
-                this.section.customFields = Utils.filterCustomFields('section', this.section.name, this.customFields, this.section.customFields, this.$parent.audit.language)
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.sectionOrig = this.$_.cloneDeep(this.section);                

@@ -131,7 +131,7 @@ export default {
       if ((display.includes(field.display) && (field.displaySub === '' || field.displaySub === displaySub))) { // wanted field
         var fieldText = ''
         if (locale && Array.isArray(field.text)) { // set default text for locale if it exists
-          let textLocale = fieldText = field.text.find(e => e.locale === locale)
+          let textLocale = field.text.find(e => e.locale === locale)
           if (textLocale) fieldText = textLocale.value
         }
         for (var i=0;i<objectFields.length; i++) { // Set corresponding text value
@@ -149,7 +149,7 @@ export default {
         }
 
         cFields.push({
-            customField: field,
+            customField: _.omit(field, ['text']),
             text: fieldText
         })
       }

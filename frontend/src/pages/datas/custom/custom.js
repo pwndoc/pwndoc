@@ -6,12 +6,14 @@ import CustomFields from 'components/custom-fields'
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
 import UserService from '@/services/user'
+import TemplateService from '@/services/template'
 
 export default {
     data: () => {
         return {
             UserService: UserService,
             Utils: Utils,
+            templates: [],
 
             languages: [],
             newLanguage: {locale: "", language: ""},
@@ -19,7 +21,7 @@ export default {
             editLanguage: false,
 
             auditTypes: [],
-            newAuditType: {name: "", locale: ""},
+            newAuditType: {name: "", templates: [], sections: [], hidden: []},
             editAuditTypes: [],
             editAuditType: false,
 
@@ -49,8 +51,8 @@ export default {
             cfDisplayOptions: [
                 {label: 'Audit General', value: 'general'},
                 {label: 'Audit Finding', value: 'finding'},
-                {label: 'Vulnerability', value: 'vulnerability'},
-                {label: 'Section', value: 'section'}
+                {label: 'Audit Section', value: 'section'},
+                {label: 'Vulnerability', value: 'vulnerability'}
             ],
             cfComponentOptions: [
                 {label: 'Editor', value: 'text'},
@@ -76,6 +78,7 @@ export default {
     },
 
     mounted: function() {
+        this.getTemplates()
         this.getLanguages()
         this.getAuditTypes()
         this.getVulnerabilityTypes()
@@ -93,6 +96,31 @@ export default {
     },
 
     methods: {
+        getTemplates: function() {
+            TemplateService.getTemplates()
+            .then((data) => {
+                this.templates = data.data.datas;
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
+        requiredFieldsEmpty: function() {
+            Object.keys(this.$refs).forEach(key => {
+                if (key.startsWith('validate') && this.$refs[key]) {
+                    if (Array.isArray(this.$refs[key]))
+                        this.$refs[key].forEach(e => e.validate())
+                    else
+                        this.$refs[key].validate()
+                }
+            })
+            if (this.selectedTab === 'languages')
+                return !this.newLanguage.language || !this.newLanguage.locale
+            if (this.selectedTab === 'audit-types') 
+                return !this.newAuditType.name || this.newAuditType.templates.length !== this.languages.length || this.newAuditType.templates.some(e => !e)
+        },
+
 /* ===== LANGUAGES ===== */
 
         // Get available languages
@@ -101,7 +129,6 @@ export default {
             .then((data) => {
                 this.languages = data.data.datas;
                 if (this.languages.length > 0) {
-                    this.newAuditType.locale = this.languages[0].locale;
                     this.newVulnType.locale = this.languages[0].locale;
                     this.cfLocale = this.languages[0].locale;
                 }
@@ -113,13 +140,7 @@ export default {
 
         // Create Language
         createLanguage: function() {
-            this.cleanErrors();
-            if (!this.newLanguage.locale)
-                this.errors.locale = "Locale required";
-            if (!this.newLanguage.language)
-                this.errors.language = "Language required";
-            
-            if (this.errors.locale || this.errors.language)
+            if (this.requiredFieldsEmpty())
                 return;
 
             DataService.createLanguage(this.newLanguage)
@@ -187,16 +208,16 @@ export default {
 
         // Create Audit type
         createAuditType: function() {
-            this.cleanErrors();
-            if (!this.newAuditType.name)
-                this.errors.auditType = "Name required";
-            
-            if (this.errors.auditType)
-                return;
+            console.log(this.requiredFieldsEmpty())
+            if (this.requiredFieldsEmpty())
+                return
 
             DataService.createAuditType(this.newAuditType)
             .then((data) => {
                 this.newAuditType.name = "";
+                this.newAuditType.templates = [];
+                this.newAuditType.sections = [];
+                this.newAuditType.hidden = [];
                 this.getAuditTypes();
                 Notify.create({
                     message: 'Audit type created successfully',
@@ -240,7 +261,13 @@ export default {
 
         // Remove Audit Type
         removeAuditType: function(auditType) {
-            this.editAuditTypes = this.editAuditTypes.filter(e => e.name !== auditType.name || e.locale !== auditType.locale)
+            this.editAuditTypes = this.editAuditTypes.filter(e => e.name !== auditType.name)
+        },
+
+        getTemplateOptionsLanguage: function(locale) {
+            var result = []
+            this.templates.forEach(e => result.push({name: e.name, locale: locale, template: e._id}))
+            return result
         },
 
 /* ===== VULNERABILITY TYPES ===== */

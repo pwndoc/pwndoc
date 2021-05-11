@@ -14,7 +14,7 @@ var CustomFieldSchema = new Schema({
     text:               [{_id: false, locale: String, value: String}]
 }, {timestamps: true})
 
-CustomFieldSchema.index({"label": 1, "display": 1}, {
+CustomFieldSchema.index({"label": 1, "display": 1, "displaySub": 1}, {
     name: "unique_label_display", 
     unique: true, 
     partialFilterExpression: {label: {$exists: true, $gt: ''}}

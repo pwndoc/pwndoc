@@ -98,18 +98,24 @@ module.exports = function(app) {
 
     // Create audit type
     app.post("/api/data/audit-types", acl.hasPermission('audit-types:create'), function(req, res) {
-        if (!req.body.name || !req.body.locale) {
-            Response.BadParameters(res, 'Missing required parameters: name, locale');
+        if (!req.body.name || !req.body.templates) {
+            Response.BadParameters(res, 'Missing required parameters: name, templates');
             return;
         }
-        if (!utils.validFilename(req.body.name) || !utils.validFilename(req.body.locale)) {
+        if (!utils.validFilename(req.body.name)) {
             Response.BadParameters(res, 'name and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
             return
         }
 
         var auditType = {};
+        // Required parameters
         auditType.name = req.body.name;
-        auditType.locale = req.body.locale;
+        auditType.templates = req.body.templates;
+
+        // Optional parameters
+        if (req.body.sections) auditType.sections = req.body.sections
+        if (req.body.hidden) auditType.hidden = req.body.hidden
+
         AuditType.create(auditType)
         .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
@@ -128,11 +134,11 @@ module.exports = function(app) {
     app.put("/api/data/audit-types", acl.hasPermission('audit-types:update'), function(req, res) {
         for (var i=0; i<req.body.length; i++) {
             var auditType = req.body[i]
-            if (!auditType.name || !auditType.locale) {
-                Response.BadParameters(res, 'Missing required parameters: name, locale')
+            if (!auditType.name || !auditType.templates) {
+                Response.BadParameters(res, 'Missing required parameters: name, templates')
                 return
             }
-            if (!utils.validFilename(auditType.name) || !utils.validFilename(auditType.locale)) {
+            if (!utils.validFilename(auditType.name)) {
                 Response.BadParameters(res, 'name and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
                 return
             }
@@ -140,7 +146,7 @@ module.exports = function(app) {
 
         var auditTypes = []
         req.body.forEach(e => {
-            auditTypes.push({name: e.name, locale: e.locale})
+            auditTypes.push({name: e.name, templates: e.templates, sections: e.sections, hidden: e.hidden})
         })
 
         AuditType.updateAll(auditTypes)

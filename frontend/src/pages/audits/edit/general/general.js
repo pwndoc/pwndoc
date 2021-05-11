@@ -94,12 +94,6 @@ export default {
         }
     },
 
-    computed: {
-        auditTypesLang: function() {
-            return this.auditTypes.filter(type => type.locale === this.audit.language)
-        }
-    },
-
     methods: {
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
@@ -117,7 +111,6 @@ export default {
             })
             .then((data) => {
                 this.audit = data.data.datas;
-                this.audit.customFields = Utils.filterCustomFields('audit-general', '', this.customFields, this.audit.customFields, this.audit.language)
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 this.getCollaborators()
             })

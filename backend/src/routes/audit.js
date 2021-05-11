@@ -46,10 +46,10 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
-    // Create audit with name, template, language and username provided
+    // Create audit with name, auditType, language provided
     app.post("/api/audits", acl.hasPermission('audits:create'), function(req, res) {
-        if (!req.body.name || !req.body.language || !req.body.template) {
-            Response.BadParameters(res, 'Missing some required parameters');
+        if (!req.body.name || !req.body.language || !req.body.auditType) {
+            Response.BadParameters(res, 'Missing some required parameters: name, language, auditType');
             return;
         }
 
@@ -57,7 +57,7 @@ module.exports = function(app, io) {
         // Required params
         audit.name = req.body.name;
         audit.language = req.body.language;
-        audit.template = req.body.template;
+        audit.auditType = req.body.auditType;
 
         Audit.create(audit, req.decodedToken.id)
         .then(inserted => Response.Created(res, {message: 'Audit created successfully', audit: inserted}))
@@ -92,7 +92,6 @@ module.exports = function(app, io) {
         var update = {};
         // Optional parameters
         if (req.body.name) update.name = req.body.name;
-        if (req.body.auditType) update.auditType = req.body.auditType;
         if (req.body.location) update.location = req.body.location;
         if (req.body.date) update.date = req.body.date;
         if (req.body.date_start) update.date_start = req.body.date_start;
@@ -291,6 +290,8 @@ module.exports = function(app, io) {
     app.get("/api/audits/:auditId/generate", acl.hasPermission('audits:read'), function(req, res){
         Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
         .then( async audit => {
+            if (!audit.template)
+                throw ({fn: 'BadParameters', message: 'Template not defined'})
             var reportDoc = await reportGenerator.generateDoc(audit);
             Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
         })

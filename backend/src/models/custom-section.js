@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 
 var CustomSectionSchema = new Schema({
     field:  {type: String, required: true, unique: true},
-    name:   String,
+    name:   {type: String, required: true, unique: true},
     icon:   String,
 }, {timestamps: true});
 

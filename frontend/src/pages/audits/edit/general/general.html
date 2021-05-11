@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name" id="edit-breadcrumb-affix">
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" id="edit-breadcrumb-affix">
     <div slot="buttons">
     <q-btn color="positive" label="Save (ctrl+s)" no-caps @click="updateAuditGeneral" />
     </div>
@@ -11,19 +11,7 @@
             <q-card-section>
                 <div class="row q-col-gutter-md">
                     <q-input class="col-md-6 col-12" label="Name *" v-model="audit.name" outlined bg-color="white" />
-                    <q-select 
-                    class="col-md-6 col-12"
-                    label="Assessment Type"
-                    v-model="audit.auditType" 
-                    :options="auditTypesLang" 
-                    option-value="name" 
-                    option-label="name" 
-                    emit-value 
-                    map-options
-                    options-sanitize
-                    outlined 
-                    bg-color="white"
-                    />
+                    <div class="col"></div>
                     <q-select 
                     class="col-md-6 col-12"
                     label="Language"
