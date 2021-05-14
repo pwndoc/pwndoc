@@ -9,7 +9,7 @@ var Paragraph = {
 var customField = {
     _id:        false,
     customField: {type: Schema.Types.Mixed, ref: 'CustomField'},
-    text:       String
+    text:       Schema.Types.Mixed
 }
 
 var Finding = {

@@ -296,6 +296,7 @@
             :category="currentVulnerability.category" 
             custom-element="QCardSection"
             display="vuln"
+            :locale="currentLanguage"
             />
         </q-expansion-item>
 
@@ -456,6 +457,7 @@
             ref="customfields" 
             v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
             custom-element="QCardSection"
+            :locale="currentLanguage"
             />
         </q-expansion-item>
 
@@ -605,6 +607,7 @@
                             ref="customfields" 
                             v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
                             custom-element="QCardSection"
+                            :locale="currentLanguage"
                             />
                         </div>
                     </q-expansion-item>
@@ -789,6 +792,7 @@
                                     v-model="update.customFields" 
                                     custom-element="QCardSection"
                                     :diff="currentVulnerability.details[currentDetailsIndex].customFields"
+                                    :locale="currentLanguage"
                                     />
                                 </div>
                             </q-expansion-item>

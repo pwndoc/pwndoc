@@ -45,7 +45,8 @@ export default {
                 offset: 0,
                 required: false,
                 description: '',
-                text: []
+                text: [],
+                options: []
             },
             cfLocale: "",
             cfDisplayOptions: [
@@ -55,10 +56,16 @@ export default {
                 {label: 'Vulnerability', value: 'vulnerability'}
             ],
             cfComponentOptions: [
-                {label: 'Editor', value: 'text'},
-                {label: 'Input', value: 'input'},
-                {label: 'Space', value: 'space'}
+                {label: 'Checkbox', value: 'checkbox', icon: 'check_box'},
+                {label: 'Date', value: 'date', icon: 'event'},
+                {label: 'Editor', value: 'text', icon: 'mdi-format-pilcrow'},
+                {label: 'Input', value: 'input', icon: 'title'},
+                {label: 'Radio', value: 'radio', icon: 'radio_button_checked'},
+                {label: 'Select', value: 'select', icon: 'far fa-caret-square-down'},
+                {label: 'Select Multiple', value: 'select-multiple', icon: 'filter_none'},
+                {label: 'Space', value: 'space', icon: 'space_bar'}
             ],
+            newCustomOption: "",
 
             sections: [],
             newSection: {field: "", name: "", icon: ""},
@@ -92,6 +99,10 @@ export default {
             return this.customFields.filter(field =>
                 (field.display === this.newCustomField.display && field.displayList.every(e => this.newCustomField.displayList.indexOf(e) > -1))
             )
+        },
+
+        newCustomFieldLangOptions() {
+            return this.newCustomField.options.filter(e => e.locale === this.cfLocale)
         }
     },
 
@@ -208,7 +219,6 @@ export default {
 
         // Create Audit type
         createAuditType: function() {
-            console.log(this.requiredFieldsEmpty())
             if (this.requiredFieldsEmpty())
                 return
 
@@ -439,6 +449,7 @@ export default {
             DataService.createCustomField(this.newCustomField)
             .then((data) => {
                 this.newCustomField.label = ""
+                this.newCustomField.options = []
                 this.getCustomFields()
                 Notify.create({
                     message: 'Custom Field created successfully',
@@ -539,14 +550,40 @@ export default {
             return this.customFields.some(field => this.canDisplayCustomField(field))
         },
 
-        getFieldLocaleIndex: function(fieldIdx) {
+        // Return the index of the text array that match the selected locale
+        // Also push default empty value if index not found
+        getFieldLocaleText: function(fieldIdx) {
             var text = this.customFields[fieldIdx].text
             for (var i=0; i<text.length; i++) {
                 if (text[i].locale === this.cfLocale)
                     return i
             }
-            text.push({locale: this.cfLocale, value: ""})
+            if (['select-multiple', 'checkbox'].includes(this.customFields[fieldIdx].fieldType))
+                text.push({locale: this.cfLocale, value: []})
+            else
+                text.push({locale: this.cfLocale, value: ""})
             return i
+        },
+
+        addCustomFieldOption: function(options) {
+            options.push({locale: this.cfLocale, value: this.newCustomOption})
+            this.newCustomOption = ""
+        },
+
+        // Remove option of options based on index of computed lang Option
+        removeCustomFieldOption: function(options, option) {
+            var index = options.findIndex(e => e.locale === option.locale && e.value === option.value)
+            options.splice(index, 1)
+        },
+
+        getOptionsGroup: function(options) {
+            return options
+            .filter(e => e.locale === this.cfLocale)
+            .map(e => {return {label: e.value, value: e.value}})
+        },
+
+        getFieldLangOptions: function(options) {
+            return options.filter(e => e.locale === this.cfLocale)
         },
 
 /* ===== SECTIONS ===== */

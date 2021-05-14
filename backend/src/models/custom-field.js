@@ -11,7 +11,8 @@ var CustomFieldSchema = new Schema({
     offset:             {type: Number, enum: [0,1,2,3,4,5,6,7,8,9,10,11,12], default: 0},
     required:           {type: Boolean, default: false},
     description:        {type: String, default: ''},
-    text:               [{_id: false, locale: String, value: String}]
+    text:               [{_id: false, locale: String, value: Schema.Types.Mixed}],
+    options:            [{_id: false, locale: String, value: String}]
 }, {timestamps: true})
 
 CustomFieldSchema.index({"label": 1, "display": 1, "displaySub": 1}, {
@@ -28,7 +29,7 @@ CustomFieldSchema.index({"label": 1, "display": 1, "displaySub": 1}, {
 CustomFieldSchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = CustomField.find().sort('position')
-        query.select('fieldType label display displaySub size offset required description text')
+        query.select('fieldType label display displaySub size offset required description text options')
         query.exec()
         .then((rows) => {
             resolve(rows);

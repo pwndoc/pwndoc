@@ -130,6 +130,8 @@ export default {
 
       if ((display.includes(field.display) && (field.displaySub === '' || field.displaySub === displaySub))) { // wanted field
         var fieldText = ''
+        if (['select-multiple', 'checkbox'].includes(field.fieldType))
+          fieldText = []
         if (locale && Array.isArray(field.text)) { // set default text for locale if it exists
           let textLocale = field.text.find(e => e.locale === locale)
           if (textLocale) fieldText = textLocale.value
@@ -142,7 +144,7 @@ export default {
             customFieldId = objectFields[i].customField
           if (customFieldId && customFieldId === field._id) { // found correct field for text
             if (objectFields[i].text){ // text already exists
-              fieldText = objectFields[i].text
+                fieldText = objectFields[i].text
             }
             break
           }

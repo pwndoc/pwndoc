@@ -381,9 +381,10 @@ module.exports = function(app) {
         if (req.body.displaySub) customField.displaySub = req.body.displaySub
         if (req.body.size) customField.size = req.body.size
         if (req.body.offset) customField.offset = req.body.offset
-        if (typeof req.body.required === 'boolean') customField.required = req.body.required
+        if (typeof req.body.required === 'boolean' && req.body.fieldType !== 'space') customField.required = req.body.required
         if (req.body.description) customField.description = req.body.description
         if (req.body.text) customField.text = req.body.text
+        if (req.body.options) customField.options = req.body.options
         if (typeof req.body.position === 'number') customField.position = req.body.position
 
         CustomField.create(customField)
