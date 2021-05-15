@@ -125,7 +125,7 @@
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
-                :rules="(field.customField.required)? [val => val.length > 0 || 'Field is required']: []"
+                :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
                      <template v-slot:label>
@@ -156,7 +156,7 @@
                 outlined
                 :readonly="diff !== null"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
-                :rules="(field.customField.required)? [val => val.length > 0 || 'Field is required']: []"
+                :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
                     <template v-slot:control>
