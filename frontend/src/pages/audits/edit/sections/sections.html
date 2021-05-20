@@ -1,13 +1,6 @@
 <div>
 <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`">
     <div slot="buttons">
-        <q-btn
-        color="negative"
-        class="q-mr-sm"
-        label="Delete"
-        no-caps
-        @click="deleteSection"
-        />
         <q-btn color="positive" label="Save (ctrl+s)" no-caps @click="updateSection" />
     </div>
 </breadcrumb>

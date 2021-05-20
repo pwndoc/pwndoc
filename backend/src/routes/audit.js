@@ -227,28 +227,6 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
-    // Add section to audit
-    app.post("/api/audits/:auditId/sections", acl.hasPermission('audits:update'), function(req, res) {
-        if (!req.body.field || !req.body.name) {
-            Response.BadParameters(res, 'Missing some required parameters: field, name');
-            return;
-        }
-
-        var section = {};
-        // Required parameters
-        section.name = req.body.name;
-        section.field = req.body.field;
-        // Optional parameters
-        if (req.body.customFields) section.customFields = req.body.customFields
-
-        Audit.createSection(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, section)
-        .then(msg => {
-            io.to(req.params.auditId).emit('updateAudit');
-            Response.Ok(res, msg)
-        })
-        .catch(err => Response.Internal(res, err))
-    });
-
     // Get section of audit
     app.get("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:read'), function(req, res) {
         Audit.getSection(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id, req.params.sectionId)
@@ -272,16 +250,6 @@ module.exports = function(app, io) {
         Audit.updateSection(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.sectionId, section)
         .then(msg => {
             Response.Ok(res, msg)
-        })
-        .catch(err => Response.Internal(res, err))
-    });
-
-    // Delete section of audit
-    app.delete("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
-        Audit.deleteSection(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.sectionId)
-        .then(msg => {
-            io.to(req.params.auditId).emit('updateAudit');            
-            Response.Ok(res, msg);
         })
         .catch(err => Response.Internal(res, err))
     });
