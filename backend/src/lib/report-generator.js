@@ -305,10 +305,10 @@ async function prepAuditData(data) {
             var fieldType = field.customField.fieldType
             var label = field.customField.label
 
-            if (fieldType === 'input')
-                result[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
-            else if (fieldType === 'text')
+            if (fieldType === 'text')
                 result[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = await splitHTMLParagraphs(field.text)
+            else if (fieldType !== 'space')
+                result[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
         }
     }
 
@@ -373,10 +373,10 @@ async function prepAuditData(data) {
                     var fieldType = field.fieldType
                     var label = field.label
                 }
-                if (fieldType === 'input')
-                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
-                else if (fieldType === 'text')
+                if (fieldType === 'text')
                     tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = await splitHTMLParagraphs(field.text)
+                else if (fieldType !== 'space')
+                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
             }
         }
         result.findings.push(tmpFinding)
@@ -400,15 +400,15 @@ async function prepAuditData(data) {
             for (field of section.customFields) {
                 var fieldType = field.customField.fieldType
                 var label = field.customField.label
-                if (fieldType === 'input')
-                    formatSection[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
-                else if (fieldType === 'text')
+                if (fieldType === 'text')
                     formatSection[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = await splitHTMLParagraphs(field.text)
+                else if (fieldType !== 'space')
+                    formatSection[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
             }
         }
         result[section.field] = formatSection
     }
-
+    
     return result
 }
 
