@@ -1,7 +1,8 @@
 <template>
   <q-card>
     <q-card-section class="row">
-      <div class="col-md-6">Risk Score</div>
+      <div class="col-md-6">OWASP Risk Rating</div>
+
       <q-space />
       <div class="scoreRating" :class="severity">
         <span class="baseSeverity" v-if="!score || score < 0.1"
@@ -15,41 +16,340 @@
     </q-card-section>
     <q-separator />
     <q-card-section class="row q-col-gutter-md">
+      <div class="text-h6 col-md-12">Impact</div>
+      <div class="text-subtitle2 col-md-12">Threat Agent Factors</div>
       <q-select
-        label="Impact"
+        label="Skill Level"
+        hint="How technically skilled is this group of threat agents?"
         stack-label
         class="col-md-6"
-        v-model="impact"
+        v-model="skillLevel"
         :options="[
-          { label: 'Very Low', value: 1 },
-          { label: 'Low', value: 2 },
-          { label: 'Medium', value: 3 },
-          { label: 'High', value: 4 },
-          { label: 'Very High', value: 5 },
+          { label: 'No technical skills (1)', value: 1 },
+          { label: 'Some technical skills (3)', value: 3 },
+          { label: 'Advanced computer user (5)', value: 5 },
+          { label: 'Network and programming skills (6)', value: 6 },
+          { label: 'Security penetration skills (9)', value: 9 },
         ]"
         map-options
         emit-value
         options-sanitize
         outlined
         bg-color="white"
+        clearable
+      />
+
+      <q-select
+        label="Motive"
+        hint="How motivated is this group of threat agents to find and exploit this vulnerability?"
+        stack-label
+        class="col-md-6"
+        v-model="motive"
+        :options="[
+          { label: 'Low or no reward (1)', value: 1 },
+          { label: 'Possible reward (4)', value: 4 },
+          { label: 'High reward (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
       />
       <q-select
-        label="Probability"
+        label="Opportunity"
+        hint="What resources and opportunities are required for this group of threat agents to find and exploit this vulnerability? "
         stack-label
         class="col-md-6"
-        v-model="probability"
+        v-model="opportunity"
         :options="[
-          { label: 'Very Low', value: 1 },
-          { label: 'Low', value: 2 },
-          { label: 'Medium', value: 3 },
-          { label: 'High', value: 4 },
-          { label: 'Very High', value: 5 },
+          {
+            label: 'Full access or expensive resources required (0)',
+            value: 0,
+          },
+          { label: 'Special access or resources required (4)', value: 4 },
+          { label: 'Some access or resources required (7)', value: 7 },
+          { label: 'No access or resources required (9)', value: 9 },
         ]"
         map-options
         emit-value
         options-sanitize
         outlined
         bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Size"
+        hint="How large is this group of threat agents?"
+        stack-label
+        class="col-md-6"
+        v-model="size"
+        :options="[
+          { label: 'Developers (2)', value: 2 },
+          { label: 'System administrators (2)', value: 2 },
+          { label: 'Intranet users (4)', value: 4 },
+          { label: 'Partners (5)', value: 5 },
+          { label: 'Authenticated users (6)', value: 6 },
+          { label: 'Anonymous Internet users (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <div class="text-subtitle2 col-md-12">Vulnerability Factors</div>
+      <q-select
+        label="Ease of Discovery"
+        hint="How easy is it for this group of threat agents to discover this vulnerability?"
+        stack-label
+        class="col-md-6"
+        v-model="easyOfDiscovery"
+        :options="[
+          { label: 'Practically impossible (1)', value: 1 },
+          { label: 'Difficult (3)', value: 3 },
+          { label: 'Easy (7)', value: 7 },
+          { label: 'Automated tools available (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Ease of Exploit"
+        hint="How easy is it for this group of threat agents to actually exploit this vulnerability?"
+        stack-label
+        class="col-md-6"
+        v-model="easyOfExploit"
+        :options="[
+          { label: 'Theoretical (1)', value: 1 },
+          { label: 'Difficult (3)', value: 3 },
+          { label: 'Easy (5)', value: 5 },
+          { label: 'Automated tools available (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Awareness"
+        hint="How well known is this vulnerability to this group of threat agents?"
+        stack-label
+        class="col-md-6"
+        v-model="awareness"
+        :options="[
+          {
+            label: 'Unknown (1)',
+            value: 1,
+          },
+          { label: 'Hidden (4)', value: 4 },
+          { label: 'Obvious (6)', value: 6 },
+          { label: 'Public knowledge (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Intrusion Detection"
+        hint="How likely is an exploit to be detected?"
+        stack-label
+        class="col-md-6"
+        v-model="intrusionDetection"
+        :options="[
+          { label: 'Active detection in application (1)', value: 1 },
+          { label: 'Logged and reviewed (3)', value: 3 },
+          { label: 'Logged without review (8)', value: 8 },
+          { label: 'Not logged (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+    </q-card-section>
+    <q-separator />
+
+    <q-card-section class="row q-col-gutter-md">
+      <div class="text-h6 col-md-12">Probability</div>
+
+      <div class="text-subtitle2 col-md-12">Technical Impact Factors</div>
+      <q-select
+        label="Loss of Confidentiality"
+        hint="How much data could be disclosed and how sensitive is it? "
+        stack-label
+        class="col-md-6"
+        v-model="lossOfConfidentiality"
+        :options="[
+          { label: 'Minimal non-sensitive data disclosed (2)', value: 2 },
+          { label: 'Minimal critical data disclosed (6)', value: 6 },
+          { label: 'Extensive non-sensitive data disclosed (6)', value: 6 },
+          { label: 'Extensive critical data disclosed (7)', value: 7 },
+          { label: 'All data disclosed (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+
+      <q-select
+        label="Loss of Integrity"
+        hint="How much data could be corrupted and how damaged is it?"
+        stack-label
+        class="col-md-6"
+        v-model="lossOfIntegrity"
+        :options="[
+          { label: 'Minimal slightly corrupt data (1)', value: 1 },
+          { label: 'Minimal seriously corrupt data (3)', value: 3 },
+          { label: 'Extensive slightly corrupt data (5)', value: 5 },
+          { label: 'Extensive seriously corrupt data (7)', value: 7 },
+          { label: 'All data totally corrupt (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Loss of Availability"
+        hint="How much service could be lost and how vital is it?"
+        stack-label
+        class="col-md-6"
+        v-model="lossOfAvailability"
+        :options="[
+          {
+            label: 'Minimal secondary services interrupted (1)',
+            value: 1,
+          },
+          { label: 'Minimal primary services interrupted (5)', value: 5 },
+          { label: 'Extensive secondary services interrupted (5)', value: 5 },
+          { label: 'Extensive primary services interrupted (7)', value: 7 },
+          { label: 'All services completely lost (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Loss of Accountability"
+        hint="Are the threat agents’ actions traceable to an individual?"
+        stack-label
+        class="col-md-6"
+        v-model="lossOfAccountability"
+        :options="[
+          { label: 'Fully traceable (1)', value: 1 },
+          { label: 'Possibly traceable (7)', value: 7 },
+          { label: 'Completely anonymous (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <div class="text-subtitle2 col-md-12">Business Impact Factors</div>
+      <q-select
+        label="Financial damage"
+        hint="How much financial damage will result from an exploit?"
+        stack-label
+        class="col-md-6"
+        v-model="financialDamage"
+        :options="[
+          {
+            label: 'Less than the cost to fix the vulnerability (1)',
+            value: 1,
+          },
+          { label: 'Minor effect on annual profit (3)', value: 3 },
+          { label: 'Significant effect on annual profit (7)', value: 7 },
+          { label: 'Bankruptcy (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Reputation damage"
+        hint="Would an exploit result in reputation damage that would harm the business?"
+        stack-label
+        class="col-md-6"
+        v-model="reputationDamage"
+        :options="[
+          { label: 'Minimal damage (1)', value: 1 },
+          { label: 'Loss of major accounts (4)', value: 4 },
+          { label: 'Loss of goodwill (5)', value: 5 },
+          { label: 'Brand damage (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Non-compliance"
+        hint="How much exposure does non-compliance introduce?"
+        stack-label
+        class="col-md-6"
+        v-model="nonCompliance"
+        :options="[
+          {
+            label: 'Minor violation (2)',
+            value: 2,
+          },
+          { label: 'Clear violation (5)', value: 5 },
+          { label: 'High profile violation (7)', value: 7 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
+      />
+      <q-select
+        label="Privacy violation"
+        hint="How much personally identifiable information could be disclosed?"
+        stack-label
+        class="col-md-6"
+        v-model="privacyViolation"
+        :options="[
+          { label: 'One individual (3)', value: 3 },
+          { label: 'Hundreds of people (5)', value: 5 },
+          { label: 'Thousands of people (7)', value: 7 },
+          { label: 'Millions of people (9)', value: 9 },
+        ]"
+        map-options
+        emit-value
+        options-sanitize
+        outlined
+        bg-color="white"
+        clearable
       />
     </q-card-section>
   </q-card>
@@ -57,7 +357,7 @@
 
 <script>
 export default {
-  name: "pwndoc-frontend-dev",
+  name: "risk-calculator",
   props: ["riskImpact", "riskProbability", "riskScore", "riskSeverity"],
   watch: {
     impact: function (val) {
@@ -67,6 +367,38 @@ export default {
     probability: function (val) {
       this.$emit("riskProbabilityChange", val);
       this.calculateScore();
+    },
+    skillLevel: function (val) {
+      // this.$emit("riskProbabilityChange", val);
+      this.calculateOwaspRating();
+    },
+    motive: function (val) {
+      // this.$emit("riskProbabilityChange", val);
+      this.calculateOwaspRating();
+    },
+    opportunity: function (val) {
+      // this.$emit("riskProbabilityChange", val);
+      this.calculateOwaspRating();
+    },
+    size: function (val) {
+      // this.$emit("riskProbabilityChange", val);
+      this.calculateOwaspRating();
+    },
+    easyOfDiscovery: function (val) {
+      // this.$emit("riskProbabilityChange", val);
+      this.calculateOwaspRating();
+    },
+    easyOfExploit: function (val) {
+      // this.$emit("riskProbabilityChange", val);
+      this.calculateOwaspRating();
+    },
+    awareness: function (val) {
+      // this.$emit("riskProbabilityChange", val);
+      this.calculateOwaspRating();
+    },
+    intrusionDetection: function (val) {
+      // this.$emit("riskProbabilityChange", val);
+      this.calculateOwaspRating();
     },
   },
 
@@ -80,6 +412,31 @@ export default {
 
         this.$emit("riskScoreChange", this.score);
         this.$emit("riskSeverityChange", this.severity);
+      }
+    },
+    calculateOwaspRating() {
+      if (
+        this.skillLevel &&
+        this.motive &&
+        this.opportunity &&
+        this.size &&
+        this.easyOfDiscovery &&
+        this.easyOfExploit &&
+        this.awareness &&
+        this.intrusionDetection
+      ) {
+        const impactSum =
+          this.skillLevel +
+          this.motive +
+          this.opportunity +
+          this.size +
+          this.easyOfDiscovery +
+          this.easyOfExploit +
+          this.awareness +
+          this.intrusionDetection;
+        const impactRating = impactSum / 8;
+
+        console.log({ impactSum, impactRating });
       }
     },
     calculateSeverity(score) {
@@ -118,6 +475,22 @@ export default {
       probability: this.riskProbability,
       score: this.riskScore,
       severity: this.riskSeverity,
+      skillLevel: "",
+      motive: "",
+      opportunity: "",
+      size: "",
+      easyOfDiscovery: "",
+      easyOfExploit: "",
+      awareness: "",
+      intrusionDetection: "",
+      lossOfConfidentiality: "",
+      lossOfIntegrity: "",
+      lossOfAvailability: "",
+      lossOfAccountability: "",
+      financialDamage: "",
+      reputationDamage: "",
+      nonCompliance: "",
+      privacyViolation: "",
     };
   },
 };
