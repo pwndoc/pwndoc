@@ -233,15 +233,58 @@
                 </template>
             </q-field>
         </q-card-section>
+     
+         <q-card-section>
+            <div class="q-col-gutter-md row">
+                <q-select
+                label="Remediation Complexity"
+                stack-label
+                class="col-md-6"
+                v-model="currentVulnerability.remediationComplexity"
+                :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
+                map-options
+                emit-value
+                options-sanitize
+                outlined
+                bg-color="white"
+                />
+                <q-select
+                label="Remediation Priority"
+                stack-label
+                class="col-md-6"
+                v-model="currentVulnerability.priority"
+                :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
+                map-options
+                emit-value
+                options-sanitize
+                outlined
+                bg-color="white"
+                />
+            </div>
+        </q-card-section>
         <q-card-section>
             <div class="col-md-12">
                 <cvss-calculator
-                :cvssString="currentVulnerability.cvssv3"
-                :cvssScore="currentVulnerability.cvssScore"
-                :cvssSeverity="currentVulnerability.cvssSeverity"
-                @cvssChange="currentVulnerability.cvssv3 = $event"
-                @cvssScoreChange="currentVulnerability.cvssScore = $event"
-                @cvssSeverityChange="currentVulnerability.cvssSeverity = $event"
+                    :cvssString="currentVulnerability.cvssv3"
+                    :cvssScore="currentVulnerability.cvssScore"
+                    :cvssSeverity="currentVulnerability.cvssSeverity"
+                    @cvssChange="currentVulnerability.cvssv3 = $event"
+                    @cvssScoreChange="currentVulnerability.cvssScore = $event"
+                    @cvssSeverityChange="currentVulnerability.cvssSeverity = $event"
+                />
+            </div>
+        </q-card-section>
+        <q-card-section>
+            <div class="col-md-12">
+                <risk-calculator
+                    :riskProbability="currentVulnerability.riskProbability"
+                    :riskImpact="currentVulnerability.riskImpact"
+                    :riskScore="currentVulnerability.riskScore"
+                    :riskSeverity="currentVulnerability.riskSeverity"
+                    @riskProbabilityChange="currentVulnerability.riskProbability = $event"
+                    @riskImpactChange="currentVulnerability.riskImpact = $event"
+                    @riskScoreChange="currentVulnerability.riskScore = $event"
+                    @riskSeverityChange="currentVulnerability.riskSeverity = $event"
                 />
             </div>
         </q-card-section>
@@ -409,6 +452,20 @@
             </div>
         </q-card-section>
         <q-card-section>
+            <div class="col-md-12">
+                <risk-calculator
+                :riskProbability="currentVulnerability.riskProbability"
+                :riskImpact="currentVulnerability.riskImpact"
+                :riskScore="currentVulnerability.riskScore"
+                :riskSeverity="currentVulnerability.riskSeverity"
+                @riskProbabilityChange="currentVulnerability.riskProbability = $event"
+                @riskImpactChange="currentVulnerability.riskImpact = $event"
+                @riskScoreChange="currentVulnerability.riskScore = $event"
+                @riskSeverityChange="currentVulnerability.riskSeverity = $event"
+                />
+            </div>
+        </q-card-section>
+        <q-card-section>
             <q-field borderless label="Remediation" stack-label>
                 <template v-slot="control">
                     <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
@@ -557,6 +614,20 @@
                         @cvssScoreChange="currentVulnerability.cvssScore = $event"
                         @cvssSeverityChange="currentVulnerability.cvssSeverity = $event"
                         />
+                    </q-card-section>
+                    <q-card-section>
+                        <div class="col-md-12">
+                            <risk-calculator
+                            :riskProbability="currentVulnerability.riskProbability"
+                            :riskImpact="currentVulnerability.riskImpact"
+                            :riskScore="currentVulnerability.riskScore"
+                            :riskSeverity="currentVulnerability.riskSeverity"
+                            @riskProbabilityChange="currentVulnerability.riskProbability = $event"
+                            @riskImpactChange="currentVulnerability.riskImpact = $event"
+                            @riskScoreChange="currentVulnerability.riskScore = $event"
+                            @riskSeverityChange="currentVulnerability.riskSeverity = $event"
+                            />
+                        </div>
                     </q-card-section>
                     <q-card-section>
                         <q-field borderless label="Remediation" stack-label>
@@ -719,6 +790,20 @@
                                 @cvssScoreChange="update.cvssScore = $event"
                                 @cvssSeverityChange="update.cvssSeverity = $event"
                                 />
+                            </q-card-section>
+                            <q-card-section>
+                                <div class="col-md-12">
+                                    <risk-calculator
+                                    :riskProbability="update.riskProbability"
+                                    :riskImpact="update.riskImpact"
+                                    :riskScore="update.riskScore"
+                                    :riskSeverity="update.riskSeverity"
+                                    @riskProbabilityChange="update.riskProbability = $event"
+                                    @riskImpactChange="update.riskImpact = $event"
+                                    @riskScoreChange="update.riskScore = $event"
+                                    @riskSeverityChange="update.riskSeverity = $event"
+                                    />
+                                </div>
                             </q-card-section>
                             <q-card-section>
                                 <q-field 

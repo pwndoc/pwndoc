@@ -4,7 +4,6 @@
 
 ![Data](_images/collaborators.png)
 
-
 ## Collaborators
 
 Collaborators are users of the application and can be part of an audit either as the creator or as a collaborative user.
@@ -23,7 +22,7 @@ There are 3 different roles:
 
 - Read/Write on created and collaboration Audits
 - Readonly on Vulnerabilities
-- Read/Write on *Companies* and *Clients* Data
+- Read/Write on _Companies_ and _Clients_ Data
 
 **report**
 
@@ -34,7 +33,6 @@ There are 3 different roles:
 
 - Read/Write on everything
 
-
 ## Companies
 
 Companies that order an Audit.
@@ -43,7 +41,6 @@ A Company is defined by:
 
 - Name
 - Logo
-
 
 ## Clients
 
@@ -72,7 +69,7 @@ A Template is defined by:
 
 Custom Data represent a way to fully customize Audits and Vulnerabilities. They are editable and their order can be changed to personalize how they will be displayed for users.
 
-!> Values must match this regex:  `/^[A-zÀ-ú0-9 \[\]\'()_-]+$/`
+!> Values must match this regex: `/^[A-zÀ-ú0-9 \[\]\'()_-]+$/`
 
 ### Languages
 
@@ -84,9 +81,10 @@ A Language is defined by:
 - Locale: the value used to identify a language in API calls
 
 > Example
+>
 > ```
-Language: English   Locale: en
-Language: French    Locale: fr
+> Language: English   Locale: en
+> Language: French    Locale: fr
 > ```
 
 ### Audit Types
@@ -98,13 +96,20 @@ An Audit Type is defined by:
 - Name
 
 > Example
->```
-English
+>
+> ```
+> English
+> ```
+
     Name: Internal,
     Name: Web Application
+
 French
-    Name: Interne
-    Name: Application Web
+Name: Interne
+Name: Application Web
+
+> ```
+>
 > ```
 
 ### Vulnerability Types
@@ -116,13 +121,20 @@ A Vulnerability Type is defined by:
 - Name
 
 > Example
->```
-English
+>
+> ```
+> English
+> ```
+
     Name: Wireless,
     Name: Mobile Application
+
 French
-    Name: Réseau Sans Fil
-    Name: Application Mobile
+Name: Réseau Sans Fil
+Name: Application Mobile
+
+> ```
+>
 > ```
 
 ### Vulnerability Categories
@@ -134,8 +146,9 @@ A Vulnerability Category is defined by:
 - Name
 
 > Example
->```
-Name: Nessus Scan
+>
+> ```
+> Name: Nessus Scan
 > ```
 
 ### Custom Fields
@@ -151,15 +164,16 @@ A Section is defined by:
 - Display for Categories: Custom Field will be displayed only for selected Categories
 
 > Example
+>
 > ```
-Type: input
-Label: Id
-Display in Vulnerability: true
-Display in Finding: false
-Display for Categories: false
->  
--> This will display an additional «Id» field in vulnerabilities that will also be displayed in findings
->```
+> Type: input
+> Label: Id
+> Display in Vulnerability: true
+> Display in Finding: false
+> Display for Categories: false
+>
+> -> This will display an additional «Id» field in vulnerabilities that will also be displayed in findings
+> ```
 
 ### Custom Sections
 
@@ -173,10 +187,17 @@ A Section is defined by:
 - icon
 
 > Example
+>
 > ```
-Name: Cleanup
-Field: cleanup
-Default Text: "This is the cleanup part.
-               Here are all elements impacted during the test"
+> Name: Cleanup
+> Field: cleanup
+> Default Text: "This is the cleanup part.
+> ```
+
+               Here are all elements riskImpacted during the test"
+
 icon: mdi-broom
->```
+
+> ```
+>
+> ```
