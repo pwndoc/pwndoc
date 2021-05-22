@@ -150,9 +150,9 @@ expressions.filters.NewLines = function(input) {
     return result;
 }
 
-// Sort array by supplied field: {#findings | sortArray: 'identifier':1}{/}
+// Sort array by supplied field: {#findings | sortArrayByField: 'identifier':1}{/}
 // order: 1 = ascending, -1 = descending
-expressions.filters.sortArray = function (input, field, order) {
+expressions.filters.sortArrayByField = function (input, field, order) {
     //invalid order sort ascending
     if(order != 1 && order != -1) order = 1;
     
