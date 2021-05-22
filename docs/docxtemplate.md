@@ -303,14 +303,14 @@ Convert HTML values to OOXML format. See [HTML values](docxtemplate.md?id=html-v
 {@value | convertHTML}
 >```
 
-### sortFindings
+### sortArray
 
-Sort findings by supplied field. See [Findings](docxtemplate.md?id=findings) for available fields.
+Sort array by supplied field. S
 Order can be 1 for ascending, or -1 for descending
 
 > Use in template document
 >```
-{#findings | sortFindings: 'identifier':1}
+{#findings | sortArray: 'identifier':1}
 {identifier}
 {/}
 >```
