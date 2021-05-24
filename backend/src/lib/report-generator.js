@@ -204,7 +204,6 @@ expressions.filters.NewLines = function (input) {
 
 // Convert HTML data to Open Office XML format: {@input | convertHTML: 'customStyle'}
 expressions.filters.convertHTML = function (input, style) {
-  console.log(input);
   if (typeof input === "undefined") var result = html2ooxml("");
   else var result = html2ooxml(input.replace(/(<p><\/p>)+$/, ""), style);
   return result;
@@ -486,7 +485,7 @@ async function getCategoriesFromFindings(findings) {
     if (!categories.some((category) => category.name == finding.category)) {
       categories.push({
         name: finding.category,
-        findings: [],
+        categoryFindings: [],
       });
     }
 
@@ -495,7 +494,9 @@ async function getCategoriesFromFindings(findings) {
 
   categories = categories.map((category) => ({
     ...category,
-    findings: findings.filter((finding) => finding.category == category.name),
+    categoryFindings: findings.filter(
+      (finding) => finding.category == category.name
+    ),
   }));
 
   for (const [key, category] of Object.entries(categories)) {
