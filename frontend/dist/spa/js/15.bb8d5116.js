@@ -1,0 +1,1 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([[15],{"20ba":function(e,n,t){"use strict";t.r(n);var r=function(){var e=this,n=e.$createElement,t=e._self._c||n;return t("div",[t("router-view")],1)},a=[],u=t("b3a4"),c={components:{Breadcrumb:u["a"]}},o=c,l=t("2877"),s=Object(l["a"])(o,r,a,!1,null,null,null);n["default"]=s.exports}}]);
