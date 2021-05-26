@@ -66,7 +66,8 @@ var AuditSchema = new Schema({
     template:           {type: Schema.Types.ObjectId, ref: 'Template'},
     creator:            {type: Schema.Types.ObjectId, ref: 'User'},
     sections:           [{field: String, name: String, text: String}],
-    customFields:       [customField]
+    customFields:       [customField],
+    approved:           Boolean
 
 }, {timestamps: true});
 

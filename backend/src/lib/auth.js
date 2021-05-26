@@ -20,6 +20,7 @@ var builtInRoles = {
             'audits:read',
             'audits:update',
             'audits:delete',
+            'audits:review',
             // Images
             'images:create',
             'images:read',
@@ -58,6 +59,13 @@ var builtInRoles = {
     },
     admin: {
         allows: "*"
+    },
+    reviewer: {
+        // Like a user, but with different audit permissions (can review)
+        inherits: ["user"],
+        allows: [
+            "audits:review"
+        ]
     }
 }
 

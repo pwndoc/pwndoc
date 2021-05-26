@@ -2,4 +2,9 @@
 
 <script src='./general.js'></script>
 
-<style></style>
+<style>
+.topButton {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+</style>

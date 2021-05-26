@@ -35,6 +35,7 @@ require('./models/vulnerability-category');
 require('./models/custom-section');
 require('./models/custom-field');
 require('./models/image');
+var configsModel = require('./models/configs');
 
 // Socket IO configuration
 var getSockets = function(room) {
@@ -109,9 +110,30 @@ require('./routes/vulnerability')(app);
 require('./routes/data')(app);
 require('./routes/image')(app);
 
+require('./routes/configs')(app);
+
+
 app.get("*", function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});
 })
+
+// Populate configs if database not defined
+configsModel.findOne()
+.then((liveConfigs) => {
+  if (!liveConfigs) {
+    console.log("Initializing database");
+    configsModel.create(config.configs).catch((err) => {
+      throw "Error creating the configs in the database : " + err;
+    });
+  } else {
+    console.log("Database already initialized");
+  }
+})
+.catch((err) => {
+  throw "Error checking for initial configs in the database : " + err;
+});
+
+
 
 // Start server
 

@@ -33,6 +33,12 @@
 
             <q-separator spaced />
 
+            <q-item v-if="UserService.isAllowed('configs:read')" to='/datas/configs' >
+                <q-item-section avatar>
+                    <q-icon name="fas fa-cogs" />
+                </q-item-section>
+                <q-item-section>Configs</q-item-section>
+            </q-item>
             <q-item to='/datas/custom'>
                 <q-item-section avatar>
                     <q-icon name="fa fa-table" />
