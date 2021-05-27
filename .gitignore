@@ -22,3 +22,6 @@ roles.json
 # backup files
 !backup/config/pwndoc.yml
 backup
+
+# history files
+.history

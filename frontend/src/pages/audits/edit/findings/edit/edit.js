@@ -22,6 +22,7 @@ export default {
       detailsTabVisited: false,
       vulnTypes: [],
       customFields: [],
+      vulnCategories: [],
     };
   },
 
@@ -34,11 +35,12 @@ export default {
     CustomFields,
   },
 
-  mounted: function () {
+  mounted: function() {
     this.auditId = this.$route.params.auditId;
     this.findingId = this.$route.params.findingId;
     this.getFinding();
     this.getVulnTypes();
+    this.getVulnerabilityCategories();
 
     this.$socket.emit("menu", {
       menu: "editFinding",
@@ -50,7 +52,7 @@ export default {
     document.addEventListener("keydown", this._listener, false);
   },
 
-  destroyed: function () {
+  destroyed: function() {
     document.removeEventListener("keydown", this._listener, false);
   },
 
@@ -80,19 +82,19 @@ export default {
   },
 
   computed: {
-    vulnTypesLang: function () {
+    vulnTypesLang: function() {
       return this.vulnTypes.filter(
         (type) => type.locale === this.$parent.audit.language
       );
     },
 
-    screenshotsSize: function () {
+    screenshotsSize: function() {
       return (JSON.stringify(this.uploadedImages).length / 1024).toFixed(2);
     },
   },
 
   methods: {
-    _listener: function (e) {
+    _listener: function(e) {
       if (
         (window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) &&
         e.keyCode == 83
@@ -106,7 +108,7 @@ export default {
     },
 
     // Get Vulnerabilities types
-    getVulnTypes: function () {
+    getVulnTypes: function() {
       DataService.getVulnerabilityTypes()
         .then((data) => {
           this.vulnTypes = data.data.datas;
@@ -116,8 +118,18 @@ export default {
         });
     },
 
+    // Get available vulnerability categories
+    getVulnerabilityCategories: function() {
+      DataService.getVulnerabilityCategories()
+        .then((data) => {
+          this.vulnCategories = data.data.datas;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
     // Get Finding
-    getFinding: function () {
+    getFinding: function() {
       DataService.getCustomFields()
         .then((data) => {
           this.customFields = data.data.datas;
@@ -157,7 +169,7 @@ export default {
     },
 
     // For retro compatibility with old paragraphs
-    convertParagraphsToHTML: function (paragraphs) {
+    convertParagraphsToHTML: function(paragraphs) {
       var result = "";
       paragraphs.forEach((p) => {
         result += `<p>${p.text}</p>`;
@@ -171,7 +183,7 @@ export default {
     },
 
     // Update Finding
-    updateFinding: function () {
+    updateFinding: function() {
       Utils.syncEditors(this.$refs);
       this.$nextTick(() => {
         if (
@@ -208,7 +220,7 @@ export default {
       });
     },
 
-    deleteFinding: function () {
+    deleteFinding: function() {
       Dialog.create({
         title: "Delete current Finding ?",
         message: `This action can't be cancelled`,
@@ -254,7 +266,7 @@ export default {
     },
 
     // Backup Finding to vulnerability database
-    backupFinding: function () {
+    backupFinding: function() {
       Utils.syncEditors(this.$refs);
       VulnService.backupFinding(this.$parent.audit.language, this.finding)
         .then((data) => {
@@ -275,11 +287,11 @@ export default {
         });
     },
 
-    syncEditors: function () {
+    syncEditors: function() {
       Utils.syncEditors(this.$refs);
     },
 
-    updateOrig: function () {
+    updateOrig: function() {
       if (this.selectedTab === "proofs" && !this.proofsTabVisited) {
         Utils.syncEditors(this.$refs);
         this.findingOrig.poc = this.finding.poc;
@@ -291,7 +303,7 @@ export default {
       }
     },
 
-    unsavedChanges: function () {
+    unsavedChanges: function() {
       if (this.finding.title !== this.findingOrig.title) return true;
       if (
         (this.finding.vulnType || this.findingOrig.vulnType) &&

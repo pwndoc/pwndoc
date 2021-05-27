@@ -79,7 +79,7 @@ export default {
     Breadcrumb,
   },
 
-  mounted: function () {
+  mounted: function() {
     this.auditId = this.$route.params.auditId;
     this.getLanguages();
     this.dtLanguage = this.$parent.audit.language;
@@ -90,7 +90,7 @@ export default {
   },
 
   computed: {
-    vulnCategoriesOptions: function () {
+    vulnCategoriesOptions: function() {
       return this.$_.uniq(
         this.$_.map(this.vulnerabilities, (vuln) => {
           return vuln.category || "No Category";
@@ -98,7 +98,7 @@ export default {
       );
     },
 
-    vulnTypeOptions: function () {
+    vulnTypeOptions: function() {
       return this.$_.uniq(
         this.$_.map(this.vulnerabilities, (vuln) => {
           return vuln.detail.vulnType || "Undefined";
@@ -109,7 +109,7 @@ export default {
 
   methods: {
     // Get available languages
-    getLanguages: function () {
+    getLanguages: function() {
       DataService.getLanguages()
         .then((data) => {
           this.languages = data.data.datas;
@@ -120,7 +120,7 @@ export default {
     },
 
     // Get vulnerabilities by language
-    getVulnerabilities: function () {
+    getVulnerabilities: function() {
       this.loading = true;
       VulnService.getVulnByLanguage(this.dtLanguage)
         .then((data) => {
@@ -133,7 +133,7 @@ export default {
     },
 
     // Get available vulnerability categories
-    getVulnerabilityCategories: function () {
+    getVulnerabilityCategories: function() {
       DataService.getVulnerabilityCategories()
         .then((data) => {
           this.vulnCategories = data.data.datas;
@@ -143,7 +143,7 @@ export default {
         });
     },
 
-    getDtTitle: function (row) {
+    getDtTitle: function(row) {
       var index = row.details.findIndex(
         (obj) => obj.locale === this.dtLanguage.locale
       );
@@ -151,7 +151,7 @@ export default {
       else return row.details[index].title;
     },
 
-    customFilter: function (rows, terms, cols, getCellValue) {
+    customFilter: function(rows, terms, cols, getCellValue) {
       var result =
         rows &&
         rows.filter((row) => {
@@ -160,7 +160,9 @@ export default {
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "");
           var type = (row.detail.vulnType || "Undefined").toLowerCase();
-          var category = (row.category || "No Category").toLowerCase();
+          var categories = (row.category || ["No Category"]).map((category) =>
+            category.toLowerCase()
+          );
           var termTitle = (terms.title || "")
             .toLowerCase()
             .normalize("NFD")
@@ -170,7 +172,7 @@ export default {
           return (
             title.indexOf(termTitle) > -1 &&
             type.indexOf(termVulnType) > -1 &&
-            category.indexOf(termCategory) > -1
+            categories.some((category) => category.includes(termCategory))
           );
         });
       this.filteredRowsCount = result.length;
@@ -178,7 +180,7 @@ export default {
       return result;
     },
 
-    addFindingFromVuln: function (vuln) {
+    addFindingFromVuln: function(vuln) {
       var finding = null;
       if (vuln) {
         finding = {
@@ -193,7 +195,7 @@ export default {
           cvssv3: vuln.cvssv3,
           cvssScore: vuln.cvssScore ? vuln.cvssScore : "0",
           cvssSeverity: vuln.cvssSeverity ? vuln.cvssSeverity : "None",
-          category: vuln.category,
+          category: vuln.category[0] || "",
           customFields: vuln.detail.customFields,
         };
       }
@@ -220,7 +222,7 @@ export default {
       }
     },
 
-    addFinding: function (category) {
+    addFinding: function(category) {
       var finding = null;
       if (category && this.findingTitle) {
         finding = {

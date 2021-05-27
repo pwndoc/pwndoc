@@ -1,10 +1,9 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name">
-</breadcrumb>
+  <breadcrumb buttons :title="$parent.audit.name"> </breadcrumb>
 
-<div class="row q-col-gutter-md q-pa-md">
+  <div class="row q-col-gutter-md q-pa-md">
     <div class="col-md-10 offset-md-1">
-        <q-table
+      <q-table
         class="sticky-header-table-addfinding"
         card-class="bg-grey-1"
         table-header-class="bg-grey-1"
@@ -16,132 +15,174 @@
         row-key="_id"
         separator="none"
         :loading="loading"
-        >
-            <template v-slot:top>
-                <q-select 
-                class="col-md-2"
-                v-model="dtLanguage" 
-                label="Language" 
-                :options="languages" 
-                option-value="locale" 
-                option-label="language"
-                map-options
-                emit-value
-                @input="getVulnerabilities"
+      >
+        <template v-slot:top>
+          <q-select
+            class="col-md-2"
+            v-model="dtLanguage"
+            label="Language"
+            :options="languages"
+            option-value="locale"
+            option-label="language"
+            map-options
+            emit-value
+            @input="getVulnerabilities"
+            options-sanitize
+            outlined
+            bg-color="white"
+          />
+          <q-space />
+          <q-input
+            v-model="findingTitle"
+            label="Title"
+            class="q-pl-md col-md-6"
+            @keyup.enter="addFinding()"
+            outlined
+            bg-color="white"
+          >
+            <template v-slot:append>
+              <q-btn-dropdown label="Create" no-caps flat>
+                <q-list separator>
+                  <q-item-label header>Select category</q-item-label>
+                  <q-item clickable v-close-popup @click="addFinding()">
+                    <q-item-section>
+                      <q-item-label>No Category</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item
+                    v-for="category of vulnCategories"
+                    :key="category.name"
+                    clickable
+                    v-close-popup
+                    @click="addFinding(category)"
+                  >
+                    <q-item-section>
+                      <q-item-label>{{category.name}}</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+            </template>
+          </q-input>
+        </template>
+
+        <template v-slot:top-row="props">
+          <q-tr>
+            <q-td style="width: 60%">
+              <q-input
+                dense
+                color="secondary"
+                label="Search..."
+                v-model="search.title"
+                clearable
+                outlined
+                bg-color="white"
+              />
+            </q-td>
+            <q-td style="width: 20%">
+              <q-select
+                dense
+                color="secondary"
+                label="Search..."
+                v-model="search.category"
+                clearable
+                :options="vulnCategoriesOptions"
                 options-sanitize
                 outlined
                 bg-color="white"
-                />
-                <q-space />
-                <q-input v-model="findingTitle" label="Title" class="q-pl-md col-md-6" @keyup.enter="addFinding()" outlined bg-color="white">
-                    <template v-slot:append>
-                        <q-btn-dropdown label="Create" no-caps flat>
-                            <q-list separator>
-                                <q-item-label header>Select category</q-item-label>
-                                <q-item clickable v-close-popup @click="addFinding()">
-                                    <q-item-section>
-                                      <q-item-label>No Category</q-item-label>
-                                    </q-item-section>
-                                </q-item>
-                                <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="addFinding(category)">
-                                    <q-item-section>
-                                      <q-item-label>{{category.name}}</q-item-label>
-                                    </q-item-section>
-                                </q-item>
-                            </q-list>
-                        </q-btn-dropdown>
-                    </template>
-                </q-input>
-            </template>
-
-            <template v-slot:top-row="props">
-                <q-tr>
-                    <q-td style="width: 60%">
-                        <q-input 
-                        dense
-                        color="secondary"
-                        label="Search..."
-                        v-model="search.title"
-                        clearable
-                        outlined
-                        bg-color="white"
-                        />
-                    </q-td>
-                    <q-td style="width: 20%">
-                        <q-select
-                        dense
-                        color="secondary"
-                        label="Search..."
-                        v-model="search.category"
-                        clearable
-                        :options="vulnCategoriesOptions"
-                        options-sanitize
-                        outlined
-                        bg-color="white"
-                        />
-                    </q-td>
-                    <q-td style="width: 20%">
-                        <q-select
-                        dense
-                        color="secondary"
-                        label="Search..."
-                        v-model="search.vulnType"
-                        clearable
-                        :options="vulnTypeOptions"
-                        options-sanitize
-                        outlined
-                        bg-color="white"
-                        />
-                    </q-td>
-                    <q-td></q-td>
-                </q-tr>
-            </template>
-
-            <template v-slot:body="props">
-                <q-tr :props="props">
-                    <q-td key="title" :props="props">
-                        {{props.row.detail.title}}
-                        <q-btn dense round flat :icon="props.expand ? 'arrow_drop_up' : 'arrow_drop_down'" @click="props.expand = !props.expand" />
-                    </q-td>
-                    <q-td key="category" :props="props">
-                        {{props.row.category || 'No Category'}}
-                    </q-td>
-                    <q-td key="vulnType" :props="props">
-                        {{props.row.detail.vulnType || 'Undefined'}}
-                    </q-td>
-                    <q-td key="action" :props="props" style="width:1px">
-                        <q-btn flat color="primary" icon="fa fa-plus-circle" @click="addFindingFromVuln(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Add to Findings</q-tooltip>                            
-                        </q-btn>
-                    </q-td>
-                </q-tr>
-                <q-tr v-show="props.expand" :props="props">
-                    <q-td colspan="100%" class="bg-grey-4">
-                        <div class="editor__content" style="white-space: initial" v-html="htmlEncode(props.row.detail.description)"></div>
-                    </q-td>
-                </q-tr>
-            </template>
-
-            <template v-slot:bottom="scope">
-                <span v-if="vulnerabilities.length === 1">{{filteredRowsCount}} / 1 Vulnerability</span>                
-                <span v-else>{{filteredRowsCount}} / {{vulnerabilities.length}} Vulnerabilities</span>  
-                <q-space />
-                <span>Results per page:</span>
-                <q-select
-                class="q-px-md"
-                v-model="vulnPagination.rowsPerPage"
-                :options="rowsPerPageOptions"
-                emit-value
-                map-options
+              />
+            </q-td>
+            <q-td style="width: 20%">
+              <q-select
                 dense
-                options-dense
-                options-cover
-                borderless
-                />
-                <q-pagination input v-model="vulnPagination.page" :max="scope.pagesNumber" />            
-            </template> 
-    
-        </q-table>
+                color="secondary"
+                label="Search..."
+                v-model="search.vulnType"
+                clearable
+                :options="vulnTypeOptions"
+                options-sanitize
+                outlined
+                bg-color="white"
+              />
+            </q-td>
+            <q-td></q-td>
+          </q-tr>
+        </template>
+
+        <template v-slot:body="props">
+          <q-tr :props="props">
+            <q-td key="title" :props="props">
+              {{props.row.detail.title}}
+              <q-btn
+                dense
+                round
+                flat
+                :icon="props.expand ? 'arrow_drop_up' : 'arrow_drop_down'"
+                @click="props.expand = !props.expand"
+              />
+            </q-td>
+            <q-td key="category" :props="props">
+              {{props.row.category.join(", ") || 'No Category'}}
+            </q-td>
+            <q-td key="vulnType" :props="props">
+              {{props.row.detail.vulnType || 'Undefined'}}
+            </q-td>
+            <q-td key="action" :props="props" style="width:1px">
+              <q-btn
+                flat
+                color="primary"
+                icon="fa fa-plus-circle"
+                @click="addFindingFromVuln(props.row)"
+              >
+                <q-tooltip
+                  anchor="bottom middle"
+                  self="center left"
+                  :delay="500"
+                  content-class="text-bold"
+                  >Add to Findings</q-tooltip
+                >
+              </q-btn>
+            </q-td>
+          </q-tr>
+          <q-tr v-show="props.expand" :props="props">
+            <q-td colspan="100%" class="bg-grey-4">
+              <div
+                class="editor__content"
+                style="white-space: initial"
+                v-html="htmlEncode(props.row.detail.description)"
+              ></div>
+            </q-td>
+          </q-tr>
+        </template>
+
+        <template v-slot:bottom="scope">
+          <span v-if="vulnerabilities.length === 1"
+            >{{filteredRowsCount}} / 1 Vulnerability</span
+          >
+          <span v-else
+            >{{filteredRowsCount}} / {{vulnerabilities.length}}
+            Vulnerabilities</span
+          >
+          <q-space />
+          <span>Results per page:</span>
+          <q-select
+            class="q-px-md"
+            v-model="vulnPagination.rowsPerPage"
+            :options="rowsPerPageOptions"
+            emit-value
+            map-options
+            dense
+            options-dense
+            options-cover
+            borderless
+          />
+          <q-pagination
+            input
+            v-model="vulnPagination.page"
+            :max="scope.pagesNumber"
+          />
+        </template>
+      </q-table>
     </div>
-</div>
+  </div>
 </div>

@@ -63,7 +63,7 @@
           no-caps
           :options="cvssItems.S"
         />
-        <div class="q-my-sm text-weight-bold">Confidentiality riskImpact</div>
+        <div class="q-my-sm text-weight-bold">Confidentiality</div>
         <q-btn-toggle
           class="group-btn"
           v-model="cvssObj.C"
@@ -72,7 +72,7 @@
           no-caps
           :options="cvssItems.C"
         />
-        <div class="q-my-sm text-weight-bold">Integrity riskImpact</div>
+        <div class="q-my-sm text-weight-bold">Integrity</div>
         <q-btn-toggle
           class="group-btn"
           v-model="cvssObj.I"
@@ -81,7 +81,7 @@
           no-caps
           :options="cvssItems.I"
         />
-        <div class="q-my-sm text-weight-bold">Availability riskImpact</div>
+        <div class="q-my-sm text-weight-bold">Availability</div>
         <q-btn-toggle
           class="group-btn"
           v-model="cvssObj.A"
@@ -100,7 +100,7 @@ export default {
   name: "cvss-calculator",
   props: ["cvssString", "cvssScore", "cvssSeverity"],
 
-  data: function () {
+  data: function() {
     return {
       cvssItems: {
         AV: [
@@ -149,12 +149,12 @@ export default {
     };
   },
 
-  created: function () {
+  created: function() {
     this.cvssStrToObject(this.cvssString);
   },
 
   watch: {
-    cvssString: function (val) {
+    cvssString: function(val) {
       this.cvssStrToObject(val);
     },
     cvssObj: {

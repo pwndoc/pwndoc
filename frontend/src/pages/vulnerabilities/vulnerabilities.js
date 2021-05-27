@@ -80,6 +80,7 @@ export default {
       errors: { title: "" },
       // Selected or New Vulnerability
       currentVulnerability: {
+        category: [],
         cvssv3: "",
         cvssScore: "",
         cvssSeverity: "",
@@ -122,7 +123,7 @@ export default {
     CustomFields,
   },
 
-  mounted: function () {
+  mounted: function() {
     this.getLanguages();
     this.getVulnTypes();
     this.getVulnerabilities();
@@ -131,19 +132,19 @@ export default {
   },
 
   watch: {
-    currentLanguage: function (val, oldVal) {
+    currentLanguage: function(val, oldVal) {
       this.setCurrentDetails();
     },
   },
 
   computed: {
-    vulnTypesLang: function () {
+    vulnTypesLang: function() {
       return this.vulnTypes.filter(
         (type) => type.locale === this.currentLanguage
       );
     },
 
-    computedVulnerabilities: function () {
+    computedVulnerabilities: function() {
       var result = [];
       this.vulnerabilities.forEach((vuln) => {
         for (var i = 0; i < vuln.details.length; i++) {
@@ -158,7 +159,7 @@ export default {
       return result;
     },
 
-    vulnCategoriesOptions: function () {
+    vulnCategoriesOptions: function() {
       var result = this.vulnCategories.map((cat) => {
         return cat.name;
       });
@@ -166,7 +167,7 @@ export default {
       return result;
     },
 
-    vulnTypeOptions: function () {
+    vulnTypeOptions: function() {
       var result = this.vulnTypes
         .filter((type) => type.locale === this.dtLanguage)
         .map((type) => {
@@ -179,7 +180,7 @@ export default {
 
   methods: {
     // Get available languages
-    getLanguages: function () {
+    getLanguages: function() {
       DataService.getLanguages()
         .then((data) => {
           this.languages = data.data.datas;
@@ -194,7 +195,7 @@ export default {
     },
 
     // Get available custom fields
-    getCustomFields: function () {
+    getCustomFields: function() {
       DataService.getCustomFields()
         .then((data) => {
           this.customFields = data.data.datas;
@@ -205,7 +206,7 @@ export default {
     },
 
     // Get Vulnerabilities types
-    getVulnTypes: function () {
+    getVulnTypes: function() {
       DataService.getVulnerabilityTypes()
         .then((data) => {
           this.vulnTypes = data.data.datas;
@@ -216,7 +217,7 @@ export default {
     },
 
     // Get available vulnerability categories
-    getVulnerabilityCategories: function () {
+    getVulnerabilityCategories: function() {
       DataService.getVulnerabilityCategories()
         .then((data) => {
           this.vulnCategories = data.data.datas;
@@ -226,7 +227,7 @@ export default {
         });
     },
 
-    getVulnerabilities: function () {
+    getVulnerabilities: function() {
       this.loading = true;
       VulnerabilityService.getVulnerabilities()
         .then((data) => {
@@ -244,7 +245,7 @@ export default {
         });
     },
 
-    createVulnerability: function () {
+    createVulnerability: function() {
       this.cleanErrors();
 
       var index = this.currentVulnerability.details.findIndex(
@@ -275,7 +276,7 @@ export default {
         });
     },
 
-    updateVulnerability: function () {
+    updateVulnerability: function() {
       this.cleanErrors();
       var index = this.currentVulnerability.details.findIndex(
         (obj) => obj.title !== ""
@@ -309,7 +310,7 @@ export default {
         });
     },
 
-    deleteVulnerability: function (vulnerabilityId) {
+    deleteVulnerability: function(vulnerabilityId) {
       VulnerabilityService.deleteVulnerability(vulnerabilityId)
         .then(() => {
           this.getVulnerabilities();
@@ -330,7 +331,7 @@ export default {
         });
     },
 
-    confirmDeleteVulnerability: function (row) {
+    confirmDeleteVulnerability: function(row) {
       Dialog.create({
         title: "Confirm Suppression",
         message: `Vulnerability will be permanently deleted`,
@@ -339,7 +340,7 @@ export default {
       }).onOk(() => this.deleteVulnerability(row._id));
     },
 
-    getVulnUpdates: function (vulnId) {
+    getVulnUpdates: function(vulnId) {
       VulnerabilityService.getVulnUpdates(vulnId)
         .then((data) => {
           this.vulnUpdates = data.data.datas;
@@ -361,7 +362,7 @@ export default {
         });
     },
 
-    clone: function (row) {
+    clone: function(row) {
       this.cleanCurrentVulnerability();
 
       this.currentVulnerability = this.$_.cloneDeep(row);
@@ -372,7 +373,7 @@ export default {
         this.getVulnUpdates(this.vulnerabilityId);
     },
 
-    editChangeCategory: function (category) {
+    editChangeCategory: function(category) {
       Dialog.create({
         title: "Confirm Category change",
         message: `Custom Fields display could be riskImpacted when changing Category`,
@@ -388,11 +389,11 @@ export default {
       });
     },
 
-    cleanErrors: function () {
+    cleanErrors: function() {
       this.errors.title = "";
     },
 
-    cleanCurrentVulnerability: function () {
+    cleanCurrentVulnerability: function() {
       this.cleanErrors();
       this.currentVulnerability.cvssv3 = "";
       this.currentVulnerability.cvssScore = "";
@@ -406,14 +407,14 @@ export default {
       this.currentVulnerability.details = [];
       this.currentLanguage = this.dtLanguage;
       if (this.currentCategory && this.currentCategory.name)
-        this.currentVulnerability.category = this.currentCategory.name;
+        this.currentVulnerability.category = [this.currentCategory.name];
       else this.currentVulnerability.category = null;
 
       this.setCurrentDetails();
     },
 
     // Create detail if locale doesn't exist else set the currentDetailIndex
-    setCurrentDetails: function (value) {
+    setCurrentDetails: function(value) {
       var index = this.currentVulnerability.details.findIndex(
         (obj) => obj.locale === this.currentLanguage
       );
@@ -438,18 +439,19 @@ export default {
         this.currentVulnerability.details.push(details);
         index = this.currentVulnerability.details.length - 1;
       } else {
-        this.currentVulnerability.details[index].customFields =
-          Utils.filterCustomFields(
-            "vulnerability",
-            this.currentVulnerability.category,
-            this.customFields,
-            this.currentVulnerability.details[index].customFields
-          );
+        this.currentVulnerability.details[
+          index
+        ].customFields = Utils.filterCustomFields(
+          "vulnerability",
+          this.currentVulnerability.category,
+          this.customFields,
+          this.currentVulnerability.details[index].customFields
+        );
       }
       this.currentDetailsIndex = index;
     },
 
-    isTextInCustomFields: function (field) {
+    isTextInCustomFields: function(field) {
       if (
         this.currentVulnerability.details[this.currentDetailsIndex].customFields
       ) {
@@ -466,7 +468,7 @@ export default {
       return false;
     },
 
-    getTextDiffInCustomFields: function (field) {
+    getTextDiffInCustomFields: function(field) {
       var result = "";
       if (
         this.currentVulnerability.details[this.currentDetailsIndex].customFields
@@ -480,7 +482,7 @@ export default {
       return result;
     },
 
-    getDtTitle: function (row) {
+    getDtTitle: function(row) {
       var index = row.details.findIndex(
         (obj) => obj.locale === this.dtLanguage
       );
@@ -489,7 +491,7 @@ export default {
       else return row.details[index].title;
     },
 
-    getDtType: function (row) {
+    getDtType: function(row) {
       var index = row.details.findIndex(
         (obj) => obj.locale === this.dtLanguage
       );
@@ -497,7 +499,7 @@ export default {
       else return row.details[index].vulnType;
     },
 
-    customSort: function (rows, sortBy, descending) {
+    customSort: function(rows, sortBy, descending) {
       if (rows) {
         var data = [...rows];
 
@@ -534,7 +536,7 @@ export default {
       }
     },
 
-    customFilter: function (rows, terms, cols, getCellValue) {
+    customFilter: function(rows, terms, cols, getCellValue) {
       var result =
         rows &&
         rows.filter((row) => {
@@ -543,7 +545,9 @@ export default {
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "");
           var type = this.getDtType(row).toLowerCase();
-          var category = (row.category || "No Category").toLowerCase();
+          var categories = (row.category || ["No Category"]).map((category) =>
+            category.toLowerCase()
+          );
           var termTitle = (terms.title || "")
             .toLowerCase()
             .normalize("NFD")
@@ -553,22 +557,23 @@ export default {
           return (
             title.indexOf(termTitle) > -1 &&
             type.indexOf(termVulnType || "") > -1 &&
-            category.indexOf(termCategory || "") > -1 &&
+            categories.some((category) => category.includes(termCategory)) &&
             (row.status === terms.valid ||
               row.status === terms.new ||
               row.status === terms.updates)
           );
         });
+
       this.filteredRowsCount = result.length;
       return result;
     },
 
-    goToAudits: function (row) {
+    goToAudits: function(row) {
       var title = this.getDtTitle(row);
       this.$router.push({ name: "audits", params: { finding: title } });
     },
 
-    getVulnTitleLocale: function (vuln, locale) {
+    getVulnTitleLocale: function(vuln, locale) {
       for (var i = 0; i < vuln.details.length; i++) {
         if (vuln.details[i].locale === locale && vuln.details[i].title)
           return vuln.details[i].title;
@@ -576,7 +581,7 @@ export default {
       return "undefined";
     },
 
-    mergeVulnerabilities: function () {
+    mergeVulnerabilities: function() {
       VulnerabilityService.mergeVulnerability(
         this.mergeVulnLeft,
         this.mergeVulnRight,
@@ -601,7 +606,7 @@ export default {
         });
     },
 
-    dblClick: function (row) {
+    dblClick: function(row) {
       this.clone(row);
       if (
         this.UserService.isAllowed("vulnerabilities:update") &&

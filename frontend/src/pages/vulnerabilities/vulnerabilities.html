@@ -119,7 +119,7 @@
                         {{getDtTitle(props.row)}}
                     </q-td>
                     <q-td key="category" :props="props">
-                        {{props.row.category || 'No Category'}}
+                        {{props.row.category.join(", ") || 'No Category'}}
                     </q-td>
                     <q-td key="type" :props="props">
                         {{getDtType(props.row)}}
@@ -168,7 +168,7 @@
     <q-card :style="($q.screen.gt.md)?'width: 50vw':''" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
-                <span v-if="currentCategory">Add Vulnerability ({{currentCategory.name}})</span>
+                <span v-if="currentVulnerability.category && currentVulnerability.category.length > 0">Add Vulnerability ({{currentVulnerability.category.join(", ")}})</span>
                 <span v-else>Add Vulnerability (No Category)</span>
             </div>
             <q-space />
@@ -177,6 +177,20 @@
 
         <q-card-section>
             <div class="q-col-gutter-md row">
+                <q-select 
+                    class="col-md-12"
+                    label="Categories"
+                    v-model="currentVulnerability.category" 
+                    :options="vulnCategories" 
+                    option-value="name" 
+                    option-label="name" 
+                    emit-value 
+                    map-options
+                    options-sanitize
+                    outlined
+                    bg-color="white"
+                    multiple
+                />
                 <q-input
                 label='Title *'
                 stack-label
@@ -355,10 +369,10 @@
     <q-card :style="($q.screen.gt.md)?'width: 50vw':''" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
-                <span v-if="currentVulnerability.category">Edit Vulnerability ({{currentVulnerability.category}})</span>
+                <span v-if="currentVulnerability.category">Edit Vulnerability ({{currentVulnerability.category.join(", ")}})</span>
                 <span v-else>Edit Vulnerability (No Category)</span>
             </div>
-            <q-separator vertical color="white" class="q-mx-md" />
+            <!-- <q-separator vertical color="white" class="q-mx-md" />
             <q-btn-dropdown
             label="Change Category"
             color="white"
@@ -376,13 +390,27 @@
                     </q-item-section>
                 </q-item>
             </q-list>
-            </q-btn-dropdown>
+            </q-btn-dropdown> -->
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
         </q-bar>
 
         <q-card-section>
             <div class="q-col-gutter-md row">
+                <q-select 
+                    class="col-md-12"
+                    label="Categories"
+                    v-model="currentVulnerability.category" 
+                    :options="vulnCategories" 
+                    option-value="name" 
+                    option-label="name" 
+                    emit-value 
+                    map-options
+                    options-sanitize
+                    outlined
+                    bg-color="white"
+                    multiple
+                />
                 <q-input
                 label='Title *'
                 stack-label

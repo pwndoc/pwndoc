@@ -57,6 +57,19 @@
       <q-tab-panel name="definition">
         <q-card class="bg-grey-1">
           <q-card-section class="row q-col-gutter-md">
+            <q-select
+              class="col-md-12"
+              label="Category"
+              v-model="finding.category"
+              :options="vulnCategories"
+              option-value="name"
+              option-label="name"
+              emit-value
+              map-options
+              options-sanitize
+              outlined
+              bg-color="white"
+            />
             <q-input
               class="col-md-8 col-12"
               label="Title *"
@@ -172,14 +185,14 @@
             />
           </div>
         </q-card>
-        <q-card-section>
+        <q-card class="q-mt-md bg-grey-1">
           <div class="col-md-12">
             <risk-calculator
               :riskProbability="finding.riskProbability"
               :riskImpact="finding.riskImpact"
             />
           </div>
-        </q-card-section>
+        </q-card>
         <q-card class="q-mt-md bg-grey-1">
           <q-card-section>Course of actions</q-card-section>
           <q-separator />
