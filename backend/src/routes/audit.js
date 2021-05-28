@@ -1,3 +1,5 @@
+const { has } = require('lodash');
+
 module.exports = function(app, io) {
 
     var Response = require('../lib/httpResponse');
@@ -106,12 +108,14 @@ module.exports = function(app, io) {
             update.company._id = req.body.company._id;
         }
         if (req.body.collaborators) update.collaborators = req.body.collaborators;
+        if (req.body.reviewers) update.reviewers = req.body.reviewers;
         if (req.body.language) update.language = req.body.language;
         if (req.body.scope && typeof(req.body.scope === "array")) {
             update.scope = req.body.scope.map(item => {return {name: item}});
         }
         if (req.body.template) update.template = req.body.template;
-        if (req.body.customFields) update.customFields = req.body.customFields
+        if (req.body.customFields) update.customFields = req.body.customFields;
+        if (req.body.isReadyForReview != undefined) update.isReadyForReview = req.body.isReadyForReview;
 
         Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {

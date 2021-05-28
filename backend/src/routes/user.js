@@ -49,6 +49,23 @@ module.exports = function(app) {
         .catch(err => Response.Internal(res, err))
     });
 
+    // Get all reviewers
+    app.get("/api/users/reviewers", acl.hasPermission('users:read'), function(req, res) {
+        console.log("bon path");
+        User.getAll()
+        .then((users) => {
+            var reviewers = [];
+            users.forEach(user => {
+                console.log(user);
+                if (acl.isAllowed(user.role, 'audits:review') || acl.isAllowed(user.role, 'audits:review-all')) {
+                    reviewers.push(user);
+                }
+            })
+            Response.Ok(res, reviewers);
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
     // Get user self
     app.get("/api/users/me", acl.hasPermission('validtoken'), function(req, res) {
         User.getByUsername(req.decodedToken.username)
@@ -183,5 +200,4 @@ module.exports = function(app) {
         })
         .catch(err => Response.Internal(res, err))
     });
-
 }

@@ -5,7 +5,6 @@ export default {
     return Vue.prototype.$axios.get(`configs`)
   },
 
-  
   updateConfigs: function(configs) {
     return Vue.prototype.$axios.put(`configs`, configs)
   }

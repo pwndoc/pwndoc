@@ -8,9 +8,11 @@ import AuditService from '@/services/audit';
 import ClientService from '@/services/client';
 import CompanyService from '@/services/company';
 import CollabService from '@/services/collaborator';
+import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
+import UserService from '@/services/user'
 
 export default {
     data: () => {
@@ -26,13 +28,15 @@ export default {
                 client: {},
                 company: {},
                 collaborators: [],
+                reviewers: [],
                 date: "",
                 date_start: "",
                 date_end: "",
                 scope: [],
                 language: "",
                 template: "",
-                customFields: []
+                customFields: [],
+                isReadyForReview: false,
             },
             auditOrig: {},
             // List of existing clients
@@ -41,6 +45,8 @@ export default {
             selectClients: [],
             // List of existing Collaborators
             collaborators: [],
+            // List of existing reviewers
+            reviewers: [],
             // List of existing Companies
             companies: [],
             // List of existing Templates
@@ -50,7 +56,11 @@ export default {
             // List of existing audit types
             auditTypes: [],
             // List of CustomFields
-            customFields: []
+            customFields: [],
+            isReviewing: false,
+            isEditing: false,
+            isApproved: false,
+            isReadyForReview: false
         }
     },
 
@@ -66,7 +76,7 @@ export default {
         this.getClients();
         this.getTemplates();
         this.getLanguages();
-        this.getAuditTypes();
+        this.getAuditTypes();        
 
         this.$socket.emit('menu', {menu: 'general', room: this.auditId});
 
@@ -108,6 +118,23 @@ export default {
             }
         },
 
+        // Tells the UI if the user is supposed to be reviewing the audit
+        isUserReviewing: function() {
+            var isAuthor = this.audit.creator._id === UserService.user.id;
+            var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
+            var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
+            var hasReviewAll = UserService.isAllowed('audits:review-all');
+            this.isReviewing = !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
+        },
+
+        // Tells the UI if the user is supposed to be editing the audit
+        isUserEditing: function() {
+            var isAuthor = this.audit.creator._id === UserService.user.id;
+            var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
+            var hasUpdateAll = UserService.isAllowed('audits:update-all');
+            this.isEditing = isAuthor || isCollaborator || hasUpdateAll;
+        },
+
         // Get Audit datas from uuid
         getAuditGeneral: function() {
             DataService.getCustomFields()
@@ -119,7 +146,11 @@ export default {
                 this.audit = data.data.datas;
                 this.audit.customFields = Utils.filterCustomFields('audit-general', '', this.customFields, this.audit.customFields)
                 this.auditOrig = this.$_.cloneDeep(this.audit);
-                this.getCollaborators()
+                this.getCollaborators();
+                this.getReviewers();
+                this.isUserReviewing();
+                this.isUserEditing();
+                this.isReadyForReview = this.audit.isReadyForReview;
             })
             .catch((err) => {              
                 console.log(err.response)
@@ -199,6 +230,20 @@ export default {
             })
         },
 
+        // Get Reviewers list
+        getReviewers: function() {
+            ReviewerService.getReviewers()
+            .then((data) => {
+                var creatorId = ""
+                if (this.audit.creator)
+                    creatorId = this.audit.creator._id
+                this.reviewers = data.data.datas.filter(e => e._id !== creatorId)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
         // Get Templates list
         getTemplates: function() {
             TemplateService.getTemplates()
@@ -257,6 +302,28 @@ export default {
                     }
                 }
             }
+        },
+
+        toggleAskReview: function() {
+            this.audit.isReadyForReview = !this.audit.isReadyForReview;
+            this.isReadyForReview = this.audit.isReadyForReview;
+            AuditService.updateAuditGeneral(this.auditId, { isReadyForReview: this.audit.isReadyForReview })
+            .then(() => {
+                this.auditOrig.isReadyForReview = this.audit.isReadyForReview;
+                Notify.create({
+                    message: 'Audit submitted for review successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {              
+                console.log(err.response)
+            })
+        },
+
+        toggleApproval: function() {
+            this.isApproved = !this.isApproved;
         }
 
     }

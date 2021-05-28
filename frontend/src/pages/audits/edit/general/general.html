@@ -1,7 +1,10 @@
 <div>
 <breadcrumb buttons :title="$parent.audit.name" id="edit-breadcrumb-affix">
     <div slot="buttons">
-    <q-btn color="secondary" label="Approve Report" no-caps class="topButton" @click="" />
+    <q-btn v-if="isEditing && !isReadyForReview" color="secondary" label="Submit for Review" no-caps class="topButton" @click="toggleAskReview" />
+    <q-btn v-if="isEditing && isReadyForReview" color="warning" label="Retract Review" no-caps class="topButton" @click="toggleAskReview" />
+    <q-btn v-if="isReviewing && !isApproved" color="secondary" label="Approve Report" no-caps class="topButton" @click="toggleApproval" />
+    <q-btn v-if="isReviewing && isApproved" color="warning" label="Remove Approval" no-caps class="topButton" @click="toggleApproval" />
     <q-btn color="positive" label="Save (ctrl+s)" no-caps class="topButton" @click="updateAuditGeneral" />
     </div>
 </breadcrumb>
@@ -85,6 +88,22 @@
                     outlined 
                     bg-color="white"
                     />
+                    <q-select 
+                    class="col-md-12 col-12"
+                    label="Reviewers"
+                    stack-label
+                    v-model="audit.reviewers"
+                    :options="reviewers"
+                    option-value="username"
+                    :option-label="(item) => item.firstname+' '+item.lastname"
+                    multiple
+                    use-chips
+                    options-sanitize
+                    outlined 
+                    bg-color="white"
+                    >
+                    </q-select>
+                    
                     <q-select 
                     class="col-md-12 col-12"
                     label="Collaborators"
