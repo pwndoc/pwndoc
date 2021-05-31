@@ -85,8 +85,10 @@ AuditSchema.statics.getAudits = (isAdmin, userId, filters) => {
             query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
         query.populate('creator', '-_id username')
         query.populate('collaborators', '-_id username')
+        query.populate('reviewers', '-_id username')
+        query.populate('approvals', '-_id username')
         query.populate('company', '-_id name')
-        query.select('id name language creator collaborators company createdAt')
+        query.select('id name language creator collaborators company createdAt isReadyForReview')
         query.exec()
         .then((rows) => {
             resolve(rows)

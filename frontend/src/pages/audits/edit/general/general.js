@@ -313,7 +313,7 @@ export default {
             .then(() => {
                 this.auditOrig.isReadyForReview = this.audit.isReadyForReview;
                 Notify.create({
-                    message: 'Audit submitted for review successfully',
+                    message: 'Audit review status updated successfully',
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -332,7 +332,7 @@ export default {
             .then(() => {
                 this.auditOrig.isReadyForReview = this.audit.isReadyForReview;
                 Notify.create({
-                    message: 'Audit approved successfully',
+                    message: 'Audit approval updated successfully',
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'

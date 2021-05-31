@@ -2,7 +2,7 @@
 <breadcrumb buttons :title="$parent.audit.name" id="edit-breadcrumb-affix">
     <div slot="buttons">
     <q-btn v-if="isEditing && !isReadyForReview" color="secondary" label="Submit for Review" no-caps class="topButton" @click="toggleAskReview" />
-    <q-btn v-if="isEditing && isReadyForReview" color="warning" label="Retract Review" no-caps class="topButton" @click="toggleAskReview" />
+    <q-btn v-if="isEditing && isReadyForReview" color="warning" label="Remove Submission" no-caps class="topButton" @click="toggleAskReview" />
     <q-btn v-if="isReviewing && !isApproved" color="secondary" label="Approve Report" no-caps class="topButton" @click="toggleApproval" />
     <q-btn v-if="isReviewing && isApproved" color="warning" label="Remove Approval" no-caps class="topButton" @click="toggleApproval" />
     <q-btn color="positive" label="Save (ctrl+s)" no-caps class="topButton" @click="updateAuditGeneral" />

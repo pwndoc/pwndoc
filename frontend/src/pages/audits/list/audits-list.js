@@ -7,6 +7,8 @@ import DataService from '@/services/data'
 import TemplateService from '@/services/template'
 import CompanyService from '@/services/company'
 import UserService from '@/services/user'
+import ConfigsService from '@/services/configs'
+import configs from '../../../services/configs';
 
 export default {
     data: () => {
@@ -50,10 +52,13 @@ export default {
             search: {finding: '', name: '', language: '', company: '', users: '', date: ''},
             myAudits: false,
             displayConnected: false,
+            displayReadyForReview: false,
             // Errors messages
             errors: {name: '', language: '', template: ''},
             // Selected or New Audit
-            currentAudit: {name: '', language: '', template: ''}
+            currentAudit: {name: '', language: '', template: ''},
+            // The application's public configs
+            configs: {}
         }
     },
 
@@ -105,17 +110,36 @@ export default {
             })
         },
 
+        isAuditApproved: function(audit) {     
+            console.log(audit.approvals.length);
+            console.log(this.configs.minReviewers)   
+            return audit.approvals.length >= this.configs.minReviewers;
+        },
+
         getAudits: function() {
             this.loading = true
             AuditService.getAudits({findingTitle: this.search.finding})
-            .then((data) => {
+            .then(async (data) => {
                 this.audits = data.data.datas
+                var configs = await this.getPublicConfigs();
+                console.log(configs);
+                this.configs = configs.data.datas;
+                this.audits.forEach((audit) => {
+                    audit.isApproved = this.isAuditApproved(audit);
+                    console.log(audit.isApproved);
+                });
                 this.loading = false
             })
             .catch((err) => {
                 console.log(err)
             })
         },
+
+        getPublicConfigs: async function() {
+            return await ConfigsService.getPublicConfigs();
+        },
+
+        
 
         createAudit: function() {
             this.cleanErrors();
@@ -277,7 +301,8 @@ export default {
                     users.indexOf(usersTerm) > -1 &&
                     date.indexOf(dateTerm) > -1 &&
                     ((this.myAudits && users.indexOf(username) > -1) || !this.myAudits) &&
-                    ((this.displayConnected && row.connected && row.connected.length > 0) || !this.displayConnected)
+                    ((this.displayConnected && row.connected && row.connected.length > 0) || !this.displayConnected) &&
+                    ((this.displayReadyForReview && (row.isReadyForReview && !row.isApproved)) || !this.displayReadyForReview)
             })
         },
 
