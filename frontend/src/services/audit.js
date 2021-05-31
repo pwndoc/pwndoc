@@ -79,5 +79,9 @@ export default {
 
   generateAuditReport: function(auditId) {
     return Vue.prototype.$axios.get(`audits/${auditId}/generate`, {responseType: 'blob'})
+  },
+
+  toggleApproval: function(auditId) {
+    return Vue.prototype.$axios.put(`audits/${auditId}/toggleApproval`);
   }
 }

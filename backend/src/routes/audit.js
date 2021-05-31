@@ -1,4 +1,5 @@
 const { has } = require('lodash');
+const { jwtSecret } = require('../lib/auth');
 
 module.exports = function(app, io) {
 
@@ -8,6 +9,7 @@ module.exports = function(app, io) {
     var reportGenerator = require('../lib/report-generator');
     var _ = require('lodash');
     var utils = require('../lib/utils');
+    var Configs = require('../models/configs').model('Configs');
 
     /* ### AUDITS LIST ### */
 
@@ -292,6 +294,11 @@ module.exports = function(app, io) {
     app.get("/api/audits/:auditId/generate", acl.hasPermission('audits:read'), function(req, res){
         Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
         .then( async audit => {
+            var configs = await Configs.findOne();
+            if (configs.mandatoryReview && configs.minReviewers > audit.approvals.length) {
+                Response.Forbidden(res, "Audit does not have the minimal number of approvals to export.");
+                return;
+            }
             var reportDoc = await reportGenerator.generateDoc(audit);
             Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
         })
@@ -301,5 +308,46 @@ module.exports = function(app, io) {
             else
                 Response.Internal(res, err)
         });
+    });
+
+    // Give or remove a reviewer's approval to an audit
+    app.put("/api/audits/:auditId/toggleApproval", acl.hasPermission('audits:review'), function(req, res) {
+        Audit.findById(req.params.auditId)
+        .then((audit) => {
+            var hasApprovedBefore = false;
+            var newApprovalsArray = [];
+            if (audit.approvals) {
+                audit.approvals.forEach((approval) => {
+                    if (approval._id.toString() === req.decodedToken.id) {
+                        hasApprovedBefore = true;
+                    } else {
+                        newApprovalsArray.push(approval);
+                    }
+                });
+            }
+
+            if (!hasApprovedBefore) {
+                newApprovalsArray.push({
+                    _id: req.decodedToken.id,
+                    role: req.decodedToken.role,
+                    username: req.decodedToken.username,
+                    firstname: req.decodedToken.firstname,
+                    lastname: req.decodedToken.lastname
+                });
+            }
+
+            var update = { approvals : newApprovalsArray};
+            console.log(update);
+            Audit.updateApprovals(acl.isAllowed(req.decodedToken.role, 'audits:review-all'), req.params.auditId, req.decodedToken.id, update)
+            .then(() => {
+                Response.Ok(res, "Approval updated successfully.")
+            })
+            .catch((err) => {
+                Response.Internal(res, err);
+            })
+        })
+        .catch((err) => {
+            Response.Internal(res, err);
+        })
     });
 }

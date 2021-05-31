@@ -193,6 +193,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
         query.populate('creator', 'username firstname lastname')
         query.populate('collaborators', 'username firstname lastname')
         query.populate('reviewers', 'username firstname lastname')
+        query.populate('approvals', 'username firstname lastname')
         query.populate('company')
         query.select('id name auditType location date date_start date_end client collaborators language scope.name template customFields, isReadyForReview')
         query.exec()
@@ -524,6 +525,28 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
             reject(err)
         })
     })
+}
+
+AuditSchema.statics.updateApprovals = (isAdmin, auditId, userId, update) => {
+    console.log("gettin there");
+    return new Promise((resolve, reject) => {
+        console.log("in updateApprovals");
+        var query = Audit.findByIdAndUpdate(auditId, update)
+        query.nor([{creator: userId}, {collaborators: userId}]);
+        if (!isAdmin)
+            query.or([{reviewers: userId}]);
+        
+        query.exec()
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'});
+            
+            resolve("Audit approvals updated successfully");
+        })
+        .catch((err) => {
+            reject(err)
+        })
+    });
 }
 
 /*

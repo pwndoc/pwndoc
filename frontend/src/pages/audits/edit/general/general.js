@@ -37,6 +37,7 @@ export default {
                 template: "",
                 customFields: [],
                 isReadyForReview: false,
+                approvals: []
             },
             auditOrig: {},
             // List of existing clients
@@ -151,6 +152,7 @@ export default {
                 this.isUserReviewing();
                 this.isUserEditing();
                 this.isReadyForReview = this.audit.isReadyForReview;
+                this.isApproved = this.audit.approvals.some((element) => element._id === UserService.user.id);
             })
             .catch((err) => {              
                 console.log(err.response)
@@ -317,13 +319,29 @@ export default {
                     position: 'top-right'
                 })
             })
-            .catch((err) => {              
+            .catch((err) => {             
+                this.audit.isReadyForReview = !this.audit.isReadyForReview;
+                this.isReadyForReview = this.audit.isReadyForReview; 
                 console.log(err.response)
-            })
+            });
         },
 
         toggleApproval: function() {
             this.isApproved = !this.isApproved;
+            AuditService.toggleApproval(this.auditId)
+            .then(() => {
+                this.auditOrig.isReadyForReview = this.audit.isReadyForReview;
+                Notify.create({
+                    message: 'Audit approved successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {      
+                this.isApproved = !this.isApproved;        
+                console.log(err.response)
+            });
         }
 
     }
