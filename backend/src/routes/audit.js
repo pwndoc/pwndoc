@@ -95,8 +95,69 @@ module.exports = function(app, io) {
     });
 
     // Update audit general information
-    app.put("/api/audits/:auditId/general", acl.hasPermission('audits:update'), function(req, res) {
+    app.put("/api/audits/:auditId/general", acl.hasPermission('audits:update'), async function(req, res) {
+        
+        
         var update = {};
+
+        var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id);
+
+        if (req.body.reviewers) {
+            if (req.body.reviewers.some(element => !element._id)) {
+                Response.BadParameters(res, "One or more reviewer is missing an _id");
+                return;
+            }
+
+            // Is the new reviewer the creator of the audit? 
+            if (req.body.reviewers.some(element => element._id === audit.creator._id)) {
+                Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
+                return;
+            }
+
+            // Is the new reviewer one of the new collaborators that will override current collaborators? 
+            if (req.body.collaborators) {
+                req.body.reviewers.forEach((reviewer) => {
+                    if (req.body.collaborators.some(element => !element._id || element._id === reviewer._id)) {
+                        Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
+                        return;
+                    }
+                });
+            }
+
+            // If no new collaborators are being set, is the new reviewer one of the current collaborators? 
+            else if (audit.collaborators) {
+                req.body.reviewers.forEach((reviewer) => {
+                    if (audit.collaborators.some(element => !element._id || element._id === reviewer._id)) {
+                        Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
+                        return;
+                    }
+                });
+            }
+        }
+
+        if (req.body.collaborators) {
+            if (req.body.collaborators.some(element => !element._id)) {
+                Response.BadParameters(res, "One or more collaborator is missing an _id");
+                return;
+            }
+            
+            // Are the new collaborators part of the current reviewers?
+            req.body.collaborators.forEach((collaborator) => {
+                if (audit.reviewers.some(element => !element._id || element._id === collaborator._id)) {
+                    Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
+                    return;
+                }
+            });
+
+            // If the new collaborator already gave a review, remove said review, accept collaborator
+            if (audit.approvals) {
+                console.log(audit.approvals);
+                console.log(req.body.collaborators);
+                newApprovals = audit.approvals.filter((approval) => !req.body.collaborators.some((collaborator) => approval.toString() === collaborator._id));
+                update.approvals = newApprovals;
+            }
+        }
+
         // Optional parameters
         if (req.body.name) update.name = req.body.name;
         if (req.body.auditType) update.auditType = req.body.auditType;
@@ -340,7 +401,6 @@ module.exports = function(app, io) {
             }
 
             var update = { approvals : newApprovalsArray};
-            console.log(update);
             Audit.updateApprovals(acl.isAllowed(req.decodedToken.role, 'audits:review-all'), req.params.auditId, req.decodedToken.id, update)
             .then(() => {
                 Response.Ok(res, "Approval updated successfully.")

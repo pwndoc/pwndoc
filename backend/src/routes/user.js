@@ -51,12 +51,10 @@ module.exports = function(app) {
 
     // Get all reviewers
     app.get("/api/users/reviewers", acl.hasPermission('users:read'), function(req, res) {
-        console.log("bon path");
         User.getAll()
         .then((users) => {
             var reviewers = [];
             users.forEach(user => {
-                console.log(user);
                 if (acl.isAllowed(user.role, 'audits:review') || acl.isAllowed(user.role, 'audits:review-all')) {
                     reviewers.push(user);
                 }

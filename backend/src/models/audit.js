@@ -530,9 +530,7 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
 }
 
 AuditSchema.statics.updateApprovals = (isAdmin, auditId, userId, update) => {
-    console.log("gettin there");
     return new Promise((resolve, reject) => {
-        console.log("in updateApprovals");
         var query = Audit.findByIdAndUpdate(auditId, update)
         query.nor([{creator: userId}, {collaborators: userId}]);
         if (!isAdmin)

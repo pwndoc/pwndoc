@@ -418,8 +418,6 @@ module.exports = function(app) {
             customFields.push(field)
         })
 
-        console.log(customFields)
-
         CustomField.updateAll(customFields)
         .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
