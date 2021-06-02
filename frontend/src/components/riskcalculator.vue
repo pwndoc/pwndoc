@@ -21,11 +21,11 @@
         class="col-md-6"
         v-model="impact"
         :options="[
-          { label: 'Very Low', value: 1 },
-          { label: 'Low', value: 2 },
-          { label: 'Medium', value: 3 },
-          { label: 'High', value: 4 },
-          { label: 'Very High', value: 5 },
+          { label: 'Insignificant (1)', value: 1 },
+          { label: 'Tolerable (2)', value: 2 },
+          { label: 'Moderate (3)', value: 3 },
+          { label: 'Grave (4)', value: 4 },
+          { label: 'Catastrophic (5)', value: 5 },
         ]"
         map-options
         emit-value
@@ -39,11 +39,11 @@
         class="col-md-6"
         v-model="probability"
         :options="[
-          { label: 'Very Low', value: 1 },
-          { label: 'Low', value: 2 },
-          { label: 'Medium', value: 3 },
-          { label: 'High', value: 4 },
-          { label: 'Very High', value: 5 },
+          { label: 'Very Unlikely (1)', value: 1 },
+          { label: 'Unlikely (2)', value: 2 },
+          { label: 'Possible (3)', value: 3 },
+          { label: 'Likely (4)', value: 4 },
+          { label: 'Very Likely (5)', value: 5 },
         ]"
         map-options
         emit-value
@@ -60,11 +60,11 @@ export default {
   name: "pwndoc-frontend-dev",
   props: ["riskImpact", "riskProbability", "riskScore", "riskSeverity"],
   watch: {
-    impact: function (val) {
+    impact: function(val) {
       this.$emit("riskImpactChange", val);
       this.calculateScore();
     },
-    probability: function (val) {
+    probability: function(val) {
       this.$emit("riskProbabilityChange", val);
       this.calculateScore();
     },
@@ -112,7 +112,7 @@ export default {
     },
   },
 
-  data: function () {
+  data: function() {
     return {
       impact: this.riskImpact,
       probability: this.riskProbability,

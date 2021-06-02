@@ -190,6 +190,12 @@
             <risk-calculator
               :riskProbability="finding.riskProbability"
               :riskImpact="finding.riskImpact"
+              :riskScore="finding.riskScore"
+              :riskSeverity="finding.riskSeverity"
+              @riskProbabilityChange="finding.riskProbability = $event"
+              @riskImpactChange="finding.riskImpact = $event"
+              @riskScoreChange="finding.riskScore = $event"
+              @riskSeverityChange="finding.riskSeverity = $event"
             />
           </div>
         </q-card>

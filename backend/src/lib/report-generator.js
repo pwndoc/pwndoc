@@ -64,6 +64,7 @@ async function generateDoc(audit) {
     .loadZip(zip)
     .setOptions({ parser: angularParser, paragraphLoop: true });
   cvssHandle(preppedAudit);
+  riskHandle(preppedAudit);
   customGenerator.apply(preppedAudit);
   doc.setData(preppedAudit);
   try {
@@ -214,14 +215,26 @@ expressions.filters.convertHTML = function (input, style) {
 expressions.filters.count = function (input, severity) {
   if (!input) return input;
   var count = 0;
-
   for (var i = 0; i < input.length; i++) {
     if (input[i].cvssSeverity === severity) {
       count += 1;
     }
   }
-
   return count;
+};
+
+// Count vulnerability by severity
+// Example: {findings | countRisk: ':1'}
+expressions.filters.countRisk = function (input, severity) {
+  const [impact, probability] = severity.split(":");
+  const count = input.reduce(
+    (counter, finding) =>
+      finding.riskImpact == impact && finding.riskProbability == probability
+        ? (counter += 1)
+        : counter,
+    0
+  );
+  return count || "";
 };
 
 // Compile all angular expressions
@@ -249,6 +262,54 @@ var angularParser = function (tag) {
     },
   };
 };
+
+// For each finding, add riskColor
+function riskHandle(data) {
+  // Header title colors
+  var noneColor = reportConfig.cvss_colors.none_color; //default of blue ("4A86E8")
+  var lowColor = reportConfig.cvss_colors.low_color; //default of green ("008000")
+  var mediumColor = reportConfig.cvss_colors.medium_color; //default of yellow ("f9a009")
+  var highColor = reportConfig.cvss_colors.high_color; //default of red ("fe0000")
+  var criticalColor = reportConfig.cvss_colors.critical_color; //default of black ("212121")
+
+  var cellNoneColor =
+    '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' +
+    noneColor +
+    '"/></w:tcPr>';
+  var cellLowColor =
+    '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' +
+    lowColor +
+    '"/></w:tcPr>';
+  var cellMediumColor =
+    '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' +
+    mediumColor +
+    '"/></w:tcPr>';
+  var cellHighColor =
+    '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' +
+    highColor +
+    '"/></w:tcPr>';
+  var cellCriticalColor =
+    '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' +
+    criticalColor +
+    '"/></w:tcPr>';
+
+  if (data.findings) {
+    for (var i = 0; i < data.findings.length; i++) {
+      // Global RISK color depending on Severity
+      if (data.findings[i].riskSeverity === "Low") {
+        data.findings[i].riskColor = cellLowColor;
+      } else if (data.findings[i].riskSeverity === "Medium") {
+        data.findings[i].riskColor = cellMediumColor;
+      } else if (data.findings[i].riskSeverity === "High") {
+        data.findings[i].riskColor = cellHighColor;
+      } else if (data.findings[i].riskSeverity === "Critical") {
+        data.findings[i].riskColor = cellCriticalColor;
+      } else {
+        data.findings[i].riskColor = cellNoneColor;
+      }
+    }
+  }
+}
 
 // For each finding, add cvssColor, cvssObj and criteria colors parameters
 function cvssHandle(data) {
@@ -427,6 +488,13 @@ async function prepAuditData(data) {
       cvssv3: finding.cvssv3 || "",
       cvssScore: finding.cvssScore || "",
       cvssSeverity: finding.cvssSeverity || "",
+      riskImpact: finding.riskImpact || "",
+      riskImpactText: getRiskImpactText(finding.riskImpact) || "",
+      riskProbability: finding.riskProbability || "",
+      riskProbabilityText:
+        getRiskProbabilityText(finding.riskProbability) || "",
+      riskScore: finding.riskScore || "",
+      riskSeverity: finding.riskSeverity || "",
       poc: await splitHTMLParagraphs(finding.poc),
       affected: finding.scope || "",
       status: finding.status || "",
@@ -478,6 +546,30 @@ async function prepAuditData(data) {
   }
 
   return result;
+}
+
+function getRiskImpactText(impact) {
+  const combination = {
+    1: "Insignificant (1)",
+    2: "Tolerable (2)",
+    3: "Moderate (3)",
+    4: "Grave (4)",
+    5: "Catastrophic (5)",
+  };
+
+  return combination[impact];
+}
+
+function getRiskProbabilityText(probability) {
+  const combination = {
+    1: "Very Unlikely (1)",
+    2: "Unlikely (2)",
+    3: "Possible (3)",
+    4: "Likely (4)",
+    5: "Very Likely (5)",
+  };
+
+  return combination[probability];
 }
 
 async function getCategoriesFromFindings(findings) {

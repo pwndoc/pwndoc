@@ -236,6 +236,11 @@ module.exports = function (app, io) {
       if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
       if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
       if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
+      if (req.body.riskImpact) finding.riskImpact = req.body.riskImpact;
+      if (req.body.riskProbability)
+        finding.riskProbability = req.body.riskProbability;
+      if (req.body.riskScore) finding.riskScore = req.body.riskScore;
+      if (req.body.riskSeverity) finding.riskSeverity = req.body.riskSeverity;
       if (req.body.poc) finding.poc = req.body.poc;
       if (req.body.scope) finding.scope = req.body.scope;
       if (req.body.status !== undefined) finding.status = req.body.status;
@@ -309,6 +314,11 @@ module.exports = function (app, io) {
       if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
       if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
       if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
+      if (req.body.riskImpact) finding.riskImpact = req.body.riskImpact;
+      if (req.body.riskProbability)
+        finding.riskProbability = req.body.riskProbability;
+      if (req.body.riskScore) finding.riskScore = req.body.riskScore;
+      if (req.body.riskSeverity) finding.riskSeverity = req.body.riskSeverity;
       if (!_.isNil(req.body.poc)) finding.poc = req.body.poc;
       if (!_.isNil(req.body.scope)) finding.scope = req.body.scope;
       if (req.body.status !== undefined) finding.status = req.body.status;
