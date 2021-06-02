@@ -2,7 +2,7 @@ var fs = require('fs');
 var Docxtemplater = require('docxtemplater');
 var JSZip = require('jszip');
 var expressions = require('angular-expressions');
-var ImageModule = require('docxtemplater-image-module-free');
+var ImageModule = require('docxtemplater-image-module-pwndoc');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
@@ -10,6 +10,7 @@ var html2ooxml = require('./html2ooxml');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
 var reportConfig = require('./report.json');
+var settings = require('./app-settings.json');
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
@@ -57,7 +58,16 @@ async function generateDoc(audit) {
         }
         return [0,0]
     }
-    var imageModule = new ImageModule(opts);
+
+    if (settings.imageBorder && settings.imageBorderColor)
+        opts.border = settings.imageBorderColor.replace('#', '')
+
+    try {
+        var imageModule = new ImageModule(opts);
+    }
+    catch(err) {
+        console.log(err)
+    }
     var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
     cvssHandle(preppedAudit);
     customGenerator.apply(preppedAudit);
