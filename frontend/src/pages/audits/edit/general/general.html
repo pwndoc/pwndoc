@@ -5,7 +5,7 @@
     <q-btn v-if="isEditing && isReadyForReview" color="warning" label="Remove Submission" no-caps class="topButton" @click="toggleAskReview" />
     <q-btn v-if="isReviewing && !isApproved" color="secondary" label="Approve Report" no-caps class="topButton" @click="toggleApproval" />
     <q-btn v-if="isReviewing && isApproved" color="warning" label="Remove Approval" no-caps class="topButton" @click="toggleApproval" />
-    <q-btn color="positive" label="Save (ctrl+s)" no-caps class="topButton" @click="updateAuditGeneral" />
+    <q-btn v-if="isEditing" color="positive" label="Save (ctrl+s)" no-caps class="topButton" @click="updateAuditGeneral" />
     </div>
 </breadcrumb>
 
@@ -14,7 +14,7 @@
         <q-card class="bg-grey-1">
             <q-card-section>
                 <div class="row q-col-gutter-md">
-                    <q-input class="col-md-6 col-12" label="Name *" v-model="audit.name" outlined bg-color="white" />
+                    <q-input class="col-md-6 col-12" label="Name *" v-model="audit.name" outlined bg-color="white" :readonly="!this.isEditing"/>
                     <q-select 
                     class="col-md-6 col-12"
                     label="Assessment Type"
@@ -27,6 +27,7 @@
                     options-sanitize
                     outlined 
                     bg-color="white"
+                    :readonly="!this.isEditing"
                     />
                     <q-select 
                     class="col-md-6 col-12"
@@ -40,6 +41,7 @@
                     options-sanitize
                     outlined 
                     bg-color="white"
+                    :readonly="!this.isEditing"
                     />
                     <q-select
                     class="col-md-6 col-12"
@@ -53,6 +55,7 @@
                     options-sanitize
                     outlined 
                     bg-color="white"
+                    :readonly="!this.isEditing"
                     /> 
                 </div>
             </q-card-section>
@@ -73,6 +76,7 @@
                     options-sanitize
                     outlined 
                     bg-color="white"
+                    :readonly="!this.isEditing"
                     />
                     <q-select
                     class="col-md-6 col-12"
@@ -87,6 +91,7 @@
                     options-sanitize
                     outlined 
                     bg-color="white"
+                    :readonly="!this.isEditing"
                     />
                     <q-select 
                     class="col-md-12 col-12"
@@ -101,6 +106,7 @@
                     options-sanitize
                     outlined 
                     bg-color="white"
+                    :readonly="!this.isEditing"
                     >
                     </q-select>
                     
@@ -117,6 +123,7 @@
                     options-sanitize
                     outlined 
                     bg-color="white"
+                    :readonly="!this.isEditing"
                     >
                         <template v-slot:after>
                             <q-chip class="q-mt-lg" color="blue-grey-5" text-color="white" dense>{{audit.creator.firstname}} {{audit.creator.lastname}}</q-chip>
@@ -141,7 +148,7 @@
 
             <q-card-section>
                 <div class="row q-col-gutter-md">
-                    <q-input class="col-md-4 col-12" label="Start Date" v-model="audit.date_start" outlined bg-color="white">
+                    <q-input class="col-md-4 col-12" label="Start Date" v-model="audit.date_start" outlined bg-color="white" :readonly="!this.isEditing">
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateStartProxy" transition-show="scale" transition-hide="scale">
@@ -150,7 +157,7 @@
                             </q-icon>
                         </template>
                     </q-input>
-                    <q-input class="col-md-4 col-12" label="End Date" v-model="audit.date_end" outlined bg-color="white">
+                    <q-input class="col-md-4 col-12" label="End Date" v-model="audit.date_end" outlined bg-color="white" :readonly="!this.isEditing">
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateEndProxy" transition-show="scale" transition-hide="scale">
@@ -159,7 +166,7 @@
                             </q-icon>
                         </template>
                     </q-input>
-                    <q-input class="col-md-4 col-12" label="Reporting Date" v-model="audit.date" outlined bg-color="white">
+                    <q-input class="col-md-4 col-12" label="Reporting Date" v-model="audit.date" outlined bg-color="white" :readonly="!this.isEditing">
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
@@ -172,7 +179,7 @@
             </q-card-section>
 
             <q-card-section>
-                <textarea-array label="Scope (One per line)" v-model="audit.scope" no-empty-line />
+                <textarea-array label="Scope (One per line)" v-model="audit.scope" no-empty-line :readonly="!this.isEditing"/>
             </q-card-section>
             <q-expansion-item 
             label="Custom Fields"
@@ -185,6 +192,7 @@
                 v-model="audit.customFields" 
                 custom-element="QCardSection" 
                 no-sync-editor
+                :readonly="!this.isEditing"
                 />
             </q-expansion-item>
         </q-card>

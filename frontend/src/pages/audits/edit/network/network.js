@@ -5,6 +5,12 @@ import Breadcrumb from 'components/breadcrumb';
 import AuditService from '@/services/audit';
 
 export default {
+    props: {
+        isReviewing: Boolean,
+		isEditing: Boolean,
+		isApproved: Boolean,
+		isReadyForReview: Boolean
+    },
     data: () => {
         return {
             audit: {

@@ -12,6 +12,12 @@ import VulnService from '@/services/vulnerability';
 import Utils from '@/services/utils';
 
 export default {
+    props: {
+        isReviewing: Boolean,
+		isEditing: Boolean,
+		isApproved: Boolean,
+		isReadyForReview: Boolean
+    },
     data: () => {
         return {
             finding: {},

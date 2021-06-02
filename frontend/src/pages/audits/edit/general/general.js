@@ -15,6 +15,12 @@ import Utils from '@/services/utils';
 import UserService from '@/services/user'
 
 export default {
+    props: {
+        isReviewing: Boolean,
+		isEditing: Boolean,
+		isApproved: Boolean,
+		isReadyForReview: Boolean
+    },
     data: () => {
         return {
             // Set audit ID
@@ -58,10 +64,6 @@ export default {
             auditTypes: [],
             // List of CustomFields
             customFields: [],
-            isReviewing: false,
-            isEditing: false,
-            isApproved: false,
-            isReadyForReview: false
         }
     },
 
@@ -77,7 +79,9 @@ export default {
         this.getClients();
         this.getTemplates();
         this.getLanguages();
-        this.getAuditTypes();        
+        this.getAuditTypes();
+        this.isApprovedCopy = this.isApproved;
+        this.isReadyForReviewCopy = this.isReadyForReview;
 
         this.$socket.emit('menu', {menu: 'general', room: this.auditId});
 
@@ -119,23 +123,6 @@ export default {
             }
         },
 
-        // Tells the UI if the user is supposed to be reviewing the audit
-        isUserReviewing: function() {
-            var isAuthor = this.audit.creator._id === UserService.user.id;
-            var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
-            var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
-            var hasReviewAll = UserService.isAllowed('audits:review-all');
-            this.isReviewing = !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
-        },
-
-        // Tells the UI if the user is supposed to be editing the audit
-        isUserEditing: function() {
-            var isAuthor = this.audit.creator._id === UserService.user.id;
-            var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
-            var hasUpdateAll = UserService.isAllowed('audits:update-all');
-            this.isEditing = isAuthor || isCollaborator || hasUpdateAll;
-        },
-
         // Get Audit datas from uuid
         getAuditGeneral: function() {
             DataService.getCustomFields()
@@ -149,10 +136,6 @@ export default {
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 this.getCollaborators();
                 this.getReviewers();
-                this.isUserReviewing();
-                this.isUserEditing();
-                this.isReadyForReview = this.audit.isReadyForReview;
-                this.isApproved = this.audit.approvals.some((element) => element._id === UserService.user.id);
             })
             .catch((err) => {              
                 console.log(err.response)
@@ -307,10 +290,10 @@ export default {
         },
 
         toggleAskReview: function() {
-            this.audit.isReadyForReview = !this.audit.isReadyForReview;
-            this.isReadyForReview = this.audit.isReadyForReview;
-            AuditService.updateAuditGeneral(this.auditId, { isReadyForReview: this.audit.isReadyForReview })
+            AuditService.updateAuditGeneral(this.auditId, { isReadyForReview: !this.audit.isReadyForReview })
             .then(() => {
+                this.$emit('toggleAskReview');
+                this.audit.isReadyForReview = !this.audit.isReadyForReview;
                 this.auditOrig.isReadyForReview = this.audit.isReadyForReview;
                 Notify.create({
                     message: 'Audit review status updated successfully',
@@ -320,17 +303,15 @@ export default {
                 })
             })
             .catch((err) => {             
-                this.audit.isReadyForReview = !this.audit.isReadyForReview;
-                this.isReadyForReview = this.audit.isReadyForReview; 
                 console.log(err.response)
             });
         },
 
         toggleApproval: function() {
-            this.isApproved = !this.isApproved;
             AuditService.toggleApproval(this.auditId)
             .then(() => {
-                this.auditOrig.isReadyForReview = this.audit.isReadyForReview;
+                this.$emit('toggleApproval');
+
                 Notify.create({
                     message: 'Audit approval updated successfully',
                     color: 'positive',
@@ -338,8 +319,7 @@ export default {
                     position: 'top-right'
                 })
             })
-            .catch((err) => {      
-                this.isApproved = !this.isApproved;        
+            .catch((err) => {          
                 console.log(err.response)
             });
         }

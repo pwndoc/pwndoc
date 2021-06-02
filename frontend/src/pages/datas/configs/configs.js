@@ -11,7 +11,7 @@ export default {
             configs : {
                 mandatoryReview: false,
                 minReviewers: 1,
-                reviewersNeedAssign: true
+                removeApprovalsUponUpdate: true
             },
             UserService: UserService,
             canEdit: false
@@ -30,7 +30,7 @@ export default {
             .then((data) => {
                 this.configs.mandatoryReview = data.data.datas.mandatoryReview;
                 this.configs.minReviewers = data.data.datas.minReviewers;
-                this.configs.reviewersNeedAssign = data.data.datas.reviewersNeedAssign;
+                this.configs.removeApprovalsUponUpdate = data.data.datas.removeApprovalsUponUpdate;
                 this.loading = false;
             })
             .catch((err) => {

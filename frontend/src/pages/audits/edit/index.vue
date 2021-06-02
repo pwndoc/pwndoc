@@ -59,6 +59,7 @@
 							round
 							dense
 							color="secondary"
+							v-if="isEditing"
 							/>
 						</q-item-section>
 					</q-item>
@@ -102,6 +103,7 @@
 							dense
 							icon="add"
 							color="secondary"
+							v-if="isEditing"
 							>
 								<q-menu v-if="sections.length === 0" anchor="top right" self="top left">
 									<q-item v-close-popup>
@@ -161,7 +163,7 @@
 			
 		</q-splitter>
 	</q-drawer>
-	<router-view :key="$route.fullPath" />
+	<router-view :key="$route.fullPath" :isReviewing="isReviewing" :isEditing="isEditing" :isApproved="isApproved" :isReadyForReview="isReadyForReview" @toggleApproval="toggleApproval" @toggleAskReview="toggleAskReview"/>
 	</div>
 </template>
 
@@ -182,7 +184,11 @@ export default {
 						sections: [],
 						splitterRatio: 80,
 						loading: true,
-						vulnCategories: []
+						vulnCategories: [],
+						isReviewing: false,
+						isEditing: false,
+						isApproved: false,
+						isReadyForReview: false
 				}
 		},
 
@@ -218,6 +224,13 @@ export default {
 		},
 
 		methods: {
+			toggleApproval: function() {
+				this.isApproved = !this.isApproved;
+			},
+			toggleAskReview: function() {
+				this.isReadyForReview = !this.isReadyForReview;
+			},
+
 			getFindingColor: function(finding) {
 				if (finding.cvssSeverity && finding.cvssSeverity !== "None") {
 					if (finding.cvssSeverity === "Low") return "green"
@@ -256,11 +269,31 @@ export default {
 					this.getAudit();
 				})
 			},
+			// Tells the UI if the user is supposed to be reviewing the audit
+			isUserReviewing: function() {
+				var isAuthor = this.audit.creator._id === UserService.user.id;
+				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
+				var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
+				var hasReviewAll = UserService.isAllowed('audits:review-all');
+				this.isReviewing = !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
+			},
+
+			// Tells the UI if the user is supposed to be editing the audit
+			isUserEditing: function() {
+				var isAuthor = this.audit.creator._id === UserService.user.id;
+				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
+				var hasUpdateAll = UserService.isAllowed('audits:update-all');
+				this.isEditing = isAuthor || isCollaborator || hasUpdateAll;
+			},
 
 			getAudit: function() {
 				AuditService.getAudit(this.auditId)
 				.then((data) => {
 					this.audit = data.data.datas
+					this.isUserReviewing();
+					this.isUserEditing();
+					this.isReadyForReview = this.audit.isReadyForReview;
+					this.isApproved = this.audit.approvals.some((element) => element._id === UserService.user.id);
 					this.getSections()
 					if (this.loading)
 						this.handleSocket()

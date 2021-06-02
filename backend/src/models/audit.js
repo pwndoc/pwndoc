@@ -111,6 +111,7 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
         query.populate('client')
         query.populate('collaborators', 'username firstname lastname role')
         query.populate('reviewers', 'username firstname lastname role')
+        query.populate('approvals', 'username firstname lastname role')
         query.populate('customFields.customField', 'label fieldType text')
         query.populate({
             path: 'findings',

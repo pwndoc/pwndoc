@@ -7,6 +7,7 @@
     @input="updateParent"
     outlined 
     bg-color="white"
+    :readonly="this.readonly"
     />
 </template>
 
@@ -20,7 +21,11 @@ export default {
         noEmptyLine: {
             type: Boolean,
             default: false
-        }
+        },
+        readonly: {
+            type: Boolean,
+            default: false
+        },
     },
 
     data: function() {

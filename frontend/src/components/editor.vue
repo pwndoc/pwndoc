@@ -157,7 +157,7 @@
         </editor-menu-bar>
     </affix>
     <q-separator />
-    <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor" />
+    <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor"/>
     <div v-else class="editor__content q-pa-sm">
         <div class="ProseMirror" v-html="diffContent"></div>
     </div>
@@ -227,6 +227,7 @@ export default {
     data() {
         return {
             editor: new Editor({
+                editable: this.editable,
                 extensions: [
                     new Blockquote(),
                     new BulletList(),
@@ -266,7 +267,7 @@ export default {
                 return;
             }
             var content = this.htmlEncode(this.value)
-            this.editor.setContent(content)
+            this.editor.setContent(content);
        }
     },
 
@@ -274,9 +275,11 @@ export default {
         if (typeof this.value === "undefined" || this.value === this.editor.getHTML()) {
             return;
         }
-        var content = this.htmlEncode(this.value)
-        this.editor.setContent(content)
-        this.editor.setOptions({editable: this.editable})
+        var content = this.htmlEncode(this.value);
+        this.editor.setContent(content);
+        this.editor.setOptions({
+            editable: this.editable,
+        });
     },
 
     beforeDestroy() {

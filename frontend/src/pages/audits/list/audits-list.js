@@ -110,9 +110,7 @@ export default {
             })
         },
 
-        isAuditApproved: function(audit) {     
-            console.log(audit.approvals.length);
-            console.log(this.configs.minReviewers)   
+        isAuditApproved: function(audit) {      
             return audit.approvals.length >= this.configs.minReviewers;
         },
 
@@ -122,11 +120,9 @@ export default {
             .then(async (data) => {
                 this.audits = data.data.datas
                 var configs = await this.getPublicConfigs();
-                console.log(configs);
                 this.configs = configs.data.datas;
                 this.audits.forEach((audit) => {
                     audit.isApproved = this.isAuditApproved(audit);
-                    console.log(audit.isApproved);
                 });
                 this.loading = false
             })

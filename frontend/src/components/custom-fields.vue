@@ -28,6 +28,7 @@
                         ref="basiceditor_custom" 
                         v-model="field.text" 
                         :noSync="noSyncEditor"
+                        :editable="!readonly"
                         /> 
                     </template>
 
@@ -80,6 +81,10 @@ export default {
         diff: {
             type: Array,
             default: null
+        },
+        readonly: {
+            type: Boolean,
+            default: true
         }
     },
 

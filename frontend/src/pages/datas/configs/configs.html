@@ -8,17 +8,17 @@
                 </q-card-section>
                 <q-separator />
                 <q-card-section>
-                    <div class="text-bold">Reviewer Assignment</div>
+                    <div class="text-bold">Audit Update After Approval</div>
                 </q-card-section>
                 <q-card-section>
                     <div class="text-grey-8">
-                        Changes how the reviewers are assigned to an audit.
+                        Changes the behavior for an approved audit that gets updated. If an audit is updated : 
                     </div>
                 </q-card-section>
                 <q-card-section>
                     <q-btn-toggle
                         :disable="!canEdit"
-                        v-model="configs.reviewersNeedAssign"
+                        v-model="configs.removeApprovalsUponUpdate"
                         class="toggleButton"
                         spread
                         no-caps
@@ -28,8 +28,8 @@
                         color="white"
                         text-color="primary"
                         :options="[
-                        {label: 'Reviewers have to be assigned to an audit to review it.', value: true},
-                        {label: 'All reviewers can review all audits.', value: false}
+                        {label: 'All its prior approvals are removed.', value: true},
+                        {label: 'All its prior approvals are kept.', value: false}
                         ]"
                         @click="updateConfigsValue()"
                     />
@@ -40,7 +40,9 @@
                 </q-card-section>
                 <q-card-section>
                     <div class="text-grey-8">
-                        Makes the review process mandatory. When activated, a user cannot export an audit unless it has been approved by the specified number of reviewers.
+                        Makes the review process mandatory. When activated, a user cannot export an audit unless it has been approved by the specified number of reviewers. 
+                        <br/><br/>
+                        The minimal number of reviewers is also used to determine if a report is marked as approved.
                     </div>
                 </q-card-section>
                 <q-card-section>
@@ -57,7 +59,7 @@
                         <q-input
                             v-model.number="configs.minReviewers"
                             type="number"
-                            :disable="!configs.mandatoryReview && !canEdit"
+                            :disable="!canEdit"
                             filled
                             :min="1"
                             :max="99"

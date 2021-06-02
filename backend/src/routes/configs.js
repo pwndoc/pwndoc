@@ -26,7 +26,7 @@ module.exports = function(app) {
         var configs = {};
         if (req.body.mandatoryReview !== undefined) configs.mandatoryReview = req.body.mandatoryReview;
         if (req.body.minReviewers !== undefined && req.body.minReviewers > 0 && req.body.minReviewers < 100) configs.minReviewers = req.body.minReviewers;
-        if (req.body.reviewersNeedAssign !== undefined) configs.reviewersNeedAssign = req.body.reviewersNeedAssign;
+        if (req.body.removeApprovalsUponUpdate !== undefined) configs.removeApprovalsUponUpdate = req.body.removeApprovalsUponUpdate;
 
         Configs.updateOne({}, configs)
         .then(msg => Response.Ok(res, msg))

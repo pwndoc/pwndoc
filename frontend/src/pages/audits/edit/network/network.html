@@ -8,6 +8,7 @@
         color="grey-4" 
         text-color="black"
         auto-close
+        v-if="this.isEditing"
         >
             <q-list>
                 <q-item clickable @click="$refs.nmapFile.click()">
@@ -41,7 +42,7 @@
                 </q-item>
             </q-list>
         </q-btn-dropdown>
-        <q-btn color="positive" label="Save (ctrl+s)" no-caps @click="updateAuditNetwork" />
+        <q-btn v-if="this.isEditing" color="positive" label="Save (ctrl+s)" no-caps @click="updateAuditNetwork" />
     </div>
 </breadcrumb>
 

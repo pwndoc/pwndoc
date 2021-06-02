@@ -7,6 +7,12 @@ import AuditService from '@/services/audit';
 import Utils from '@/services/utils';
 
 export default {
+    props: {
+        isReviewing: Boolean,
+		isEditing: Boolean,
+		isApproved: Boolean,
+		isReadyForReview: Boolean
+    },
     data: () => {
         return {
             // Set audit ID

@@ -96,8 +96,6 @@ module.exports = function(app, io) {
 
     // Update audit general information
     app.put("/api/audits/:auditId/general", acl.hasPermission('audits:update'), async function(req, res) {
-        
-        
         var update = {};
 
         var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id);
@@ -117,7 +115,7 @@ module.exports = function(app, io) {
             // Is the new reviewer one of the new collaborators that will override current collaborators? 
             if (req.body.collaborators) {
                 req.body.reviewers.forEach((reviewer) => {
-                    if (req.body.collaborators.some(element => !element._id || element._id === reviewer._id)) {
+                    if (req.body.collaborators.some(element => element._id === reviewer._id)) {
                         Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
                         return;
                     }
@@ -127,7 +125,7 @@ module.exports = function(app, io) {
             // If no new collaborators are being set, is the new reviewer one of the current collaborators? 
             else if (audit.collaborators) {
                 req.body.reviewers.forEach((reviewer) => {
-                    if (audit.collaborators.some(element => !element._id || element._id === reviewer._id)) {
+                    if (audit.collaborators.some(element => element._id === reviewer._id)) {
                         Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
                         return;
                     }
@@ -143,7 +141,7 @@ module.exports = function(app, io) {
             
             // Are the new collaborators part of the current reviewers?
             req.body.collaborators.forEach((collaborator) => {
-                if (audit.reviewers.some(element => !element._id || element._id === collaborator._id)) {
+                if (audit.reviewers.some(element => element._id === collaborator._id)) {
                     Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
                     return;
                 }
@@ -151,8 +149,6 @@ module.exports = function(app, io) {
 
             // If the new collaborator already gave a review, remove said review, accept collaborator
             if (audit.approvals) {
-                console.log(audit.approvals);
-                console.log(req.body.collaborators);
                 newApprovals = audit.approvals.filter((approval) => !req.body.collaborators.some((collaborator) => approval.toString() === collaborator._id));
                 update.approvals = newApprovals;
             }
@@ -183,6 +179,11 @@ module.exports = function(app, io) {
         if (req.body.customFields) update.customFields = req.body.customFields;
         if (req.body.isReadyForReview != undefined) update.isReadyForReview = req.body.isReadyForReview;
 
+        var configs = await Configs.findOne();
+        if (configs.removeApprovalsUponUpdate) {
+            update.approvals = [];
+        }
+
         Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
@@ -199,10 +200,15 @@ module.exports = function(app, io) {
     });
 
     // Update audit network information
-    app.put("/api/audits/:auditId/network", acl.hasPermission('audits:update'), function(req, res) {
+    app.put("/api/audits/:auditId/network", acl.hasPermission('audits:update'), async function(req, res) {
         var update = {};
         // Optional parameters
         if (req.body.scope) update.scope = req.body.scope;
+
+        var configs = await Configs.findOne();
+        if (configs.removeApprovalsUponUpdate) {
+            Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
+        }
 
         Audit.updateNetwork(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => Response.Ok(res, msg))
@@ -210,7 +216,7 @@ module.exports = function(app, io) {
     });
 
     // Add finding to audit
-    app.post("/api/audits/:auditId/findings", acl.hasPermission('audits:update'), function(req, res) {
+    app.post("/api/audits/:auditId/findings", acl.hasPermission('audits:update'), async function(req, res) {
         if (!req.body.title) {
             Response.BadParameters(res, 'Missing some required parameters: title');
             return;
@@ -237,6 +243,11 @@ module.exports = function(app, io) {
         if (req.body.category) finding.category = req.body.category
         if (req.body.customFields) finding.customFields = req.body.customFields
 
+        var configs = await Configs.findOne();
+        if (configs.removeApprovalsUponUpdate) {
+            Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
+        }
+
         Audit.createFinding(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, finding)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
@@ -260,7 +271,7 @@ module.exports = function(app, io) {
     });
 
     // Update finding of audit
-    app.put("/api/audits/:auditId/findings/:findingId", acl.hasPermission('audits:update'), function(req, res) {
+    app.put("/api/audits/:auditId/findings/:findingId", acl.hasPermission('audits:update'), async function(req, res) {
         var finding = {};
         // Optional parameters
         if (req.body.title) finding.title = req.body.title;
@@ -279,6 +290,11 @@ module.exports = function(app, io) {
         if (req.body.status !== undefined) finding.status = req.body.status;
         if (req.body.category) finding.category = req.body.category
         if (req.body.customFields) finding.customFields = req.body.customFields
+
+        var configs = await Configs.findOne();
+        if (configs.removeApprovalsUponUpdate) {
+            Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
+        }
 
         Audit.updateFinding(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.findingId, finding)
         .then(msg => {
@@ -328,7 +344,7 @@ module.exports = function(app, io) {
     });
 
     // Update section of audit
-    app.put("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
+    app.put("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), async function(req, res) {
         if (typeof req.body.text === 'undefined') {
             Response.BadParameters(res, 'Missing some required parameters: text');
             return;
@@ -336,6 +352,11 @@ module.exports = function(app, io) {
         var section = {};
         // Mandatory parameters
         section.text = req.body.text;
+
+        var configs = await Configs.findOne();
+        if (configs.removeApprovalsUponUpdate) {
+            Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
+        }
 
         Audit.updateSection(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.sectionId, section)
         .then(msg => {

@@ -4,7 +4,7 @@ var Schema = mongoose.Schema;
 var ConfigSchema = new Schema({
     mandatoryReview: { type: Boolean, default: false },
     minReviewers: { type: Number, default: 1 },
-    reviewersNeedAssign: { type: Boolean, default: true }
+    removeApprovalsUponUpdate: { type: Boolean, default: true }
 }, {
     collection: 'configs',
     capped: { max: 1 }

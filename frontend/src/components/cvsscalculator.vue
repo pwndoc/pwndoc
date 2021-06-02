@@ -24,6 +24,7 @@
                     toggle-text-color="black"
                     no-caps
                     :options="cvssItems.AV"
+                    :readonly="readonly"
                 />
                 <div class="q-my-sm text-weight-bold">Attack Complexity</div>
                 <q-btn-toggle
@@ -33,6 +34,7 @@
                     toggle-text-color="black"
                     no-caps
                     :options="cvssItems.AC"
+                    :readonly="readonly"
                 />
                 <div class="q-my-sm text-weight-bold">Privileges Required</div>
                 <q-btn-toggle
@@ -42,6 +44,7 @@
                     toggle-text-color="black"
                     no-caps
                     :options="cvssItems.PR"
+                    :readonly="readonly"
                 />
                 <div class="q-my-sm text-weight-bold">User Interaction</div>
                 <q-btn-toggle
@@ -51,6 +54,7 @@
                     toggle-text-color="black"
                     no-caps
                     :options="cvssItems.UI"
+                    :readonly="readonly"
                 />
             </div>
             <div class="col-md-6">
@@ -62,6 +66,7 @@
                     toggle-text-color="black"
                     no-caps
                     :options="cvssItems.S"
+                    :readonly="readonly"
                 />
                 <div class="q-my-sm text-weight-bold">Confidentiality Impact</div>
                 <q-btn-toggle
@@ -71,6 +76,7 @@
                     toggle-text-color="black"
                     no-caps
                     :options="cvssItems.C"
+                    :readonly="readonly"
                 />
                 <div class="q-my-sm text-weight-bold">Integrity Impact</div>
                 <q-btn-toggle
@@ -80,6 +86,7 @@
                     toggle-text-color="black"
                     no-caps
                     :options="cvssItems.I"
+                    :readonly="readonly"
                 />
                 <div class="q-my-sm text-weight-bold">Availability Impact</div>
                 <q-btn-toggle
@@ -89,6 +96,7 @@
                     toggle-text-color="black"
                     no-caps
                     :options="cvssItems.A"
+                    :readonly="readonly"
                 />
             </div>
            
@@ -100,7 +108,7 @@
 
 export default {
     name: 'cvss-calculator',
-    props: ['cvssString', 'cvssScore', 'cvssSeverity'],
+    props: ['cvssString', 'cvssScore', 'cvssSeverity','readonly'],
 
     data: function() {
         return {
