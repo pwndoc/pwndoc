@@ -8,6 +8,13 @@ import DataService from '@/services/data';
 import Utils from '@/services/utils'
 
 export default {
+    props: {
+        isReviewing: Boolean,
+		isEditing: Boolean,
+		isApproved: Boolean,
+		isReadyForReview: Boolean,
+        fullyApproved: Boolean
+    },
     data: () => {
         return {
             finding: {},

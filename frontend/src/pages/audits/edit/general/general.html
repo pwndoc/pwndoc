@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name" id="edit-breadcrumb-affix">
+<breadcrumb buttons :title="$parent.audit.name" id="edit-breadcrumb-affix" :approved="fullyApproved">
     <div slot="buttons">
     <q-btn v-if="isEditing && !isReadyForReview" color="secondary" label="Submit for Review" no-caps class="topButton" @click="toggleAskReview" />
     <q-btn v-if="isEditing && isReadyForReview" color="warning" label="Remove Submission" no-caps class="topButton" @click="toggleAskReview" />

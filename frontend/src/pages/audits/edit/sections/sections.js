@@ -11,7 +11,8 @@ export default {
         isReviewing: Boolean,
 		isEditing: Boolean,
 		isApproved: Boolean,
-		isReadyForReview: Boolean
+		isReadyForReview: Boolean,
+        fullyApproved: Boolean
     },
     data: () => {
         return {

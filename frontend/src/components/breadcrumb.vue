@@ -9,7 +9,11 @@
             <i class="fa fa-home fa-lg"></i>
         </q-btn>
         <p v-if="typeof(title) === 'undefined'" class="breadcrumb-title">{{bread[last].name}}</p>
-        <p v-else class="breadcrumb-title">{{title}}</p>
+        <p v-else class="breadcrumb-title">{{title}} 
+            <q-icon v-if="approved" size="sm" flat color="positive" name="far fa-check-circle" class="approvedMark">
+                <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Audit is approved</q-tooltip> 
+            </q-icon>
+        </p>
         <q-breadcrumbs v-if="typeof(buttons) === 'undefined'" separator="/" active-color="secondary" color="light" align="right">
             <q-breadcrumbs-el v-for="breadcrumb in bread" :label="breadcrumb.name" :to="breadcrumb.path" :key="breadcrumb.path" />
         </q-breadcrumbs>
@@ -23,7 +27,7 @@
 
 export default {
     name: 'breadcrumb',
-    props: ['buttons', 'title'],
+    props: ['buttons', 'title', 'approved'],
 
     data: function() {
         return {
@@ -74,5 +78,10 @@ export default {
 
 .card-breadcrumb>.q-breadcrumbs {
     margin-top: 17px
+}
+
+.approvedMark {
+    margin-left: 10px;
+    font-size: 1.25em!important;
 }
 </style>

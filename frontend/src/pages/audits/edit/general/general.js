@@ -19,7 +19,8 @@ export default {
         isReviewing: Boolean,
 		isEditing: Boolean,
 		isApproved: Boolean,
-		isReadyForReview: Boolean
+		isReadyForReview: Boolean,
+        fullyApproved: Boolean
     },
     data: () => {
         return {
@@ -63,7 +64,7 @@ export default {
             // List of existing audit types
             auditTypes: [],
             // List of CustomFields
-            customFields: [],
+            customFields: []
         }
     },
 
@@ -323,6 +324,5 @@ export default {
                 console.log(err.response)
             });
         }
-
     }
 }

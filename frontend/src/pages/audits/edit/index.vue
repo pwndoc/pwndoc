@@ -163,7 +163,7 @@
 			
 		</q-splitter>
 	</q-drawer>
-	<router-view :key="$route.fullPath" :isReviewing="isReviewing" :isEditing="isEditing" :isApproved="isApproved" :isReadyForReview="isReadyForReview" @toggleApproval="toggleApproval" @toggleAskReview="toggleAskReview"/>
+	<router-view :key="$route.fullPath" :isReviewing="isReviewing" :isEditing="isEditing" :isApproved="isApproved" :isReadyForReview="isReadyForReview" @toggleApproval="toggleApproval" @toggleAskReview="toggleAskReview" :fullyApproved="fullyApproved"/>
 	</div>
 </template>
 
@@ -173,6 +173,7 @@ import { Notify } from 'quasar';
 import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
+import ConfigsService from '@/services/configs'
 
 export default {
 		data () {
@@ -188,7 +189,10 @@ export default {
 						isReviewing: false,
 						isEditing: false,
 						isApproved: false,
-						isReadyForReview: false
+						isReadyForReview: false,
+						fullyApproved: false,
+						// The application's public configs
+            			configs: {}
 				}
 		},
 
@@ -294,6 +298,7 @@ export default {
 					this.isUserEditing();
 					this.isReadyForReview = this.audit.isReadyForReview;
 					this.isApproved = this.audit.approvals.some((element) => element._id === UserService.user.id);
+					this.getPublicConfigs();
 					this.getSections()
 					if (this.loading)
 						this.handleSocket()
@@ -337,52 +342,67 @@ export default {
 			},
 
 			// Convert blob to text
-        BlobReader: function(data) {
-            const fileReader = new FileReader();
+			BlobReader: function(data) {
+				const fileReader = new FileReader();
 
-            return new Promise((resolve, reject) => {
-                fileReader.onerror = () => {
-                    fileReader.abort()
-                    reject(new Error('Problem parsing blob'));
-                }
+				return new Promise((resolve, reject) => {
+					fileReader.onerror = () => {
+						fileReader.abort()
+						reject(new Error('Problem parsing blob'));
+					}
 
-                fileReader.onload = () => {
-                    resolve(fileReader.result)
-                }
+					fileReader.onload = () => {
+						resolve(fileReader.result)
+					}
 
-                fileReader.readAsText(data)
-            })
-        },
+					fileReader.readAsText(data)
+				})
+			},
 
-        generateReport: function() {
-            AuditService.generateAuditReport(this.auditId)
-            .then(response => {
-                var blob = new Blob([response.data], {type: "application/octet-stream"});
-                var link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = response.headers['content-disposition'].split('"')[1];
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-              })
-            .catch( async err => {
-                var message = "Error generating template"
-                if (err.response && err.response.data) {
-                    var blob = new Blob([err.response.data], {type: "application/json"})
-                    var blobData = await this.BlobReader(blob)
-                    message = JSON.parse(blobData).datas
-                }
-                Notify.create({
-                    message: message,
-                    type: 'negative',
-                    textColor:'white',
-                    position: 'top',
-                    closeBtn: true,
-                    timeout: 0,
-                    classes: "text-pre-wrap"
-                })
-            })
-        },
+			generateReport: function() {
+				AuditService.generateAuditReport(this.auditId)
+				.then(response => {
+					var blob = new Blob([response.data], {type: "application/octet-stream"});
+					var link = document.createElement('a');
+					link.href = window.URL.createObjectURL(blob);
+					link.download = response.headers['content-disposition'].split('"')[1];
+					document.body.appendChild(link);
+					link.click();
+					link.remove();
+				})
+				.catch( async err => {
+					var message = "Error generating template"
+					if (err.response && err.response.data) {
+						var blob = new Blob([err.response.data], {type: "application/json"})
+						var blobData = await this.BlobReader(blob)
+						message = JSON.parse(blobData).datas
+					}
+					Notify.create({
+						message: message,
+						type: 'negative',
+						textColor:'white',
+						position: 'top',
+						closeBtn: true,
+						timeout: 0,
+						classes: "text-pre-wrap"
+					})
+				})
+			},
+
+			isAuditFullyApproved: function() {
+				this.fullyApproved = this.audit.approvals.length >= this.configs.minReviewers;
+        	},
+
+			getPublicConfigs: function() {
+				ConfigsService.getPublicConfigs()
+				.then((data) => {
+					this.configs = data.data.datas;
+					this.isAuditFullyApproved();
+				})
+				.catch((err) => {
+					console.log(err);
+				});
+			},
 		}
 }
 </script>

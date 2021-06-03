@@ -427,6 +427,7 @@ module.exports = function(app, io) {
             var update = { approvals : newApprovalsArray};
             Audit.updateApprovals(acl.isAllowed(req.decodedToken.role, 'audits:review-all'), req.params.auditId, req.decodedToken.id, update)
             .then(() => {
+                io.to(req.params.auditId).emit('updateAudit');
                 Response.Ok(res, "Approval updated successfully.")
             })
             .catch((err) => {

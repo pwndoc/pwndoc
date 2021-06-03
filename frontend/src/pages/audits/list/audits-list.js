@@ -8,7 +8,6 @@ import TemplateService from '@/services/template'
 import CompanyService from '@/services/company'
 import UserService from '@/services/user'
 import ConfigsService from '@/services/configs'
-import configs from '../../../services/configs';
 
 export default {
     data: () => {
