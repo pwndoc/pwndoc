@@ -99,6 +99,7 @@ module.exports = function(app, io) {
         var update = {};
 
         var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id);
+        var invalid = false;
 
         if (req.body.reviewers) {
             if (req.body.reviewers.some(element => !element._id)) {
@@ -115,11 +116,12 @@ module.exports = function(app, io) {
             // Is the new reviewer one of the new collaborators that will override current collaborators? 
             if (req.body.collaborators) {
                 req.body.reviewers.forEach((reviewer) => {
-                    if (req.body.collaborators.some(element => element._id === reviewer._id)) {
+                    if (req.body.collaborators.some(element => !element._id || element._id === reviewer._id)) {
                         Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
-                        return;
+                        invalid = true;
                     }
                 });
+                if (invalid) return;
             }
 
             // If no new collaborators are being set, is the new reviewer one of the current collaborators? 
@@ -127,9 +129,10 @@ module.exports = function(app, io) {
                 req.body.reviewers.forEach((reviewer) => {
                     if (audit.collaborators.some(element => element._id === reviewer._id)) {
                         Response.BadParameters(res, "A user cannot simultaneously be a reviewer and a collaborator/creator");
-                        return;
+                        invalid = true;
                     }
                 });
+                if (invalid) return;
             }
         }
 

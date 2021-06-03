@@ -10,7 +10,7 @@
         "configs": {
             "mandatoryReview": false,
             "minReviewers": 1,
-            "reviewersNeedAssign": true
+            "removeApprovalsUponUpdate": false
         }
     },
     "prod": {
@@ -24,7 +24,7 @@
         "configs": {
             "mandatoryReview": false,
             "minReviewers": 1,
-            "reviewersNeedAssign": true
+            "removeApprovalsUponUpdate": false
         }
     },
     "test": {
@@ -38,7 +38,7 @@
         "configs": {
             "mandatoryReview": false,
             "minReviewers": 1,
-            "reviewersNeedAssign": true
+            "removeApprovalsUponUpdate": false
         }
     }
 }
