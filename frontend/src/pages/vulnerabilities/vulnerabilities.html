@@ -222,14 +222,14 @@
         <q-card-section>
             <q-field borderless label="Description" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
             <q-field borderless label="Observation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -248,7 +248,7 @@
         <q-card-section>
             <q-field borderless label="Remediation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -393,14 +393,14 @@
         <q-card-section>
             <q-field borderless label="Description" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
             <q-field borderless label="Observation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -419,7 +419,7 @@
         <q-card-section>
             <q-field borderless label="Remediation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -546,14 +546,14 @@
                     <q-card-section>
                         <q-field borderless label="Description" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                                <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                             </template>
                         </q-field>
                     </q-card-section>
                     <q-card-section>
                         <q-field borderless label="Observation" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                                <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                             </template>
                         </q-field>
                     </q-card-section>
@@ -570,7 +570,7 @@
                     <q-card-section>
                         <q-field borderless label="Remediation" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                                <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                             </template>
                         </q-field>
                     </q-card-section>
@@ -693,7 +693,7 @@
                                 "
                                 readonly>
                                     <template v-slot="control">
-                                        <basic-editor 
+                                        <basic-editor noAffix 
                                         v-model="update.description" 
                                         :diff="currentVulnerability.details[currentDetailsIndex].description || ''" 
                                         :editable=false />
@@ -712,7 +712,7 @@
                                 "
                                 readonly>
                                     <template v-slot="control">
-                                        <basic-editor 
+                                        <basic-editor noAffix 
                                         v-model="update.observation"
                                         :diff="currentVulnerability.details[currentDetailsIndex].observation || ''"
                                         :editable=false />
@@ -742,7 +742,7 @@
                                 "
                                 readonly>
                                     <template v-slot="control">
-                                        <basic-editor 
+                                        <basic-editor noAffix 
                                         v-model="update.remediation" 
                                         :diff="currentVulnerability.details[currentDetailsIndex].remediation || ''"
                                         :editable=false />
