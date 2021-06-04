@@ -158,5 +158,9 @@ export default {
     })
 
     return cFields
+  },
+
+  normalizeString: function(value) {
+    return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   }
 }

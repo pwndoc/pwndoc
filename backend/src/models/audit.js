@@ -267,7 +267,11 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
 
 // Update audit general information
 AuditSchema.statics.updateGeneral = (isAdmin, auditId, userId, update) => {
-    return new Promise((resolve, reject) => { 
+    return new Promise(async(resolve, reject) => { 
+        if (update.company && update.company.name) {
+            var Company = mongoose.model("Company");
+            update.company = await Company.create(update.company)
+        }
         var query = Audit.findByIdAndUpdate(auditId, update)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])

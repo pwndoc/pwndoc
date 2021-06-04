@@ -100,9 +100,12 @@ module.exports = function(app, io) {
             update.client = {};
             update.client._id = req.body.client._id;
         }
-        if (req.body.company && req.body.company._id) {
+        if (req.body.company) {
             update.company = {};
-            update.company._id = req.body.company._id;
+            if (req.body.company._id)
+                update.company._id = req.body.company._id;
+            else
+                update.company.name = req.body.company
         }
         if (req.body.collaborators) update.collaborators = req.body.collaborators;
         if (req.body.language) update.language = req.body.language;
