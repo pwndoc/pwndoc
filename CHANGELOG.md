@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3.0 (2021-06-07)
+
+### Enhancements
+
+- Add Settings feature with image border [`74cb76c`](https://github.com/pwndoc/pwndoc/commit/74cb76c92e78234e156e70693dd635a58fb66ea1)
+    -  It is now possible to enable and manage color of border on images generated in the report
+- Add Trim to all strings saved in database [`011d9d2`](https://github.com/pwndoc/pwndoc/commit/011d9d2b5c05cc5925af9478da0e0bee77f8aa93)
+    - Avoid issues like additionnal spaces in titles
+- Add Company creation directly from Audit General [`1b28a21`](https://github.com/pwndoc/pwndoc/commit/1b28a218172d9b9e38d4a3cb39c0d563ccad95fb)
+    - Update select with input filtering
+    - If Company does not exist it will be created upon saving in Audit General section (make sure to tap enter to add the company)
+- Add creator to new vulnerability from finding [`5173b07`](https://github.com/pwndoc/pwndoc/commit/5173b0752271f2f71e3fb7f56e7a60d0080230ac)
+    - Like for vulnerablities updates, creator is now visible when editing newly created vulnerability
+
+### Fixed
+
+- Fix editor affix issue in vulnerabilities modals [`9e5d0c`](https://github.com/pwndoc/pwndoc/commit/9e5d0c64e418a6dca1f53f66365bc87ba2fa9af8)
+    - Disable affix to avoid issues
+
 ## 0.2.0 (2021-05-21)
 
 ### Enhancements
