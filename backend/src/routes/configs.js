@@ -6,13 +6,13 @@ module.exports = function(app) {
 
 
     app.get("/api/configs", acl.hasPermission('configs:read'), function(req, res) {
-        Configs.findOne()
+        Configs.getConfigs()
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err));
     });
 
     app.get("/api/configs/public", acl.hasPermission('configs:read-public'), function(req, res) {
-        Configs.findOne()
+        Configs.getConfigs()
         .then((msg) => {
             out = {};
             out.mandatoryReview = msg.mandatoryReview;
