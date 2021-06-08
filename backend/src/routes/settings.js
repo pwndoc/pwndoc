@@ -12,7 +12,7 @@ module.exports = function(app) {
     // Get settings
     app.get("/api/settings", acl.hasPermission('settings:read'), function(req, res) {
         try {
-            var settings = require('../lib/app-settings.json')
+            var settings = JSON.parse(fs.readFileSync(`${__basedir}/lib/app-settings.json`))            
             Object.keys(defaultSettings).forEach(key => {
                 if (!(key in settings))
                     settings[key] = defaultSettings[key]
