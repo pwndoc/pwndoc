@@ -43,6 +43,8 @@ export default {
             collaborators: [],
             // List of existing Companies
             companies: [],
+            // List of filtered companies
+            selectCompanies: [],
             // List of existing Templates
             templates: [],
             // List of existing Languages
@@ -94,12 +96,6 @@ export default {
         }
     },
 
-    computed: {
-        auditTypesLang: function() {
-            return this.auditTypes.filter(type => type.locale === this.audit.language)
-        }
-    },
-
     methods: {
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
@@ -117,7 +113,6 @@ export default {
             })
             .then((data) => {
                 this.audit = data.data.datas;
-                this.audit.customFields = Utils.filterCustomFields('audit-general', '', this.customFields, this.audit.customFields)
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 this.getCollaborators()
             })
@@ -165,7 +160,6 @@ export default {
             ClientService.getClients()
             .then((data) => {
                 this.clients = data.data.datas;
-                this.selectClients = this.clients;
                 this.getCompanies();
             })
             .catch((err) => {
@@ -233,7 +227,8 @@ export default {
         },
 
         // Filter client options when selecting company
-        filterClients: function(value) {
+        filterClients: function() {
+            this.audit.client = null
             if (this.audit.company) {
                 this.selectClients = [];
                 this.clients.map(client => {
@@ -244,10 +239,10 @@ export default {
                 this.selectClients = this.clients;
         },
 
-        // Filter company options when selecting client 
-        filterCompany: function(value) {
+        // Set Company when selecting client 
+        setCompanyFromClient: function(value) {
             if (value && !value.company) {
-                this.audit.company = {};
+                this.audit.company = null;
             }
             else if (value) {
                 for (var i=0; i<this.companies.length; i++) {
@@ -257,7 +252,26 @@ export default {
                     }
                 }
             }
-        }
+        },
+
+        createSelectCompany: function(val, done) {
+            var index = this.companies.findIndex(e => Utils.normalizeString(e.name) === Utils.normalizeString(val))
+            if (index > -1)
+                done(this.companies[index], 'add-unique')
+            else
+                done(val, 'add-unique')
+        },
+
+        filterSelectCompany (val, update) {   
+            if (val === '') {
+                update(() => this.selectCompanies = this.companies)
+                return
+              }
+            update(() => {
+                const needle = Utils.normalizeString(val)
+                this.selectCompanies = this.companies.filter(v => Utils.normalizeString(v.name).indexOf(needle) > -1)
+            })
+          }
 
     }
 }

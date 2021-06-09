@@ -108,7 +108,7 @@ export default {
     return result
   },
 
-  filterCustomFields: function(page, displaySub, customFields = [], objectFields = []) {
+  filterCustomFields: function(page, displaySub, customFields = [], objectFields = [], locale = "") {
     var cFields = []
     var display = []
 
@@ -123,29 +123,44 @@ export default {
         case 'audit-general':
           display = ['general']
           break
+        case 'section':
+          display = ['section']
+          break
       }
 
-      if ((display.includes(field.display) && (field.displaySub === '' || field.displaySub === displaySub))) {
+      if ((display.includes(field.display) && (field.displaySub === '' || field.displaySub === displaySub))) { // wanted field
         var fieldText = ''
+        if (['select-multiple', 'checkbox'].includes(field.fieldType))
+          fieldText = []
+        if (locale && Array.isArray(field.text)) { // set default text for locale if it exists
+          let textLocale = field.text.find(e => e.locale === locale)
+          if (textLocale) fieldText = textLocale.value
+        }
         for (var i=0;i<objectFields.length; i++) { // Set corresponding text value
           var customFieldId = ""
           if (typeof objectFields[i].customField === 'object')
             customFieldId = objectFields[i].customField._id
           else
             customFieldId = objectFields[i].customField
-          if (objectFields[i].customField && customFieldId === field._id) {
-              fieldText = objectFields[i].text
-              break
-          }  
+          if (customFieldId && customFieldId === field._id) { // found correct field for text
+            if (objectFields[i].text){ // text already exists
+                fieldText = objectFields[i].text
+            }
+            break
+          }
         }
 
         cFields.push({
-            customField: field,
+            customField: _.omit(field, ['text']),
             text: fieldText
         })
       }
     })
 
     return cFields
+  },
+
+  normalizeString: function(value) {
+    return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   }
 }

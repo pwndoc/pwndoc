@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name">
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`">
     <div slot="buttons">
         <q-btn-dropdown 
         class="q-mr-sm" 

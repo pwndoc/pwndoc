@@ -1,12 +1,18 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var AuditTypeSchema = new Schema({
-    name:   String,
+var Template = {
+    _id: false,
+    template: {type: Schema.Types.ObjectId, ref: 'Template'},
     locale: String
-}, {timestamps: true});
+}
 
-AuditTypeSchema.index({"name": 1, "locale": 1}, {name: "unique_name_locale", unique: true})
+var AuditTypeSchema = new Schema({
+    name:   {type: String, unique: true},
+    templates: [Template],
+    sections: [{type: String, ref: 'CustomSection'}],
+    hidden: [{type: String, enum: ['network', 'findings']}]
+}, {timestamps: true});
 
 /*
 *** Statics ***
@@ -16,7 +22,22 @@ AuditTypeSchema.index({"name": 1, "locale": 1}, {name: "unique_name_locale", uni
 AuditTypeSchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = AuditType.find();
-        query.select('-_id name locale')
+        query.select('-_id name templates sections hidden')
+        query.exec()
+        .then((rows) => {
+            resolve(rows);
+        })
+        .catch((err) => {
+            reject(err);
+        })
+    });
+}
+
+// Get auditType by name
+AuditTypeSchema.statics.getByName = (name) => {
+    return new Promise((resolve, reject) => {
+        var query = AuditType.findOne({name: name});
+        query.select('-_id name templates sections hidden')
         query.exec()
         .then((rows) => {
             resolve(rows);
@@ -81,4 +102,5 @@ AuditTypeSchema.statics.delete = (name) => {
 */
 
 var AuditType = mongoose.model('AuditType', AuditTypeSchema);
+AuditType.syncIndexes();
 module.exports = AuditType;

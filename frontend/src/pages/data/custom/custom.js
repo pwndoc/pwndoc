@@ -6,12 +6,14 @@ import CustomFields from 'components/custom-fields'
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
 import UserService from '@/services/user'
+import TemplateService from '@/services/template'
 
 export default {
     data: () => {
         return {
             UserService: UserService,
             Utils: Utils,
+            templates: [],
 
             languages: [],
             newLanguage: {locale: "", language: ""},
@@ -19,7 +21,7 @@ export default {
             editLanguage: false,
 
             auditTypes: [],
-            newAuditType: {name: "", locale: ""},
+            newAuditType: {name: "", templates: [], sections: [], hidden: []},
             editAuditTypes: [],
             editAuditType: false,
 
@@ -42,21 +44,31 @@ export default {
                 size: 12,
                 offset: 0,
                 required: false,
-                description: ''
+                description: '',
+                text: [],
+                options: []
             },
+            cfLocale: "",
             cfDisplayOptions: [
                 {label: 'Audit General', value: 'general'},
                 {label: 'Audit Finding', value: 'finding'},
+                {label: 'Audit Section', value: 'section'},
                 {label: 'Vulnerability', value: 'vulnerability'}
             ],
             cfComponentOptions: [
-                {label: 'Editor', value: 'text'},
-                {label: 'Input', value: 'input'},
-                {label: 'Space', value: 'space'}
+                {label: 'Checkbox', value: 'checkbox', icon: 'check_box'},
+                {label: 'Date', value: 'date', icon: 'event'},
+                {label: 'Editor', value: 'text', icon: 'mdi-format-pilcrow'},
+                {label: 'Input', value: 'input', icon: 'title'},
+                {label: 'Radio', value: 'radio', icon: 'radio_button_checked'},
+                {label: 'Select', value: 'select', icon: 'far fa-caret-square-down'},
+                {label: 'Select Multiple', value: 'select-multiple', icon: 'filter_none'},
+                {label: 'Space', value: 'space', icon: 'space_bar'}
             ],
+            newCustomOption: "",
 
             sections: [],
-            newSection: {field: "", name: "", locale: "", icon: ""},
+            newSection: {field: "", name: "", icon: ""},
             editSections: [],
             editSection: false,
 
@@ -73,6 +85,7 @@ export default {
     },
 
     mounted: function() {
+        this.getTemplates()
         this.getLanguages()
         this.getAuditTypes()
         this.getVulnerabilityTypes()
@@ -86,10 +99,39 @@ export default {
             return this.customFields.filter(field =>
                 (field.display === this.newCustomField.display && field.displayList.every(e => this.newCustomField.displayList.indexOf(e) > -1))
             )
+        },
+
+        newCustomFieldLangOptions() {
+            return this.newCustomField.options.filter(e => e.locale === this.cfLocale)
         }
     },
 
     methods: {
+        getTemplates: function() {
+            TemplateService.getTemplates()
+            .then((data) => {
+                this.templates = data.data.datas;
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
+        requiredFieldsEmpty: function() {
+            Object.keys(this.$refs).forEach(key => {
+                if (key.startsWith('validate') && this.$refs[key]) {
+                    if (Array.isArray(this.$refs[key]))
+                        this.$refs[key].forEach(e => e.validate())
+                    else
+                        this.$refs[key].validate()
+                }
+            })
+            if (this.selectedTab === 'languages')
+                return !this.newLanguage.language || !this.newLanguage.locale
+            if (this.selectedTab === 'audit-types') 
+                return !this.newAuditType.name || this.newAuditType.templates.length !== this.languages.length || this.newAuditType.templates.some(e => !e)
+        },
+
 /* ===== LANGUAGES ===== */
 
         // Get available languages
@@ -98,9 +140,8 @@ export default {
             .then((data) => {
                 this.languages = data.data.datas;
                 if (this.languages.length > 0) {
-                    this.newAuditType.locale = this.languages[0].locale;
                     this.newVulnType.locale = this.languages[0].locale;
-                    this.newSection.locale = this.languages[0].locale;
+                    this.cfLocale = this.languages[0].locale;
                 }
             })
             .catch((err) => {
@@ -110,13 +151,7 @@ export default {
 
         // Create Language
         createLanguage: function() {
-            this.cleanErrors();
-            if (!this.newLanguage.locale)
-                this.errors.locale = "Locale required";
-            if (!this.newLanguage.language)
-                this.errors.language = "Language required";
-            
-            if (this.errors.locale || this.errors.language)
+            if (this.requiredFieldsEmpty())
                 return;
 
             DataService.createLanguage(this.newLanguage)
@@ -184,16 +219,15 @@ export default {
 
         // Create Audit type
         createAuditType: function() {
-            this.cleanErrors();
-            if (!this.newAuditType.name)
-                this.errors.auditType = "Name required";
-            
-            if (this.errors.auditType)
-                return;
+            if (this.requiredFieldsEmpty())
+                return
 
             DataService.createAuditType(this.newAuditType)
             .then((data) => {
                 this.newAuditType.name = "";
+                this.newAuditType.templates = [];
+                this.newAuditType.sections = [];
+                this.newAuditType.hidden = [];
                 this.getAuditTypes();
                 Notify.create({
                     message: 'Audit type created successfully',
@@ -237,7 +271,13 @@ export default {
 
         // Remove Audit Type
         removeAuditType: function(auditType) {
-            this.editAuditTypes = this.editAuditTypes.filter(e => e.name !== auditType.name || e.locale !== auditType.locale)
+            this.editAuditTypes = this.editAuditTypes.filter(e => e.name !== auditType.name)
+        },
+
+        getTemplateOptionsLanguage: function(locale) {
+            var result = []
+            this.templates.forEach(e => result.push({name: e.name, locale: locale, template: e._id}))
+            return result
         },
 
 /* ===== VULNERABILITY TYPES ===== */
@@ -409,6 +449,7 @@ export default {
             DataService.createCustomField(this.newCustomField)
             .then((data) => {
                 this.newCustomField.label = ""
+                this.newCustomField.options = []
                 this.getCustomFields()
                 Notify.create({
                     message: 'Custom Field created successfully',
@@ -509,6 +550,42 @@ export default {
             return this.customFields.some(field => this.canDisplayCustomField(field))
         },
 
+        // Return the index of the text array that match the selected locale
+        // Also push default empty value if index not found
+        getFieldLocaleText: function(fieldIdx) {
+            var text = this.customFields[fieldIdx].text
+            for (var i=0; i<text.length; i++) {
+                if (text[i].locale === this.cfLocale)
+                    return i
+            }
+            if (['select-multiple', 'checkbox'].includes(this.customFields[fieldIdx].fieldType))
+                text.push({locale: this.cfLocale, value: []})
+            else
+                text.push({locale: this.cfLocale, value: ""})
+            return i
+        },
+
+        addCustomFieldOption: function(options) {
+            options.push({locale: this.cfLocale, value: this.newCustomOption})
+            this.newCustomOption = ""
+        },
+
+        // Remove option of options based on index of computed lang Option
+        removeCustomFieldOption: function(options, option) {
+            var index = options.findIndex(e => e.locale === option.locale && e.value === option.value)
+            options.splice(index, 1)
+        },
+
+        getOptionsGroup: function(options) {
+            return options
+            .filter(e => e.locale === this.cfLocale)
+            .map(e => {return {label: e.value, value: e.value}})
+        },
+
+        getFieldLangOptions: function(options) {
+            return options.filter(e => e.locale === this.cfLocale)
+        },
+
 /* ===== SECTIONS ===== */
 
         // Get available sections
@@ -533,14 +610,10 @@ export default {
             if (this.errors.sectionName || this.errors.sectionField)
                 return;
 
-            Utils.syncEditors(this.$refs)
-
-            if (this.newSection.text) this.newSection.text = this.newSection.text.replace(/(<p><\/p>)+$/, '')
             DataService.createSection(this.newSection)
             .then((data) => {
                 this.newSection.field = "";
                 this.newSection.name = "";
-                this.newSection.text = ""
                 this.newSection.icon = ""
                 this.getSections();
                 Notify.create({
