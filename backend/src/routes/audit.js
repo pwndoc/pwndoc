@@ -37,13 +37,14 @@ module.exports = function(app, io) {
                     a.collaborators = audit.collaborators
                     a.company = audit.company
                     a.createdAt = audit.createdAt
+                    a.ext = !!audit.template && !!audit.template.ext ? audit.template.ext : "Template error";
                     if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected'))
                         a.connected = getUsersRoom(audit._id)
                     result.push(a)
                 })
             Response.Ok(res, result)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => { Response.Internal(res, err) })
     });
 
     // Create audit with name, auditType, language provided
@@ -271,6 +272,51 @@ module.exports = function(app, io) {
                 Response.BadParameters(res, 'Template File not found')
             else
                 Response.Internal(res, err)
+        });
+    });
+
+    // Generate Report as PDF if template is a word document
+    app.get("/api/audits/:auditId/generate/pdf", acl.hasPermission('audits:read'), function(req, res){
+        Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then( async audit => {
+            if(audit.template.ext === "doc" || audit.template.ext === "docx" || audit.template.ext === "docm") {
+                var reportPdf = await reportGenerator.generatePdf(audit);
+                Response.SendFile(res, `${audit.name}.pdf`, reportPdf);
+            } else {
+                Response.BadParameters(res, 'Template not in a Microsoft Word format')
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            if (err.code === "ENOENT")
+                Response.BadParameters(res, 'Template File not found')
+            else
+                Response.Internal(res, err)
+        });
+    });
+
+    // Generate Report as csv
+    app.get("/api/audits/:auditId/generate/csv", acl.hasPermission('audits:read'), function(req, res){
+        Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then( async audit => {
+            var reportCsv = await reportGenerator.generateCsv(audit);
+            Response.SendFile(res, `${audit.name}.csv`, reportCsv);
+        })
+        .catch(err => {
+            console.log(err);
+            Response.Internal(res, err)
+        });
+    });
+
+    // Generate Report as json
+    app.get("/api/audits/:auditId/generate/json", acl.hasPermission('audits:read'), function(req, res){
+        Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then( async audit => {
+            Response.SendFile(res, `${audit.name}.json`, audit);
+        })
+        .catch(err => {
+            console.log(err);
+            Response.Internal(res, err)
         });
     });
 }

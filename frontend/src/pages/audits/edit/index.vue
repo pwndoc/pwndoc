@@ -7,9 +7,39 @@
 					<q-item>
 						<q-item-section>Sections</q-item-section>
 						<q-item-section side>
-							<q-btn flat dense size="sm" color="info" icon="fa fa-download" @click="generateReport">
+							<q-btn-dropdown flat dense size="sm" color="info" icon="fa fa-download">
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
-							</q-btn>
+								<q-list>
+									<q-item v-if="audit.template && audit.template.ext" clickable v-close-popup @click="generateReport()">
+										<q-item-section>
+											<q-item-label>{{ audit.template.ext }}</q-item-label>
+										</q-item-section>
+									</q-item>
+									<q-item v-if="!audit.template || !audit.template.ext" clickable v-close-popup :disable="true">
+										<q-item-section>
+											<q-item-label>Template error</q-item-label>
+										</q-item-section>
+									</q-item>
+							
+									<q-item v-if="audit.template && audit.template.ext && (audit.template.ext === 'docx' || audit.template.ext === 'docm' || audit.template.ext === 'doc')" clickable v-close-popup @click="generateReport('pdf')">
+										<q-item-section>
+											<q-item-label>pdf</q-item-label>
+										</q-item-section>
+									</q-item>
+
+									<q-item clickable v-close-popup @click="generateReport('csv')">
+										<q-item-section>
+											<q-item-label>csv</q-item-label>
+										</q-item-section>
+									</q-item>
+
+									<q-item clickable v-close-popup @click="generateReport('json')">
+										<q-item-section>
+											<q-item-label>json</q-item-label>
+										</q-item-section>
+									</q-item>
+								</q-list>
+							</q-btn-dropdown>
 						</q-item-section>
 					</q-item>
 
@@ -305,8 +335,8 @@ export default {
             })
         },
 
-        generateReport: function() {
-            AuditService.generateAuditReport(this.auditId)
+        generateReport: function(format = "") {
+            AuditService.generateAuditReport(this.auditId, format)
             .then(response => {
                 var blob = new Blob([response.data], {type: "application/octet-stream"});
                 var link = document.createElement('a');
@@ -388,4 +418,5 @@ export default {
 	// height: 70%;
 
 }
+
 </style>
