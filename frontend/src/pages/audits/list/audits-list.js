@@ -4,7 +4,6 @@ import Breadcrumb from 'components/breadcrumb'
 
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
-import TemplateService from '@/services/template'
 import CompanyService from '@/services/company'
 import UserService from '@/services/user'
 
@@ -16,8 +15,8 @@ export default {
             audits: [],
             // Loading state
             loading: true,
-            // Templates list
-            templates: [],
+            // AuditTypes list
+            auditTypes: [],
             // Companies list
             companies: [],
             // Languages availbable
@@ -51,9 +50,9 @@ export default {
             myAudits: false,
             displayConnected: false,
             // Errors messages
-            errors: {name: '', language: '', template: ''},
+            errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
-            currentAudit: {name: '', language: '', template: ''}
+            currentAudit: {name: '', language: '', auditType: ''}
         }
     },
 
@@ -69,7 +68,7 @@ export default {
 
         this.getAudits();
         this.getLanguages();
-        this.getTemplates();
+        this.getAuditTypes();
         this.getCompanies();
     },
 
@@ -84,10 +83,10 @@ export default {
             })
         },
 
-        getTemplates: function() {
-            TemplateService.getTemplates()
+        getAuditTypes: function() {
+            DataService.getAuditTypes()
             .then((data) => {
-                this.templates = data.data.datas
+                this.auditTypes = data.data.datas
             })
             .catch((err) => {
                 console.log(err)
@@ -123,11 +122,11 @@ export default {
                 this.errors.name = "Name required";
             if (!this.currentAudit.language)
                 this.errors.language = "Language required";
-            if (!this.currentAudit.template)
-                this.errors.template = "Template required";
+            if (!this.currentAudit.auditType)
+                this.errors.auditType = "Assessment required";
                 
             
-            if (this.errors.name || this.errors.language || this.errors.template)
+            if (this.errors.name || this.errors.language || this.errors.auditType)
                 return;
 
             AuditService.createAudit(this.currentAudit)
@@ -227,14 +226,14 @@ export default {
         cleanErrors: function() {
             this.errors.name = '';
             this.errors.language = '';
-            this.errors.template = '';
+            this.errors.auditType = '';
         },
 
         cleanCurrentAudit: function() {
             this.cleanErrors();
             this.currentAudit.name = '';
             this.currentAudit.language = '';
-            this.currentAudit.template = '';
+            this.currentAudit.auditType = '';
         },
 
         // Convert language locale of audit for table display
@@ -255,25 +254,22 @@ export default {
         customFilter: function(rows, terms, cols, getCellValue) {
             var username = this.UserService.user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
+            var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            var languageTerm = (terms.language)? terms.language.toLowerCase(): ""
+            var companyTerm = (terms.company)? terms.company.toLowerCase(): ""
+            var usersTerm = (terms.users || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            var dateTerm = (terms.date)? terms.date.toLowerCase(): ""
+
             return rows && rows.filter(row => {
                 var name = (row.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-
-                var language = (row.language)? this.convertLocale(row.language).toLowerCase(): ""
-                var languageTerm = (terms.language)? terms.language.toLowerCase(): ""
-
+                var language = (row.language)? row.language.toLowerCase(): ""
                 var companyName = (row.company)? row.company.name.toLowerCase(): ""
-                var companyTerm = (terms.company)? terms.company.toLowerCase(): ""
-
                 var users = this.convertParticipants(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                var usersTerm = (terms.users || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-
                 var date = (row.createdAt)? row.createdAt.split('T')[0]: "";
-                var dateTerm = (terms.date)? terms.date.toLowerCase(): ""
 
                 return name.indexOf(nameTerm) > -1 &&
                     language.indexOf(languageTerm) > -1 &&
-                    companyName.indexOf(companyTerm) > -1 &&
+                    (!companyTerm || companyTerm === companyName) &&
                     users.indexOf(usersTerm) > -1 &&
                     date.indexOf(dateTerm) > -1 &&
                     ((this.myAudits && users.indexOf(username) > -1) || !this.myAudits) &&

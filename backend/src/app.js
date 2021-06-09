@@ -17,6 +17,8 @@ global.__basedir = __dirname;
 var mongoose = require('mongoose');
 // Use native promises
 mongoose.Promise = global.Promise;
+// Trim all Strings
+mongoose.Schema.Types.String.set('trim', true);
 
 mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false});
 
@@ -108,6 +110,7 @@ require('./routes/template')(app);
 require('./routes/vulnerability')(app);
 require('./routes/data')(app);
 require('./routes/image')(app);
+require('./routes/settings')(app);
 
 app.get("*", function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});
