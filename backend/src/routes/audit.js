@@ -275,15 +275,15 @@ module.exports = function(app, io) {
         });
     });
 
-    // Generate Report as PDF if template is a word document
+    // Generate Report as PDF if template is a word/powerpoint document
     app.get("/api/audits/:auditId/generate/pdf", acl.hasPermission('audits:read'), function(req, res){
         Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
-        .then( async audit => {
-            if(audit.template.ext === "doc" || audit.template.ext === "docx" || audit.template.ext === "docm") {
+        .then(async audit => {
+            if(['ppt', 'pptx', 'doc', 'docx', 'docm'].find(ext => ext === audit.template.ext)) {
                 var reportPdf = await reportGenerator.generatePdf(audit);
                 Response.SendFile(res, `${audit.name}.pdf`, reportPdf);
             } else {
-                Response.BadParameters(res, 'Template not in a Microsoft Word format')
+                Response.BadParameters(res, 'Template not in a Microsoft Word/Powerpoint format')
             }
         })
         .catch(err => {

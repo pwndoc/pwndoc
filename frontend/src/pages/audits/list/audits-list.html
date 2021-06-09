@@ -139,7 +139,7 @@
                             </q-item-section>
                         </q-item>
 
-                        <q-item v-if="props.row.ext === 'docx' || props.row.ext === 'docm' || props.row.ext === 'doc'" clickable v-close-popup @click="generateReport(props.row._id, 'pdf')">
+                        <q-item v-if="['ppt', 'pptx', 'doc', 'docx', 'docm'].find(ext => ext === props.row.ext)">
                             <q-item-section>
                               <q-item-label>pdf</q-item-label>
                             </q-item-section>
