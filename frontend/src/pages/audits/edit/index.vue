@@ -13,12 +13,7 @@
 						</q-item-section>
 					</q-item>
 
-					<q-separator />
-
-					<q-item 
-					:to='"/audits/"+auditId+"/general"'
-					class="q-py-lg"
-					>
+					<q-item :to='"/audits/"+auditId+"/general"'>
 						<q-item-section avatar>
 							<q-icon name="fa fa-cog"></q-icon>
 						</q-item-section>
@@ -29,11 +24,9 @@
 						<div v-for="(user,idx) in generalUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
 					</div>
 
-					<q-separator />
-
 					<q-item
+					v-if="!currentAuditType || !currentAuditType.hidden.includes('network')"
 					:to="'/audits/'+auditId+'/network'"
-					class="q-py-lg"
 					>
 						<q-item-section avatar>
 							<q-icon name="fa fa-globe"></q-icon>
@@ -45,85 +38,57 @@
 						<div v-for="(user,idx) in networkUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
 					</div>
 
-					<q-separator />
-
-					<q-item class="q-py-lg">
-						<q-item-section avatar>
-							<q-icon name="fa fa-list"></q-icon>
-						</q-item-section>
-						<q-item-section>Findings ({{audit.findings.length || 0}})</q-item-section>
-						<q-item-section avatar>
-							<q-btn
-							@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
-							icon="add"
-							round
-							dense
-							color="secondary"
-							v-if="isEditing"
-							/>
-						</q-item-section>
-					</q-item>
-					
-					<div v-for="categoryFindings of findingList" :key="categoryFindings.category">
-						<q-item-label header>{{categoryFindings.category}}</q-item-label>
-						<q-list no-border v-for="finding of categoryFindings.findings" :key="finding._id">
-							<q-item
-							dense
-							class="cursor-pointer"
-							:to="'/audits/'+auditId+'/findings/'+finding._id"
-							>
-								<q-item-section side>
-									<q-chip
-										class="text-white"
-										size="sm"
-										square
-										:color="getFindingColor(finding)"
-									>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
-								</q-item-section>
-								<q-item-section>
-									<span>{{finding.title}}</span>
-								</q-item-section>
-								<q-item-section side v-if="finding.status === 0">
-									<q-icon name="check" color="green" />
-								</q-item-section>
-							</q-item>
-							<div class="row">
-								<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
-							</div>
-						</q-list>
+					<div v-if="!currentAuditType || !currentAuditType.hidden.includes('findings')">
+						<q-separator class="q-my-sm" />
+						<q-item>
+							<q-item-section avatar>
+								<q-icon name="fa fa-list"></q-icon>
+							</q-item-section>
+							<q-item-section>Findings ({{audit.findings.length || 0}})</q-item-section>
+							<q-item-section avatar>
+								<q-btn
+								@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
+								icon="add"
+								round
+								dense
+								color="secondary"
+								v-if="isEditing"
+								/>
+							</q-item-section>
+						</q-item>
+						
+						<div v-for="categoryFindings of findingList" :key="categoryFindings.category">
+							<q-item-label header>{{categoryFindings.category}}</q-item-label>
+							<q-list no-border v-for="finding of categoryFindings.findings" :key="finding._id">
+								<q-item
+								dense
+								class="cursor-pointer"
+								:to="'/audits/'+auditId+'/findings/'+finding._id"
+								>
+									<q-item-section side>
+										<q-chip
+											class="text-white"
+											size="sm"
+											square
+											:color="getFindingColor(finding)"
+										>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
+									</q-item-section>
+									<q-item-section>
+										<span>{{finding.title}}</span>
+									</q-item-section>
+									<q-item-section side v-if="finding.status === 0">
+										<q-icon name="check" color="green" />
+									</q-item-section>
+								</q-item>
+								<div class="row">
+									<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
+								</div>
+							</q-list>
+						</div>
+						<q-separator class="q-my-sm" />
 					</div>
-
-					<q-separator class="q-mt-lg" />
-
-					<q-item class="q-py-lg">
-						<q-item-section>Custom Sections</q-item-section>
-						<q-item-section avatar>
-							<q-btn
-							round
-							dense
-							icon="add"
-							color="secondary"
-							v-if="isEditing"
-							>
-								<q-menu v-if="sections.length === 0" anchor="top right" self="top left">
-									<q-item v-close-popup>
-										<q-item-section>No custom sections defined yet</q-item-section>
-									</q-item>
-								</q-menu>
-								<q-menu v-else anchor="top right" self="top left">
-									<q-list separator>
-										<q-item clickable v-close-popup v-for="section of sections" :key="section.field" @click="createSection(section)">
-											<q-item-section>{{section.name}}</q-item-section>
-										</q-item>
-									</q-list>
-								</q-menu>
-							</q-btn>
-						</q-item-section>
-					</q-item>
 					<q-list v-for="section of audit.sections" :key="section._id">
-						<q-item
-						:to="'/audits/'+auditId+'/sections/'+section._id"
-						>
+						<q-item :to="'/audits/'+auditId+'/sections/'+section._id">
 							<q-item-section avatar>
 								<q-icon :name="getSectionIcon(section)"></q-icon>
 							</q-item-section>
@@ -134,7 +99,6 @@
 						<div class="row">
 							<div v-for="(user,idx) in sectionUsers" :key="idx" v-if="user.section === section._id" class="col multi-colors-bar" :style="{background:user.color}" />
 						</div>
-						<q-separator />
 					</q-list>
 				</q-list>
 			</template>
@@ -174,30 +138,35 @@ import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
 import ConfigsService from '@/services/configs'
+import Utils from '@/services/utils';
 
 export default {
 		data () {
 				return {
-						auditId: "",
-						findings: [],
-						users: [],
-						audit: {findings: {}},
-						sections: [],
-						splitterRatio: 80,
-						loading: true,
-						vulnCategories: [],
-						isReviewing: false,
-						isEditing: false,
-						isApproved: false,
-						isReadyForReview: false,
-						fullyApproved: false,
-						// The application's public configs
-            			configs: {}
+					auditId: "",
+					findings: [],
+					users: [],
+					audit: {findings: {}},
+					sections: [],
+					splitterRatio: 80,
+					loading: true,
+					vulnCategories: [],
+					customFields: [],
+					auditTypes: [],
+					isReviewing: false,
+					isEditing: false,
+					isApproved: false,
+					isReadyForReview: false,
+					fullyApproved: false,
+					// The application's public configs
+            		configs: {}
 				}
 		},
 
 		created: function() {
 			this.auditId = this.$route.params.auditId;
+			this.getCustomFields();
+			this.getAuditTypes();
 			this.getAudit(); // Calls getSections				
 		},
 
@@ -224,6 +193,10 @@ export default {
 						return {category: key, findings: value}
 				})
 				.value()
+			},
+
+			currentAuditType: function() {
+				return this.auditTypes.find(e => e.name === this.audit.auditType)
 			}
 		},
 
@@ -312,8 +285,18 @@ export default {
 				})
 			},
 
+			getCustomFields: function() {
+				DataService.getCustomFields()
+				.then((data) => {
+					this.customFields = data.data.datas;
+				})
+				.catch((err) => {
+					console.log(err);
+				})
+			},
+
 			getSections: function() {
-				DataService.getSectionsByLanguage(this.audit.language)
+				DataService.getSections()
 				.then((data) => {
 					this.sections = data.data.datas;
 				})
@@ -329,15 +312,13 @@ export default {
 				return 'notes'
 			},
 
-			createSection: function(section) {
-				AuditService.createSection(this.auditId, section)
+			getAuditTypes: function() {
+				DataService.getAuditTypes()
+				.then((data) => {
+					this.auditTypes = data.data.datas;
+				})
 				.catch((err) => {
-					Notify.create({
-						message: err.response.data.datas,
-						color: 'negative',
-						textColor: 'white',
-						position: 'top-right'
-					})
+					console.log(err);
 				})
 			},
 

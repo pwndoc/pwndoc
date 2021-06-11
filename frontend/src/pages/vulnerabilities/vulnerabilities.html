@@ -1,7 +1,7 @@
 <div>
 <div class="row">
     <div v-if="languages.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-        <p>No languages are defined. </br> Please create Languages in <a href="/datas/custom">Datas -> Custom Datas -> Languages</a></p>
+        <p>No languages are defined. </br> Please create Languages in <a href="/data/custom">Datas -> Custom Datas -> Languages</a></p>
     </div>
     <div v-else class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
@@ -222,14 +222,14 @@
         <q-card-section>
             <q-field borderless label="Description" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
             <q-field borderless label="Observation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -248,7 +248,7 @@
         <q-card-section>
             <q-field borderless label="Remediation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -296,6 +296,7 @@
             :category="currentVulnerability.category" 
             custom-element="QCardSection"
             display="vuln"
+            :locale="currentLanguage"
             />
         </q-expansion-item>
 
@@ -334,6 +335,13 @@
                 </q-item>
             </q-list>
             </q-btn-dropdown>
+            <q-separator v-if="currentVulnerability.creator" vertical color="white" class="q-ml-md q-mr-sm" />
+            <div v-if="currentVulnerability.creator" class="q-toolbar-title" style="height:80%">
+                    <q-badge color="grey" style="height:100%">
+                        Creator: {{currentVulnerability.creator.username}}
+                    </q-badge>
+                </span>
+            </div>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
         </q-bar>
@@ -385,14 +393,14 @@
         <q-card-section>
             <q-field borderless label="Description" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
             <q-field borderless label="Observation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -411,7 +419,7 @@
         <q-card-section>
             <q-field borderless label="Remediation" stack-label>
                 <template v-slot="control">
-                    <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                    <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
             </q-field>
         </q-card-section>
@@ -456,6 +464,7 @@
             ref="customfields" 
             v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
             custom-element="QCardSection"
+            :locale="currentLanguage"
             />
         </q-expansion-item>
 
@@ -537,14 +546,14 @@
                     <q-card-section>
                         <q-field borderless label="Description" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                                <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                             </template>
                         </q-field>
                     </q-card-section>
                     <q-card-section>
                         <q-field borderless label="Observation" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                                <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                             </template>
                         </q-field>
                     </q-card-section>
@@ -561,7 +570,7 @@
                     <q-card-section>
                         <q-field borderless label="Remediation" stack-label>
                             <template v-slot="control">
-                                <basic-editor v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                                <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                             </template>
                         </q-field>
                     </q-card-section>
@@ -605,6 +614,7 @@
                             ref="customfields" 
                             v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
                             custom-element="QCardSection"
+                            :locale="currentLanguage"
                             />
                         </div>
                     </q-expansion-item>
@@ -683,7 +693,7 @@
                                 "
                                 readonly>
                                     <template v-slot="control">
-                                        <basic-editor 
+                                        <basic-editor noAffix 
                                         v-model="update.description" 
                                         :diff="currentVulnerability.details[currentDetailsIndex].description || ''" 
                                         :editable=false />
@@ -702,7 +712,7 @@
                                 "
                                 readonly>
                                     <template v-slot="control">
-                                        <basic-editor 
+                                        <basic-editor noAffix 
                                         v-model="update.observation"
                                         :diff="currentVulnerability.details[currentDetailsIndex].observation || ''"
                                         :editable=false />
@@ -732,7 +742,7 @@
                                 "
                                 readonly>
                                     <template v-slot="control">
-                                        <basic-editor 
+                                        <basic-editor noAffix 
                                         v-model="update.remediation" 
                                         :diff="currentVulnerability.details[currentDetailsIndex].remediation || ''"
                                         :editable=false />
@@ -789,6 +799,7 @@
                                     v-model="update.customFields" 
                                     custom-element="QCardSection"
                                     :diff="currentVulnerability.details[currentDetailsIndex].customFields"
+                                    :locale="currentLanguage"
                                     />
                                 </div>
                             </q-expansion-item>

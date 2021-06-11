@@ -53,10 +53,10 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
-    // Create audit with name, template, language and username provided
+    // Create audit with name, auditType, language provided
     app.post("/api/audits", acl.hasPermission('audits:create'), function(req, res) {
-        if (!req.body.name || !req.body.language || !req.body.template) {
-            Response.BadParameters(res, 'Missing some required parameters');
+        if (!req.body.name || !req.body.language || !req.body.auditType) {
+            Response.BadParameters(res, 'Missing some required parameters: name, language, auditType');
             return;
         }
 
@@ -64,7 +64,7 @@ module.exports = function(app, io) {
         // Required params
         audit.name = req.body.name;
         audit.language = req.body.language;
-        audit.template = req.body.template;
+        audit.auditType = req.body.auditType;
 
         Audit.create(audit, req.decodedToken.id)
         .then(inserted => Response.Created(res, {message: 'Audit created successfully', audit: inserted}))
@@ -159,7 +159,6 @@ module.exports = function(app, io) {
 
         // Optional parameters
         if (req.body.name) update.name = req.body.name;
-        if (req.body.auditType) update.auditType = req.body.auditType;
         if (req.body.location) update.location = req.body.location;
         if (req.body.date) update.date = req.body.date;
         if (req.body.date_start) update.date_start = req.body.date_start;
@@ -168,9 +167,12 @@ module.exports = function(app, io) {
             update.client = {};
             update.client._id = req.body.client._id;
         }
-        if (req.body.company && req.body.company._id) {
+        if (req.body.company) {
             update.company = {};
-            update.company._id = req.body.company._id;
+            if (req.body.company._id)
+                update.company._id = req.body.company._id;
+            else
+                update.company.name = req.body.company
         }
         if (req.body.collaborators) update.collaborators = req.body.collaborators;
         if (req.body.reviewers) update.reviewers = req.body.reviewers;
@@ -317,28 +319,6 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
-    // Add section to audit
-    app.post("/api/audits/:auditId/sections", acl.hasPermission('audits:update'), function(req, res) {
-        if (!req.body.field || !req.body.name) {
-            Response.BadParameters(res, 'Missing some required parameters: field, name');
-            return;
-        }
-
-        var section = {};
-        // Required parameters
-        section.name = req.body.name;
-        section.field = req.body.field;
-        // Optional parameters
-        if (req.body.text) section.text = req.body.text
-
-        Audit.createSection(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, section)
-        .then(msg => {
-            io.to(req.params.auditId).emit('updateAudit');
-            Response.Ok(res, msg)
-        })
-        .catch(err => Response.Internal(res, err))
-    });
-
     // Get section of audit
     app.get("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:read'), function(req, res) {
         Audit.getSection(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id, req.params.sectionId)
@@ -348,13 +328,16 @@ module.exports = function(app, io) {
 
     // Update section of audit
     app.put("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), async function(req, res) {
-        if (typeof req.body.text === 'undefined') {
-            Response.BadParameters(res, 'Missing some required parameters: text');
+        if (typeof req.body.customFields === 'undefined') {
+            Response.BadParameters(res, 'Missing some required parameters: customFields');
             return;
         }
         var section = {};
         // Mandatory parameters
-        section.text = req.body.text;
+        section.customFields = req.body.customFields;
+
+        // For retrocompatibility with old section.text usage
+        if (req.body.text) section.text = req.body.text; 
 
         var configs = await Configs.findOne();
         if (configs.removeApprovalsUponUpdate) {
@@ -368,16 +351,6 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
-    // Delete section of audit
-    app.delete("/api/audits/:auditId/sections/:sectionId", acl.hasPermission('audits:update'), function(req, res) {
-        Audit.deleteSection(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.sectionId)
-        .then(msg => {
-            io.to(req.params.auditId).emit('updateAudit');            
-            Response.Ok(res, msg);
-        })
-        .catch(err => Response.Internal(res, err))
-    });
-
     // Generate Report for specific audit
     app.get("/api/audits/:auditId/generate", acl.hasPermission('audits:read'), function(req, res){
         Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
@@ -387,6 +360,10 @@ module.exports = function(app, io) {
                 Response.Forbidden(res, "Audit does not have the minimal number of approvals to export.");
                 return;
             }
+
+            if (!audit.template)
+                throw ({fn: 'BadParameters', message: 'Template not defined'})
+
             var reportDoc = await reportGenerator.generateDoc(audit);
             Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
         })

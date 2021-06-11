@@ -2,8 +2,10 @@ import { Notify, Dialog } from 'quasar';
 
 import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
+import CustomFields from 'components/custom-fields';
 
 import AuditService from '@/services/audit';
+import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
 export default {
@@ -18,14 +20,21 @@ export default {
         return {
             // Set audit ID
             auditId: null,
-            section: {},
+            section: {
+                field: "",
+                name: "",
+                customFields: []
+            },
             sectionOrig: {},
+            // List of CustomFields
+            customFields: []
         }
     },
 
     components: {
         BasicEditor,
-        Breadcrumb
+        Breadcrumb,
+        CustomFields
     },
 
     mounted: function() {
@@ -83,7 +92,11 @@ export default {
 
         // Get Section
         getSection: function() {
-            AuditService.getSection(this.auditId, this.sectionId)
+            DataService.getCustomFields()
+            .then((data) => {
+                this.customFields = data.data.datas
+                return AuditService.getSection(this.auditId, this.sectionId)
+            })
             .then((data) => {
                 this.section = data.data.datas;
                 this.$nextTick(() => {
@@ -100,50 +113,25 @@ export default {
         // Update Section
         updateSection: function() {
             Utils.syncEditors(this.$refs)
-            AuditService.updateSection(this.auditId, this.sectionId, this.section)
-            .then(() => {
-                this.sectionOrig = this.$_.cloneDeep(this.section);
-                Notify.create({
-                    message: 'Section updated successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
-                })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor:'white',
-                    position: 'top-right'
-                })
-            })
-        },
-
-        deleteSection: function() {
-            Dialog.create({
-                title: 'Delete current Section ?',
-                message: `This action can't be cancelled`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
-            })
-            .onOk(() => {
-                AuditService.deleteSection(this.auditId, this.sectionId)
-                .then(() => {
+            this.$nextTick(() => {
+                if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
                     Notify.create({
-                        message: 'Section deleted successfully',
+                        message: 'Please fill all required Fields',
+                        color: 'negative',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
+                    return
+                }
+                AuditService.updateSection(this.auditId, this.sectionId, this.section)
+                .then(() => {
+                    this.sectionOrig = this.$_.cloneDeep(this.section);
+                    Notify.create({
+                        message: 'Section updated successfully',
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'
                     })
-                    this.sectionOrig = this.section
-                    var currentIndex = this.$parent.audit.sections.findIndex(e => e._id === this.sectionId)
-                    if (this.$parent.audit.sections.length === 1)
-                        this.$router.push(`/audits/${this.$parent.auditId}/general`)
-                    else if (currentIndex === this.$parent.audit.sections.length - 1)
-                        this.$router.push(`/audits/${this.$parent.auditId}/sections/${this.$parent.audit.sections[currentIndex - 1]._id}`)
-                    else
-                        this.$router.push(`/audits/${this.$parent.auditId}/sections/${this.$parent.audit.sections[currentIndex + 1]._id}`)
                 })
                 .catch((err) => {
                     Notify.create({
@@ -157,7 +145,7 @@ export default {
         },
 
         unsavedChanges: function() {  
-            if ((this.section.text || this.sectionOrig.text) && this.section.text !== this.sectionOrig.text)
+            if (!this.$_.isEqual(this.section.customFields, this.sectionOrig.customFields))
                 return true
 
             return false

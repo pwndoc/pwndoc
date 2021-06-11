@@ -293,7 +293,7 @@ export default {
             .then((data) => {
                 this.vulnUpdates = data.data.datas;
                 this.vulnUpdates.forEach(vuln => {
-                    vuln.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, vuln.customFields)
+                    vuln.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, vuln.customFields, vuln.locale)
                 })
                 if (this.vulnUpdates.length > 0) {
                     this.currentUpdate = this.vulnUpdates[0]._id || null;
@@ -369,13 +369,13 @@ export default {
                     references: [],
                     customFields: []
                 }
-                details.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, [])
+                details.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, [], this.currentLanguage)
                 
                 this.currentVulnerability.details.push(details)
                 index = this.currentVulnerability.details.length - 1;
             }
             else {
-                this.currentVulnerability.details[index].customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, this.currentVulnerability.details[index].customFields)
+                this.currentVulnerability.details[index].customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, this.currentVulnerability.details[index].customFields, this.currentLanguage)
             }
             this.currentDetailsIndex = index;
         },
