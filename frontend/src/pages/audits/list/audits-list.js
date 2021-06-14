@@ -54,13 +54,8 @@ export default {
             // Errors messages
             errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
-<<<<<<< HEAD
             currentAudit: {name: '', language: '', template: ''},
             // The application's public configs
-            configs: {}
-=======
-            currentAudit: {name: '', language: '', auditType: ''}
->>>>>>> origin/master
         }
     },
 
