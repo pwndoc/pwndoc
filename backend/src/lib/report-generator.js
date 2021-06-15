@@ -137,6 +137,17 @@ expressions.filters.convertDateLocale = function(input, locale, style) {
     }
 }
 
+// Convert input date to ISO 8601 format YYYY/MM/DD
+expressions.filters.convertDateISO = function(input) {
+    var date = new Date(input);
+    if (date != "Invalid Date") {
+        var day = date.getUTCDate();
+        var month = date.getUTCMonth();
+        var year = date.getUTCFullYear();
+        return year + "/" + (month<10 ? '0'+month: month) + "/" + (day<10 ? '0'+day: day);
+    }
+}
+
 // Convert identifier prefix to a user defined prefix: {identifier | changeID: 'PRJ-'}
 expressions.filters.changeID = function (input, prefix) {
     return input.replace("IDX-", prefix);
@@ -201,11 +212,13 @@ var angularParser = function(tag) {
     return {
         get: function(scope, context) {
             let obj = {};
+            const index = _.last(context.scopePathItem);
             const scopeList = context.scopeList;
             const num = context.num;
             for (let i = 0, len = num + 1; i < len; i++) {
                 obj = _.merge(obj, scopeList[i]);
             }
+            obj = _.assign(obj, {"$index": index});
             return expr(scope, obj);
         }
     };
