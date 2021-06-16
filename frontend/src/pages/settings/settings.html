@@ -1,0 +1,48 @@
+<div>
+<div class="row">
+    <div class="col-md-8 col-12 offset-md-2 q-mt-md">
+        <q-card>
+            <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                <div class="text-h6">Settings</div>
+            </q-card-section>
+            <q-separator />
+            <div v-if="UserService.isAllowed('settings:update')">
+                <q-card-section>
+                    <div class="text-bold">Report Images border</div>
+                    <div class="text-caption">Add border to images in the generated report</div>
+                    <q-list>
+                        <q-item class="row">
+                            <q-item-section class="col-md-1">
+                                <q-toggle label="Enable" v-model="settings.imageBorder" />
+                            </q-item-section>
+                            <q-item-section>
+                                <div class="row">
+                                    <input :disabled="!settings.imageBorder" type="color" id="colorpicker" v-model="settings.imageBorderColor" />
+                                    <label :disabled="!settings.imageBorder" for="colorpicker" class="q-pl-md">Current color: {{settings.imageBorderColor}}</label>
+                                </div>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+                
+                <q-separator />
+
+                <q-card-section>
+                    <q-btn 
+                    label="Save"
+                    color="secondary"
+                    no-caps
+                    style="width:100px"
+                    flat
+                    class="bg-secondary text-white"
+                    @click="updateSettings"
+                    />
+                </q-card-section>
+            </div>
+        </q-card>
+    </div>
+</div>
+
+
+</div>
+        

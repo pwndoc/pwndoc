@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name" id="edit-breadcrumb-affix">
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" id="edit-breadcrumb-affix">
     <div slot="buttons">
     <q-btn color="positive" label="Save (ctrl+s)" no-caps @click="updateAuditGeneral" />
     </div>
@@ -11,19 +11,7 @@
             <q-card-section>
                 <div class="row q-col-gutter-md">
                     <q-input class="col-md-6 col-12" label="Name *" v-model="audit.name" outlined bg-color="white" />
-                    <q-select 
-                    class="col-md-6 col-12"
-                    label="Assessment Type"
-                    v-model="audit.auditType" 
-                    :options="auditTypesLang" 
-                    option-value="name" 
-                    option-label="name" 
-                    emit-value 
-                    map-options
-                    options-sanitize
-                    outlined 
-                    bg-color="white"
-                    />
+                    <div class="col"></div>
                     <q-select 
                     class="col-md-6 col-12"
                     label="Language"
@@ -61,14 +49,19 @@
                     class="col-md-6 col-12"
                     label="Company"
                     v-model="audit.company"
-                    :options="companies"
+                    :options="selectCompanies"
                     option-value="_id"
                     option-label="name"
+                    input-debounce="0"
+                    @new-value="createSelectCompany"
                     @input="filterClients"
+                    @filter="filterSelectCompany"
                     clearable
                     options-sanitize
+                    use-input
                     outlined 
                     bg-color="white"
+                    color="secondary"
                     />
                     <q-select
                     class="col-md-6 col-12"
@@ -78,7 +71,7 @@
                     :options="selectClients"
                     option-value="email"
                     option-label="email"
-                    @input="filterCompany"
+                    @input="setCompanyFromClient"
                     clearable
                     options-sanitize
                     outlined 
@@ -165,6 +158,7 @@
                 v-model="audit.customFields" 
                 custom-element="QCardSection" 
                 no-sync-editor
+                :locale="audit.language"
                 />
             </q-expansion-item>
         </q-card>
