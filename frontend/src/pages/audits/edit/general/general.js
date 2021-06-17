@@ -323,6 +323,10 @@ export default {
             .catch((err) => {          
                 console.log(err.response)
             });
+        },
+
+        isReviewerApproved(reviewer) {
+            return this.audit.approvals.find(r => r._id === reviewer._id);
         }
     }
 }
