@@ -124,7 +124,13 @@
             </q-td>
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                 <q-icon v-if="props.row.isApproved" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button">
-					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Audit is approved</q-tooltip> 
+					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+                        Audit is approved
+                        <div v-for="user in props.row.approvals">
+                            <q-separator />
+                            {{ user.username }}
+                        </div>
+                    </q-tooltip> 
                 </q-icon>
                 <q-icon v-if="!props.row.isApproved && props.row.isReadyForReview" size="sm" flat color="warning" name="fas fa-exclamation-triangle" class="icon-next-to-button">
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Audit is ready to be reviewed</q-tooltip> 
