@@ -23,6 +23,7 @@ export default {
                 minReviewers: 1,
                 removeApprovalsUponUpdate: false
             },
+            settingsOrig : {},
             canEdit: false
         }
     },
@@ -30,6 +31,20 @@ export default {
         if (!UserService.isAllowed('settings:read'))
             next('/audits')
         next()
+    },
+
+    beforeRouteLeave (to, from , next) {
+        if (this.unsavedChanges()) {
+            Dialog.create({
+            title: 'There are unsaved changes !',
+            message: `Do you really want to leave ?`,
+            ok: {label: 'Confirm', color: 'negative'},
+            cancel: {label: 'Cancel', color: 'white'}
+            })
+            .onOk(() => next())
+        }
+        else
+            next()
     },
 
     mounted: function() {
@@ -42,6 +57,7 @@ export default {
             SettingsService.getSettings()
             .then((data) => {
                 this.settings = data.data.datas;
+                this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.loading = false;
             })
             .catch((err) => {
@@ -62,6 +78,7 @@ export default {
             }
             SettingsService.updateSettings(this.settings)
             .then((data) => {
+                this.settingsOrig = this.$_.cloneDeep(this.settings);
                 Notify.create({
                     message: "Settings updated successfully",
                     color: 'positive',
@@ -114,6 +131,10 @@ export default {
             this.loading = true;
             await SettingsService.exportSettings();
             this.loading = false;
+        },
+
+        unsavedChanges() {
+            return JSON.stringify(this.settingsOrig) !== JSON.stringify(this.settings);
         }
     }
 }
