@@ -1,4 +1,4 @@
-import { Notify } from 'quasar'
+import { Notify, Dialog } from 'quasar'
 
 import SettingsService from '@/services/settings'
 import UserService from '@/services/user'
@@ -87,7 +87,23 @@ export default {
         }, 
 
         revertToDefaults: function() {
-
+            Dialog.create({
+                title: 'Reverting settings !',
+                message: `Do you really wish to revert the settings to the defaults? You will lose all current settings.`,
+                ok: {label: 'Confirm', color: 'negative'},
+                cancel: {label: 'Cancel', color: 'white'}
+            })
+            .onOk(async () => {
+                this.loading = true;
+                await SettingsService.revertDefaults();
+                this.getSettings();
+                Notify.create({
+                    message: "Settings reverted successfully",
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
         },
 
         importSettings: function() {
@@ -96,7 +112,7 @@ export default {
 
         exportSettings: async function() {
             this.loading = true;
-            await exportSettings();
+            await SettingsService.exportSettings();
             this.loading = false;
         }
     }

@@ -3,6 +3,7 @@ module.exports = function(app) {
     var Response = require('../lib/httpResponse.js')
     var acl = require('../lib/auth').acl
     var Settings = require('mongoose').model('Settings');
+    var fs = require('fs');
 
     app.get("/api/settings", acl.hasPermission('settings:read'), function(req, res) {
         Settings.getSettings()
@@ -34,6 +35,14 @@ module.exports = function(app) {
         
 
         Settings.updateOne({}, settings)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err));
+    });
+
+
+    app.put("/api/settings/revert", acl.hasPermission('settings:update'), function(req, res) {
+        var settings = JSON.parse(fs.readFileSync(`${__basedir}/app-settings.json`));
+        Settings.updateOne(settings)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err));
     });
