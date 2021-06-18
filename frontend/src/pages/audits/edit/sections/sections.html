@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :audit="audit" :configs="configs">
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :audit="audit" :settings="settings">
     <div slot="buttons">
         <q-btn v-if="this.isEditing" color="positive" label="Save (ctrl+s)" no-caps @click="updateSection" />
     </div>

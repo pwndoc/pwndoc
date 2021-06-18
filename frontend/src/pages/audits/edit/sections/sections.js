@@ -5,7 +5,7 @@ import Breadcrumb from 'components/breadcrumb';
 import CustomFields from 'components/custom-fields';
 
 import AuditService from '@/services/audit';
-import ConfigsService from '@/services/configs';
+import SettingsService from '@/services/settings';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
@@ -22,14 +22,13 @@ export default {
             // Set audit ID
             auditId: null,
             audit: {},
-            configs: {},
+            settings: {},
             section: {
                 field: "",
                 name: "",
                 customFields: []
             },
             sectionOrig: {},
-            configs: {},
             // List of CustomFields
             customFields: []
         }
@@ -45,7 +44,7 @@ export default {
         this.auditId = this.$route.params.auditId;
         this.sectionId = this.$route.params.sectionId;
         this.getSection();
-        this.getConfigs();
+        this.getSettings();
 
         this.$socket.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
 
@@ -157,8 +156,8 @@ export default {
             return false
         },
 
-        async getConfigs() {
-            this.configs = (await ConfigsService.getPublicConfigs()).data.datas;
+        async getSettings() {
+            this.settings = (await SettingsService.getSettings()).data.datas;
         }
     }
 }

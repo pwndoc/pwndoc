@@ -24,7 +24,7 @@
 <script>
 export default {
     name: 'audit-state-icon',
-    props: ['audit', 'configs', 'size'],
+    props: ['audit', 'settings', 'size'],
 
     data() {
         return {}
@@ -32,8 +32,8 @@ export default {
 
     methods: {
         isAuditApproved() {
-            if(!this.configs || !this.audit || !this.audit.approvals) return false;
-            else return this.audit.approvals.length >= this.configs.minReviewers;
+            if(!this.settings || !this.audit || !this.audit.approvals) return false;
+            else return this.audit.approvals.length >= this.settings.minReviewers;
         },
 
         getApprovalCount() {
@@ -42,8 +42,8 @@ export default {
         },
 
         getRequiredApprovalCount() {
-            if(!this.configs) return -1;
-            else return this.configs.minReviewers;
+            if(!this.settings) return -1;
+            else return this.settings.minReviewers;
         }
     }
 }
