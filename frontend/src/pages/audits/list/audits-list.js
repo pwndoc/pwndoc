@@ -6,7 +6,7 @@ import AuditService from '@/services/audit'
 import DataService from '@/services/data'
 import CompanyService from '@/services/company'
 import UserService from '@/services/user'
-import ConfigsService from '@/services/configs'
+import SettingsService from '@/services/settings'
 
 export default {
     data: () => {
@@ -55,7 +55,8 @@ export default {
             errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
             currentAudit: {name: '', language: '', template: ''},
-            // The application's public configs
+            // The application's public settings
+            settings: {}
         }
     },
 
@@ -108,7 +109,7 @@ export default {
         },
 
         isAuditApproved: function(audit) {      
-            return audit.approvals.length >= this.configs.minReviewers;
+            return audit.approvals.length >= this.settings.minReviewers;
         },
 
         getAudits: function() {
@@ -116,8 +117,8 @@ export default {
             AuditService.getAudits({findingTitle: this.search.finding})
             .then(async (data) => {
                 this.audits = data.data.datas
-                var configs = await this.getPublicConfigs();
-                this.configs = configs.data.datas;
+                var settings = await this.getPublicSettings();
+                this.settings = settings.data.datas;
                 this.audits.forEach((audit) => {
                     audit.isApproved = this.isAuditApproved(audit);
                 });
@@ -128,8 +129,8 @@ export default {
             })
         },
 
-        getPublicConfigs: async function() {
-            return await ConfigsService.getPublicConfigs();
+        getPublicSettings: async function() {
+            return await SettingsService.getPublicSettings();
         },
 
         

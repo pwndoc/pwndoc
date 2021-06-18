@@ -21,8 +21,7 @@ export default [
       {path: 'clients', component: () => import('pages/data/clients')},
       {path: 'templates', component: () => import('pages/data/templates')},   
       {path: 'dump', component: () => import('pages/data/dump')},
-      {path: 'custom', component: () => import('pages/data/custom')},
-      {path: 'configs', component: () => import('pages/data/configs')}
+      {path: 'custom', component: () => import('pages/data/custom')}
     ]},
     {path: 'vulnerabilities', component: () => import('pages/vulnerabilities'), meta: {breadcrumb: 'Vulnerabilities'}},
     {path: 'profile', component: () => import('pages/profile')},

@@ -137,7 +137,7 @@ import { Notify } from 'quasar';
 import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
-import ConfigsService from '@/services/configs'
+import SettingsService from '@/services/settings'
 import Utils from '@/services/utils';
 
 export default {
@@ -158,8 +158,8 @@ export default {
 					isApproved: false,
 					isReadyForReview: false,
 					fullyApproved: false,
-					// The application's public configs
-            		configs: {}
+					// The application's public settings
+            		settings: {}
 				}
 		},
 
@@ -271,7 +271,7 @@ export default {
 					this.isUserEditing();
 					this.isReadyForReview = this.audit.isReadyForReview;
 					this.isApproved = this.audit.approvals.some((element) => element._id === UserService.user.id);
-					this.getPublicConfigs();
+					this.getPublicSettings();
 					this.getSections()
 					if (this.loading)
 						this.handleSocket()
@@ -371,13 +371,13 @@ export default {
 			},
 
 			isAuditFullyApproved: function() {
-				this.fullyApproved = this.audit.approvals.length >= this.configs.minReviewers;
+				this.fullyApproved = this.audit.approvals.length >= this.settings.minReviewers;
         	},
 
-			getPublicConfigs: function() {
-				ConfigsService.getPublicConfigs()
+			getPublicSettings: function() {
+				SettingsService.getPublicSettings()
 				.then((data) => {
-					this.configs = data.data.datas;
+					this.settings = data.data.datas;
 					this.isAuditFullyApproved();
 				})
 				.catch((err) => {
