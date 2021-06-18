@@ -46,4 +46,16 @@ module.exports = function(app) {
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err));
     });
+
+    app.get("/api/settings/export", acl.hasPermission("settings:read"), function(req, res) {
+        Settings.getSettings()
+        .then((settings) => {
+            Response.SendFile(res, "app-settings.json", settings);
+        })
+        .catch((err) => {
+            console.log(err);
+            Response.Internal(res, err)
+        })
+        
+    });
 }
