@@ -4,6 +4,7 @@ import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
 
 import AuditService from '@/services/audit';
+import ConfigsService from '@/services/configs';
 import Utils from '@/services/utils';
 
 export default {
@@ -18,8 +19,11 @@ export default {
         return {
             // Set audit ID
             auditId: null,
+            audit: {},
+            configs: {},
             section: {},
             sectionOrig: {},
+            configs: {}
         }
     },
 
@@ -32,6 +36,7 @@ export default {
         this.auditId = this.$route.params.auditId;
         this.sectionId = this.$route.params.sectionId;
         this.getSection();
+        this.getConfigs();
 
         this.$socket.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
 
@@ -84,8 +89,9 @@ export default {
         // Get Section
         getSection: function() {
             AuditService.getSection(this.auditId, this.sectionId)
-            .then((data) => {
-                this.section = data.data.datas;
+            .then(res => {
+                this.audit = res.data.datas;
+                this.section = this.audit.sections[0];
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.sectionOrig = this.$_.cloneDeep(this.section);                
@@ -161,6 +167,10 @@ export default {
                 return true
 
             return false
+        },
+
+        async getConfigs() {
+            this.configs = (await ConfigsService.getPublicConfigs()).data.datas;
         }
     }
 }

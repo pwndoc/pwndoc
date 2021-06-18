@@ -7,6 +7,7 @@ import CustomFields from 'components/custom-fields'
 import AuditService from '@/services/audit';
 import ClientService from '@/services/client';
 import CompanyService from '@/services/company';
+import ConfigsService from '@/services/configs';
 import CollabService from '@/services/collaborator';
 import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
@@ -64,7 +65,9 @@ export default {
             // List of existing audit types
             auditTypes: [],
             // List of CustomFields
-            customFields: []
+            customFields: [],
+            // Public configs
+            configs: {}
         }
     },
 
@@ -77,6 +80,7 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getAuditGeneral();
+        this.getConfigs();
         this.getClients();
         this.getTemplates();
         this.getLanguages();
@@ -327,6 +331,10 @@ export default {
 
         isReviewerApproved(reviewer) {
             return this.audit.approvals.find(r => r._id === reviewer._id);
+        },
+
+        async getConfigs() {
+            this.configs = (await ConfigsService.getPublicConfigs()).data.datas;
         }
     }
 }

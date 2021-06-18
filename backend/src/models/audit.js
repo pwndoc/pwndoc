@@ -241,7 +241,8 @@ AuditSchema.statics.getNetwork = (isAdmin, auditId, userId) => {
         var query = Audit.findById(auditId)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
-        query.select('scope')
+        query.select('id scope approvals isReadyForReview')
+        query.populate('approvals', 'username firstname lastname')
         query.exec()
         .then((row) => {
             if (!row)
@@ -451,20 +452,21 @@ AuditSchema.statics.createSection = (isAdmin, auditId, userId, section) => {
 // Get section of audit
 AuditSchema.statics.getSection = (isAdmin, auditId, userId, sectionId) => {
     return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId)
+        var query = Audit.findOne({ 
+            _id: auditId,
+            "sections._id": sectionId
+        })
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
-        query.select('sections')
+        query.select('id sections approvals isReadyForReview')
+        query.populate('approvals', 'username firstname lastname')
         query.exec()
         .then((row) => {
-            if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+            if (!row) throw({fn: 'NotFound', message: 'Audit not found, Section ID not found, or Insufficient Privileges'})
 
-            var section = row.sections.id(sectionId);
-            if (section === null) 
-                throw({fn: 'NotFound', message: 'Section id not found'});
-            else 
-                resolve(section);
+            row.sections = [row.sections.id(sectionId)];
+
+            resolve(row);
         })
         .catch((err) => {
             reject(err)

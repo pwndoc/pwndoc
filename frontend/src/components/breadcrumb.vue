@@ -10,7 +10,7 @@
         </q-btn>
         <p v-if="typeof(title) === 'undefined'" class="breadcrumb-title">{{bread[last].name}}</p>
         <p v-else class="breadcrumb-title">{{title}} 
-            <audit-state-icon size="xs" :auditId='auditId' :loadConfigs='true'/>
+            <audit-state-icon size="xs" :audit="audit" :configs="configs"/>
         </p>
         <q-breadcrumbs v-if="typeof(buttons) === 'undefined'" separator="/" active-color="secondary" color="light" align="right">
             <q-breadcrumbs-el v-for="breadcrumb in bread" :label="breadcrumb.name" :to="breadcrumb.path" :key="breadcrumb.path" />
@@ -26,7 +26,7 @@ import AuditStateIcon from 'components/audit-state-icon';
 
 export default {
     name: 'breadcrumb',
-    props: ['buttons', 'title', 'audit', 'auditId'],
+    props: ['buttons', 'title', 'audit', 'configs'],
 
     components: {
         AuditStateIcon
