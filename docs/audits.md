@@ -24,6 +24,15 @@ This section allows to import Nmap/Nessus Scans (only port scan).
 
 ![Network Scan](/_images/audits_network.png)
 
+Before importing a scan at least one Audit scope must be defined.
+Once the scope is created it will appear on Network Scan page.
+At this point you may follow these steps: 
+
+1. Import nmap/nessus scan
+2. Select all the hosts associated with the scope
+3. Click the + symbol to effectively associate hosts with the scope
+4. Save
+
 ## Findings
 
 ### Create

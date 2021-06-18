@@ -1,6 +1,6 @@
 <template>
-<q-card flat bordered class="editor full-width">
-    <affix relative-element-selector=".affix-relative-element" :enabled="affix">
+<q-card flat bordered class="editor full-width" :class="affixRelativeElement">
+    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix">
         <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
             <q-toolbar class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">
@@ -178,7 +178,6 @@ import {
   Bold,
   Code,
   Italic,
-  Link,
   Strike,
   Underline,
   History,
@@ -206,7 +205,7 @@ export default {
                 return ['format', 'marks', 'list', 'code', 'image']
             }
         },
-        affix: {
+        noAffix: {
             type: Boolean,
             default: false
         },
@@ -256,6 +255,7 @@ export default {
             json: '',
             html: '',
             toggleDiff: true,
+            affixRelativeElement: 'affix-relative-element',
 
             htmlEncode: Utils.htmlEncode
         }
@@ -272,6 +272,7 @@ export default {
     },
 
     mounted: function() {
+        this.affixRelativeElement += '-'+Math.floor((Math.random()*1000000) + 1)
         if (typeof this.value === "undefined" || this.value === this.editor.getHTML()) {
             return;
         }

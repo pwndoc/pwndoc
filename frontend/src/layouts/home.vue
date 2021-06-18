@@ -18,7 +18,7 @@
             <q-item-section>Vulnerabilities</q-item-section>
             </q-item>
 
-            <q-item to='/datas' active-class="text-green">
+            <q-item to='/data' active-class="text-green">
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-database" />
             </q-item-section>
@@ -27,6 +27,14 @@
 
             <q-space />
 
+            <div v-if="userService.isAllowed('settings:read')">
+              <q-item to='/settings' active-class="text-green">
+              <q-item-section avatar style="min-width:0" class="q-pr-sm">
+                  <q-icon name="fa fa-cog" />
+              </q-item-section>
+              <q-item-section>Settings</q-item-section>
+              </q-item>
+            </div>
             <q-btn-dropdown auto-close flat icon="fa fa-user-circle" no-caps :label="userService.user.username">
                 <q-list>
                   <q-item clickable @click="$router.push('/profile')">

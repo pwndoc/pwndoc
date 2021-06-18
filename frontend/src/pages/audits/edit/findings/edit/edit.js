@@ -26,8 +26,7 @@ export default {
             selectedTab: "definition",
             proofsTabVisited: false,
             detailsTabVisited: false,
-            vulnTypes: [],
-            customFields: []
+            vulnTypes: []
         }
     },
 
@@ -120,17 +119,16 @@ export default {
 
         // Get Finding
         getFinding: function() {
-            DataService.getCustomFields()
-            .then((data) => {
-                this.customFields = data.data.datas
-                return AuditService.getFinding(this.auditId, this.findingId)
-            })
+            AuditService.getFinding(this.auditId, this.findingId)
             .then((data) => {
                 this.finding = data.data.datas;
+                if (this.finding.customFields && // For retrocompatibility with customField reference instead of object
+                    this.finding.customFields.length > 0 && 
+                    typeof (this.finding.customFields[0].customField) === 'string') 
+                    this.finding.customFields = Utils.filterCustomFields('finding', this.finding.category, this.$parent.customFields, this.finding.customFields, this.$parent.audit.language)
                 if (this.finding.paragraphs.length > 0 && !this.finding.poc)
                     this.finding.poc = this.convertParagraphsToHTML(this.finding.paragraphs)
 
-                this.finding.customFields = Utils.filterCustomFields('finding', this.finding.category, this.customFields, this.finding.customFields)
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.findingOrig = this.$_.cloneDeep(this.finding); 

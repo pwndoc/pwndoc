@@ -19,6 +19,7 @@ services:
     container_name: pwndoc-backend
     volumes:
       - ./backend/report-templates:/app/report-templates
+      - ./backend/src/lib:/app/src/lib
     depends_on:
       - mongodb
     restart: always

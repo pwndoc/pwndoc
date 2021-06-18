@@ -1,6 +1,6 @@
-<template src='./configs.html'></template>
+<template src='./settings.html'></template>
 
-<script src='./configs.js'></script>
+<script src='./settings.js'></script>
 
 <style>
 .fieldContent {
@@ -16,5 +16,13 @@
 .toggleButton {
     margin: 0px 20px;
     border: 1px solid #3c4759;
+}
+
+.settings-q-card {
+    margin: 20px 0px;
+}
+
+.icon-update-btn {
+    font-size: 1.3em !important;
 }
 </style>

@@ -11,12 +11,15 @@ var cookieParser = require('cookie-parser')
 // Get configuration
 var env = process.env.NODE_ENV || 'dev';
 var config = require('./config.json')[env];
+var setting = require('./app-settings.json');
 global.__basedir = __dirname;
 
 // Database connection
 var mongoose = require('mongoose');
 // Use native promises
 mongoose.Promise = global.Promise;
+// Trim all Strings
+mongoose.Schema.Types.String.set('trim', true);
 
 mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false});
 
@@ -35,7 +38,7 @@ require('./models/vulnerability-category');
 require('./models/custom-section');
 require('./models/custom-field');
 require('./models/image');
-var configsModel = require('./models/configs');
+var settingsModel = require('./models/settings');
 
 // Socket IO configuration
 var getSockets = function(room) {
@@ -109,28 +112,27 @@ require('./routes/template')(app);
 require('./routes/vulnerability')(app);
 require('./routes/data')(app);
 require('./routes/image')(app);
-
-require('./routes/configs')(app);
+require('./routes/settings')(app);
 
 
 app.get("*", function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});
 })
 
-// Populate configs if database not defined
-configsModel.findOne()
-.then((liveConfigs) => {
-  if (!liveConfigs) {
+// Populate settings if database not defined
+settingsModel.findOne()
+.then((liveSettings) => {
+  if (!liveSettings) {
     console.log("Initializing database");
-    configsModel.create(config.configs).catch((err) => {
-      throw "Error creating the configs in the database : " + err;
+    settingsModel.create(setting).catch((err) => {
+      throw "Error creating the settings in the database : " + err;
     });
   } else {
     console.log("Database already initialized");
   }
 })
 .catch((err) => {
-  throw "Error checking for initial configs in the database : " + err;
+  throw "Error checking for initial settings in the database : " + err;
 });
 
 

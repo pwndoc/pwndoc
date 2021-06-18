@@ -14,18 +14,18 @@ export default [
         {path: 'sections/:sectionId', component: () => import('pages/audits/edit/sections')}
       ]}
     ]},
-    {path: 'datas', component: () => import('pages/datas'), meta: {breadcrumb: 'Datas'}, children: [
+    {path: 'data', component: () => import('pages/data'), meta: {breadcrumb: 'Datas'}, children: [
       {path: '', redirect: 'collaborators'},
-      {path: 'collaborators', component: () => import('pages/datas/collaborators')},
-      {path: 'companies', component: () => import('pages/datas/companies')},
-      {path: 'clients', component: () => import('pages/datas/clients')},
-      {path: 'templates', component: () => import('pages/datas/templates')},   
-      {path: 'dump', component: () => import('pages/datas/dump')},
-      {path: 'custom', component: () => import('pages/datas/custom')},
-      {path: 'configs', component: () => import('pages/datas/configs')}
+      {path: 'collaborators', component: () => import('pages/data/collaborators')},
+      {path: 'companies', component: () => import('pages/data/companies')},
+      {path: 'clients', component: () => import('pages/data/clients')},
+      {path: 'templates', component: () => import('pages/data/templates')},   
+      {path: 'dump', component: () => import('pages/data/dump')},
+      {path: 'custom', component: () => import('pages/data/custom')}
     ]},
     {path: 'vulnerabilities', component: () => import('pages/vulnerabilities'), meta: {breadcrumb: 'Vulnerabilities'}},
     {path: 'profile', component: () => import('pages/profile')},
+    {path: 'settings', component: () => import('pages/settings')},
     {path: '403', name: '403', component: () => import('pages/403')},
     {path: '404', name: '404', component: () => import('pages/404')}
   ]},

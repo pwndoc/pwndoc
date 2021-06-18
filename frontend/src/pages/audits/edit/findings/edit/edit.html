@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name" :approved="fullyApproved">
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :approved="fullyApproved">
     <div slot="buttons">
         <q-btn
         color="orange"
@@ -74,6 +74,7 @@
                     custom-element="QCardSection" 
                     no-sync-editor
                     :readonly="!isEditing"
+                    :locale="$parent.audit.language"
                     />
                 </q-expansion-item>
 
@@ -82,9 +83,9 @@
         <q-tab-panel name="proofs">
             <div class="q-col-gutter-md row">
                 <div class="col-12">
-                    <q-card class="affix-relative-element bg-grey-1">
+                    <q-card class="bg-grey-1">
                         <q-card-section>
-                            <basic-editor ref="basiceditor_poc" noSync affix v-model="finding.poc" :editable="isEditing"/>
+                            <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="isEditing"/>
                         </q-card-section>
                     </q-card>
                 </div>

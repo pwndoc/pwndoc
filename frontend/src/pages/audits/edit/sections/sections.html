@@ -1,24 +1,24 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name" :audit="audit" :configs="configs">
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :audit="audit" :configs="configs">
     <div slot="buttons">
-        <q-btn
-        color="negative"
-        class="q-mr-sm"
-        label="Delete"
-        no-caps
-        @click="deleteSection"
-        v-if="this.isEditing"
-        />
         <q-btn v-if="this.isEditing" color="positive" label="Save (ctrl+s)" no-caps @click="updateSection" />
     </div>
 </breadcrumb>
 
 <div class="row q-col-gutter-md q-pa-md">
     <div class="col-md-8 offset-md-2">
-        <q-card class="affix-relative-element bg-grey-1">
-            <q-card-section>
-                <basic-editor ref="basiceditor_section" noSync affix v-model="section.text" :editable="isEditing"/>
+        <q-card class="bg-grey-1">
+            <!-- For retrocompatibility, test if section.text exists -->
+            <q-card-section v-if="section.text"> 
+                <basic-editor ref="basiceditor_section" noSync v-model="section.text" :editable="isEditing" />
             </q-card-section>
+            <custom-fields v-else 
+            ref="customfields" 
+            v-model="section.customFields" 
+            custom-element="QCardSection" 
+            no-sync-editor
+            :locale="$parent.audit.language"
+            />
         </q-card>
     </div>
 </div>

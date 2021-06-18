@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name" :approved="fullyApproved">
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :approved="fullyApproved">
 </breadcrumb>
 
 <div class="row q-col-gutter-md q-pa-md">

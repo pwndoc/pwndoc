@@ -1,0 +1,238 @@
+<div>
+<div class="row">
+    <div class="col-md-8 col-12 offset-md-2 q-mt-md">
+
+        <q-card class="settings-q-card">
+            <q-card-section class="q-py-none bg-blue-grey-5 text-white">
+                <q-item style="padding:0px;">
+                    <q-item-section class="col-md-11">
+                        <div class="text-h6">Reports</div>
+                    </q-item-section>
+                </q-item>
+            </q-card-section>
+            <div v-if="UserService.isAllowed('settings:update')">
+                <q-card-section>
+                    <div class="text-bold">Report Images border</div>
+                    <br/>
+                    <div class="text-grey-8">Add border to images in the generated report.</div>
+                    <q-item>
+                        <q-item-section class="col-md-2">
+                            <q-toggle label="Enable" v-model="settings.imageBorder" />
+                        </q-item-section>
+                        <q-item-section class="col-md-1">
+                            <input :disabled="!settings.imageBorder" type="color" id="colorpicker" v-model="settings.imageBorderColor" />
+                        </q-item-section>
+                        <q-item-section class="col-md-2">
+                            <label :disabled="!settings.imageBorder" for="colorpicker" class="vertical-center">Current color: {{settings.imageBorderColor}}</label>
+                        </q-item-section>
+                    </q-item>
+                </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-bold">CVSS colors</div>
+                    <br/>
+                    <div class="text-grey-8">Changes the colors used in the report to represent the different CVSS severities.</div>
+                    <q-list>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">Critical : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.cvssColors.criticalColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.criticalColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">High : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.cvssColors.highColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.highColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">Medium : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.cvssColors.mediumColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.mediumColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">Low : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.cvssColors.lowColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.lowColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">Informational : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.cvssColors.noneColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.noneColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+            </div>
+        </q-card>
+
+        <q-card class="settings-q-card">
+            <q-card-section class="q-py-none bg-blue-grey-5 text-white">
+                <q-item style="padding:0px;">
+                    <q-item-section class="col-md-11">
+                        <div class="text-h6">Reviews</div>
+                    </q-item-section>
+                    <q-item-section class="col-md-1 items-center" >
+                        <q-toggle
+                            color="primary"
+                            keep-color
+                            :disable="!canEdit"
+                            v-model="settings.enableReviews"
+                        />
+                    </q-item-section>
+                </q-item>
+            </q-card-section>
+            <q-separator />
+            <q-card-section>
+                <div class="text-bold">Audit Update After Approval</div>
+                <br/>
+                <div class="text-grey-8">
+                    Changes the behavior for an approved audit that gets updated. If an audit is updated : 
+                </div>
+            </q-card-section>
+            <q-card-section>
+                <q-btn-toggle
+                    :disable="!canEdit || !settings.enableReviews"
+                    v-model="settings.removeApprovalsUponUpdate"
+                    class="toggleButton"
+                    spread
+                    no-caps
+                    rounded
+                    unelevated
+                    toggle-color="primary"
+                    color="white"
+                    text-color="primary"
+                    :options="[
+                    {label: 'All its prior approvals are removed.', value: true},
+                    {label: 'All its prior approvals are kept.', value: false}
+                    ]"
+                />
+            </q-card-section>
+            <q-separator />
+            <q-card-section>
+                <div class="text-bold">Mandatory Review</div>
+                <br/>
+                <div class="text-grey-8">
+                    Makes the review process mandatory. When activated, a user cannot export an audit unless it has been approved by the specified number of reviewers. 
+                    <br/>
+                    The minimal number of reviewers is also used to determine if a report is marked as approved.
+                </div>
+            </q-card-section>
+            <q-card-section>
+                <q-item>
+                    <q-item-section class="col-2">
+                        <q-toggle
+                            label="Enable"
+                            v-model="settings.mandatoryReview"
+                            color="primary"
+                            keep-color
+                            id="toggle"
+                            :disable="!canEdit || !settings.enableReviews"
+                        />
+                    </q-item-section>
+                    <q-item-section class="col-2">
+                        <q-input
+                            v-model.number="settings.minReviewers"
+                            type="number"
+                            :disable="!canEdit || !settings.enableReviews"
+                            filled
+                            :min="1"
+                            :max="99"
+                            hint="Minimal number of reviewers"
+                        />
+                    </q-item-section>
+                </q-item>
+            </q-card-section>
+        </q-card>
+
+        <q-card class="settings-q-card" v-if="canEdit" align="center">
+            <q-card-section >
+                <q-item>
+                    <q-item-section class="q-px-md">
+                        <q-btn 
+                        label="Save settings"
+                        color="secondary"
+                        no-caps
+                        flat
+                        class="bg-secondary text-white"
+                        @click="updateSettings"
+                        ></q-btn>
+                    </q-item-section>
+                    <q-item-section class="q-px-md">
+                        <q-btn 
+                        label="Revert settings to defaults"
+                        color="negative"
+                        no-caps
+                        flat
+                        class="bg-negative text-white"
+                        @click="revertToDefaults"
+                        /></q-btn>
+                    </q-item-section>
+                    <q-item-section class="q-px-md">
+                        <q-btn 
+                        color="warning"
+                        no-caps
+                        flat
+                        class="bg-warning text-white"
+                        @click="importSettings"
+                        >
+                            <div class="row items-center no-wrap">
+                                <q-icon left name="fas fa-file-import" class="icon-update-btn"/>
+                                <div class="text-center">
+                                    Import settings
+                                </div>
+                            </div>
+                        </q-btn>
+                    </q-item-section>
+                    <q-item-section class="q-px-md">
+                        <q-btn 
+                        color="warning"
+                        no-caps
+                        flat
+                        class="bg-warning text-white"
+                        @click="exportSettings"
+                        >
+                            <div class="row items-center no-wrap">
+                                <q-icon left name="fas fa-file-export" class="icon-update-btn"/>
+                                <div class="text-center">
+                                    Export settings
+                                </div>
+                            </div>
+                        </q-btn>
+                    </q-item-section>
+                </q-item>
+            </q-card-section>
+        </q-card>
+    </div>
+</div>
+
+
+</div>
+        
