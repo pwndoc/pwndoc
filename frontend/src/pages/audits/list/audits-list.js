@@ -272,8 +272,13 @@ export default {
             return result.join(', '); 
         },
 
+        isAuditCollaborator(user, audit) {
+            return audit.creator.id === user._id || audit.collaborators.some(collaborator => collaborator._id === user.id);
+        },
+
         customFilter: function(rows, terms, cols, getCellValue) {
-            var username = this.UserService.user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            const user = this.UserService.user;
+            var username = user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
             var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
             var languageTerm = (terms.language)? terms.language.toLowerCase(): ""
@@ -295,7 +300,7 @@ export default {
                     date.indexOf(dateTerm) > -1 &&
                     ((this.myAudits && users.indexOf(username) > -1) || !this.myAudits) &&
                     ((this.displayConnected && row.connected && row.connected.length > 0) || !this.displayConnected) &&
-                    ((this.displayReadyForReview && (row.isReadyForReview && !row.isApproved)) || !this.displayReadyForReview)
+                    ((this.displayReadyForReview && (!this.isAuditCollaborator(user, row) && row.isReadyForReview && !row.isApproved)) || !this.displayReadyForReview)
             })
         },
 

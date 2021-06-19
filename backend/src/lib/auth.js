@@ -60,13 +60,6 @@ var builtInRoles = {
     },
     admin: {
         allows: "*"
-    },
-    reviewer: {
-        // Like a user, but with different audit permissions (can review)
-        inherits: ["user"],
-        allows: [
-            "audits:review"
-        ]
     }
 }
 

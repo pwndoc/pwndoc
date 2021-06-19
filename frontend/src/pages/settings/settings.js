@@ -1,4 +1,4 @@
-import { Notify } from 'quasar'
+import { Notify, Dialog } from 'quasar'
 
 import SettingsService from '@/services/settings'
 import UserService from '@/services/user'
@@ -23,6 +23,7 @@ export default {
                 minReviewers: 1,
                 removeApprovalsUponUpdate: false
             },
+            settingsOrig : {},
             canEdit: false
         }
     },
@@ -30,6 +31,20 @@ export default {
         if (!UserService.isAllowed('settings:read'))
             next('/audits')
         next()
+    },
+
+    beforeRouteLeave (to, from , next) {
+        if (this.unsavedChanges()) {
+            Dialog.create({
+            title: 'There are unsaved changes !',
+            message: `Do you really want to leave ?`,
+            ok: {label: 'Confirm', color: 'negative'},
+            cancel: {label: 'Cancel', color: 'white'}
+            })
+            .onOk(() => next())
+        }
+        else
+            next()
     },
 
     mounted: function() {
@@ -42,6 +57,7 @@ export default {
             SettingsService.getSettings()
             .then((data) => {
                 this.settings = data.data.datas;
+                this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.loading = false;
             })
             .catch((err) => {
@@ -62,6 +78,7 @@ export default {
             }
             SettingsService.updateSettings(this.settings)
             .then((data) => {
+                this.settingsOrig = this.$_.cloneDeep(this.settings);
                 Notify.create({
                     message: "Settings updated successfully",
                     color: 'positive',
@@ -79,25 +96,85 @@ export default {
             })
         },
 
-        updateSettingsValueRange: function(paramName, min, max) {
-            if(this.settings[paramName] < min || this.settings[paramName] > max) {
-                this.settings[paramName] = this.settings[paramName] < min ? min: max;
-            }
-            this.updateSettings();
-        }, 
-
         revertToDefaults: function() {
-
+            Dialog.create({
+                title: 'Reverting settings !',
+                message: `Do you really wish to revert the settings to the defaults? You will lose all current settings.`,
+                ok: {label: 'Confirm', color: 'negative'},
+                cancel: {label: 'Cancel', color: 'white'}
+            })
+            .onOk(async () => {
+                this.loading = true;
+                await SettingsService.revertDefaults();
+                this.getSettings();
+                Notify.create({
+                    message: "Settings reverted successfully",
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
         },
 
-        importSettings: function() {
-
+        importSettings: function(file) {
+            this.loading = true;
+            var fileReader = new FileReader();
+            fileReader.onloadend = async (e) => {
+                try {
+                    var settings = JSON.parse(fileReader.result);
+                    if (typeof settings === 'object') {
+                        Dialog.create({
+                            title: 'Importing settings !',
+                            message: `Do you really wish to import the new settings? You will lose all current settings that are replaced.`,
+                            ok: {label: 'Confirm', color: 'negative'},
+                            cancel: {label: 'Cancel', color: 'white'}
+                        })
+                        .onOk(async () => {
+                            this.loading = true;
+                            await SettingsService.updateSettings(settings);
+                            this.getSettings();
+                            Notify.create({
+                                message: "Settings imported successfully",
+                                color: 'positive',
+                                textColor:'white',
+                                position: 'top-right'
+                            })
+                        })
+                    } else {
+                        throw "JSON must be an object.";
+                    }
+                }
+                catch (err) {
+                    console.log(err);
+                    if (err.message) errMsg = `Error while parsing JSON content: ${err.message}`;
+                    Notify.create({
+                        message: errMsg,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                }
+            };
+            var fileContent = new Blob(file, {type : 'application/json'});
+            console.log(fileContent);
+            fileReader.readAsText(fileContent);
         },
 
         exportSettings: async function() {
             this.loading = true;
-            await exportSettings();
+            var response = await SettingsService.exportSettings();
+            var blob = new Blob([JSON.stringify(response.data)], {type: "application/json"});
+            var link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = response.headers['content-disposition'].split('"')[1];
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
             this.loading = false;
+        },
+
+        unsavedChanges() {
+            return JSON.stringify(this.settingsOrig) !== JSON.stringify(this.settings);
         }
     }
 }
