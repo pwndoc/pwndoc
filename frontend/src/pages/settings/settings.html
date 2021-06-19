@@ -196,12 +196,20 @@
                         /></q-btn>
                     </q-item-section>
                     <q-item-section class="q-px-md">
+                        <input
+                        ref="importSetttings"
+                        value=""
+                        type="file"
+                        accept=".json"
+                        class="hidden"
+                        @change="importSettings($event.target.files)"
+                        />
                         <q-btn 
                         color="warning"
                         no-caps
                         flat
                         class="bg-warning text-white"
-                        @click="importSettings"
+                        @click="$refs.importSetttings.click()"
                         >
                             <div class="row items-center no-wrap">
                                 <q-icon left name="fas fa-file-import" class="icon-update-btn"/>

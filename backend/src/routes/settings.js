@@ -31,7 +31,16 @@ module.exports = function(app) {
         if (req.body.removeApprovalsUponUpdate !== undefined) settings.removeApprovalsUponUpdate = req.body.removeApprovalsUponUpdate;
         if (req.body.imageBorder !== undefined) settings.imageBorder = req.body.imageBorder;
         if (req.body.imageBorderColor !== undefined) settings.imageBorderColor = req.body.imageBorderColor;
-        if (req.body.cvssColors !== undefined) settings.cvssColors = req.body.cvssColors;
+        if (req.body.cvssColors !== undefined) {
+            var colors = {};
+            if(req.body.cvssColors.criticalColor !== undefined) colors.criticalColor = req.body.cvssColors.criticalColor;
+            if(req.body.cvssColors.highColor !== undefined) colors.highColor = req.body.cvssColors.highColor;
+            if(req.body.cvssColors.mediumColor !== undefined) colors.mediumColor = req.body.cvssColors.mediumColor;
+            if(req.body.cvssColors.lowColor !== undefined) colors.lowColor = req.body.cvssColors.lowColor;
+            if(req.body.cvssColors.noneColor !== undefined) colors.noneColor = req.body.cvssColors.noneColor;
+            settings.cvssColors = colors;
+        }
+            
         
 
         Settings.updateOne({}, settings)
@@ -56,6 +65,5 @@ module.exports = function(app) {
             console.log(err);
             Response.Internal(res, err)
         })
-        
     });
 }

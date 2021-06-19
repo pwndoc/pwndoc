@@ -96,13 +96,6 @@ export default {
             })
         },
 
-        updateSettingsValueRange: function(paramName, min, max) {
-            if(this.settings[paramName] < min || this.settings[paramName] > max) {
-                this.settings[paramName] = this.settings[paramName] < min ? min: max;
-            }
-            this.updateSettings();
-        }, 
-
         revertToDefaults: function() {
             Dialog.create({
                 title: 'Reverting settings !',
@@ -123,8 +116,48 @@ export default {
             })
         },
 
-        importSettings: function() {
-
+        importSettings: function(file) {
+            this.loading = true;
+            var fileReader = new FileReader();
+            fileReader.onloadend = async (e) => {
+                try {
+                    var settings = JSON.parse(fileReader.result);
+                    if (typeof settings === 'object') {
+                        Dialog.create({
+                            title: 'Importing settings !',
+                            message: `Do you really wish to import the new settings? You will lose all current settings that are replaced.`,
+                            ok: {label: 'Confirm', color: 'negative'},
+                            cancel: {label: 'Cancel', color: 'white'}
+                        })
+                        .onOk(async () => {
+                            this.loading = true;
+                            await SettingsService.updateSettings(settings);
+                            this.getSettings();
+                            Notify.create({
+                                message: "Settings imported successfully",
+                                color: 'positive',
+                                textColor:'white',
+                                position: 'top-right'
+                            })
+                        })
+                    } else {
+                        throw "JSON must be an object.";
+                    }
+                }
+                catch (err) {
+                    console.log(err);
+                    if (err.message) errMsg = `Error while parsing JSON content: ${err.message}`;
+                    Notify.create({
+                        message: errMsg,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                }
+            };
+            var fileContent = new Blob(file, {type : 'application/json'});
+            console.log(fileContent);
+            fileReader.readAsText(fileContent);
         },
 
         exportSettings: async function() {
