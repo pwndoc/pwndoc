@@ -356,7 +356,7 @@ export default {
             if (Array.isArray(this.json.content) && this.json.content.length === 1 && !this.json.content[0].hasOwnProperty("content")) {
                 this.html = ""
             }
-            this.$emit('input', this.html)
+            this.$emit('input', this.htmlEncode(this.html))
         }
     }
 }

@@ -37,6 +37,7 @@ export default {
     .replace(/&lt;\/li&gt;/g, '</li>')
     .replace(/&lt;h1&gt;/g, '<h1>')
     .replace(/&lt;\/h1&gt;/g, '</h1>')
+    .replace(/&nbsp;/g, ' ')
     .replace(/&lt;h2&gt;/g, '<h2>')
     .replace(/&lt;\/h2&gt;/g, '</h2>')
     .replace(/&lt;h3&gt;/g, '<h3>')
