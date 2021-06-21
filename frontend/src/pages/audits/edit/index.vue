@@ -433,7 +433,6 @@ export default {
 				AuditService.updateReadyForReview(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
 				.then(() => {
 					this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
-					this.auditOrig.state = this.audit.state;
 					this.getUIState();
 					Notify.create({
 						message: 'Audit review status updated successfully',
@@ -442,8 +441,8 @@ export default {
 						position: 'top-right'
 					})
 				})
-				.catch((err) => {             
-					console.log(err.response)
+				.catch((err) => {     
+					console.log(err)
 				});
 			},
 
@@ -458,7 +457,7 @@ export default {
 					})
 				})
 				.catch((err) => {          
-					console.log(err.response)
+					console.log(err)
 				});
 			}
 		}
