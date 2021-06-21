@@ -123,14 +123,14 @@
                 </q-chip>
             </q-td>
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                <q-icon v-if="props.row.isApproved" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button">
+                <q-icon v-if="props.row.state === 'APPROVED'" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button">
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Audit is approved</q-tooltip> 
                 </q-icon>
-                <q-icon v-if="!props.row.isApproved && props.row.isReadyForReview" size="sm" flat color="warning" name="fas fa-exclamation-triangle" class="icon-next-to-button">
+                <q-icon v-if="props.row.state !== 'APPROVED' && props.row.state === 'REVIEW'" size="sm" flat color="warning" name="fas fa-exclamation-triangle" class="icon-next-to-button">
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Audit is ready to be reviewed</q-tooltip> 
                 </q-icon>
                 <!-- Taking up space to keep the alignment-->
-                <q-icon v-if="!props.row.isApproved && !props.row.isReadyForReview" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button invisible">
+                <q-icon v-if="props.row.state !== 'APPROVED' && props.row.state !== 'REVIEW'" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button invisible">
                 </q-icon>
                 <q-btn size="sm" flat color="primary" :to="'/audits/'+props.row._id" icon="fa fa-edit">
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit Audit</q-tooltip> 

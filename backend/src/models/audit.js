@@ -1,4 +1,5 @@
-var mongoose = require('mongoose')//.set('debug', true);
+var mongoose = require('mongoose');//.set('debug', true);
+const Settings = require('./settings');
 var Schema = mongoose.Schema;
 
 var Paragraph = {
@@ -68,7 +69,7 @@ var AuditSchema = new Schema({
     creator:            {type: Schema.Types.ObjectId, ref: 'User'},
     sections:           [{field: String, name: String, text: String, customFields: [customField]}], // keep text for retrocompatibility
     customFields:       [customField],
-    isReadyForReview:   Boolean,
+    state:              { type: String, enum: ['EDIT', 'REVIEW', 'APPROVED'], default: 'EDIT'},
     approvals:          [{type: Schema.Types.ObjectId, ref: 'User'}],
 }, {timestamps: true});
 
@@ -87,7 +88,7 @@ AuditSchema.statics.getAudits = (isAdmin, userId, filters) => {
         query.populate('reviewers', 'id username')
         query.populate('approvals', 'id username')
         query.populate('company', 'id name')
-        query.select('id name language creator collaborators company createdAt isReadyForReview')
+        query.select('id name language creator collaborators company createdAt isReadyForReview state')
         query.exec()
         .then((rows) => {
             resolve(rows)
@@ -255,7 +256,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
         query.populate('reviewers', 'username firstname lastname')
         query.populate('approvals', 'username firstname lastname')
         query.populate('company')
-        query.select('id name auditType location date date_start date_end client collaborators language scope.name template customFields, isReadyForReview')
+        query.select('id name auditType location date date_start date_end client collaborators language scope.name template customFields state')
         query.exec()
         .then((row) => {
             if (!row)
@@ -592,7 +593,13 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
 }
 
 AuditSchema.statics.updateApprovals = (isAdmin, auditId, userId, update) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+        var settings = await Settings.getSettings();
+        if (update.approvals.length >= settings.minReviewers) {
+            update.state = "APPROVED";
+        } else {
+            update.state = "REVIEW";
+        }
         var query = Audit.findByIdAndUpdate(auditId, update)
         query.nor([{creator: userId}, {collaborators: userId}]);
         if (!isAdmin)
