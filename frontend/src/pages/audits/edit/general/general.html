@@ -1,7 +1,7 @@
 <div>
 <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" id="edit-breadcrumb-affix" :audit="audit">
     <div slot="buttons">
-        <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" label="Save (ctrl+s)" no-caps class="topButton" @click="updateAuditGeneral" />
+      <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" label="Save (ctrl+s)" no-caps @click="updateAuditGeneral" />
     </div>
 </breadcrumb>
 
