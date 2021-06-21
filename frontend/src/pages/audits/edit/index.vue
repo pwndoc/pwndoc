@@ -4,31 +4,36 @@
 		<q-splitter horizontal v-model="splitterRatio" :limits="[50, 80]" style="height: 100%">
 			<template v-slot:before>
 				<q-list class="home-drawer">
-					<q-item>
-						<q-item-section>Sections</q-item-section>
-						<q-item-section side v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-							<q-btn flat dense size="sm" color="secondary" icon="fas fa-exclamation-triangle" @click="toggleAskReview" >
+					<q-item style="padding:0px">
+						<q-item-section class="q-mx-md">Sections</q-item-section>
+						<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+							<q-btn flat color="secondary" @click="toggleAskReview" >
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Mark audit as ready for review</q-tooltip> 
+								<i class="fas fa-exclamation-triangle fa-lg"></i>
 							</q-btn>
 						</q-item-section>
-						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
-							<q-btn flat dense size="sm" color="warning" icon="fas fa-undo-alt" @click="toggleAskReview" >
+						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
+							<q-btn flat color="warning" @click="toggleAskReview" >
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Make changes to the audit</q-tooltip> 
+								<i class="fas fa-undo-alt fa-lg"></i>
 							</q-btn>
 						</q-item-section>
-						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.APPROVED].includes(frontEndAuditState)">
-							<q-btn flat dense size="sm" color="secondary" icon="fas fa-check-circle" @click="toggleApproval" >
+						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.APPROVED].includes(frontEndAuditState)">
+							<q-btn flat color="secondary" @click="toggleApproval" >
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Approve this report</q-tooltip> 
+								<i class="fas fa-check-circle fa-lg"></i>
 							</q-btn>
 						</q-item-section>
-						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
-							<q-btn flat dense size="sm" color="warning" icon="fas fa-times-circle" @click="toggleApproval" >
+						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
+							<q-btn flat color="warning" @click="toggleApproval" >
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Remove report approval</q-tooltip> 
+								<i class="fas fa-times-circle fa-lg"></i>
 							</q-btn>
 						</q-item-section>
-						<q-item-section side>
-							<q-btn flat dense size="sm" color="info" icon="fa fa-download" @click="generateReport">
+						<q-item-section side class="topButtonSection">
+							<q-btn flat color="info" @click="generateReport">
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
+								<i class="fa fa-download fa-lg"></i>
 							</q-btn>
 						</q-item-section>
 					</q-item>
@@ -511,8 +516,13 @@ export default {
 
 }
 
+.topButtonSection {
+    padding-left: 0px!important;
+	padding-right: 0px!important;
+}
+
 .topButton {
-    margin-right: 10px;
-    margin-left: 10px;
+	// margin-left:13px;
+	// margin-right:13px;
 }
 </style>
