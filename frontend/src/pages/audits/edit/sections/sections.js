@@ -16,6 +16,7 @@ export default {
         return {
             // Set audit ID
             auditId: null,
+            audit: {},
             section: {
                 field: "",
                 name: "",
@@ -23,7 +24,8 @@ export default {
             },
             sectionOrig: {},
             // List of CustomFields
-            customFields: []
+            customFields: [],
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -94,7 +96,8 @@ export default {
                 return AuditService.getSection(this.auditId, this.sectionId)
             })
             .then((data) => {
-                this.section = data.data.datas;
+                this.audit = data.data.datas;
+                this.section = this.audit.sections[0];
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.sectionOrig = this.$_.cloneDeep(this.section);                

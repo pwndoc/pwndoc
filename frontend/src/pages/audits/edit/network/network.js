@@ -3,6 +3,7 @@ import { Notify, Dialog } from 'quasar';
 import Breadcrumb from 'components/breadcrumb';
 
 import AuditService from '@/services/audit';
+import Utils from '@/services/utils';
 
 export default {
     props: {
@@ -10,6 +11,7 @@ export default {
     },
     data: () => {
         return {
+            auditId: null,
             audit: {
                 // scope: []
             },
@@ -32,7 +34,8 @@ export default {
                 page: 1,
                 rowsPerPage: 20,
                 sortBy: 'port'
-            }
+            },
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -43,7 +46,6 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getAuditNetwork();
-
         this.$socket.emit('menu', {menu: 'network', room: this.auditId});
 
         // save on ctrl+s

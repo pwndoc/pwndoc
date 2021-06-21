@@ -12,7 +12,6 @@ import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
-import UserService from '@/services/user'
 
 export default {
     props: {
@@ -296,6 +295,10 @@ export default {
                 const needle = Utils.normalizeString(val)
                 this.selectCompanies = this.companies.filter(v => Utils.normalizeString(v.name).indexOf(needle) > -1)
             })
+        },
+
+        isReviewerApproved(reviewer) {
+            return this.audit.approvals.find(r => r._id === reviewer._id);
         }
     }
 }

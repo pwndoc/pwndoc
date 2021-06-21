@@ -4,7 +4,7 @@ services:
     image: mongo
     container_name: mongo-pwndoc
     volumes:
-      - ./backend/mongo-data:/data/db
+      - mongo-data:/data/db
     restart: always
     ports:
       - 127.0.0.1:27017:27017
@@ -39,6 +39,9 @@ services:
       - 8443:8443
     networks:
       - backend
+
+volumes:
+  mongo-data:
 
 networks:
   backend:
