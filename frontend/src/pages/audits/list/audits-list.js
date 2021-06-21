@@ -4,10 +4,9 @@ import Breadcrumb from 'components/breadcrumb'
 
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
-import TemplateService from '@/services/template'
 import CompanyService from '@/services/company'
 import UserService from '@/services/user'
-import ConfigsService from '@/services/configs'
+import SettingsService from '@/services/settings'
 
 export default {
     data: () => {
@@ -17,8 +16,8 @@ export default {
             audits: [],
             // Loading state
             loading: true,
-            // Templates list
-            templates: [],
+            // AuditTypes list
+            auditTypes: [],
             // Companies list
             companies: [],
             // Languages availbable
@@ -53,11 +52,11 @@ export default {
             displayConnected: false,
             displayReadyForReview: false,
             // Errors messages
-            errors: {name: '', language: '', template: ''},
+            errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
             currentAudit: {name: '', language: '', template: ''},
-            // The application's public configs
-            configs: {}
+            // The application's public settings
+            settings: {}
         }
     },
 
@@ -73,7 +72,7 @@ export default {
 
         this.getAudits();
         this.getLanguages();
-        this.getTemplates();
+        this.getAuditTypes();
         this.getCompanies();
     },
 
@@ -88,10 +87,10 @@ export default {
             })
         },
 
-        getTemplates: function() {
-            TemplateService.getTemplates()
+        getAuditTypes: function() {
+            DataService.getAuditTypes()
             .then((data) => {
-                this.templates = data.data.datas
+                this.auditTypes = data.data.datas
             })
             .catch((err) => {
                 console.log(err)
@@ -110,7 +109,7 @@ export default {
         },
 
         isAuditApproved: function(audit) {      
-            return audit.approvals.length >= this.configs.minReviewers;
+            return audit.approvals.length >= this.settings.minReviewers;
         },
 
         getAudits: function() {
@@ -118,8 +117,8 @@ export default {
             AuditService.getAudits({findingTitle: this.search.finding})
             .then(async (data) => {
                 this.audits = data.data.datas
-                var configs = await this.getPublicConfigs();
-                this.configs = configs.data.datas;
+                var settings = await this.getPublicSettings();
+                this.settings = settings.data.datas;
                 this.audits.forEach((audit) => {
                     audit.isApproved = this.isAuditApproved(audit);
                 });
@@ -130,8 +129,8 @@ export default {
             })
         },
 
-        getPublicConfigs: async function() {
-            return await ConfigsService.getPublicConfigs();
+        getPublicSettings: async function() {
+            return await SettingsService.getPublicSettings();
         },
 
         
@@ -142,11 +141,11 @@ export default {
                 this.errors.name = "Name required";
             if (!this.currentAudit.language)
                 this.errors.language = "Language required";
-            if (!this.currentAudit.template)
-                this.errors.template = "Template required";
+            if (!this.currentAudit.auditType)
+                this.errors.auditType = "Assessment required";
                 
             
-            if (this.errors.name || this.errors.language || this.errors.template)
+            if (this.errors.name || this.errors.language || this.errors.auditType)
                 return;
 
             AuditService.createAudit(this.currentAudit)
@@ -246,14 +245,14 @@ export default {
         cleanErrors: function() {
             this.errors.name = '';
             this.errors.language = '';
-            this.errors.template = '';
+            this.errors.auditType = '';
         },
 
         cleanCurrentAudit: function() {
             this.cleanErrors();
             this.currentAudit.name = '';
             this.currentAudit.language = '';
-            this.currentAudit.template = '';
+            this.currentAudit.auditType = '';
         },
 
         // Convert language locale of audit for table display
@@ -271,33 +270,35 @@ export default {
             return result.join(', '); 
         },
 
+        isAuditCollaborator(user, audit) {
+            return audit.creator.id === user._id || audit.collaborators.some(collaborator => collaborator._id === user.id);
+        },
+
         customFilter: function(rows, terms, cols, getCellValue) {
-            var username = this.UserService.user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            const user = this.UserService.user;
+            var username = user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+
+            var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            var languageTerm = (terms.language)? terms.language.toLowerCase(): ""
+            var companyTerm = (terms.company)? terms.company.toLowerCase(): ""
+            var usersTerm = (terms.users || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            var dateTerm = (terms.date)? terms.date.toLowerCase(): ""
 
             return rows && rows.filter(row => {
                 var name = (row.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-
-                var language = (row.language)? this.convertLocale(row.language).toLowerCase(): ""
-                var languageTerm = (terms.language)? terms.language.toLowerCase(): ""
-
+                var language = (row.language)? row.language.toLowerCase(): ""
                 var companyName = (row.company)? row.company.name.toLowerCase(): ""
-                var companyTerm = (terms.company)? terms.company.toLowerCase(): ""
-
                 var users = this.convertParticipants(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                var usersTerm = (terms.users || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-
                 var date = (row.createdAt)? row.createdAt.split('T')[0]: "";
-                var dateTerm = (terms.date)? terms.date.toLowerCase(): ""
 
                 return name.indexOf(nameTerm) > -1 &&
                     language.indexOf(languageTerm) > -1 &&
-                    companyName.indexOf(companyTerm) > -1 &&
+                    (!companyTerm || companyTerm === companyName) &&
                     users.indexOf(usersTerm) > -1 &&
                     date.indexOf(dateTerm) > -1 &&
                     ((this.myAudits && users.indexOf(username) > -1) || !this.myAudits) &&
                     ((this.displayConnected && row.connected && row.connected.length > 0) || !this.displayConnected) &&
-                    ((this.displayReadyForReview && (row.isReadyForReview && !row.isApproved)) || !this.displayReadyForReview)
+                    ((this.displayReadyForReview && (!this.isAuditCollaborator(user, row) && row.isReadyForReview && !row.isApproved)) || !this.displayReadyForReview)
             })
         },
 

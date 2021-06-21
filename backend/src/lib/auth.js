@@ -54,19 +54,12 @@ var builtInRoles = {
             'vulnerability-updates:create',
             // Custom Fields
             'custom-fields:read',
-            //Configs
-            'configs:read-public'
+            // Settings
+            'settings:read-public'
         ]
     },
     admin: {
         allows: "*"
-    },
-    reviewer: {
-        // Like a user, but with different audit permissions (can review)
-        inherits: ["user"],
-        allows: [
-            "audits:review"
-        ]
     }
 }
 

@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');//.set('debug', true);
+const Settings = require('./settings');
 var Schema = mongoose.Schema;
 
 var Paragraph = {
@@ -8,8 +9,8 @@ var Paragraph = {
 
 var customField = {
     _id:        false,
-    customField:  {type: Schema.Types.ObjectId, ref: 'CustomField'},
-    text:       String
+    customField: {type: Schema.Types.Mixed, ref: 'CustomField'},
+    text:       Schema.Types.Mixed
 }
 
 var Finding = {
@@ -66,11 +67,10 @@ var AuditSchema = new Schema({
     findings:           [Finding],
     template:           {type: Schema.Types.ObjectId, ref: 'Template'},
     creator:            {type: Schema.Types.ObjectId, ref: 'User'},
-    sections:           [{field: String, name: String, text: String}],
+    sections:           [{field: String, name: String, text: String, customFields: [customField]}], // keep text for retrocompatibility
     customFields:       [customField],
-    isReadyForReview:   Boolean,
+    state:              { type: String, enum: ['EDIT', 'REVIEW', 'APPROVED'], default: 'EDIT'},
     approvals:          [{type: Schema.Types.ObjectId, ref: 'User'}],
-
 }, {timestamps: true});
 
 /*
@@ -83,12 +83,12 @@ AuditSchema.statics.getAudits = (isAdmin, userId, filters) => {
         var query = Audit.find(filters)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
-        query.populate('creator', '-_id username')
-        query.populate('collaborators', '-_id username')
-        query.populate('reviewers', '-_id username')
-        query.populate('approvals', '-_id username')
-        query.populate('company', '-_id name')
-        query.select('id name language creator collaborators company createdAt isReadyForReview')
+        query.populate('creator', 'id username')
+        query.populate('collaborators', 'id username')
+        query.populate('reviewers', 'id username')
+        query.populate('approvals', 'id username')
+        query.populate('company', 'id name')
+        query.select('id name language creator collaborators company createdAt isReadyForReview state')
         query.exec()
         .then((rows) => {
             resolve(rows)
@@ -117,7 +117,7 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
             path: 'findings',
             populate: {
                 path: 'customFields.customField',
-                select: 'label fieldType text displayFinding displayCategory'
+                select: 'label fieldType text'
             }
         })
         query.exec()
@@ -139,20 +139,78 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
 AuditSchema.statics.create = (audit, userId) => {
     return new Promise((resolve, reject) => {
         audit.creator = userId
-        var Template = mongoose.model('Template')
-        var query = Template.findById(audit.template)
-        return query.exec()
+        audit.sections = []
+        audit.customFields = []
+
+        var auditTypeSections = []
+        var customSections = []
+        var customFields = []
+        var AuditType = mongoose.model('AuditType')
+        AuditType.getByName(audit.auditType)
         .then((row) => {
             if (row) {
-                return new Audit(audit).save()              
+                auditTypeSections = row.sections
+                var auditTypeTemplate = row.templates.find(e => e.locale === audit.language)
+                if (auditTypeTemplate)
+                    audit.template = auditTypeTemplate.template
+                var Section = mongoose.model('CustomSection')
+                var CustomField = mongoose.model('CustomField')
+                var promises = []
+                promises.push(Section.getAll())
+                promises.push(CustomField.getAll())
+                return Promise.all(promises)
             }
             else
-                throw({fn: 'NotFound', message: 'Template not found'})
+                throw({fn: 'NotFound', message: 'AuditType not found'})
+        })
+        .then(resolved => {
+            customSections = resolved[0]
+            customFields = resolved[1]
+
+            customSections.forEach(section => { // Add sections with customFields (and default text) to audit
+                var tmpSection = {}
+                if (auditTypeSections.includes(section.field)) {
+                    tmpSection.field = section.field
+                    tmpSection.name = section.name
+                    tmpSection.customFields = []
+
+                    customFields.forEach(field => {
+                        field = field.toObject()
+                        if (field.display === 'section' && field.displaySub === tmpSection.name) {
+                            var fieldText = field.text.find(e => e.locale === audit.language)
+                            if (fieldText)
+                                fieldText = fieldText.value
+                            else
+                                fieldText = ""
+                            
+                            delete field.text
+                            tmpSection.customFields.push({customField: field, text: fieldText})
+                        }
+                    })
+                    audit.sections.push(tmpSection)
+                }
+            })
+
+            customFields.forEach(field => { // Add customFields (and default text) to audit
+                field = field.toObject()
+                if (field.display === 'general') {
+                    var fieldText = field.text.find(e => e.locale === audit.language)
+                    if (fieldText)
+                        fieldText = fieldText.value
+                    else
+                        fieldText = ""
+
+                    delete field.text
+                    audit.customFields.push({customField: field, text: fieldText})
+                }
+            })
+            return new Audit(audit).save()
         })
         .then((rows) => {
             resolve(rows)
         })
         .catch((err) => {
+            console.log(err)
             if (err.name === "ValidationError")
                 reject({fn: 'BadParameters', message: 'Audit validation failed'})
             else
@@ -198,7 +256,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
         query.populate('reviewers', 'username firstname lastname')
         query.populate('approvals', 'username firstname lastname')
         query.populate('company')
-        query.select('id name auditType location date date_start date_end client collaborators language scope.name template customFields, isReadyForReview')
+        query.select('id name auditType location date date_start date_end client collaborators language scope.name template customFields state')
         query.exec()
         .then((row) => {
             if (!row)
@@ -218,7 +276,11 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
 
 // Update audit general information
 AuditSchema.statics.updateGeneral = (isAdmin, auditId, userId, update) => {
-    return new Promise((resolve, reject) => { 
+    return new Promise(async(resolve, reject) => { 
+        if (update.company && update.company.name) {
+            var Company = mongoose.model("Company");
+            update.company = await Company.create(update.company)
+        }
         var query = Audit.findByIdAndUpdate(auditId, update)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
@@ -531,7 +593,13 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
 }
 
 AuditSchema.statics.updateApprovals = (isAdmin, auditId, userId, update) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+        var settings = await Settings.getSettings();
+        if (update.approvals.length >= settings.minReviewers) {
+            update.state = "APPROVED";
+        } else {
+            update.state = "REVIEW";
+        }
         var query = Audit.findByIdAndUpdate(auditId, update)
         query.nor([{creator: userId}, {collaborators: userId}]);
         if (!isAdmin)

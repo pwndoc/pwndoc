@@ -6,11 +6,6 @@
             "name": "pwndoc",
             "server": "mongo-pwndoc-dev",
             "port": "27017"
-        },
-        "configs": {
-            "mandatoryReview": false,
-            "minReviewers": 1,
-            "removeApprovalsUponUpdate": false
         }
     },
     "prod": {
@@ -20,11 +15,6 @@
             "name": "pwndoc",
             "server": "mongo-pwndoc",
             "port": "27017"
-        },
-        "configs": {
-            "mandatoryReview": false,
-            "minReviewers": 1,
-            "removeApprovalsUponUpdate": false
         }
     },
     "test": {
@@ -34,11 +24,6 @@
             "name": "pwndoc",
             "server": "mongo-pwndoc-test",
             "port": "27017"
-        },
-        "configs": {
-            "mandatoryReview": false,
-            "minReviewers": 1,
-            "removeApprovalsUponUpdate": false
         }
     }
 }

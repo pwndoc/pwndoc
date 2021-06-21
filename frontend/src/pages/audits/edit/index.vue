@@ -6,6 +6,26 @@
 				<q-list class="home-drawer">
 					<q-item>
 						<q-item-section>Sections</q-item-section>
+						<q-item-section side v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+							<q-btn flat dense size="sm" color="secondary" icon="fas fa-exclamation-triangle" @click="toggleAskReview" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Mark audit as ready for review</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
+							<q-btn flat dense size="sm" color="warning" icon="fas fa-undo-alt" @click="toggleAskReview" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Make changes to the audit</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.APPROVED].includes(frontEndAuditState)">
+							<q-btn flat dense size="sm" color="secondary" icon="fas fa-check-circle" @click="toggleApproval" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Approve this report</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
+							<q-btn flat dense size="sm" color="warning" icon="fas fa-times-circle" @click="toggleApproval" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Remove report approval</q-tooltip> 
+							</q-btn>
+						</q-item-section>
 						<q-item-section side>
 							<q-btn flat dense size="sm" color="info" icon="fa fa-download" @click="generateReport">
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
@@ -13,12 +33,7 @@
 						</q-item-section>
 					</q-item>
 
-					<q-separator />
-
-					<q-item 
-					:to='"/audits/"+auditId+"/general"'
-					class="q-py-lg"
-					>
+					<q-item :to='"/audits/"+auditId+"/general"'>
 						<q-item-section avatar>
 							<q-icon name="fa fa-cog"></q-icon>
 						</q-item-section>
@@ -29,11 +44,9 @@
 						<div v-for="(user,idx) in generalUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
 					</div>
 
-					<q-separator />
-
 					<q-item
+					v-if="!currentAuditType || !currentAuditType.hidden.includes('network')"
 					:to="'/audits/'+auditId+'/network'"
-					class="q-py-lg"
 					>
 						<q-item-section avatar>
 							<q-icon name="fa fa-globe"></q-icon>
@@ -45,85 +58,57 @@
 						<div v-for="(user,idx) in networkUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
 					</div>
 
-					<q-separator />
-
-					<q-item class="q-py-lg">
-						<q-item-section avatar>
-							<q-icon name="fa fa-list"></q-icon>
-						</q-item-section>
-						<q-item-section>Findings ({{audit.findings.length || 0}})</q-item-section>
-						<q-item-section avatar>
-							<q-btn
-							@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
-							icon="add"
-							round
-							dense
-							color="secondary"
-							v-if="isEditing"
-							/>
-						</q-item-section>
-					</q-item>
-					
-					<div v-for="categoryFindings of findingList" :key="categoryFindings.category">
-						<q-item-label header>{{categoryFindings.category}}</q-item-label>
-						<q-list no-border v-for="finding of categoryFindings.findings" :key="finding._id">
-							<q-item
-							dense
-							class="cursor-pointer"
-							:to="'/audits/'+auditId+'/findings/'+finding._id"
-							>
-								<q-item-section side>
-									<q-chip
-										class="text-white"
-										size="sm"
-										square
-										:color="getFindingColor(finding)"
-									>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
-								</q-item-section>
-								<q-item-section>
-									<span>{{finding.title}}</span>
-								</q-item-section>
-								<q-item-section side v-if="finding.status === 0">
-									<q-icon name="check" color="green" />
-								</q-item-section>
-							</q-item>
-							<div class="row">
-								<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
-							</div>
-						</q-list>
+					<div v-if="!currentAuditType || !currentAuditType.hidden.includes('findings')">
+						<q-separator class="q-my-sm" />
+						<q-item>
+							<q-item-section avatar>
+								<q-icon name="fa fa-list"></q-icon>
+							</q-item-section>
+							<q-item-section>Findings ({{audit.findings.length || 0}})</q-item-section>
+							<q-item-section avatar>
+								<q-btn
+								@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
+								icon="add"
+								round
+								dense
+								color="secondary"
+								v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+								/>
+							</q-item-section>
+						</q-item>
+						
+						<div v-for="categoryFindings of findingList" :key="categoryFindings.category">
+							<q-item-label header>{{categoryFindings.category}}</q-item-label>
+							<q-list no-border v-for="finding of categoryFindings.findings" :key="finding._id">
+								<q-item
+								dense
+								class="cursor-pointer"
+								:to="'/audits/'+auditId+'/findings/'+finding._id"
+								>
+									<q-item-section side>
+										<q-chip
+											class="text-white"
+											size="sm"
+											square
+											:color="getFindingColor(finding)"
+										>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
+									</q-item-section>
+									<q-item-section>
+										<span>{{finding.title}}</span>
+									</q-item-section>
+									<q-item-section side v-if="finding.status === 0">
+										<q-icon name="check" color="green" />
+									</q-item-section>
+								</q-item>
+								<div class="row">
+									<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
+								</div>
+							</q-list>
+						</div>
+						<q-separator class="q-my-sm" />
 					</div>
-
-					<q-separator class="q-mt-lg" />
-
-					<q-item class="q-py-lg">
-						<q-item-section>Custom Sections</q-item-section>
-						<q-item-section avatar>
-							<q-btn
-							round
-							dense
-							icon="add"
-							color="secondary"
-							v-if="isEditing"
-							>
-								<q-menu v-if="sections.length === 0" anchor="top right" self="top left">
-									<q-item v-close-popup>
-										<q-item-section>No custom sections defined yet</q-item-section>
-									</q-item>
-								</q-menu>
-								<q-menu v-else anchor="top right" self="top left">
-									<q-list separator>
-										<q-item clickable v-close-popup v-for="section of sections" :key="section.field" @click="createSection(section)">
-											<q-item-section>{{section.name}}</q-item-section>
-										</q-item>
-									</q-list>
-								</q-menu>
-							</q-btn>
-						</q-item-section>
-					</q-item>
 					<q-list v-for="section of audit.sections" :key="section._id">
-						<q-item
-						:to="'/audits/'+auditId+'/sections/'+section._id"
-						>
+						<q-item :to="'/audits/'+auditId+'/sections/'+section._id">
 							<q-item-section avatar>
 								<q-icon :name="getSectionIcon(section)"></q-icon>
 							</q-item-section>
@@ -134,7 +119,6 @@
 						<div class="row">
 							<div v-for="(user,idx) in sectionUsers" :key="idx" v-if="user.section === section._id" class="col multi-colors-bar" :style="{background:user.color}" />
 						</div>
-						<q-separator />
 					</q-list>
 				</q-list>
 			</template>
@@ -163,7 +147,7 @@
 			
 		</q-splitter>
 	</q-drawer>
-	<router-view :key="$route.fullPath" :isReviewing="isReviewing" :isEditing="isEditing" :isApproved="isApproved" :isReadyForReview="isReadyForReview" @toggleApproval="toggleApproval" @toggleAskReview="toggleAskReview" :fullyApproved="fullyApproved"/>
+	<router-view :key="$route.fullPath" :frontEndAuditState="frontEndAuditState"/>
 	</div>
 </template>
 
@@ -173,31 +157,36 @@ import { Notify } from 'quasar';
 import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
-import ConfigsService from '@/services/configs'
+import SettingsService from '@/services/settings'
+import Utils from '@/services/utils';
 
 export default {
 		data () {
 				return {
-						auditId: "",
-						findings: [],
-						users: [],
-						audit: {findings: {}},
-						sections: [],
-						splitterRatio: 80,
-						loading: true,
-						vulnCategories: [],
-						isReviewing: false,
-						isEditing: false,
-						isApproved: false,
-						isReadyForReview: false,
-						fullyApproved: false,
-						// The application's public configs
-            			configs: {}
+					auditId: "",
+					findings: [],
+					users: [],
+					audit: {findings: {}},
+					sections: [],
+					splitterRatio: 80,
+					loading: true,
+					vulnCategories: [],
+					customFields: [],
+					auditTypes: [],
+					hasAlreadyApproved: false,
+					state: "EDIT",
+					fullyApproved: false,
+					// The application's public settings
+            		settings: {},
+					frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
+					AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
 				}
 		},
 
 		created: function() {
 			this.auditId = this.$route.params.auditId;
+			this.getCustomFields();
+			this.getAuditTypes();
 			this.getAudit(); // Calls getSections				
 		},
 
@@ -224,17 +213,14 @@ export default {
 						return {category: key, findings: value}
 				})
 				.value()
+			},
+
+			currentAuditType: function() {
+				return this.auditTypes.find(e => e.name === this.audit.auditType)
 			}
 		},
 
 		methods: {
-			toggleApproval: function() {
-				this.isApproved = !this.isApproved;
-			},
-			toggleAskReview: function() {
-				this.isReadyForReview = !this.isReadyForReview;
-			},
-
 			getFindingColor: function(finding) {
 				if (finding.cvssSeverity && finding.cvssSeverity !== "None") {
 					if (finding.cvssSeverity === "Low") return "green"
@@ -274,31 +260,57 @@ export default {
 				})
 			},
 			// Tells the UI if the user is supposed to be reviewing the audit
-			isUserReviewing: function() {
+			isUserAReviewer: function() {
 				var isAuthor = this.audit.creator._id === UserService.user.id;
 				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
 				var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
 				var hasReviewAll = UserService.isAllowed('audits:review-all');
-				this.isReviewing = !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
+				return !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
 			},
 
 			// Tells the UI if the user is supposed to be editing the audit
-			isUserEditing: function() {
+			isUserAnEditor: function() {
 				var isAuthor = this.audit.creator._id === UserService.user.id;
 				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
 				var hasUpdateAll = UserService.isAllowed('audits:update-all');
-				this.isEditing = isAuthor || isCollaborator || hasUpdateAll;
+				return (isAuthor || isCollaborator || hasUpdateAll);
+			},
+
+			userHasAlreadyApproved: function() {
+				return this.audit.approvals.some((element) => element._id === UserService.user.id);
+			},
+
+			getUIState: function() {
+				if(this.audit.state === "EDIT") {
+					this.frontEndAuditState = this.isUserAnEditor() ? Utils.AUDIT_VIEW_STATE.EDIT : Utils.AUDIT_VIEW_STATE.EDIT_READONLY;
+				} 
+				else if (this.audit.state === "REVIEW") {
+					this.frontEndAuditState = this.isUserAReviewer() ? Utils.AUDIT_VIEW_STATE.REVIEW : Utils.AUDIT_VIEW_STATE.REVIEW_READONLY;
+					if (!this.isUserAReviewer()) {
+						this.frontEndAuditState = this.isUserAnEditor()? Utils.AUDIT_VIEW_STATE.REVIEW_EDITOR : Utils.AUDIT_VIEW_STATE.REVIEW_READONLY;
+						return;
+					}
+					if (this.isUserAnEditor()) {
+						this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN;
+						return;
+					}
+					this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW;
+				} 
+				else if (this.audit.state === "APPROVED") {
+					if (!this.isUserAReviewer()) {
+						this.frontEndAuditState = Utils.AUDIT_VIEW_STATE.APPROVED_READONLY;
+					} else {
+						this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.APPROVED_APPROVED : Utils.AUDIT_VIEW_STATE.APPROVED
+					}
+				}
 			},
 
 			getAudit: function() {
 				AuditService.getAudit(this.auditId)
 				.then((data) => {
-					this.audit = data.data.datas
-					this.isUserReviewing();
-					this.isUserEditing();
-					this.isReadyForReview = this.audit.isReadyForReview;
-					this.isApproved = this.audit.approvals.some((element) => element._id === UserService.user.id);
-					this.getPublicConfigs();
+					this.audit = data.data.datas;
+					this.getUIState();
+					this.getPublicSettings();
 					this.getSections()
 					if (this.loading)
 						this.handleSocket()
@@ -312,8 +324,18 @@ export default {
 				})
 			},
 
+			getCustomFields: function() {
+				DataService.getCustomFields()
+				.then((data) => {
+					this.customFields = data.data.datas;
+				})
+				.catch((err) => {
+					console.log(err);
+				})
+			},
+
 			getSections: function() {
-				DataService.getSectionsByLanguage(this.audit.language)
+				DataService.getSections()
 				.then((data) => {
 					this.sections = data.data.datas;
 				})
@@ -329,15 +351,13 @@ export default {
 				return 'notes'
 			},
 
-			createSection: function(section) {
-				AuditService.createSection(this.auditId, section)
+			getAuditTypes: function() {
+				DataService.getAuditTypes()
+				.then((data) => {
+					this.auditTypes = data.data.datas;
+				})
 				.catch((err) => {
-					Notify.create({
-						message: err.response.data.datas,
-						color: 'negative',
-						textColor: 'white',
-						position: 'top-right'
-					})
+					console.log(err);
 				})
 			},
 
@@ -390,19 +410,52 @@ export default {
 			},
 
 			isAuditFullyApproved: function() {
-				this.fullyApproved = this.audit.approvals.length >= this.configs.minReviewers;
+				this.fullyApproved = this.audit.approvals.length >= this.settings.minReviewers;
         	},
 
-			getPublicConfigs: function() {
-				ConfigsService.getPublicConfigs()
+			getPublicSettings: function() {
+				SettingsService.getPublicSettings()
 				.then((data) => {
-					this.configs = data.data.datas;
+					this.settings = data.data.datas;
 					this.isAuditFullyApproved();
 				})
 				.catch((err) => {
 					console.log(err);
 				});
 			},
+
+			toggleAskReview: function() {
+				AuditService.updateAuditGeneral(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
+				.then(() => {
+					this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
+					this.auditOrig.state = this.audit.state;
+					this.getUIState();
+					Notify.create({
+						message: 'Audit review status updated successfully',
+						color: 'positive',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
+				.catch((err) => {             
+					console.log(err.response)
+				});
+			},
+
+			toggleApproval: function() {
+				AuditService.toggleApproval(this.auditId)
+				.then(() => {
+					Notify.create({
+						message: 'Audit approval updated successfully',
+						color: 'positive',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
+				.catch((err) => {          
+					console.log(err.response)
+				});
+			}
 		}
 }
 </script>
@@ -456,5 +509,10 @@ export default {
 .edit-drawer {
 	// height: 70%;
 
+}
+
+.topButton {
+    margin-right: 10px;
+    margin-left: 10px;
 }
 </style>

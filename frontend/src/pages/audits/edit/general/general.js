@@ -16,11 +16,7 @@ import UserService from '@/services/user'
 
 export default {
     props: {
-        isReviewing: Boolean,
-		isEditing: Boolean,
-		isApproved: Boolean,
-		isReadyForReview: Boolean,
-        fullyApproved: Boolean
+        frontEndAuditState: Number
     },
     data: () => {
         return {
@@ -43,7 +39,6 @@ export default {
                 language: "",
                 template: "",
                 customFields: [],
-                isReadyForReview: false,
                 approvals: []
             },
             auditOrig: {},
@@ -57,6 +52,8 @@ export default {
             reviewers: [],
             // List of existing Companies
             companies: [],
+            // List of filtered companies
+            selectCompanies: [],
             // List of existing Templates
             templates: [],
             // List of existing Languages
@@ -64,7 +61,8 @@ export default {
             // List of existing audit types
             auditTypes: [],
             // List of CustomFields
-            customFields: []
+            customFields: [],
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -81,8 +79,6 @@ export default {
         this.getTemplates();
         this.getLanguages();
         this.getAuditTypes();
-        this.isApprovedCopy = this.isApproved;
-        this.isReadyForReviewCopy = this.isReadyForReview;
 
         this.$socket.emit('menu', {menu: 'general', room: this.auditId});
 
@@ -110,12 +106,6 @@ export default {
         }
     },
 
-    computed: {
-        auditTypesLang: function() {
-            return this.auditTypes.filter(type => type.locale === this.audit.language)
-        }
-    },
-
     methods: {
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
@@ -133,7 +123,6 @@ export default {
             })
             .then((data) => {
                 this.audit = data.data.datas;
-                this.audit.customFields = Utils.filterCustomFields('audit-general', '', this.customFields, this.audit.customFields)
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 this.getCollaborators();
                 this.getReviewers();
@@ -182,7 +171,6 @@ export default {
             ClientService.getClients()
             .then((data) => {
                 this.clients = data.data.datas;
-                this.selectClients = this.clients;
                 this.getCompanies();
             })
             .catch((err) => {
@@ -264,7 +252,8 @@ export default {
         },
 
         // Filter client options when selecting company
-        filterClients: function(value) {
+        filterClients: function() {
+            this.audit.client = null
             if (this.audit.company) {
                 this.selectClients = [];
                 this.clients.map(client => {
@@ -275,10 +264,10 @@ export default {
                 this.selectClients = this.clients;
         },
 
-        // Filter company options when selecting client 
-        filterCompany: function(value) {
+        // Set Company when selecting client 
+        setCompanyFromClient: function(value) {
             if (value && !value.company) {
-                this.audit.company = {};
+                this.audit.company = null;
             }
             else if (value) {
                 for (var i=0; i<this.companies.length; i++) {
@@ -290,39 +279,23 @@ export default {
             }
         },
 
-        toggleAskReview: function() {
-            AuditService.updateAuditGeneral(this.auditId, { isReadyForReview: !this.audit.isReadyForReview })
-            .then(() => {
-                this.$emit('toggleAskReview');
-                this.audit.isReadyForReview = !this.audit.isReadyForReview;
-                this.auditOrig.isReadyForReview = this.audit.isReadyForReview;
-                Notify.create({
-                    message: 'Audit review status updated successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
-                })
-            })
-            .catch((err) => {             
-                console.log(err.response)
-            });
+        createSelectCompany: function(val, done) {
+            var index = this.companies.findIndex(e => Utils.normalizeString(e.name) === Utils.normalizeString(val))
+            if (index > -1)
+                done(this.companies[index], 'add-unique')
+            else
+                done(val, 'add-unique')
         },
 
-        toggleApproval: function() {
-            AuditService.toggleApproval(this.auditId)
-            .then(() => {
-                this.$emit('toggleApproval');
-
-                Notify.create({
-                    message: 'Audit approval updated successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
-                })
+        filterSelectCompany (val, update) {   
+            if (val === '') {
+                update(() => this.selectCompanies = this.companies)
+                return
+              }
+            update(() => {
+                const needle = Utils.normalizeString(val)
+                this.selectCompanies = this.companies.filter(v => Utils.normalizeString(v.name).indexOf(needle) > -1)
             })
-            .catch((err) => {          
-                console.log(err.response)
-            });
         }
     }
 }

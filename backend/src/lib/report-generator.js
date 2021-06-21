@@ -2,14 +2,14 @@ var fs = require('fs');
 var Docxtemplater = require('docxtemplater');
 var JSZip = require('jszip');
 var expressions = require('angular-expressions');
-var ImageModule = require('docxtemplater-image-module-free');
+var ImageModule = require('docxtemplater-image-module-pwndoc');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
 var html2ooxml = require('./html2ooxml');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
-var reportConfig = require('./report.json');
+var Settings = require('mongoose').model('Settings');
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
@@ -18,6 +18,8 @@ async function generateDoc(audit) {
     var content = fs.readFileSync(templatePath, "binary");
 
     var zip = new JSZip(content);
+
+    var settings = await Settings.getSettings();
 
     var opts = {};
     // opts.centered = true;
@@ -57,9 +59,18 @@ async function generateDoc(audit) {
         }
         return [0,0]
     }
-    var imageModule = new ImageModule(opts);
+
+    if (settings.imageBorder && settings.imageBorderColor)
+        opts.border = settings.imageBorderColor.replace('#', '')
+
+    try {
+        var imageModule = new ImageModule(opts);
+    }
+    catch(err) {
+        console.log(err)
+    }
     var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
-    cvssHandle(preppedAudit);
+    cvssHandle(preppedAudit, settings);
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
     try {
@@ -201,13 +212,13 @@ var angularParser = function(tag) {
 }
 
 // For each finding, add cvssColor, cvssObj and criteria colors parameters
-function cvssHandle(data) {
+function cvssHandle(data, settings) {
     // Header title colors
-    var noneColor = reportConfig.cvss_colors.none_color; //default of blue ("4A86E8")
-    var lowColor = reportConfig.cvss_colors.low_color; //default of green ("008000")
-    var mediumColor = reportConfig.cvss_colors.medium_color; //default of yellow ("f9a009")
-    var highColor = reportConfig.cvss_colors.high_color; //default of red ("fe0000")
-    var criticalColor = reportConfig.cvss_colors.critical_color; //default of black ("212121")
+    var noneColor = settings.cvssColors.noneColor.replace('#', ''); //default of blue ("#4A86E8")
+    var lowColor = settings.cvssColors.lowColor.replace('#', ''); //default of green ("#008000")
+    var mediumColor = settings.cvssColors.mediumColor.replace('#', ''); //default of yellow ("#f9a009")
+    var highColor = settings.cvssColors.highColor.replace('#', ''); //default of red ("#fe0000")
+    var criticalColor = settings.cvssColors.criticalColor.replace('#', ''); //default of black ("#212121")
 
     var cellNoneColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + noneColor + '"/></w:tcPr>';
     var cellLowColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColor+'"/></w:tcPr>';
@@ -305,10 +316,10 @@ async function prepAuditData(data) {
             var fieldType = field.customField.fieldType
             var label = field.customField.label
 
-            if (fieldType === 'input')
-                result[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
-            else if (fieldType === 'text')
+            if (fieldType === 'text')
                 result[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = await splitHTMLParagraphs(field.text)
+            else if (fieldType !== 'space')
+                result[_.deburr(label.toLowerCase()).replace(/\s/g, '')] = field.text
         }
     }
 
@@ -373,10 +384,10 @@ async function prepAuditData(data) {
                     var fieldType = field.fieldType
                     var label = field.label
                 }
-                if (fieldType === 'input')
-                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
-                else if (fieldType === 'text')
+                if (fieldType === 'text')
                     tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = await splitHTMLParagraphs(field.text)
+                else if (fieldType !== 'space')
+                    tmpFinding[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
             }
         }
         result.findings.push(tmpFinding)
@@ -391,12 +402,24 @@ async function prepAuditData(data) {
     }
 
     for (section of data.sections) {
-        result[section.field] = {
-            name: section.name,
-            text: await splitHTMLParagraphs(section.text) 
+        var formatSection = { 
+            name: section.name
         }
+        if (section.text) // keep text for retrocompatibility
+            formatSection.text = await splitHTMLParagraphs(section.text)
+        else if (section.customFields) {
+            for (field of section.customFields) {
+                var fieldType = field.customField.fieldType
+                var label = field.customField.label
+                if (fieldType === 'text')
+                    formatSection[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = await splitHTMLParagraphs(field.text)
+                else if (fieldType !== 'space')
+                    formatSection[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
+            }
+        }
+        result[section.field] = formatSection
     }
-
+    
     return result
 }
 

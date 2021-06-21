@@ -1,12 +1,12 @@
 <div>
 <div class="row">
     <div v-if="languages.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-        <p>No languages are defined. </br> Please create Languages in <a href="/datas/custom">Datas -> Custom Datas -> Languages</a></p>
+        <p>No languages are defined. </br> Please create Languages in <a href="/data/custom">Datas -> Custom Datas -> Languages</a></p>
     </div>
-    <div v-if="templates.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-        <p>No templates are defined. </br> Please create Templates in <a href="/datas/templates">Datas -> Templates</a></p>
+    <div v-if="auditTypes.length === 0" class="col-md-4 offset-md-4 q-mt-md">
+        <p>No Audit Types are defined. </br> Please create Audit Types in <a href="/data/custom">Datas -> Custom</a></p>
     </div>
-    <div v-if="languages.length > 0 && templates.length > 0" class="col-md-8 col-12 offset-md-2 q-mt-md">
+    <div v-if="languages.length > 0 && auditTypes.length > 0" class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
             class="sticky-header-table"
             card-class="bg-grey-1"
@@ -39,7 +39,7 @@
                 </q-input>
                 <q-toggle label="My Audits" v-model="myAudits" />
                 <q-toggle v-if="UserService.isAllowed('audits:users-connected')" label="Users Connected" v-model="displayConnected" />
-                <q-toggle v-if="UserService.isAllowed('audits:review') || UserService.isAllowed('audits:review-all')" label="Ready for review" v-model="displayReadyForReview" />
+                <q-toggle v-if="UserService.isAllowed('audits:review') || UserService.isAllowed('audits:review-all')" label="Awaiting my review" v-model="displayReadyForReview" />
                 <q-space />
                 <q-btn 
                 color="secondary"
@@ -123,14 +123,14 @@
                 </q-chip>
             </q-td>
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                <q-icon v-if="props.row.isApproved" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button">
+                <q-icon v-if="props.row.state === 'APPROVED'" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button">
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Audit is approved</q-tooltip> 
                 </q-icon>
-                <q-icon v-if="!props.row.isApproved && props.row.isReadyForReview" size="sm" flat color="warning" name="fas fa-exclamation-triangle" class="icon-next-to-button">
+                <q-icon v-if="props.row.state !== 'APPROVED' && props.row.state === 'REVIEW'" size="sm" flat color="warning" name="fas fa-exclamation-triangle" class="icon-next-to-button">
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Audit is ready to be reviewed</q-tooltip> 
                 </q-icon>
                 <!-- Taking up space to keep the alignment-->
-                <q-icon v-if="!props.row.isApproved && !props.row.isReadyForReview" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button invisible">
+                <q-icon v-if="props.row.state !== 'APPROVED' && props.row.state !== 'REVIEW'" size="sm" flat color="positive" name="far fa-check-circle" class="icon-next-to-button invisible">
                 </q-icon>
                 <q-btn size="sm" flat color="primary" :to="'/audits/'+props.row._id" icon="fa fa-edit">
 					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit Audit</q-tooltip> 
@@ -183,6 +183,18 @@
             @keyup.enter="createAudit()"
             v-model="currentAudit.name"
             />
+            <q-select
+            label="Select Assessment *"
+            :error="!!errors.auditType"
+            :error-message="errors.auditType"
+            v-model="currentAudit.auditType"
+            :options="auditTypes"
+            option-value="name"
+            option-label="name"
+            emit-value
+            map-options
+            options-sanitize
+            /> 
             <q-select 
             label="Select Language *"
             :error="!!errors.language"
@@ -195,18 +207,6 @@
             map-options
             options-sanitize
             />
-            <q-select
-            label="Select Template *"
-            :error="!!errors.template"
-            :error-message="errors.template"
-            v-model="currentAudit.template"
-            :options="templates"
-            option-value="_id"
-            option-label="name"
-            emit-value
-            map-options
-            options-sanitize
-            /> 
         </q-card-section>
 
         <q-separator />

@@ -1,5 +1,6 @@
 <div>
-<breadcrumb buttons :title="$parent.audit.name" :approved="fullyApproved">
+
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :approved="frontEndAuditState >= AUDIT_VIEW_STATE.APPROVED && frontEndAuditState <= AUDIT_VIEW_STATE.APPROVED_READONLY">
     <div slot="buttons">
         <q-btn-dropdown 
         class="q-mr-sm" 
@@ -8,7 +9,7 @@
         color="grey-4" 
         text-color="black"
         auto-close
-        v-if="this.isEditing"
+        v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
         >
             <q-list>
                 <q-item clickable @click="$refs.nmapFile.click()">
@@ -42,7 +43,7 @@
                 </q-item>
             </q-list>
         </q-btn-dropdown>
-        <q-btn v-if="this.isEditing" color="positive" label="Save (ctrl+s)" no-caps @click="updateAuditNetwork" />
+        <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" label="Save (ctrl+s)" no-caps @click="updateAuditNetwork" />
     </div>
 </breadcrumb>
 

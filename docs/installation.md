@@ -38,10 +38,7 @@ docker-compose up -d --build
 ```
 
 Application is accessible through https://localhost:8443  
-API is accessible through https://localhost:4242/api
-
-!> When using Firefox, a certificate exception must be added for the backend. For that go to https://localhost:4242/api/users/init
-
+API is accessible through https://localhost:8443/api
 ## Development
 
 For development purposes, specific docker-compose file can be used in each folder (backend/frontend).
@@ -69,8 +66,8 @@ Remove containers
 docker-compose -f backend/docker-compose.dev.yml down
 ```
 
-Application is accessible through http://localhost:8081  
-API is accessible through https://localhost:5252/api
+Application is accessible through https://localhost:8081  
+API is accessible through https://localhost:8081/api
 
 ## Tests
 
