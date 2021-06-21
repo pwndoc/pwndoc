@@ -430,7 +430,7 @@ export default {
 			},
 
 			toggleAskReview: function() {
-				AuditService.updateAuditGeneral(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
+				AuditService.updateReadyForReview(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
 				.then(() => {
 					this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
 					this.auditOrig.state = this.audit.state;
@@ -519,10 +519,5 @@ export default {
 .topButtonSection {
     padding-left: 0px!important;
 	padding-right: 0px!important;
-}
-
-.topButton {
-	// margin-left:13px;
-	// margin-right:13px;
 }
 </style>
