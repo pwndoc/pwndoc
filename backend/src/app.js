@@ -10,7 +10,7 @@ var cookieParser = require('cookie-parser')
 
 // Get configuration
 var env = process.env.NODE_ENV || 'dev';
-var config = require('./config.json')[env];
+var config = require('./config/config.json')[env];
 global.__basedir = __dirname;
 
 // Database connection

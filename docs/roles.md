@@ -55,7 +55,7 @@ This role has full permissions access
 
 ## Create additional Roles
 
-Custom roles can be defined in `backend/src/lib/roles.json`
+Custom roles can be defined in `backend/src/config/roles.json`
 The format is:
 
 ```

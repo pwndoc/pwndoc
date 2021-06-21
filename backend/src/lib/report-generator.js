@@ -9,7 +9,7 @@ var utils = require('./utils');
 var html2ooxml = require('./html2ooxml');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
-var reportConfig = require('./report.json');
+var reportConfig = require('../config/report.json');
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
@@ -19,7 +19,7 @@ async function generateDoc(audit) {
 
     var zip = new JSZip(content);
 
-    var settings = JSON.parse(fs.readFileSync(`${__basedir}/lib/app-settings.json`));
+    var settings = JSON.parse(fs.readFileSync(`${__basedir}/config/app-settings.json`));
 
     var opts = {};
     // opts.centered = true;
