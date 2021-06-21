@@ -17,6 +17,7 @@
             v-model="section.customFields" 
             custom-element="QCardSection" 
             no-sync-editor
+            :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
             :locale="$parent.audit.language"
             />
         </q-card>
