@@ -88,7 +88,7 @@ AuditSchema.statics.getAudits = (isAdmin, userId, filters) => {
         query.populate('reviewers', 'id username firstname lastname')
         query.populate('approvals', 'id username firstname lastname')
         query.populate('company', 'id name')
-        query.select('id name language creator collaborators company createdAt isReadyForReview state')
+        query.select('id name language creator collaborators company createdAt state')
         query.exec()
         .then((rows) => {
             resolve(rows)
@@ -303,7 +303,7 @@ AuditSchema.statics.getNetwork = (isAdmin, auditId, userId) => {
         var query = Audit.findById(auditId)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
-        query.select('id scope approvals isReadyForReview')
+        query.select('id scope approvals state')
         query.populate('approvals', 'username firstname lastname')
         query.exec()
         .then((row) => {
@@ -520,7 +520,7 @@ AuditSchema.statics.getSection = (isAdmin, auditId, userId, sectionId) => {
         })
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
-        query.select('id sections approvals isReadyForReview')
+        query.select('id sections approvals state')
         query.populate('approvals', 'username firstname lastname')
         query.exec()
         .then((row) => {
