@@ -5,6 +5,7 @@ import Breadcrumb from 'components/breadcrumb';
 import CustomFields from 'components/custom-fields';
 
 import AuditService from '@/services/audit';
+import SettingsService from '@/services/settings';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
@@ -16,6 +17,8 @@ export default {
         return {
             // Set audit ID
             auditId: null,
+            audit: {},
+            settings: {},
             section: {
                 field: "",
                 name: "",
@@ -37,6 +40,7 @@ export default {
         this.auditId = this.$route.params.auditId;
         this.sectionId = this.$route.params.sectionId;
         this.getSection();
+        this.getSettings();
 
         this.$socket.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
 
@@ -94,7 +98,8 @@ export default {
                 return AuditService.getSection(this.auditId, this.sectionId)
             })
             .then((data) => {
-                this.section = data.data.datas;
+                this.audit = data.data.datas;
+                this.section = this.audit.sections[0];
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.sectionOrig = this.$_.cloneDeep(this.section);                
@@ -145,6 +150,10 @@ export default {
                 return true
 
             return false
+        },
+
+        async getSettings() {
+            this.settings = (await SettingsService.getSettings()).data.datas;
         }
     }
 }

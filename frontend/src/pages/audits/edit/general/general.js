@@ -7,6 +7,7 @@ import CustomFields from 'components/custom-fields'
 import AuditService from '@/services/audit';
 import ClientService from '@/services/client';
 import CompanyService from '@/services/company';
+import SettingsService from '@/services/settings';
 import CollabService from '@/services/collaborator';
 import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
@@ -62,7 +63,9 @@ export default {
             auditTypes: [],
             // List of CustomFields
             customFields: [],
-            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+            // Public settings
+            settings: {}
         }
     },
 
@@ -75,6 +78,7 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getAuditGeneral();
+        this.getSettings();
         this.getClients();
         this.getTemplates();
         this.getLanguages();
@@ -296,6 +300,49 @@ export default {
                 const needle = Utils.normalizeString(val)
                 this.selectCompanies = this.companies.filter(v => Utils.normalizeString(v.name).indexOf(needle) > -1)
             })
+        },
+
+        toggleAskReview: function() {
+            AuditService.updateAuditGeneral(this.auditId, { isReadyForReview: !this.audit.isReadyForReview })
+            .then(() => {
+                this.$emit('toggleAskReview');
+                this.audit.isReadyForReview = !this.audit.isReadyForReview;
+                this.auditOrig.isReadyForReview = this.audit.isReadyForReview;
+                Notify.create({
+                    message: 'Audit review status updated successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {             
+                console.log(err.response)
+            });
+        },
+
+        toggleApproval: function() {
+            AuditService.toggleApproval(this.auditId)
+            .then(() => {
+                this.$emit('toggleApproval');
+
+                Notify.create({
+                    message: 'Audit approval updated successfully',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {          
+                console.log(err.response)
+            });
+        },
+
+        isReviewerApproved(reviewer) {
+            return this.audit.approvals.find(r => r._id === reviewer._id);
+        },
+
+        async getSettings() {
+            this.settings = (await SettingsService.getSettings()).data.datas;
         }
     }
 }

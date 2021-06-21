@@ -1,5 +1,6 @@
 import { Dialog, Notify } from 'quasar';
 
+import AuditStateIcon from 'components/audit-state-icon'
 import Breadcrumb from 'components/breadcrumb'
 
 import AuditService from '@/services/audit'
@@ -61,6 +62,7 @@ export default {
     },
 
     components: {
+        AuditStateIcon,
         Breadcrumb
     },
 
