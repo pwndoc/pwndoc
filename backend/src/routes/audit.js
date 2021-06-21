@@ -454,8 +454,20 @@ module.exports = function(app, io) {
             Response.Unauthorized(res, "The audit is not in the proper state for this action.");
             return;
         }
-        
+
         if (req.body.state != undefined && (req.body.state === "EDIT" || req.body.state === "REVIEW")) update.state = req.body.state;
+
+        if (update.state === "EDIT") {
+            var newApprovalsArray = [];
+            if (audit.approvals) {
+                audit.approvals.forEach((approval) => {
+                    if (approval._id.toString() !== req.decodedToken.id) {
+                        newApprovalsArray.push(approval);
+                    }
+                });
+                update.approvals = newApprovalsArray;
+            }
+        }
 
         Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
