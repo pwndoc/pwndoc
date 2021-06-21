@@ -5,7 +5,7 @@ import Breadcrumb from 'components/breadcrumb';
 import VulnService from '@/services/vulnerability';
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
-import Utils from '@/services/utils'
+import Utils from '@/services/utils';
 
 export default {
     props: {
@@ -13,6 +13,7 @@ export default {
     },
     data: () => {
         return {
+            audit: {},
             finding: {},
             findingTitle: '',
             // List of vulnerabilities from knowledge base
@@ -50,7 +51,8 @@ export default {
             // Vulnerability categories
             vulnCategories: [],
 
-            htmlEncode: Utils.htmlEncode
+            htmlEncode: Utils.htmlEncode,
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -60,6 +62,7 @@ export default {
 
     mounted: function() {
         this.auditId = this.$route.params.auditId;
+        this.getAudit();
         this.getLanguages();
         this.dtLanguage = this.$parent.audit.language;
         this.getVulnerabilities();
@@ -83,6 +86,14 @@ export default {
     },
 
     methods: {
+        getAudit: async function() {
+            try {
+                this.audit = (await AuditService.getAuditGeneral(this.auditId)).data.datas;
+            } catch(err) {
+                console.error(err);
+            }
+        },
+
         // Get available languages
         getLanguages: function() {
             DataService.getLanguages()

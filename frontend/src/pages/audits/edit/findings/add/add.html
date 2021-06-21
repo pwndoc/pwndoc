@@ -1,6 +1,5 @@
 <div>
-<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :approved="frontEndAuditState >= AUDIT_VIEW_STATE.APPROVED && frontEndAuditState <= AUDIT_VIEW_STATE.APPROVED_READONLY">
-</breadcrumb>
+<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :audit="audit"/>
 
 <div class="row q-col-gutter-md q-pa-md">
     <div class="col-md-10 offset-md-1">

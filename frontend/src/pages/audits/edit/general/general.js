@@ -7,13 +7,11 @@ import CustomFields from 'components/custom-fields'
 import AuditService from '@/services/audit';
 import ClientService from '@/services/client';
 import CompanyService from '@/services/company';
-import SettingsService from '@/services/settings';
 import CollabService from '@/services/collaborator';
 import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
-import UserService from '@/services/user'
 
 export default {
     props: {
@@ -63,9 +61,7 @@ export default {
             auditTypes: [],
             // List of CustomFields
             customFields: [],
-            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
-            // Public settings
-            settings: {}
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -78,7 +74,6 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getAuditGeneral();
-        this.getSettings();
         this.getClients();
         this.getTemplates();
         this.getLanguages();
@@ -339,10 +334,6 @@ export default {
 
         isReviewerApproved(reviewer) {
             return this.audit.approvals.find(r => r._id === reviewer._id);
-        },
-
-        async getSettings() {
-            this.settings = (await SettingsService.getSettings()).data.datas;
         }
     }
 }

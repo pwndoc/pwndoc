@@ -17,12 +17,14 @@ export default {
     },
     data: () => {
         return {
+            audit: {},
             finding: {},
             findingOrig: {},
             selectedTab: "definition",
             proofsTabVisited: false,
             detailsTabVisited: false,
-            vulnTypes: []
+            vulnTypes: [],
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -37,6 +39,7 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.findingId = this.$route.params.findingId;
+        this.getAudit();
         this.getFinding();
         this.getVulnTypes();
 
@@ -92,6 +95,14 @@ export default {
     },
 
     methods: {
+        getAudit: async function() {
+            try {
+                this.audit = (await AuditService.getAuditGeneral(this.auditId)).data.datas;
+            } catch(err) {
+                console.error(err);
+            }
+        },
+
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
                 e.preventDefault();
