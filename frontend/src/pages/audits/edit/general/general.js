@@ -17,11 +17,7 @@ import UserService from '@/services/user'
 
 export default {
     props: {
-        isReviewing: Boolean,
-		isEditing: Boolean,
-		isApproved: Boolean,
-		isReadyForReview: Boolean,
-        fullyApproved: Boolean
+        frontEndAuditState: Number
     },
     data: () => {
         return {
@@ -44,7 +40,6 @@ export default {
                 language: "",
                 template: "",
                 customFields: [],
-                isReadyForReview: false,
                 approvals: []
             },
             auditOrig: {},
@@ -68,6 +63,7 @@ export default {
             auditTypes: [],
             // List of CustomFields
             customFields: [],
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
             // Public settings
             settings: {}
         }
@@ -87,8 +83,6 @@ export default {
         this.getTemplates();
         this.getLanguages();
         this.getAuditTypes();
-        this.isApprovedCopy = this.isApproved;
-        this.isReadyForReviewCopy = this.isReadyForReview;
 
         this.$socket.emit('menu', {menu: 'general', room: this.auditId});
 

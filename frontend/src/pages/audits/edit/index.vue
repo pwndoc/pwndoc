@@ -6,6 +6,26 @@
 				<q-list class="home-drawer">
 					<q-item>
 						<q-item-section>Sections</q-item-section>
+						<q-item-section side v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+							<q-btn flat dense size="sm" color="secondary" icon="fas fa-exclamation-triangle" @click="toggleAskReview" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Mark audit as ready for review</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
+							<q-btn flat dense size="sm" color="warning" icon="fas fa-undo-alt" @click="toggleAskReview" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Make changes to the audit</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.APPROVED].includes(frontEndAuditState)">
+							<q-btn flat dense size="sm" color="secondary" icon="fas fa-check-circle" @click="toggleApproval" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Approve this report</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
+							<q-btn flat dense size="sm" color="warning" icon="fas fa-times-circle" @click="toggleApproval" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Remove report approval</q-tooltip> 
+							</q-btn>
+						</q-item-section>
 						<q-item-section side>
 							<q-btn flat dense size="sm" color="info" icon="fa fa-download" @click="generateReport">
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
@@ -52,7 +72,7 @@
 								round
 								dense
 								color="secondary"
-								v-if="isEditing"
+								v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
 								/>
 							</q-item-section>
 						</q-item>
@@ -127,7 +147,7 @@
 			
 		</q-splitter>
 	</q-drawer>
-	<router-view :key="$route.fullPath" :isReviewing="isReviewing" :isEditing="isEditing" :isApproved="isApproved" :isReadyForReview="isReadyForReview" @toggleApproval="toggleApproval" @toggleAskReview="toggleAskReview" :fullyApproved="fullyApproved"/>
+	<router-view :key="$route.fullPath" :frontEndAuditState="frontEndAuditState"/>
 	</div>
 </template>
 
@@ -153,13 +173,13 @@ export default {
 					vulnCategories: [],
 					customFields: [],
 					auditTypes: [],
-					isReviewing: false,
-					isEditing: false,
-					isApproved: false,
-					isReadyForReview: false,
+					hasAlreadyApproved: false,
+					state: "EDIT",
 					fullyApproved: false,
 					// The application's public settings
-            		settings: {}
+            		settings: {},
+					frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
+					AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
 				}
 		},
 
@@ -201,13 +221,6 @@ export default {
 		},
 
 		methods: {
-			toggleApproval: function() {
-				this.isApproved = !this.isApproved;
-			},
-			toggleAskReview: function() {
-				this.isReadyForReview = !this.isReadyForReview;
-			},
-
 			getFindingColor: function(finding) {
 				if (finding.cvssSeverity && finding.cvssSeverity !== "None") {
 					if (finding.cvssSeverity === "Low") return "green"
@@ -247,30 +260,56 @@ export default {
 				})
 			},
 			// Tells the UI if the user is supposed to be reviewing the audit
-			isUserReviewing: function() {
+			isUserAReviewer: function() {
 				var isAuthor = this.audit.creator._id === UserService.user.id;
 				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
 				var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
 				var hasReviewAll = UserService.isAllowed('audits:review-all');
-				this.isReviewing = !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
+				return !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
 			},
 
 			// Tells the UI if the user is supposed to be editing the audit
-			isUserEditing: function() {
+			isUserAnEditor: function() {
 				var isAuthor = this.audit.creator._id === UserService.user.id;
 				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
 				var hasUpdateAll = UserService.isAllowed('audits:update-all');
-				this.isEditing = isAuthor || isCollaborator || hasUpdateAll;
+				return (isAuthor || isCollaborator || hasUpdateAll);
+			},
+
+			userHasAlreadyApproved: function() {
+				return this.audit.approvals.some((element) => element._id === UserService.user.id);
+			},
+
+			getUIState: function() {
+				if(this.audit.state === "EDIT") {
+					this.frontEndAuditState = this.isUserAnEditor() ? Utils.AUDIT_VIEW_STATE.EDIT : Utils.AUDIT_VIEW_STATE.EDIT_READONLY;
+				} 
+				else if (this.audit.state === "REVIEW") {
+					this.frontEndAuditState = this.isUserAReviewer() ? Utils.AUDIT_VIEW_STATE.REVIEW : Utils.AUDIT_VIEW_STATE.REVIEW_READONLY;
+					if (!this.isUserAReviewer()) {
+						this.frontEndAuditState = this.isUserAnEditor()? Utils.AUDIT_VIEW_STATE.REVIEW_EDITOR : Utils.AUDIT_VIEW_STATE.REVIEW_READONLY;
+						return;
+					}
+					if (this.isUserAnEditor()) {
+						this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN;
+						return;
+					}
+					this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW;
+				} 
+				else if (this.audit.state === "APPROVED") {
+					if (!this.isUserAReviewer()) {
+						this.frontEndAuditState = Utils.AUDIT_VIEW_STATE.APPROVED_READONLY;
+					} else {
+						this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.APPROVED_APPROVED : Utils.AUDIT_VIEW_STATE.APPROVED
+					}
+				}
 			},
 
 			getAudit: function() {
 				AuditService.getAudit(this.auditId)
 				.then((data) => {
-					this.audit = data.data.datas
-					this.isUserReviewing();
-					this.isUserEditing();
-					this.isReadyForReview = this.audit.isReadyForReview;
-					this.isApproved = this.audit.approvals.some((element) => element._id === UserService.user.id);
+					this.audit = data.data.datas;
+					this.getUIState();
 					this.getPublicSettings();
 					this.getSections()
 					if (this.loading)
@@ -384,6 +423,39 @@ export default {
 					console.log(err);
 				});
 			},
+
+			toggleAskReview: function() {
+				AuditService.updateAuditGeneral(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
+				.then(() => {
+					this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
+					this.auditOrig.state = this.audit.state;
+					this.getUIState();
+					Notify.create({
+						message: 'Audit review status updated successfully',
+						color: 'positive',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
+				.catch((err) => {             
+					console.log(err.response)
+				});
+			},
+
+			toggleApproval: function() {
+				AuditService.toggleApproval(this.auditId)
+				.then(() => {
+					Notify.create({
+						message: 'Audit approval updated successfully',
+						color: 'positive',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
+				.catch((err) => {          
+					console.log(err.response)
+				});
+			}
 		}
 }
 </script>
@@ -437,5 +509,10 @@ export default {
 .edit-drawer {
 	// height: 70%;
 
+}
+
+.topButton {
+    margin-right: 10px;
+    margin-left: 10px;
 }
 </style>

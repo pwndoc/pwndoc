@@ -43,7 +43,7 @@ module.exports = function(app, io) {
                     a.createdAt = audit.createdAt
                     a.reviewers = audit.reviewers
                     a.approvals = audit.approvals
-                    a.isReadyForReview = audit.isReadyForReview
+                    a.state = audit.state
                     if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected'))
                         a.connected = getUsersRoom(audit._id)
                     result.push(a)
@@ -182,7 +182,7 @@ module.exports = function(app, io) {
         }
         if (req.body.template) update.template = req.body.template;
         if (req.body.customFields) update.customFields = req.body.customFields;
-        if (req.body.isReadyForReview != undefined) update.isReadyForReview = req.body.isReadyForReview;
+        if (req.body.state != undefined && (req.body.state === "EDIT" || req.body.state === "REVIEW")) update.state = req.body.state;
 
         var settings = await Settings.getSettings();
         if (settings.removeApprovalsUponUpdate) {

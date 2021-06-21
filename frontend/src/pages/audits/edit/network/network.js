@@ -7,11 +7,7 @@ import SettingsService from '@/services/settings';
 
 export default {
     props: {
-        isReviewing: Boolean,
-		isEditing: Boolean,
-		isApproved: Boolean,
-		isReadyForReview: Boolean,
-        fullyApproved: Boolean
+        frontEndAuditState: Number
     },
     data: () => {
         return {
