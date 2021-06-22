@@ -15,7 +15,10 @@ import Utils from '@/services/utils';
 
 export default {
     props: {
-        frontEndAuditState: Number
+        frontEndAuditState: Number,
+        parentState: String,
+        parentApprovals: Array
+
     },
     data: () => {
         return {

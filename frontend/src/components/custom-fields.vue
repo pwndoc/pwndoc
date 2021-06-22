@@ -43,7 +43,7 @@
                 :label='field.customField.label'
                 stack-label
                 v-model="field.text"
-                :readonly="diff !== null"
+                :readonly="diff !== null || readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -62,7 +62,7 @@
                 :label='field.customField.label'
                 stack-label
                 v-model="field.text"
-                :readonly="diff !== null"
+                :readonly="diff !== null || readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -73,7 +73,7 @@
                     <template v-slot:append>
                         <q-icon name="event" class="cursor-pointer">
                         <q-popup-proxy ref="qDateProxyField" transition-show="scale" transition-hide="scale">
-                            <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text" @input="$refs.qDateProxyField.forEach(e => e.hide())" />
+                            <q-date :readonly="readonly" first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text" @input="$refs.qDateProxyField.forEach(e => e.hide())" />
                         </q-popup-proxy>
                         </q-icon>
                     </template>
@@ -95,7 +95,7 @@
                 clearable
                 options-sanitize
                 outlined 
-                :readonly="diff !== null"
+                :readonly="diff !== null || readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -122,7 +122,7 @@
                 clearable
                 options-sanitize
                 outlined 
-                :readonly="diff !== null"
+                :readonly="diff !== null || readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -155,7 +155,7 @@
                 :hint="field.description"
                 hide-bottom-space
                 outlined
-                :readonly="diff !== null"
+                :readonly="diff !== null || readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -182,7 +182,7 @@
                 :hint="field.description"
                 hide-bottom-space
                 outlined
-                :readonly="diff !== null"
+                :readonly="diff !== null || readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -243,6 +243,16 @@ export default {
         BasicEditor
     },
 
+    watch: { 
+        readonly: function(readonly, readonlyOld) {
+            if(!this.value) return;
+
+            for(var i = 0; i < this.value.length; ++i) {
+                this.setOptionsReadonly(this.value[i]);
+            }
+        }
+    },
+
     computed: {
          computedFields: function() {
             var result = []
@@ -254,6 +264,7 @@ export default {
                     tmpArray = []
                 }
                 else {
+                    this.setOptionsReadonly(e);
                     tmpArray.push(e)
                 }
             })
@@ -264,6 +275,16 @@ export default {
     },
 
     methods: {
+        setOptionsReadonly: function(field) {
+            if (field.customField.fieldType === "checkbox" || field.customField.fieldType === "radio" || field.customField.fieldType === "select-multiple")  {
+                if(!field.customField.options) return;
+                for(var j = 0; j < field.customField.options.length; ++j) {
+                    field.customField.options[j]["disable"] = this.readonly;
+                } 
+            }
+            
+        },
+
         isTextInCustomFields: function(field) {
             if (this.diff) {
                 return typeof this.diff.find(f => {
@@ -296,7 +317,7 @@ export default {
         getOptionsGroup: function(options) {
             return options
             .filter(e => e.locale === this.locale)
-            .map(e => {return {label: e.value, value: e.value}})
+            .map(e => {return {label: e.value, value: e.value, disable: e.disable}})
         },
 
         test: function(val) {

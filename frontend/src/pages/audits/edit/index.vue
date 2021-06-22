@@ -152,7 +152,7 @@
 			
 		</q-splitter>
 	</q-drawer>
-	<router-view :key="$route.fullPath" :frontEndAuditState="frontEndAuditState"/>
+	<router-view :key="$route.fullPath" :frontEndAuditState="frontEndAuditState" :propagate="propagate" :parentState="audit.state" :parentApprovals="audit.approvals" />
 	</div>
 </template>
 
@@ -180,11 +180,11 @@ export default {
 					auditTypes: [],
 					hasAlreadyApproved: false,
 					state: "EDIT",
-					fullyApproved: false,
 					// The application's public settings
             		settings: {},
 					frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
-					AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
+					AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+					propagate: 0
 				}
 		},
 
@@ -414,15 +414,10 @@ export default {
 				})
 			},
 
-			isAuditFullyApproved: function() {
-				this.fullyApproved = this.audit.approvals.length >= this.settings.minReviewers;
-        	},
-
 			getPublicSettings: function() {
 				SettingsService.getPublicSettings()
 				.then((data) => {
 					this.settings = data.data.datas;
-					this.isAuditFullyApproved();
 				})
 				.catch((err) => {
 					console.log(err);
@@ -433,8 +428,8 @@ export default {
 				AuditService.updateReadyForReview(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
 				.then(() => {
 					this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
-					this.auditOrig.state = this.audit.state;
 					this.getUIState();
+					this.propagate += 1;
 					Notify.create({
 						message: 'Audit review status updated successfully',
 						color: 'positive',
@@ -442,14 +437,15 @@ export default {
 						position: 'top-right'
 					})
 				})
-				.catch((err) => {             
-					console.log(err.response)
+				.catch((err) => {     
+					console.log(err)
 				});
 			},
 
 			toggleApproval: function() {
 				AuditService.toggleApproval(this.auditId)
 				.then(() => {
+					this.propagate += 1;
 					Notify.create({
 						message: 'Audit approval updated successfully',
 						color: 'positive',
@@ -458,7 +454,7 @@ export default {
 					})
 				})
 				.catch((err) => {          
-					console.log(err.response)
+					console.log(err)
 				});
 			}
 		}
