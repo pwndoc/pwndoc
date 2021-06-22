@@ -119,10 +119,10 @@ export default {
             AuditService.getAudits({findingTitle: this.search.finding})
             .then(async (data) => {
                 this.audits = data.data.datas
-                var settings = await this.getPublicSettings();
+                var settings = await SettingsService.getPublicSettings();
                 this.settings = settings.data.datas;
                 this.audits.forEach((audit) => {
-                    audit.isApproved = this.isAuditApproved(audit);
+                    audit.isApproved = audit.state === "APPROVED";
                 });
                 this.loading = false
             })
@@ -130,12 +130,6 @@ export default {
                 console.log(err)
             })
         },
-
-        getPublicSettings: async function() {
-            return await SettingsService.getPublicSettings();
-        },
-
-        
 
         createAudit: function() {
             this.cleanErrors();

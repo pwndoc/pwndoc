@@ -1,5 +1,5 @@
 <div>
-    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :audit="audit">
+    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" id="edit-breadcrumb-affix" :state="parentState" :approvals="parentApprovals">
     <div slot="buttons">
         <q-btn-dropdown 
         class="q-mr-sm" 
