@@ -147,7 +147,7 @@
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateStartProxy" transition-show="scale" transition-hide="scale">
-                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date_start" @input="() => $refs.qDateStartProxy.hide()" />
+                                <q-date :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT" first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date_start" @input="() => $refs.qDateStartProxy.hide()" />
                             </q-popup-proxy>
                             </q-icon>
                         </template>
@@ -156,7 +156,7 @@
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateEndProxy" transition-show="scale" transition-hide="scale">
-                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date_end" @input="() => $refs.qDateEndProxy.hide()" />
+                                <q-date :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT" first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date_end" @input="() => $refs.qDateEndProxy.hide()" />
                             </q-popup-proxy>
                             </q-icon>
                         </template>
@@ -165,7 +165,7 @@
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date" @input="() => $refs.qDateProxy.hide()" />
+                                <q-date :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT" first-day-of-week="1" mask="YYYY-MM-DD" v-model="audit.date" @input="() => $refs.qDateProxy.hide()" />
                             </q-popup-proxy>
                             </q-icon>
                         </template>
