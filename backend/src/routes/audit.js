@@ -407,14 +407,21 @@ module.exports = function(app, io) {
     });
 
     // Give or remove a reviewer's approval to an audit
-    app.put("/api/audits/:auditId/toggleApproval", acl.hasPermission('audits:review'), function(req, res) {
-        Audit.findById(req.params.auditId)
-        .then((audit) => {
+    app.put("/api/audits/:auditId/toggleApproval", acl.hasPermission('audits:review'), async function(req, res) {
+        const settings = await Settings.getAll();
 
+        if (!settings.reviews.enabled) {
+            Response.Unauthorized(res, "Audit reviews are not enabled.");
+            return;
+        }
+
+        Audit.findById(req.params.auditId)
+        .then(audit => {
             if (audit.state !== "REVIEW" && audit.state !== "APPROVED") {
                 Response.Unauthorized(res, "The audit is not in the approvable in the current state.");
                 return;
             }
+
             var hasApprovedBefore = false;
             var newApprovalsArray = [];
             if (audit.approvals) {
@@ -454,8 +461,16 @@ module.exports = function(app, io) {
 
     // Sets the audit state to EDIT or REVIEW
     app.put("/api/audits/:auditId/updateReadyForReview", acl.hasPermission('audits:update'), async function(req, res) {
+        const settings = await Settings.getAll();
+
+        if (!settings.reviews.enabled) {
+            Response.Unauthorized(res, "Audit reviews are not enabled.");
+            return;
+        }
+
         var update = {};
         var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id);
+
         if (audit.state !== "EDIT" && audit.state !== "REVIEW") {
             Response.Unauthorized(res, "The audit is not in the proper state for this action.");
             return;
