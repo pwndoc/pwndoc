@@ -95,3 +95,7 @@ Once enough approvals are given for an audit to be approved, the audit passes to
 The states of the audits can also be seen from the audit list page. 
 
 ![Audit list page](/_images/audit_list_states.png)
+
+The audit edit page, when then review mode is activated, follows the following state machine diagram. Different states show different UI elements. Keep in mind that the Report role here is viewing a report for which he is neither a the creator nor collaborator. Otherwise, on his own reports, his graph would be similar to the Collaborator shown here. Also, the reviewer role, here, has only `audits:review` permission, and not `audits:review-all`. 
+
+![Audit edit view state diagram](/_images/edit_state_graph.png)
