@@ -329,7 +329,6 @@ export default {
 				.then((data) => {
 					this.audit = data.data.datas;
 					this.getUIState();
-					this.getPublicSettings();
 					this.getSections()
 					if (this.loading)
 						this.handleSocket()
