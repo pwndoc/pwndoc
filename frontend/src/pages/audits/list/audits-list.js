@@ -7,7 +7,6 @@ import AuditService from '@/services/audit'
 import DataService from '@/services/data'
 import CompanyService from '@/services/company'
 import UserService from '@/services/user'
-import SettingsService from '@/services/settings'
 
 export default {
     data: () => {
@@ -55,9 +54,7 @@ export default {
             // Errors messages
             errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
-            currentAudit: {name: '', language: '', template: ''},
-            // The application's public settings
-            settings: {}
+            currentAudit: {name: '', language: '', template: ''}
         }
     },
 
@@ -110,17 +107,11 @@ export default {
             })
         },
 
-        isAuditApproved: function(audit) {      
-            return audit.approvals.length >= this.settings.minReviewers;
-        },
-
         getAudits: function() {
             this.loading = true
             AuditService.getAudits({findingTitle: this.search.finding})
             .then(async (data) => {
-                this.audits = data.data.datas
-                var settings = await SettingsService.getPublicSettings();
-                this.settings = settings.data.datas;
+                this.audits = data.data.datas;
                 this.audits.forEach((audit) => {
                     audit.isApproved = audit.state === "APPROVED";
                 });

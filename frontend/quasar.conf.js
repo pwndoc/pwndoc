@@ -10,7 +10,8 @@ module.exports = function (ctx) {
       'affix',
       'auth',
       'lodash',
-      'socketio'
+      'socketio',
+      'settings'
     ],
     css: [
       'app.styl'

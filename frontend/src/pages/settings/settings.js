@@ -8,21 +8,7 @@ export default {
         return {
             loading: true,
             UserService: UserService,
-            settings: {
-                imageBorder: false,
-                imageBorderColor: "#000000",
-                cvssColors : {
-                    noneColor : "#4a86e8",
-                    lowColor : "#008000",
-                    mediumColor : "#f9a009",
-                    highColor : "#fe0000",
-                    criticalColor : "#212121" 
-                },
-                enableReviews: false,
-                mandatoryReview: false,
-                minReviewers: 1,
-                removeApprovalsUponUpdate: false
-            },
+            settings: {},
             settingsOrig : {},
             canEdit: false
         }

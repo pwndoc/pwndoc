@@ -162,7 +162,6 @@ import { Notify } from 'quasar';
 import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
-import SettingsService from '@/services/settings'
 import Utils from '@/services/utils';
 
 export default {
@@ -180,8 +179,6 @@ export default {
 					auditTypes: [],
 					hasAlreadyApproved: false,
 					state: "EDIT",
-					// The application's public settings
-            		settings: {},
 					frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
 					AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
 					propagate: 0
@@ -412,16 +409,6 @@ export default {
 						classes: "text-pre-wrap"
 					})
 				})
-			},
-
-			getPublicSettings: function() {
-				SettingsService.getPublicSettings()
-				.then((data) => {
-					this.settings = data.data.datas;
-				})
-				.catch((err) => {
-					console.log(err);
-				});
 			},
 
 			toggleAskReview: function() {
