@@ -193,8 +193,8 @@ export default {
             })
         },
 
-        generateReport: function(auditId) {
-            AuditService.generateAuditReport(auditId)
+        generateReport: function(auditId, format = "") {
+            AuditService.generateAuditReport(auditId, format)
             .then(response => {
                 var blob = new Blob([response.data], {type: "application/octet-stream"});
                 var link = document.createElement('a');

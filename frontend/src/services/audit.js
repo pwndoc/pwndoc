@@ -69,7 +69,8 @@ export default {
     return Vue.prototype.$axios.get(`audits/types`)
   },
 
-  generateAuditReport: function(auditId) {
-    return Vue.prototype.$axios.get(`audits/${auditId}/generate`, {responseType: 'blob'})
+  generateAuditReport: function(auditId, format = "") {
+    var formatPath = format === "" ? format : "/" + format;
+    return Vue.prototype.$axios.get(`audits/${auditId}/generate${formatPath}`, {responseType: 'blob'})
   }
 }
