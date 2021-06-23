@@ -21,10 +21,10 @@
                             <q-toggle label="Enable" v-model="settings.report.settings.imageBorder" />
                         </q-item-section>
                         <q-item-section class="col-md-1">
-                            <input :disabled="!settings.imageBorder" type="color" id="colorpicker" v-model="settings.report.settings.imageBorderColor" />
+                            <input :disabled="!settings.report.settings.imageBorder" type="color" id="colorpicker" v-model="settings.report.settings.imageBorderColor" />
                         </q-item-section>
                         <q-item-section class="col-md-2">
-                            <label :disabled="!settings.imageBorder" for="colorpicker" class="vertical-center">Current color: {{settings.report.settings.imageBorderColor}}</label>
+                            <label :disabled="!settings.report.settings.imageBorder" for="colorpicker" class="vertical-center">Current color: {{settings.report.settings.imageBorderColor}}</label>
                         </q-item-section>
                     </q-item>
                 </q-card-section>
