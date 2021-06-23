@@ -13,16 +13,18 @@ const colorValidator = (v) => (/^#([0-9a-f]{3}){1,2}$/i).test(v);
 
 const ReportSettingSchema = new Schema({
     ...BaseSettingSchema,
-    private: {
-        imageBorder: { type: Boolean, default: false },
-        imageBorderColor: { type: String, default: "#000000", validate: [colorValidator, 'Invalid color'] },
+    public: {
         cvssColors: {
             noneColor: { type: String, default: "#4a86e8", validate: [colorValidator, 'Invalid color'] },
             lowColor: { type: String, default: "#008000", validate: [colorValidator, 'Invalid color'] },
             mediumColor: { type: String, default: "#f9a009", validate: [colorValidator, 'Invalid color'] },
             highColor: { type: String, default: "#fe0000", validate: [colorValidator, 'Invalid color'] },
             criticalColor: { type: String, default: "#212121", validate: [colorValidator, 'Invalid color'] }
-        },
+        }
+    },
+    private: {
+        imageBorder: { type: Boolean, default: false },
+        imageBorderColor: { type: String, default: "#000000", validate: [colorValidator, 'Invalid color'] }
     }
 });
 

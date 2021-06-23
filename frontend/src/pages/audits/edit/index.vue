@@ -97,7 +97,7 @@
 											class="text-white"
 											size="sm"
 											square
-											:color="getFindingColor(finding)"
+											:style="`background: ${getFindingColor(finding)}`"
 										>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
 									</q-item-section>
 									<q-item-section>
@@ -226,19 +226,34 @@ export default {
 
 		methods: {
 			getFindingColor: function(finding) {
-				if (finding.cvssSeverity && finding.cvssSeverity !== "None") {
-					if (finding.cvssSeverity === "Low") return "green"
-					if (finding.cvssSeverity === "Medium") return "orange"
-					if (finding.cvssSeverity === "High") return "red"
-					if (finding.cvssSeverity === "Critical") return "black"
+				const SEVERITIES = ["Low", "Medium", "High", "Critical"];
+
+				let severity = "None";
+				if (finding.cvssSeverity && SEVERITIES.indexOf(finding.cvssSeverity) >= 0) {
+					severity = finding.cvssSeverity;
+				} else if(finding.priority && finding.priority >= 1 && finding.priority <= 4) {
+					severity = SEVERITIES[finding.priority - 1];
 				}
-				else if (finding.priority) {
-					if (finding.priority === 1) return "green"
-					if (finding.priority === 2) return "orange"
-					if (finding.priority === 3) return "red"
-					if (finding.priority === 4) return "black"
+
+				if(this.$settings.report) {
+					const severityColorName = `${severity.toLowerCase()}Color`;
+					const cvssColors = this.$settings.report.settings.cvssColors;
+
+					return cvssColors[severityColorName] || cvssColors.noneColor;
+				} else {
+					switch(severity) {
+						case "Low": 
+							return "green";
+						case "Medium":
+							return "orange";
+						case "High":
+							return "red";
+						case "Critical":
+							return "black";
+						default:
+							return "blue";
+					}
 				}
-				return "light-blue";
 			},
 
 			// Sockets handle
