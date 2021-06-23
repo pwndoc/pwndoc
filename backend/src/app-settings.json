@@ -1,15 +1,24 @@
 {
-    "imageBorder": false,
-    "imageBorderColor": "#000000",
-    "cvssColors" : {
-        "noneColor" : "#4a86e8",
-        "lowColor" : "#008000",
-        "mediumColor" : "#f9a009",
-        "highColor" : "#fe0000",
-        "criticalColor" : "#212121" 
+    "report": {
+        "enabled": true,
+        "settings": {
+            "cvssColors": {
+                "noneColor": "#4a87e8",
+                "lowColor": "#008000",
+                "mediumColor": "#f9a009",
+                "highColor": "#fe0000",
+                "criticalColor": "#212121"
+            },
+            "imageBorder": true,
+            "imageBorderColor": "#000000"
+        }
     },
-    "enableReviews": false,
-    "mandatoryReview": false,
-    "minReviewers": 1,
-    "removeApprovalsUponUpdate": false
+    "reviews": {
+        "enabled": false,
+        "settings": {
+            "mandatoryReview": false,
+            "minReviewers": 1,
+            "removeApprovalsUponUpdate": false
+        }
+    }
 }
