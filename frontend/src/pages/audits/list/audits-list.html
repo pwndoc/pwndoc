@@ -173,13 +173,13 @@
             :error-message="errors.name"
             autofocus
             @keyup.enter="createAudit()"
-            v-model="currentAudit.name"
+            v-model="auditName"
             />
             <q-select
             label="Select Assessment *"
             :error="!!errors.auditType"
             :error-message="errors.auditType"
-            v-model="currentAudit.auditType"
+            v-model="auditType"
             :options="auditTypes"
             option-value="name"
             option-label="name"
@@ -191,7 +191,7 @@
             label="Select Language *"
             :error="!!errors.language"
             :error-message="errors.language"
-            v-model="currentAudit.language" 
+            v-model="auditLanguage" 
             :options="languages" 
             option-value="locale" 
             option-label="language" 
