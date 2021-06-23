@@ -596,12 +596,14 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
 
 AuditSchema.statics.updateApprovals = (isAdmin, auditId, userId, update) => {
     return new Promise(async (resolve, reject) => {
-        var settings = await Settings.getSettings();
-        if (update.approvals.length >= settings.minReviewers) {
+        var settings = await Settings.getAll();
+
+        if (update.approvals.length >= settings.reviews.settings.minReviewers) {
             update.state = "APPROVED";
         } else {
             update.state = "REVIEW";
         }
+        
         var query = Audit.findByIdAndUpdate(auditId, update)
         query.nor([{creator: userId}, {collaborators: userId}]);
         if (!isAdmin)

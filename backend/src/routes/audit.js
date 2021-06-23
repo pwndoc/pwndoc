@@ -187,8 +187,8 @@ module.exports = function(app, io) {
         if (req.body.template) update.template = req.body.template;
         if (req.body.customFields) update.customFields = req.body.customFields;
 
-        var settings = await Settings.getSettings();
-        if (settings.removeApprovalsUponUpdate) {
+        var settings = await Settings.getAll();
+        if (settings.reviews.enabled && settings.reviews.settings.removeApprovalsUponUpdate) {
             update.approvals = [];
         }
 
@@ -219,8 +219,8 @@ module.exports = function(app, io) {
         // Optional parameters
         if (req.body.scope) update.scope = req.body.scope;
 
-        var settings = await Settings.getSettings();
-        if (settings.removeApprovalsUponUpdate) {
+        var settings = await Settings.getAll();
+        if (settings.reviews.enabled && settings.reviews.settings.removeApprovalsUponUpdate) {
             Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
         }
 
@@ -262,8 +262,8 @@ module.exports = function(app, io) {
         if (req.body.category) finding.category = req.body.category
         if (req.body.customFields) finding.customFields = req.body.customFields
 
-        var settings = await Settings.getSettings();
-        if (settings.removeApprovalsUponUpdate) {
+        var settings = await Settings.getAll();
+        if (settings.reviews.enabled && settings.reviews.settings.removeApprovalsUponUpdate) {
             Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
         }
 
@@ -316,8 +316,8 @@ module.exports = function(app, io) {
         if (req.body.category) finding.category = req.body.category
         if (req.body.customFields) finding.customFields = req.body.customFields
 
-        var settings = await Settings.getSettings();
-        if (settings.removeApprovalsUponUpdate) {
+        var settings = await Settings.getAll();
+        if (settings.reviews.enabled && settings.reviews.settings.removeApprovalsUponUpdate) {
             Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
         }
 
@@ -369,8 +369,8 @@ module.exports = function(app, io) {
         // For retrocompatibility with old section.text usage
         if (req.body.text) section.text = req.body.text; 
 
-        var settings = await Settings.getSettings();
-        if (settings.removeApprovalsUponUpdate) {
+        var settings = await Settings.getAll();
+        if (settings.reviews.enabled && settings.reviews.settings.removeApprovalsUponUpdate) {
             Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
         }
 
@@ -384,10 +384,11 @@ module.exports = function(app, io) {
     // Generate Report for specific audit
     app.get("/api/audits/:auditId/generate", acl.hasPermission('audits:read'), function(req, res){
         Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
-        .then( async audit => {
-            var settings = await Settings.getSettings();
-            if (settings.mandatoryReview && settings.minReviewers > audit.approvals.length) {
-                Response.Forbidden(res, "Audit does not have the minimal number of approvals to export.");
+        .then(async audit => {
+            var settings = await Settings.getAll();
+
+            if (settings.reviews.enabled && settings.reviews.settings.mandatoryReview && audit.state !== 'APPROVED') {
+                Response.Forbidden(res, "Audit was not approved therefore cannot be exported.");
                 return;
             }
 
