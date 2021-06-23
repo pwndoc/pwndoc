@@ -21,7 +21,7 @@
 										</q-item-section>
 									</q-item>
 							
-									<q-item v-if="['ppt', 'pptx', 'doc', 'docx', 'docm'].find(ext => ext === audit.template?.ext)" clickable v-close-popup @click="generateReport('pdf')">
+									<q-item v-if="['ppt', 'pptx', 'doc', 'docx', 'docm'].find(ext => audit.template !== undefined && ext === audit.template.ext)" clickable v-close-popup @click="generateReport('pdf')">
 										<q-item-section>
 											<q-item-label>pdf</q-item-label>
 										</q-item-section>
