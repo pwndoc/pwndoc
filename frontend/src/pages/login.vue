@@ -183,7 +183,8 @@ export default {
                 return;
 
             UserService.initUser(this.username, this.firstname, this.lastname, this.password)
-            .then(() => {
+            .then(async () => {
+                await this.$settings.refresh();
                 this.$router.push('/');
             })
             .catch(err => {
@@ -203,7 +204,8 @@ export default {
                 return;
 
             UserService.getToken(this.username, this.password)
-            .then(() => {
+            .then(async () => {
+                await this.$settings.refresh();
                 this.$router.push('/');
             })
             .catch(err => {

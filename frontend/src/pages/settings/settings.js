@@ -65,6 +65,7 @@ export default {
             SettingsService.updateSettings(this.settings)
             .then((data) => {
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
+                this.$settings.refresh();
                 Notify.create({
                     message: "Settings updated successfully",
                     color: 'positive',
@@ -92,6 +93,7 @@ export default {
             .onOk(async () => {
                 this.loading = true;
                 await SettingsService.revertDefaults();
+                this.$settings.refresh();
                 this.getSettings();
                 Notify.create({
                     message: "Settings reverted successfully",
