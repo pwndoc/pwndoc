@@ -6,25 +6,25 @@
 				<q-list class="home-drawer">
 					<q-item style="padding:0px">
 						<q-item-section class="q-mx-md">Sections</q-item-section>
-						<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+						<q-item-section side class="topButtonSection" v-if="$settings && $settings.reviews && frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 							<q-btn flat color="secondary" @click="toggleAskReview" >
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Mark audit as ready for review</q-tooltip> 
 								<i class="fas fa-exclamation-triangle fa-lg"></i>
 							</q-btn>
 						</q-item-section>
-						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
+						<q-item-section side class="topButtonSection" v-if="$settings && $settings.reviews && [AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
 							<q-btn flat color="warning" @click="toggleAskReview" >
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Make changes to the audit</q-tooltip> 
 								<i class="fas fa-undo-alt fa-lg"></i>
 							</q-btn>
 						</q-item-section>
-						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.APPROVED].includes(frontEndAuditState)">
+						<q-item-section side class="topButtonSection" v-if="$settings && $settings.reviews && [AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.APPROVED].includes(frontEndAuditState)">
 							<q-btn flat color="secondary" @click="toggleApproval" >
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Approve this report</q-tooltip> 
 								<i class="fas fa-check-circle fa-lg"></i>
 							</q-btn>
 						</q-item-section>
-						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
+						<q-item-section side class="topButtonSection" v-if="$settings && $settings.reviews && [AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
 							<q-btn flat color="warning" @click="toggleApproval" >
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Remove report approval</q-tooltip> 
 								<i class="fas fa-times-circle fa-lg"></i>

@@ -82,6 +82,7 @@
                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                     />
                     <q-select 
+                    v-if="$settings && $settings.reviews"
                     class="col-md-12 col-12"
                     label="Reviewers"
                     stack-label

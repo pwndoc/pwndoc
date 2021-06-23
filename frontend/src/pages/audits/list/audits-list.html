@@ -39,7 +39,7 @@
                 </q-input>
                 <q-toggle label="My Audits" v-model="myAudits" />
                 <q-toggle v-if="UserService.isAllowed('audits:users-connected')" label="Users Connected" v-model="displayConnected" />
-                <q-toggle v-if="UserService.isAllowed('audits:review') || UserService.isAllowed('audits:review-all')" label="Awaiting my review" v-model="displayReadyForReview" />
+                <q-toggle v-if="($settings && $settings.reviews) && (UserService.isAllowed('audits:review') || UserService.isAllowed('audits:review-all'))" label="Awaiting my review" v-model="displayReadyForReview" />
                 <q-space />
                 <q-btn 
                 color="secondary"

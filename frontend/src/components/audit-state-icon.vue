@@ -1,5 +1,5 @@
 <template>
-    <q-icon v-if="!state" :size="size" style="visibility: hidden" flat color="warning" name="fas fa-question"></q-icon>
+    <q-icon v-if="!$settings || !$settings.reviews || !state" :size="size" flat></q-icon>
     <q-icon v-else-if="state === 'APPROVED'" :size="size" flat color="positive" name="far fa-check-circle">
         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
             Audit is approved ({{ getApprovalCount() }}/{{ getMinReviewers() }})
