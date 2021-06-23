@@ -53,8 +53,9 @@ export default {
             displayReadyForReview: false,
             // Errors messages
             errors: {name: '', language: '', auditType: ''},
-            // Selected or New Audit
-            currentAudit: {name: '', language: '', template: ''}
+            auditType: "",
+            auditLanguage: "",
+            auditName: ""
         }
     },
 
@@ -124,18 +125,24 @@ export default {
 
         createAudit: function() {
             this.cleanErrors();
-            if (!this.currentAudit.name)
+            if (!this.auditName)
                 this.errors.name = "Name required";
-            if (!this.currentAudit.language)
+            if (!this.auditLanguage)
                 this.errors.language = "Language required";
-            if (!this.currentAudit.auditType)
+            if (!this.auditType)
                 this.errors.auditType = "Assessment required";
                 
             
             if (this.errors.name || this.errors.language || this.errors.auditType)
                 return;
 
-            AuditService.createAudit(this.currentAudit)
+            AuditService.createAudit(
+                {
+                    name: this.auditName,
+                    language: this.auditLanguage,
+                    auditType: this.auditType
+                }
+            )
             .then((response) => {
                 this.$refs.createModal.hide();
                 this.$router.push("/audits/" + response.data.datas.audit._id)
@@ -237,9 +244,9 @@ export default {
 
         cleanCurrentAudit: function() {
             this.cleanErrors();
-            this.currentAudit.name = '';
-            this.currentAudit.language = '';
-            this.currentAudit.auditType = '';
+            this.auditName = "";
+            this.auditLanguage = "";
+            this.auditType = "";
         },
 
         // Convert language locale of audit for table display

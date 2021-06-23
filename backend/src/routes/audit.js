@@ -231,6 +231,11 @@ module.exports = function(app, io) {
 
     // Add finding to audit
     app.post("/api/audits/:auditId/findings", acl.hasPermission('audits:update'), async function(req, res) {
+        var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id);
+        if (audit.state !== "EDIT") {
+            Response.Unauthorized(res, "The audit is not in the EDIT state and therefore cannot be edited.");
+            return;
+        }
         if (!req.body.title) {
             Response.BadParameters(res, 'Missing some required parameters: title');
             return;

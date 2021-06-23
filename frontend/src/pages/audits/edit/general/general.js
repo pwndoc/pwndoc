@@ -77,11 +77,10 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getAuditGeneral();
-        this.getClients();
         this.getTemplates();
         this.getLanguages();
         this.getAuditTypes();
-
+        this.getClients();
         this.$socket.emit('menu', {menu: 'general', room: this.auditId});
 
         // save on ctrl+s
@@ -255,7 +254,9 @@ export default {
 
         // Filter client options when selecting company
         filterClients: function() {
-            this.audit.client = null
+            if (!this.$_.isEqual(this.audit.company, this.auditOrig.company)) {
+                this.audit.client = null
+            }
             if (this.audit.company) {
                 this.selectClients = [];
                 this.clients.map(client => {
