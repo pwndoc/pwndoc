@@ -7,6 +7,7 @@ export default {
     data: () => {
         return {
             loading: true,
+            initialLoading: true,
             UserService: UserService,
             settings: {},
             settingsOrig : {},
@@ -45,6 +46,7 @@ export default {
                 this.settings = data.data.datas;
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.loading = false;
+                this.initialLoading = false;
             })
             .catch((err) => {
                 Notify.create({
