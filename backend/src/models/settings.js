@@ -104,7 +104,9 @@ SettingSchema.statics.getAll = () => {
 SettingSchema.statics.getPublic = () => {
     return new Promise((resolve, reject) => {
         const query = Settings.findOne({});
-        query.select(BASE_SELECT_QUERY + "-report.private -reviews.private ");
+        let excludePrivate = Object.keys(SettingSchema.paths).filter((val) => val !== "__v" && val !== "_id")
+        excludePrivate = "-" + excludePrivate.join(".private -") + ".private";
+        query.select(BASE_SELECT_QUERY + excludePrivate);
         query.exec()
             .then(settings => resolve(mergeSettings(removeDisabledSetting(settings))))
             .catch(err => reject(err));
