@@ -5,7 +5,7 @@ services:
     image: mongo
     container_name: mongo-pwndoc-dev
     volumes:
-      - mongo-data-dev:/data/db
+      - ./mongo-data-dev:/data/db
     restart: always
     ports:
       - 127.0.0.1:27017:27017

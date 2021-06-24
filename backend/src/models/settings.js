@@ -116,7 +116,7 @@ SettingSchema.statics.update = (settings) => {
     settings = unmergeSettings(settings);
 
     return new Promise((resolve, reject) => {
-        const query = Settings.findOneAndUpdate({}, settings, { new: true });
+        const query = Settings.findOneAndUpdate({}, settings, { new: true, runValidators: true });
         query.select(BASE_SELECT_QUERY);
         query.exec()
             .then(settings => resolve(mergeSettings(settings)))
