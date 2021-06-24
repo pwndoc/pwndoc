@@ -37,9 +37,21 @@ export default {
     mounted: function() {
         this.getSettings()
         this.canEdit = this.UserService.isAllowed('settings:update');
+        document.addEventListener('keydown', this._listener, false)
+    },
+
+    destroyed: function() {
+        document.removeEventListener('keydown', this._listener, false)
     },
 
     methods: {
+        _listener: function(e) {
+            if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
+                e.preventDefault();
+                this.updateSettings();
+            }
+        },
+
         getSettings: function() {
             SettingsService.getSettings()
             .then((data) => {
