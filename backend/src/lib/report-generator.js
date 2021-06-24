@@ -19,7 +19,7 @@ async function generateDoc(audit) {
 
     var zip = new JSZip(content);
 
-    var settings = await Settings.getSettings();
+    var settings = await Settings.getAll();
 
     var opts = {};
     // opts.centered = true;
@@ -60,8 +60,8 @@ async function generateDoc(audit) {
         return [0,0]
     }
 
-    if (settings.imageBorder && settings.imageBorderColor)
-        opts.border = settings.imageBorderColor.replace('#', '')
+    if (settings.report.settings.imageBorder && settings.report.settings.imageBorderColor)
+        opts.border = settings.report.settings.imageBorderColor.replace('#', '')
 
     try {
         var imageModule = new ImageModule(opts);
@@ -214,11 +214,11 @@ var angularParser = function(tag) {
 // For each finding, add cvssColor, cvssObj and criteria colors parameters
 function cvssHandle(data, settings) {
     // Header title colors
-    var noneColor = settings.cvssColors.noneColor.replace('#', ''); //default of blue ("#4A86E8")
-    var lowColor = settings.cvssColors.lowColor.replace('#', ''); //default of green ("#008000")
-    var mediumColor = settings.cvssColors.mediumColor.replace('#', ''); //default of yellow ("#f9a009")
-    var highColor = settings.cvssColors.highColor.replace('#', ''); //default of red ("#fe0000")
-    var criticalColor = settings.cvssColors.criticalColor.replace('#', ''); //default of black ("#212121")
+    var noneColor = settings.report.settings.cvssColors.noneColor.replace('#', ''); //default of blue ("#4A86E8")
+    var lowColor = settings.report.settings.cvssColors.lowColor.replace('#', ''); //default of green ("#008000")
+    var mediumColor = settings.report.settings.cvssColors.mediumColor.replace('#', ''); //default of yellow ("#f9a009")
+    var highColor = settings.report.settings.cvssColors.highColor.replace('#', ''); //default of red ("#fe0000")
+    var criticalColor = settings.report.settings.cvssColors.criticalColor.replace('#', ''); //default of black ("#212121")
 
     var cellNoneColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + noneColor + '"/></w:tcPr>';
     var cellLowColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColor+'"/></w:tcPr>';

@@ -3,14 +3,14 @@
         <q-btn 
         v-if="typeof(buttons) !== 'undefined'" 
         flat 
-        color="secondary"
+        color='secondary'
         @click="$router.push('/audits')"
         >
             <i class="fa fa-home fa-lg"></i>
         </q-btn>
         <p v-if="typeof(title) === 'undefined'" class="breadcrumb-title">{{bread[last].name}}</p>
         <p v-else class="breadcrumb-title">{{title}} 
-            <audit-state-icon class="q-mx-sm" size="xs" :approvals="approvals" :state="state" :minReviewers="settings.minReviewers"/>
+            <audit-state-icon class="q-mx-sm" size="xs" :approvals="approvals" :state="state"/>
         </p>
         <q-breadcrumbs v-if="typeof(buttons) === 'undefined'" separator="/" active-color="secondary" color="light" align="right">
             <q-breadcrumbs-el v-for="breadcrumb in bread" :label="breadcrumb.name" :to="breadcrumb.path" :key="breadcrumb.path" />
@@ -23,7 +23,6 @@
 
 <script>
 import AuditStateIcon from 'components/audit-state-icon';
-import SettingsService from '@/services/settings';
 
 export default {
     name: 'breadcrumb',
@@ -36,8 +35,7 @@ export default {
     data: function() {
         return {
             bread: [],
-            last: 0,
-            settings: {}
+            last: 0
         }
     },
 
@@ -47,9 +45,6 @@ export default {
 
     methods: {
         initBreadcrumb: async function() {
-            var settings = await SettingsService.getPublicSettings();
-            this.settings = settings.data.datas;
-
             var breadArray = this.$route.matched;
             breadArray.forEach((element) => {
                 var entry = {};

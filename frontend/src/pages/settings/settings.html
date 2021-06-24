@@ -1,4 +1,4 @@
-<div>
+<div v-if="!initialLoading">
 <div class="row">
     <div class="col-md-8 col-12 offset-md-2 q-mt-md">
 
@@ -18,13 +18,13 @@
                     <br/>
                     <q-item>
                         <q-item-section class="col-md-2">
-                            <q-toggle label="Enable" v-model="settings.imageBorder" />
+                            <q-toggle label="Enable" v-model="settings.report.settings.imageBorder" />
                         </q-item-section>
                         <q-item-section class="col-md-1">
-                            <input :disabled="!settings.imageBorder" type="color" id="colorpicker" v-model="settings.imageBorderColor" />
+                            <input :disabled="!settings.report.settings.imageBorder" type="color" id="colorpicker" v-model="settings.report.settings.imageBorderColor" />
                         </q-item-section>
                         <q-item-section class="col-md-2">
-                            <label :disabled="!settings.imageBorder" for="colorpicker" class="vertical-center">Current color: {{settings.imageBorderColor}}</label>
+                            <label :disabled="!settings.report.settings.imageBorder" for="colorpicker" class="vertical-center">Current color: {{settings.report.settings.imageBorderColor}}</label>
                         </q-item-section>
                     </q-item>
                 </q-card-section>
@@ -40,10 +40,10 @@
                                 <label class="vertical-center">Critical : </label>
                             </q-item-section>
                             <q-item-section class="col-md-1">
-                                <input type="color" id="colorpicker" v-model="settings.cvssColors.criticalColor"/>
+                                <input type="color" id="colorpicker" v-model="settings.report.settings.cvssColors.criticalColor"/>
                             </q-item-section>
                             <q-item-section class="col-md-2">
-                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.criticalColor}}</label>
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.report.settings.cvssColors.criticalColor}}</label>
                             </q-item-section>
                         </q-item>
                         <q-item>
@@ -51,10 +51,10 @@
                                 <label class="vertical-center">High : </label>
                             </q-item-section>
                             <q-item-section class="col-md-1">
-                                <input type="color" id="colorpicker" v-model="settings.cvssColors.highColor"/>
+                                <input type="color" id="colorpicker" v-model="settings.report.settings.cvssColors.highColor"/>
                             </q-item-section>
                             <q-item-section class="col-md-2">
-                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.highColor}}</label>
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.report.settings.cvssColors.highColor}}</label>
                             </q-item-section>
                         </q-item>
                         <q-item>
@@ -62,10 +62,10 @@
                                 <label class="vertical-center">Medium : </label>
                             </q-item-section>
                             <q-item-section class="col-md-1">
-                                <input type="color" id="colorpicker" v-model="settings.cvssColors.mediumColor"/>
+                                <input type="color" id="colorpicker" v-model="settings.report.settings.cvssColors.mediumColor"/>
                             </q-item-section>
                             <q-item-section class="col-md-2">
-                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.mediumColor}}</label>
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.report.settings.cvssColors.mediumColor}}</label>
                             </q-item-section>
                         </q-item>
                         <q-item>
@@ -73,10 +73,10 @@
                                 <label class="vertical-center">Low : </label>
                             </q-item-section>
                             <q-item-section class="col-md-1">
-                                <input type="color" id="colorpicker" v-model="settings.cvssColors.lowColor"/>
+                                <input type="color" id="colorpicker" v-model="settings.report.settings.cvssColors.lowColor"/>
                             </q-item-section>
                             <q-item-section class="col-md-2">
-                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.lowColor}}</label>
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.report.settings.cvssColors.lowColor}}</label>
                             </q-item-section>
                         </q-item>
                         <q-item>
@@ -84,10 +84,10 @@
                                 <label class="vertical-center">Informational : </label>
                             </q-item-section>
                             <q-item-section class="col-md-1">
-                                <input type="color" id="colorpicker" v-model="settings.cvssColors.noneColor"/>
+                                <input type="color" id="colorpicker" v-model="settings.report.settings.cvssColors.noneColor"/>
                             </q-item-section>
                             <q-item-section class="col-md-2">
-                                <label for="colorpicker" class="vertical-center">Current color: {{settings.cvssColors.noneColor}}</label>
+                                <label for="colorpicker" class="vertical-center">Current color: {{settings.report.settings.cvssColors.noneColor}}</label>
                             </q-item-section>
                         </q-item>
                     </q-list>
@@ -106,7 +106,7 @@
                             color="primary"
                             keep-color
                             :disable="!canEdit"
-                            v-model="settings.enableReviews"
+                            v-model="settings.reviews.enabled"
                         />
                     </q-item-section>
                 </q-item>
@@ -121,8 +121,8 @@
             </q-card-section>
             <q-card-section>
                 <q-btn-toggle
-                    :disable="!canEdit || !settings.enableReviews"
-                    v-model="settings.removeApprovalsUponUpdate"
+                    :disable="!canEdit || !settings.reviews.enabled"
+                    v-model="settings.reviews.settings.removeApprovalsUponUpdate"
                     class="toggleButton"
                     spread
                     no-caps
@@ -152,18 +152,18 @@
                     <q-item-section class="col-2">
                         <q-toggle
                             label="Enable"
-                            v-model="settings.mandatoryReview"
+                            v-model="settings.reviews.settings.mandatoryReview"
                             color="primary"
                             keep-color
                             id="toggle"
-                            :disable="!canEdit || !settings.enableReviews"
+                            :disable="!canEdit || !settings.reviews.enabled"
                         />
                     </q-item-section>
                     <q-item-section class="col-2">
                         <q-input
-                            v-model.number="settings.minReviewers"
+                            v-model.number="settings.reviews.settings.minReviewers"
                             type="number"
-                            :disable="!canEdit || !settings.enableReviews"
+                            :disable="!canEdit || !settings.reviews.enabled"
                             filled
                             :min="1"
                             :max="99"
@@ -242,7 +242,5 @@
         </q-card>
     </div>
 </div>
-
-
 </div>
         

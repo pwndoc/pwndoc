@@ -7,22 +7,9 @@ export default {
     data: () => {
         return {
             loading: true,
+            initialLoading: true,
             UserService: UserService,
-            settings: {
-                imageBorder: false,
-                imageBorderColor: "#000000",
-                cvssColors : {
-                    noneColor : "#4a86e8",
-                    lowColor : "#008000",
-                    mediumColor : "#f9a009",
-                    highColor : "#fe0000",
-                    criticalColor : "#212121" 
-                },
-                enableReviews: false,
-                mandatoryReview: false,
-                minReviewers: 1,
-                removeApprovalsUponUpdate: false
-            },
+            settings: {},
             settingsOrig : {},
             canEdit: false
         }
@@ -59,6 +46,7 @@ export default {
                 this.settings = data.data.datas;
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.loading = false;
+                this.initialLoading = false;
             })
             .catch((err) => {
                 Notify.create({
@@ -79,6 +67,7 @@ export default {
             SettingsService.updateSettings(this.settings)
             .then((data) => {
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
+                this.$settings.refresh();
                 Notify.create({
                     message: "Settings updated successfully",
                     color: 'positive',
@@ -106,6 +95,7 @@ export default {
             .onOk(async () => {
                 this.loading = true;
                 await SettingsService.revertDefaults();
+                this.$settings.refresh();
                 this.getSettings();
                 Notify.create({
                     message: "Settings reverted successfully",

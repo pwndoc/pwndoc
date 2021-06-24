@@ -1,8 +1,8 @@
-<template>
-    <q-icon v-if="!state" :size="size" style="visibility: hidden" flat color="warning" name="fas fa-question"></q-icon>
+<template v-if="$settings.reviews">
+    <q-icon v-if="!state" :size="size" flat></q-icon>
     <q-icon v-else-if="state === 'APPROVED'" :size="size" flat color="positive" name="far fa-check-circle">
         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
-            Audit is approved ({{ getApprovalCount() }}/{{ minReviewers }})
+            Audit is approved ({{ getApprovalCount() }}/{{ getMinReviewers() }})
             <div v-for="reviewer in approvals">
                 <q-separator />
                 {{ reviewer.firstname }} {{ reviewer.lastname }} 
@@ -11,7 +11,7 @@
     </q-icon>
     <q-icon v-else-if="state === 'REVIEW'" :size="size" flat color="warning" name="fas fa-exclamation-triangle">
         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
-            Audit is being reviewed ({{ getApprovalCount() }}/{{ minReviewers }})
+            Audit is being reviewed ({{ getApprovalCount() }}/{{ getMinReviewers() }})
             <div v-for="reviewer in approvals">
                 <q-separator />
                 {{ reviewer.firstname }} {{ reviewer.lastname }}
@@ -25,7 +25,7 @@
 
 export default {
     name: 'audit-state-icon',
-    props: ['approvals', 'state', 'size', 'minReviewers'],
+    props: ['approvals', 'state', 'size'],
 
     data() {
         return {}
@@ -33,8 +33,12 @@ export default {
 
     methods: {
         getApprovalCount() {
-            if(!this.approvals) return -1;
-            else return this.approvals.length;
+            if(this.approvals) return this.approvals.length;
+            else return -1;
+        },
+
+        getMinReviewers() {
+            return this.$settings.reviews.settings.minReviewers;
         }
     }
 }
