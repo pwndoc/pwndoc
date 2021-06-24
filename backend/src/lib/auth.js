@@ -8,9 +8,17 @@ if (!config[env].jwtSecret) {
     var configString = JSON.stringify(config, null, 4)
     fs.writeFileSync(`${__basedir}/config/config.json`, configString)
 }
+if (!config[env].jwtRefreshSecret) {
+    config[env].jwtRefreshSecret = require('crypto').randomBytes(32).toString('hex')
+    var configString = JSON.stringify(config, null, 4)
+    fs.writeFileSync(`${__basedir}/config/config.json`, configString)
+}
 
 var jwtSecret = config[env].jwtSecret
 exports.jwtSecret = jwtSecret
+
+var jwtRefreshSecret = config[env].jwtRefreshSecret
+exports.jwtRefreshSecret = jwtRefreshSecret
 
 /*  ROLES LOGIC
 

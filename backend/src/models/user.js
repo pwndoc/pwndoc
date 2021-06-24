@@ -4,6 +4,7 @@ var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 
 var auth = require('../lib/auth.js');
+const { generateUUID } = require('../lib/utils.js');
 
 var UserSchema = new Schema({
     username:       {type: String, unique: true, required: true},
@@ -11,6 +12,7 @@ var UserSchema = new Schema({
     firstname:      {type: String, required: true},
     lastname:       {type: String, required: true},
     role:           {type: String, default: 'user'},
+    refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
 
 /*
@@ -130,31 +132,130 @@ UserSchema.statics.updateUser = function (userId, user) {
     })
 }
 
+// Update refreshtoken
+UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
+    return new Promise((resolve, reject) => {
+        var token = ""
+        var newRefreshToken = ""
+        try {
+            var decoded = jwt.verify(refreshToken, auth.jwtRefreshSecret)
+            var username = decoded.username
+            var sessionId = decoded.sessionId
+            var expiration = decoded.exp
+        }
+        catch (err) {
+            if (err.name === 'TokenExpiredError')
+                throw({fn: 'Unauthorized', message: 'Expired refreshToken'})
+            else
+                throw({fn: 'Unauthorized', message: 'Invalid refreshToken'})
+        }
+        var query = this.findOne({username: username})
+        query.exec()
+        .then(row => {
+            if (row) {
+                // Check session exist and sessionId not null (if null then it is a login)
+                if (sessionId !== null) {
+                    var sessionExist = row.refreshTokens.findIndex(e => e.sessionId === sessionId && e.token === refreshToken)
+                    if (sessionExist === -1) // Not found
+                        throw({fn: 'Unauthorized', message: 'Session not found'})
+                }
+
+                // Generate new token
+                var payload = {}
+                payload.id = row._id
+                payload.username = row.username
+                payload.role = row.role
+                payload.firstname = row.firstname
+                payload.lastname = row.lastname
+                payload.roles = auth.acl.getRoles(payload.role)
+
+                token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '15 minutes'})
+
+                // Remove expired sessions
+                row.refreshTokens = row.refreshTokens.filter(e => {
+                    try {
+                        var decoded = jwt.verify(e.token, auth.jwtRefreshSecret)
+                    }
+                    catch (err) {
+                        var decoded = null
+                    }
+                    return decoded !== null
+                })
+                // Update or add new refresh token
+                var foundIndex = row.refreshTokens.findIndex(e => e.sessionId === sessionId)
+                if (foundIndex === -1) { // Not found
+                    sessionId = generateUUID()
+                    newRefreshToken = jwt.sign({sessionId: sessionId, username: username}, auth.jwtRefreshSecret, {expiresIn: '7 days'})
+                    row.refreshTokens.push({sessionId: sessionId, userAgent: userAgent, token:newRefreshToken})
+                 }
+                else {
+                    newRefreshToken = jwt.sign({sessionId: sessionId, username: username, exp: expiration}, auth.jwtRefreshSecret)
+                    row.refreshTokens[foundIndex].token = newRefreshToken
+                }
+                return row.save()
+            }
+            else
+                reject({fn: 'NotFound', message: 'User not found'})
+        })
+        .then(() => {
+            resolve({token: token, refreshToken: newRefreshToken})
+        })
+        .catch(err => {
+            if (err.code === 11000)
+                reject({fn: 'BadParameters', message: 'Username already exists'})
+            else
+                reject(err)
+        })
+    })
+}
+
+// Remove session
+UserSchema.statics.removeSession = function (username, sessionId) {
+    return new Promise((resolve, reject) => {
+        var query = this.findOne({username: username})
+        query.exec()
+        .then(row => {
+            if (row) {
+                row.refreshTokens = row.refreshTokens.filter(e => e.sessionId !== sessionId)
+                return row.save()
+            }
+            else
+                reject({fn: 'NotFound', message: 'User not found'})
+        })
+        .then(() => {
+            resolve('Session removed successfully')
+        })
+        .catch(err => {
+            if (err.code === 11000)
+                reject({fn: 'BadParameters', message: 'Username already exists'})
+            else
+                reject(err)
+        })
+    })
+}
+
+
 /*
 *** Methods ***
 */
 
 // Authenticate user with username and password, return JWT token
-UserSchema.methods.getToken = function () {
+UserSchema.methods.getToken = function (userAgent) {
     return new Promise((resolve, reject) => {
         var user = this;
+        var token = ""
         var query = User.findOne({username: user.username});
         query.exec()
         .then(function(row) {
             if (row && bcrypt.compareSync(user.password, row.password)) {
-                var payload = {};
-                payload.id = row._id;
-                payload.username = row.username;
-                payload.role = row.role;
-                payload.firstname = row.firstname;
-                payload.lastname = row.lastname;
-                payload.roles = auth.acl.getRoles(payload.role)
-
-                var token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '3 days'});
-                resolve({token: `JWT ${token}`});
+                var refreshToken = jwt.sign({sessionId: null, username: row.username}, auth.jwtRefreshSecret)
+                return User.updateRefreshToken(refreshToken, userAgent)
             }
             else
                 throw({fn: 'Unauthorized', message: 'Invalid credentials'});
+        })
+        .then(row => {
+            resolve({token: row.token, refreshToken: row.refreshToken})
         })
         .catch(function(err) {
             reject(err);

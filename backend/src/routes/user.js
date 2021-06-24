@@ -3,17 +3,56 @@ module.exports = function(app) {
     var Response = require('../lib/httpResponse.js');
     var User = require('mongoose').model('User');
     var acl = require('../lib/auth').acl;
-    var utils = require('../lib/utils')
+    var jwtRefreshSecret = require('../lib/auth').jwtRefreshSecret
+    var jwt = require('jsonwebtoken')
 
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
         Response.Ok(res, req.cookies['token']);
     });
 
+    // Refresh token
+    app.get("/api/users/refreshtoken", function(req, res) {
+        var userAgent = req.headers['user-agent']
+        var token = req.cookies['refreshToken']
+        
+        User.updateRefreshToken(token, userAgent)
+        .then(msg => {
+            res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
+            res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true})
+            Response.Ok(res, msg)
+        })
+        .catch(err => {
+            if (err.fn === 'Unauthorized') {
+                res.clearCookie('token')
+                res.clearCookie('refreshToken')
+            }
+            Response.Internal(res, err)
+        })
+    });
+
     // Remove token cookie
-    app.get("/api/users/destroytoken", acl.hasPermission('validtoken'), function(req, res) {
-        res.clearCookie('token')
-        Response.Ok(res, 'Removed token');
+    app.get("/api/users/destroytoken", function(req, res) {
+        var token = req.cookies['refreshToken']
+        try {
+            var decoded = jwt.verify(token, jwtRefreshSecret)
+        }
+        catch (err) {
+            res.clearCookie('token')
+            res.clearCookie('refreshToken')
+            if (err.name === 'TokenExpiredError')
+                Response.Unauthorized(res, 'Expired refreshToken')
+            else
+                Response.Unauthorized(res, 'Invalid refreshToken')
+            return
+        }
+        User.removeSession(decoded.username, decoded.sessionId)
+        .then(msg => {
+            res.clearCookie('token')
+            res.clearCookie('refreshToken')
+            Response.Ok(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
     });
 
     // Authenticate user -> return JWT token
@@ -27,9 +66,10 @@ module.exports = function(app) {
         user.username = req.body.username;
         user.password = req.body.password;
 
-        user.getToken()
+        user.getToken(req.headers['user-agent'])
         .then(msg => {
-            res.cookie('token', msg.token, {secure: true, httpOnly: true})
+            res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
+            res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true})
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err))

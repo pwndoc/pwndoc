@@ -25,3 +25,8 @@ function escapeRegex(regex) {
     return regex.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
 }
 exports.escapeRegex = escapeRegex
+
+function generateUUID() {
+    return require('crypto').randomBytes(32).toString('hex')
+}
+exports.generateUUID = generateUUID
