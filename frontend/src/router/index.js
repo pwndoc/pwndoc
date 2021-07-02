@@ -1,9 +1,24 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import Vue from "vue";
+import VueRouter from "vue-router";
+import routes from "./routes";
+import AuthConfig from "../config/auth";
+import { Auth0Plugin } from "../auth";
 
-import routes from './routes'
+console.log(AuthConfig);
 
-Vue.use(VueRouter)
+Vue.use(Auth0Plugin, {
+  domain: AuthConfig.domain,
+  clientId: AuthConfig.clientId,
+  onRedirectCallback: (appState) => {
+    router.push(
+      appState && appState.targetUrl
+        ? appState.targetUrl
+        : window.location.pathname
+    );
+  },
+});
+
+Vue.use(VueRouter);
 
 const Router = new VueRouter({
   /*
@@ -18,7 +33,7 @@ const Router = new VueRouter({
   mode: process.env.VUE_ROUTER_MODE,
   base: process.env.VUE_ROUTER_BASE,
   scrollBehavior: () => ({ y: 0 }),
-  routes
-})
+  routes,
+});
 
-export default Router
+export default Router;
