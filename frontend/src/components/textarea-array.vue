@@ -46,9 +46,9 @@ export default {
     methods: {
         updateParent: function() {
             if (this.noEmptyLine)
-                this.$emit('input', this.dataString.split('\n').filter(e => e !== '').map(e => e.trim()))
+                this.$emit('input', this.dataString.split('\n').filter(e => e !== ''))
             else
-                this.$emit('input', this.dataString.split('\n').map(e => e.trim()))
+                this.$emit('input', this.dataString.split('\n'))
         }
     }
 }
