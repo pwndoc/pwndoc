@@ -1,6 +1,24 @@
-// Secret for JWT tokens creation (make it dynamic for production)
-var jwtSecret = "ASy4FVjsXNLQl09LbieroWsjO5UXjvX5";
-exports.jwtSecret = jwtSecret;
+// Dynamic generation of JWT Secret if not exist (different for each environnment)
+var fs = require('fs')
+var env = process.env.NODE_ENV || 'dev'
+var config = require('../config/config.json')
+
+if (!config[env].jwtSecret) {
+    config[env].jwtSecret = require('crypto').randomBytes(32).toString('hex')
+    var configString = JSON.stringify(config, null, 4)
+    fs.writeFileSync(`${__basedir}/config/config.json`, configString)
+}
+if (!config[env].jwtRefreshSecret) {
+    config[env].jwtRefreshSecret = require('crypto').randomBytes(32).toString('hex')
+    var configString = JSON.stringify(config, null, 4)
+    fs.writeFileSync(`${__basedir}/config/config.json`, configString)
+}
+
+var jwtSecret = config[env].jwtSecret
+exports.jwtSecret = jwtSecret
+
+var jwtRefreshSecret = config[env].jwtRefreshSecret
+exports.jwtRefreshSecret = jwtRefreshSecret
 
 /*  ROLES LOGIC
 
@@ -62,7 +80,7 @@ var builtInRoles = {
 }
 
 try {
-    var customRoles = require('./roles.json')}
+    var customRoles = require('../config/roles.json')}
 catch(error) {
     var customRoles = []
 }

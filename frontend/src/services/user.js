@@ -13,6 +13,10 @@ export default {
             .then((response) => {
                 var token = response.data.datas.token;
                 this.user = jwtDecode(token);
+                var countdown = this.user.exp*1000 - Date.now() - 60000 // Countdown to expiration less 1 minute
+                setTimeout(() => {
+                    this.refreshToken()
+                }, countdown)
                 resolve();
             })
             .catch((error) => {
@@ -22,12 +26,31 @@ export default {
         })
     },
 
+    refreshToken() {
+        Vue.prototype.$axios.get('users/refreshtoken')
+        .then((response) => {
+            var token = response.data.datas.token;
+            this.user = jwtDecode(token);
+            var countdown = this.user.exp*1000 - Date.now() - 60000 // Countdown to expiration less 1 minute
+            setTimeout(() => {
+                this.refreshToken()
+            }, countdown)
+        })
+        .catch(err => {
+            console.log(err)
+            if (err.response && err.response.data.datas.includes('Expired'))
+                Router.push('/login?tokenError=2')
+            else
+                Router.push('/login')
+        })
+    },
+
     destroyToken() {
         Vue.prototype.$axios.get('users/destroytoken')
         .then(() => {
             Router.push('/login');
         })
-        .catch(err => console.log(err))
+        .catch(err => Router.push('/login'))
     },
 
     checkToken() {
