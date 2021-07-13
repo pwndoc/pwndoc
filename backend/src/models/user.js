@@ -98,7 +98,7 @@ UserSchema.statics.updateProfile = function (username, user) {
                 throw({fn: 'Unauthorized', message: 'Current password is invalid'});
         })
         .then(function() {
-            var token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '24h'});
+            var token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '15 minutes'});
             resolve({token: `JWT ${token}`});
         })
         .catch(function(err) {
@@ -139,7 +139,7 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
         var newRefreshToken = ""
         try {
             var decoded = jwt.verify(refreshToken, auth.jwtRefreshSecret)
-            var username = decoded.username
+            var userId = decoded.userId
             var sessionId = decoded.sessionId
             var expiration = decoded.exp
         }
@@ -149,7 +149,7 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
             else
                 throw({fn: 'Unauthorized', message: 'Invalid refreshToken'})
         }
-        var query = this.findOne({username: username})
+        var query = this.findById(userId)
         query.exec()
         .then(row => {
             if (row) {
@@ -185,17 +185,17 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                 var foundIndex = row.refreshTokens.findIndex(e => e.sessionId === sessionId)
                 if (foundIndex === -1) { // Not found
                     sessionId = generateUUID()
-                    newRefreshToken = jwt.sign({sessionId: sessionId, username: username}, auth.jwtRefreshSecret, {expiresIn: '7 days'})
+                    newRefreshToken = jwt.sign({sessionId: sessionId, userId: userId}, auth.jwtRefreshSecret, {expiresIn: '7 days'})
                     row.refreshTokens.push({sessionId: sessionId, userAgent: userAgent, token:newRefreshToken})
                  }
                 else {
-                    newRefreshToken = jwt.sign({sessionId: sessionId, username: username, exp: expiration}, auth.jwtRefreshSecret)
+                    newRefreshToken = jwt.sign({sessionId: sessionId, userId: userId, exp: expiration}, auth.jwtRefreshSecret)
                     row.refreshTokens[foundIndex].token = newRefreshToken
                 }
                 return row.save()
             }
             else
-                reject({fn: 'NotFound', message: 'User not found'})
+                reject({fn: 'NotFound', message: 'Session not found'})
         })
         .then(() => {
             resolve({token: token, refreshToken: newRefreshToken})
@@ -210,9 +210,9 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
 }
 
 // Remove session
-UserSchema.statics.removeSession = function (username, sessionId) {
+UserSchema.statics.removeSession = function (userId, sessionId) {
     return new Promise((resolve, reject) => {
-        var query = this.findOne({username: username})
+        var query = this.findById(userId)
         query.exec()
         .then(row => {
             if (row) {
@@ -243,12 +243,11 @@ UserSchema.statics.removeSession = function (username, sessionId) {
 UserSchema.methods.getToken = function (userAgent) {
     return new Promise((resolve, reject) => {
         var user = this;
-        var token = ""
         var query = User.findOne({username: user.username});
         query.exec()
         .then(function(row) {
             if (row && bcrypt.compareSync(user.password, row.password)) {
-                var refreshToken = jwt.sign({sessionId: null, username: row.username}, auth.jwtRefreshSecret)
+                var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
                 return User.updateRefreshToken(refreshToken, userAgent)
             }
             else

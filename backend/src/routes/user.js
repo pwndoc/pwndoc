@@ -32,7 +32,7 @@ module.exports = function(app) {
     });
 
     // Remove token cookie
-    app.get("/api/users/destroytoken", function(req, res) {
+    app.delete("/api/users/refreshtoken", function(req, res) {
         var token = req.cookies['refreshToken']
         try {
             var decoded = jwt.verify(token, jwtRefreshSecret)
@@ -46,7 +46,7 @@ module.exports = function(app) {
                 Response.Unauthorized(res, 'Invalid refreshToken')
             return
         }
-        User.removeSession(decoded.username, decoded.sessionId)
+        User.removeSession(decoded.userId, decoded.sessionId)
         .then(msg => {
             res.clearCookie('token')
             res.clearCookie('refreshToken')
@@ -150,9 +150,10 @@ module.exports = function(app) {
                     newUser.username = req.body.username;
                     newUser.password = req.body.password;
 
-                    newUser.getToken()
+                    newUser.getToken(req.headers['user-agent'])
                     .then(msg => {
-                        res.cookie('token', msg.token, {secure: true, httpOnly: true})
+                        res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
+                        res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
                         Response.Created(res, msg)
                     })
                     .catch(err => Response.Internal(res, err))

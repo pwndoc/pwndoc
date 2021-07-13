@@ -1,10 +1,17 @@
 var jwtDecode = require('jwt-decode');
 import Vue from 'vue';
+import User from '@/services/user';
 
-import Router from '../router'
+import Router from '@/router'
 
 export default {
-    user: null,
+    user: {
+        username: "",
+        role: "",
+        firstname: "",
+        lastname: "",
+        roles: ""
+    },
 
     getToken(username, password) {
         return new Promise((resolve, reject) => {
@@ -13,63 +20,39 @@ export default {
             .then((response) => {
                 var token = response.data.datas.token;
                 this.user = jwtDecode(token);
-                var countdown = this.user.exp*1000 - Date.now() - 60000 // Countdown to expiration less 1 minute
-                setTimeout(() => {
-                    this.refreshToken()
-                }, countdown)
                 resolve();
             })
             .catch((error) => {
-                console.log(error)
                 reject(error);
             })
         })
     },
 
     refreshToken() {
-        Vue.prototype.$axios.get('users/refreshtoken')
-        .then((response) => {
-            var token = response.data.datas.token;
-            this.user = jwtDecode(token);
-            var countdown = this.user.exp*1000 - Date.now() - 60000 // Countdown to expiration less 1 minute
-            setTimeout(() => {
-                this.refreshToken()
-            }, countdown)
-        })
-        .catch(err => {
-            console.log(err)
-            if (err.response && err.response.data.datas.includes('Expired'))
-                Router.push('/login?tokenError=2')
-            else
-                Router.push('/login')
+        return new Promise((resolve, reject) => {
+            Vue.prototype.$axios.get('users/refreshtoken')
+            .then((response) => {
+                var token = response.data.datas.token;
+                this.user = jwtDecode(token);
+                resolve()
+            })
+            .catch(err => {
+                if (err.response && err.response.data)
+                    reject(err.response.data.datas)
+                else 
+                    reject('Invalid Token')
+            })
         })
     },
 
     destroyToken() {
-        Vue.prototype.$axios.get('users/destroytoken')
+        Vue.prototype.$axios.delete('users/refreshtoken')
         .then(() => {
+            User.clear()
             Router.push('/login');
         })
-        .catch(err => Router.push('/login'))
-    },
-
-    checkToken() {
-        return new Promise((resolve, reject) => {
-            Vue.prototype.$axios.get(`users/checktoken`)
-            .then(data => {
-                var token = data.data.datas
-                var decoded = jwtDecode(token);
-                if (decoded) {
-                    this.user = decoded;
-                    resolve();
-                }
-                else
-                    reject('InvalidToken');
-                resolve()
-            })
-            .catch((error) => {
-                reject(error);
-            })
+        .catch(err => {
+            console.log(err)
         })
     },
 
@@ -94,7 +77,20 @@ export default {
     },
 
     isAuth() {
-        return (this.user !== null);
+        if (this.user && this.user.username)
+            return true
+        return false
+    },
+
+    // Reset user variable to default empty
+    clear() {
+        this.user = {
+            username: "",
+            role: "",
+            firstname: "",
+            lastname: "",
+            roles: ""
+        }
     },
 
     isAllowed(role) {
