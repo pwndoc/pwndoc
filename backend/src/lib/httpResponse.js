@@ -75,7 +75,8 @@ function Internal(res, error){
         res.status(500).json({"status": "error", "datas": error.errmsg});
     }   
     else {
-        res.status(500).json({"status": "error", "datas": error});
+        console.log(error)
+        res.status(500).json({"status": "error", "datas": "Internal Error"});
     }
 };
 exports.Internal = Internal;
