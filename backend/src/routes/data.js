@@ -1,3 +1,5 @@
+const { isArray } = require('lodash');
+
 module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
@@ -236,8 +238,14 @@ module.exports = function(app) {
         }
 
         var vulnCat = {};
+        // Required parameters
         vulnCat.name = req.body.name;
-        vulnCat.fields = req.body.fields || [];
+
+        // Optional parameters
+        if (!_.isNil(req.body.sortValue)) vulnCat.sortValue = req.body.sortValue
+        if (!_.isNil(req.body.sortOrder)) vulnCat.sortOrder = req.body.sortOrder
+        if (!_.isNil(req.body.sortAuto)) vulnCat.sortAuto = req.body.sortAuto
+
         VulnerabilityCategory.create(vulnCat)
         .then(msg => Response.Created(res, msg))
         .catch(err => Response.Internal(res, err))
@@ -255,23 +263,19 @@ module.exports = function(app) {
                 Response.BadParameters(res, 'name value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
                 return
             }
-
-            for (var j=0; j<vulnCat.fields.length; j++) {
-                var field = vulnCat.fields[j]
-                if (!field.fieldType || !field.label) {
-                    Response.BadParameters(res, 'Missing required parameters: fields.fieldType, fields.label')
-                    return
-                }
-                if (!utils.validFilename(field.fieldType) || !utils.validFilename(field.label) ) {
-                    Response.BadParameters(res, 'fieldType and label value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
-                    return
-                }
-            }
         }
 
         var vulnCategories = []
         req.body.forEach(e => {
-            vulnCategories.push({name: e.name, fields: e.fields})
+            // Required parameters
+            var tmpCat = {name: e.name}
+
+            // Optional parameters
+            if (!_.isNil(e.sortValue)) tmpCat.sortValue = e.sortValue
+            if (!_.isNil(e.sortOrder)) tmpCat.sortOrder = e.sortOrder
+            if (!_.isNil(e.sortAuto)) tmpCat.sortAuto = e.sortAuto
+
+            vulnCategories.push(tmpCat)
         })
 
         VulnerabilityCategory.updateAll(vulnCategories)
@@ -414,6 +418,7 @@ module.exports = function(app) {
             if (typeof e.required === 'boolean') field.required = e.required
             if (!_.isNil(e.description)) field.description = e.description
             if (!_.isNil(e.text)) field.text = e.text
+            if (isArray(e.options)) field.options = e.options
             if (typeof e.position === 'number') field.position = e.position
             customFields.push(field)
         })

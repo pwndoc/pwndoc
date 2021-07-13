@@ -49,6 +49,14 @@ var Host = {
     services:   [Service]
 }
 
+var SortOption = {
+    _id:        false,
+    category:   String,
+    sortValue:  String,
+    sortOrder:  {type: String, enum: ['desc', 'asc']},
+    sortAuto:   Boolean
+}
+
 var AuditSchema = new Schema({
     name:               {type: String, required: true},
     auditType:          String,
@@ -66,7 +74,8 @@ var AuditSchema = new Schema({
     template:           {type: Schema.Types.ObjectId, ref: 'Template'},
     creator:            {type: Schema.Types.ObjectId, ref: 'User'},
     sections:           [{field: String, name: String, text: String, customFields: [customField]}], // keep text for retrocompatibility
-    customFields:       [customField]
+    customFields:       [customField],
+    sortFindings:       [SortOption]
 
 }, {timestamps: true});
 
@@ -197,6 +206,22 @@ AuditSchema.statics.create = (audit, userId) => {
                     audit.customFields.push({customField: field, text: fieldText})
                 }
             })
+
+            var VulnerabilityCategory = mongoose.model('VulnerabilityCategory')
+            return VulnerabilityCategory.getAll()
+        })
+        .then((rows) => {
+            // Add default sort options for each vulnerability category
+            audit.sortFindings = []
+            rows.forEach(e => {
+                audit.sortFindings.push({
+                    category: e.name,
+                    sortValue: e.sortValue,
+                    sortOrder: e.sortOrder,
+                    sortAuto: e.sortAuto
+                })
+            })
+
             return new Audit(audit).save()
         })
         .then((rows) => {
@@ -334,16 +359,22 @@ AuditSchema.statics.createFinding = (isAdmin, auditId, userId, finding) => {
         .then(identifier => {
             finding.identifier = ++identifier
             
-            var query = Audit
-                .findByIdAndUpdate(auditId, {$push: {findings: {$each: [finding], $sort: {cvssScore: -1}}}})
-                .collation({locale: "en_US", numericOrdering: true})
+            var query = Audit.findByIdAndUpdate(auditId, {$push: {findings: finding}})
             if (!isAdmin)
                 query.or([{creator: userId}, {collaborators: userId}])
             return query.exec()
         .then(row => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
-
+            else {
+                var sortOption = row.sortFindings.find(e => e.category === (finding.category || 'No Category'))
+                if (sortOption && sortOption.sortAuto)
+                    return Audit.updateSortFindings(isAdmin, auditId, userId, null)
+                else
+                    resolve("Audit Finding created succesfully")
+            }
+        })
+        .then(() => {
             resolve("Audit Finding created successfully")
         })
         .catch((err) => {
@@ -422,6 +453,8 @@ AuditSchema.statics.getFinding = (isAdmin, auditId, userId, findingId) => {
 // Update finding of audit
 AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFinding) => {
     return new Promise((resolve, reject) => { 
+        var sortAuto = true
+
         var query = Audit.findById(auditId)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
@@ -434,6 +467,10 @@ AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFin
             if (finding === null)
                 reject({fn: 'NotFound', message: 'Finding not found'})         
             else {
+                var sortOption = row.sortFindings.find(e => e.category === (newFinding.category || 'No Category'))
+                if (sortOption && !sortOption.sortAuto)
+                    sortAuto = false
+
                 Object.keys(newFinding).forEach((key) => {
                     finding[key] = newFinding[key]
                 })
@@ -441,9 +478,10 @@ AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFin
             } 
         })
         .then(() => {
-            return Audit
-            .findByIdAndUpdate(auditId, {$push: {findings: {$each: [], $sort: {cvssScore: -1, priority: -1}}}})
-            .collation({locale: "en_US", numericOrdering: true})
+            if (sortAuto)
+                return Audit.updateSortFindings(isAdmin, auditId, userId, null)
+            else
+                resolve("Audit Finding updated successfully")
         })
         .then(() => {
             resolve("Audit Finding updated successfully")        
@@ -577,6 +615,125 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
         })
         .then(() => {
             resolve('Audit Section deleted successfully')
+        })
+        .catch((err) => {
+            reject(err)
+        })
+    })
+}
+
+// Update audit sort options for findings and run the sorting. If update param is null then just run sorting
+AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
+    return new Promise((resolve, reject) => {
+        var audit = {} 
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.exec()
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+            else {
+                audit = row
+                if (update) // if update is null then we only sort findings (no sort options saving)
+                    audit.sortFindings = update.sortFindings // saving sort options to audit
+
+                var VulnerabilityCategory = mongoose.model('VulnerabilityCategory')
+                return VulnerabilityCategory.getAll()
+                
+            }            
+        })
+        .then(row => {
+            var _ = require('lodash')
+            var findings = []
+
+            // Group findings by category
+            var findingList = _
+            .chain(audit.findings)
+            .groupBy("category")
+            .map((value, key) => {
+                if (key === 'undefined') key = 'No Category'
+                var sortOption = audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
+                if (!sortOption) // no option for category in audit
+                    sortOption = row.find(e => e.name === key) // Get sort option from default in vulnerability category
+                if (!sortOption) // no default option or category don't exist
+                    sortOption = {sortValue: 'cvssScore', sortOrder: 'desc', sortAuto: true} // set a default sort option
+
+                return {category: key, findings: value, sortOption: sortOption}
+            })
+            .value()
+
+            findingList.forEach(group => {
+                var order = -1 // desc
+                if (group.sortOption.sortOrder === 'asc') order = 1
+
+                var tmpFindings = group.findings
+                .sort((a,b) => {
+                    // Get built-in value (findings[sortValue])
+                    var left = a[group.sortOption.sortValue]
+                    // Not found then get customField sortValue
+                    if (!left) {
+                        left = a.customFields.find(e => e.customField.label === group.sortOption.sortValue)
+                        if (left)
+                            left = left.text
+                    }
+                    // Not found then set default to 0
+                    if (!left)
+                        left = 0
+                    // Convert to string in case of int value
+                    left = left.toString()
+                    
+                    // Same for right value to compare
+                    var right = b[group.sortOption.sortValue]
+                    if (!right) {
+                        right = b.customFields.find(e => e.customField.label === group.sortOption.sortValue)
+                        if (right)
+                            right = right.text
+                    }
+                    if (!right)
+                        right = 0
+                    right = right.toString()
+
+                    return left.localeCompare(right, undefined, {numeric: true}) * order
+                })
+
+                findings = findings.concat(tmpFindings)
+            })
+
+            audit.findings = findings
+
+            return audit.save()
+        })
+        .then(() => {
+            resolve("Audit findings sorted successfully")
+        })
+        .catch((err) => {
+            console.log(err)
+            reject(err)
+        })
+    })
+},
+
+// Move finding from move.oldIndex to move.newIndex
+AuditSchema.statics.moveFindingPosition = (isAdmin, auditId, userId, move) => {
+    return new Promise((resolve, reject) => { 
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.exec()
+        .then((row) => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+            
+            var tmp = row.findings[move.oldIndex]
+            row.findings.splice(move.oldIndex, 1)
+            row.findings.splice(move.newIndex, 0, tmp)
+
+            row.markModified('findings')
+            return row.save()
+        })
+        .then((msg) => {
+            resolve('Audit Finding moved successfully') 
         })
         .catch((err) => {
             reject(err)

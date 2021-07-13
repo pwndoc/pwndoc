@@ -31,9 +31,18 @@ export default {
             editVulnType: false,
 
             vulnCategories: [],
-            newVulnCat: {name: ""},
+            newVulnCat: {name: "", sortValue: "cvssScore", sortOrder: "desc", sortAuto: true},
             editCategories: [],
             editCategory: false,
+            sortValueOptions: [
+                {label: 'CVSS Score', value: 'cvssScore'},
+                {label: 'Priority', value: 'priority'},
+                {label: 'Remediation Complexity', value: 'remediationComplexity'}
+            ],
+            sortOrderOptions: [
+                {label: 'Ascending', value: 'asc'},
+                {label: 'Descending', value: 'desc'}
+            ],
 
             customFields: [],
             newCustomField: {
@@ -375,7 +384,7 @@ export default {
 
             DataService.createVulnerabilityCategory(this.newVulnCat)
             .then((data) => {
-                this.newVulnCat.name = "";
+                this.newVulnCat = {name: "", sortValue: "cvssScore", sortOrder: "desc", sortAuto: true}
                 this.getVulnerabilityCategories();
                 Notify.create({
                     message: 'Vulnerability category created successfully',
@@ -420,6 +429,25 @@ export default {
         // Remove Category
         removeCategory: function(vulnCat) {
             this.editCategories = this.editCategories.filter(e => e.name !== vulnCat.name)
+        },
+
+        getSortOptions: function(category) {
+            var options = [
+                {label: 'CVSS Score', value: 'cvssScore'},
+                {label: 'Priority', value: 'priority'},
+                {label: 'Remediation Complexity', value: 'remediationComplexity'}
+            ]
+            var allowedFieldTypes = ['date', 'input', 'radio', 'select']
+            this.customFields.forEach(e => {
+                if (
+                    (e.display === 'finding' || e.display === 'vulnerability') && 
+                    (!e.displaySub || e.displaySub === category) && 
+                    allowedFieldTypes.includes(e.fieldType)
+                ) {
+                    options.push({label: e.label, value: e.label})
+                }
+            })
+            return options
         },
 
 /* ===== CUSTOM FIELDS ===== */

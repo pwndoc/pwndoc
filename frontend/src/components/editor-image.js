@@ -52,10 +52,8 @@ export default class CustomImage extends TipTapImage {
                 var fileReader = new FileReader()
 
                 fileReader.onloadend = (e) => {
-                  console.log(fileReader.result)
                   Utils.resizeImg(fileReader.result)
                   .then(data => {
-                    console.log(data)
                     return ImageService.createImage({value: data, name: file.name, auditId: auditId})
                   })
                   .then((data) => {
@@ -88,10 +86,8 @@ export default class CustomImage extends TipTapImage {
                 var fileReader = new FileReader()
 
                 fileReader.onloadend = (e) => {
-                  console.log(fileReader.result)
                   Utils.resizeImg(fileReader.result)
                   .then(data => {
-                    console.log(data)
                     return ImageService.createImage({value: data, name: file.name, auditId: auditId})
                   })
                   .then((data) => {

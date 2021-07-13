@@ -58,31 +58,106 @@
 						</q-item>
 						
 						<div v-for="categoryFindings of findingList" :key="categoryFindings.category">
-							<q-item-label header>{{categoryFindings.category}}</q-item-label>
-							<q-list no-border v-for="finding of categoryFindings.findings" :key="finding._id">
-								<q-item
-								dense
-								class="cursor-pointer"
-								:to="'/audits/'+auditId+'/findings/'+finding._id"
-								>
-									<q-item-section side>
-										<q-chip
-											class="text-white"
-											size="sm"
-											square
-											:color="getFindingColor(finding)"
-										>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
-									</q-item-section>
-									<q-item-section>
-										<span>{{finding.title}}</span>
-									</q-item-section>
-									<q-item-section side v-if="finding.status === 0">
-										<q-icon name="check" color="green" />
-									</q-item-section>
-								</q-item>
-								<div class="row">
-									<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
-								</div>
+							<q-item>
+								<q-item-section>
+									<q-item-label header>{{categoryFindings.category}}</q-item-label>
+								</q-item-section>
+								<q-item-section avatar>
+									<q-btn icon="sort" flat>
+										<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Sort Options</q-tooltip>
+										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left" content-class="bg-grey-1">
+											<q-item>
+												<q-item-section>
+													<q-toggle 
+													v-model="categoryFindings.sortOption.sortAuto" 
+													label="Automatic Sorting"
+													@input="updateSortFindings"
+													/>
+												</q-item-section>
+											</q-item>
+											<q-separator />
+											<q-item>
+												<q-item-section>
+													<q-item-label>Sort By</q-item-label>
+												</q-item-section>
+											</q-item>
+											<q-item>
+												<q-item-section>
+													<q-option-group
+													v-model="categoryFindings.sortOption.sortValue"
+													:options="getSortOptions(categoryFindings.sortOption.category)"
+													type="radio"
+													:disable="!categoryFindings.sortOption.sortAuto"
+													@input="updateSortFindings"
+													/>
+												</q-item-section>
+											</q-item>
+											<q-separator />
+											<q-item>
+												<q-item-section>
+													<q-btn 
+													flat
+													icon="fa fa-long-arrow-alt-up"
+													label="Ascending"
+													dense
+													no-caps
+													align="left"
+													:disable="!categoryFindings.sortOption.sortAuto"
+													:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':'black'" 
+													@click="categoryFindings.sortOption.sortOrder = 'asc'; updateSortFindings()" 
+													/>
+												</q-item-section>
+											</q-item>
+											<q-item>
+												<q-item-section>
+													<q-btn 
+													flat
+													icon="fa fa-long-arrow-alt-down"
+													label="Descending"
+													dense
+													no-caps
+													align="left"
+													:disable="!categoryFindings.sortOption.sortAuto"
+													:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':'black'" 
+													@click="categoryFindings.sortOption.sortOrder = 'desc'; updateSortFindings()" 
+													/>
+												</q-item-section>
+											</q-item>
+										</q-menu>
+									</q-btn>
+								</q-item-section>
+							</q-item>
+							<q-list no-border>
+								<draggable :list="categoryFindings.findings" @end="moveFindingPosition($event, categoryFindings.category)" handle=".handle" ghost-class="drag-ghost">
+									<div v-for="finding of categoryFindings.findings" :key="finding._id">
+										<q-item
+										dense
+										class="cursor-pointer"
+										:to="'/audits/'+auditId+'/findings/'+finding._id"
+										>
+											<q-item-section side v-if="!categoryFindings.sortOption.sortAuto">
+												<q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
+											</q-item-section>
+											<q-item-section side>
+												<q-chip
+													class="text-white"
+													size="sm"
+													square
+													:color="getFindingColor(finding)"
+												>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
+											</q-item-section>
+											<q-item-section>
+												<span>{{finding.title}}</span>
+											</q-item-section>
+											<q-item-section side v-if="finding.status === 0">
+												<q-icon name="check" color="green" />
+											</q-item-section>
+										</q-item>
+										<div class="row">
+											<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
+										</div>
+									</div>
+								</draggable>
 							</q-list>
 						</div>
 						<q-separator class="q-my-sm" />
@@ -134,11 +209,11 @@
 
 <script>
 import { Notify } from 'quasar';
+import draggable from 'vuedraggable'
 
 import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
-import Utils from '@/services/utils';
 
 export default {
 		data () {
@@ -152,8 +227,14 @@ export default {
 					loading: true,
 					vulnCategories: [],
 					customFields: [],
-					auditTypes: []
+					auditTypes: [],
+					vulnCategories: [],
+					findingList: []
 				}
+		},
+
+		components: {
+			draggable
 		},
 
 		created: function() {
@@ -170,23 +251,46 @@ export default {
 			}
 		},
 
+		watch: {
+			'audit.findings': {
+				handler(newVal, oldVal) {
+					var result = _.chain(this.audit.findings)
+					.groupBy("category")
+					.map((value, key) => {
+						if (key === 'undefined') key = 'No Category'
+						var sortOption = this.audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
+						
+						if (!sortOption) { // no option for category in audit
+							sortOption = this.vulnCategories.find(e => e.name === key) // Get sort option from default in vulnerability category
+							if (sortOption) // found sort option from vuln categories
+								sortOption.category = sortOption.name
+							else // no default option or category don't exist
+								sortOption = {category: key, sortValue: 'cvssScore', sortOrder: 'desc', sortAuto: true} // set a default sort option
+							
+							this.audit.sortFindings.push({
+								category: sortOption.category,
+								sortValue: sortOption.sortValue,
+								sortOrder: sortOption.sortOrder,
+								sortAuto: sortOption.sortAuto
+							})
+						}
+						
+						return {category: key, findings: value, sortOption: sortOption}
+					})
+					.value()
+
+					this.findingList = result
+				},
+				deep: true,
+				immediate: true
+			}
+		},
+
 		computed: {
 			generalUsers: function() {return this.users.filter(user => user.menu === 'general')},
 			networkUsers: function() {return this.users.filter(user => user.menu === 'network')},
 			findingUsers: function() {return this.users.filter(user => user.menu === 'editFinding')},
 			sectionUsers: function() {return this.users.filter(user => user.menu === 'editSection')},
-
-			findingList: function() { // Group findings by category
-				return _.chain(this.audit.findings)
-				.groupBy("category")
-				.map((value, key) => {
-					if (key === 'undefined')
-						return { category: 'No Category', findings: value }
-					else
-						return {category: key, findings: value}
-				})
-				.value()
-			},
 
 			currentAuditType: function() {
 				return this.auditTypes.find(e => e.name === this.audit.auditType)
@@ -200,12 +304,6 @@ export default {
 					if (finding.cvssSeverity === "Medium") return "orange"
 					if (finding.cvssSeverity === "High") return "red"
 					if (finding.cvssSeverity === "Critical") return "black"
-				}
-				else if (finding.priority) {
-					if (finding.priority === 1) return "green"
-					if (finding.priority === 2) return "orange"
-					if (finding.priority === 3) return "red"
-					if (finding.priority === 4) return "black"
 				}
 				return "light-blue";
 			},
@@ -234,7 +332,11 @@ export default {
 			},
 
 			getAudit: function() {
-				AuditService.getAudit(this.auditId)
+				DataService.getVulnerabilityCategories() // Vuln Categories must exist before getting audit data for handling default sort options
+				.then(data => {
+					this.vulnCategories = data.data.datas
+					return AuditService.getAudit(this.auditId)
+				})
 				.then((data) => {
 					this.audit = data.data.datas
 					this.getSections()
@@ -288,52 +390,101 @@ export default {
 			},
 
 			// Convert blob to text
-        BlobReader: function(data) {
-            const fileReader = new FileReader();
+			BlobReader: function(data) {
+				const fileReader = new FileReader();
 
-            return new Promise((resolve, reject) => {
-                fileReader.onerror = () => {
-                    fileReader.abort()
-                    reject(new Error('Problem parsing blob'));
-                }
+				return new Promise((resolve, reject) => {
+					fileReader.onerror = () => {
+						fileReader.abort()
+						reject(new Error('Problem parsing blob'));
+					}
 
-                fileReader.onload = () => {
-                    resolve(fileReader.result)
-                }
+					fileReader.onload = () => {
+						resolve(fileReader.result)
+					}
 
-                fileReader.readAsText(data)
-            })
-        },
+					fileReader.readAsText(data)
+				})
+			},
 
-        generateReport: function() {
-            AuditService.generateAuditReport(this.auditId)
-            .then(response => {
-                var blob = new Blob([response.data], {type: "application/octet-stream"});
-                var link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = response.headers['content-disposition'].split('"')[1];
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-              })
-            .catch( async err => {
-                var message = "Error generating template"
-                if (err.response && err.response.data) {
-                    var blob = new Blob([err.response.data], {type: "application/json"})
-                    var blobData = await this.BlobReader(blob)
-                    message = JSON.parse(blobData).datas
-                }
-                Notify.create({
-                    message: message,
-                    type: 'negative',
-                    textColor:'white',
-                    position: 'top',
-                    closeBtn: true,
-                    timeout: 0,
-                    classes: "text-pre-wrap"
-                })
-            })
-        },
+			generateReport: function() {
+				AuditService.generateAuditReport(this.auditId)
+				.then(response => {
+					var blob = new Blob([response.data], {type: "application/octet-stream"});
+					var link = document.createElement('a');
+					link.href = window.URL.createObjectURL(blob);
+					link.download = response.headers['content-disposition'].split('"')[1];
+					document.body.appendChild(link);
+					link.click();
+					link.remove();
+				})
+				.catch( async err => {
+					var message = "Error generating template"
+					if (err.response && err.response.data) {
+						var blob = new Blob([err.response.data], {type: "application/json"})
+						var blobData = await this.BlobReader(blob)
+						message = JSON.parse(blobData).datas
+					}
+					Notify.create({
+						message: message,
+						type: 'negative',
+						textColor:'white',
+						position: 'top',
+						closeBtn: true,
+						timeout: 0,
+						classes: "text-pre-wrap"
+					})
+				})
+			},
+
+			updateSortFindings: function() {
+				AuditService.updateAuditSortFindings(this.auditId, {sortFindings: this.audit.sortFindings})
+			},
+
+			getSortOptions: function(category) {
+				var options = [
+					{label: 'CVSS Score', value: 'cvssScore'},
+					{label: 'Priority', value: 'priority'},
+					{label: 'Remediation Difficulty', value: 'remediationComplexity'}
+				]
+				var allowedFieldTypes = ['date', 'input', 'radio', 'select']
+				this.customFields.forEach(e => {
+					if (
+						(e.display === 'finding' || e.display === 'vulnerability') && 
+						(!e.displaySub || e.displaySub === category) && 
+						allowedFieldTypes.includes(e.fieldType)
+					) {
+						options.push({label: e.label, value: e.label})
+					}
+				})
+				return options
+			},
+
+			moveFindingPosition: function(event, category) {
+				var index = this.audit.findings.findIndex(e => {
+					if (category === 'No Category')
+						return !e.category
+					else
+						return e.category === category
+				})
+				if (index > -1) {
+					var realOldIndex = event.oldIndex + index
+					var realNewIndex = event.newIndex + index
+
+					AuditService.updateAuditFindingPosition(this.auditId, {oldIndex: realOldIndex, newIndex: realNewIndex})
+					.then(msg => this.getAudit())
+					.catch(err => {
+						console.log(err.response.data.datas)
+						Notify.create({
+							message: err.response.data.datas || err.message,
+							color: 'negative',
+							textColor:'white',
+							position: 'top-right'
+						})
+						this.getAudit()
+					})
+				}
+			}
 		}
 }
 </script>

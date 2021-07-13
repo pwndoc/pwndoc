@@ -71,5 +71,13 @@ export default {
 
   generateAuditReport: function(auditId) {
     return Vue.prototype.$axios.get(`audits/${auditId}/generate`, {responseType: 'blob'})
+  },
+
+  updateAuditSortFindings: function(auditId, audit) {
+    return Vue.prototype.$axios.put(`audits/${auditId}/sortfindings`, audit)
+  },
+
+  updateAuditFindingPosition: function(auditId, audit) {
+    return Vue.prototype.$axios.put(`audits/${auditId}/movefinding`, audit)
   }
 }

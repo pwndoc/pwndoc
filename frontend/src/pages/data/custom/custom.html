@@ -222,7 +222,7 @@
                                 </q-item-section>
                             </q-item>
                             <q-separator inset class="q-mb-sm" />
-                            <q-btn class="q-ml-md" color="secondary" unelevated label="Create" size="md" @click="createAuditType" />
+                            <q-btn class="q-ml-md" color="secondary" unelevated label="Create" size="md" no-caps @click="createAuditType" />
                         </div>
 
                         <div v-if="!editAuditType" class="col-md-6 col-12">
@@ -564,9 +564,43 @@
                                     bg-color="white"
                                     />
                                 </q-item-section>
-                                <q-item-section side>
-                                    <q-btn color="secondary" unelevated label="+" size="md" @click="createVulnerabilityCategory" />
+                            </q-item>
+                            <q-item>
+                                <div class="text-subtitle1">Default Sorting Options</div>
+                            </q-item>
+                            <q-item>
+                                <q-item-section>
+                                    <q-select
+                                    label="Sort By"
+                                    v-model="newVulnCat.sortValue"
+                                    :options="sortValueOptions"
+                                    emit-value
+                                    map-options
+                                    outlined
+                                    bg-color="white"
+                                    />
                                 </q-item-section>
+                                <q-item-section>
+                                    <q-select
+                                    label="Sort Order"
+                                    v-model="newVulnCat.sortOrder"
+                                    :options="sortOrderOptions"
+                                    emit-value
+                                    map-options
+                                    outlined
+                                    bg-color="white"
+                                    />
+                                </q-item-section>
+                                <q-item-section>
+                                    <q-toggle 
+                                    v-model="newVulnCat.sortAuto" 
+                                    label="Automatic Sorting"
+                                    />
+                                </q-item-section>
+                            </q-item>
+                            <q-separator inset class="q-mt-sm" />
+                            <q-item>
+                                <q-btn color="secondary" unelevated label="Create" no-caps size="md" @click="createVulnerabilityCategory" />
                             </q-item>
                         </div>
 
@@ -590,6 +624,35 @@
                                             bg-color="white"
                                             />
                                         </q-item-section>
+                                        <q-item-section>
+                                            <q-select
+                                            label="Sort By"
+                                            v-model="vulnCat.sortValue"
+                                            :options="sortValueOptions"
+                                            map-options
+                                            readonly
+                                            outlined
+                                            bg-color="white"
+                                            />
+                                        </q-item-section>
+                                        <q-item-section>
+                                            <q-select
+                                            label="Sort Order"
+                                            v-model="vulnCat.sortOrder"
+                                            :options="sortOrderOptions"
+                                            map-options
+                                            readonly
+                                            outlined
+                                            bg-color="white"
+                                            />
+                                        </q-item-section>
+                                        <q-item-section>
+                                            <q-toggle 
+                                            v-model="vulnCat.sortAuto" 
+                                            label="Automatic Sorting"
+                                            disable
+                                            />
+                                        </q-item-section>
                                     </q-item>
                             </q-card>
                         </div>
@@ -611,6 +674,34 @@
                                                 v-model="vulnCat.name"
                                                 outlined
                                                 bg-color="white"
+                                                />
+                                            </q-item-section>
+                                            <q-item-section>
+                                                <q-select
+                                                label="Sort By"
+                                                v-model="vulnCat.sortValue"
+                                                :options="getSortOptions(vulnCat.name)"
+                                                emit-value
+                                                map-options
+                                                outlined
+                                                bg-color="white"
+                                                />
+                                            </q-item-section>
+                                            <q-item-section>
+                                                <q-select
+                                                label="Sort Order"
+                                                v-model="vulnCat.sortOrder"
+                                                :options="sortOrderOptions"
+                                                emit-value
+                                                map-options
+                                                outlined
+                                                bg-color="white"
+                                                />
+                                            </q-item-section>
+                                            <q-item-section>
+                                                <q-toggle 
+                                                v-model="vulnCat.sortAuto" 
+                                                label="Automatic Sorting"
                                                 />
                                             </q-item-section>
                                             <q-item-section side>

@@ -273,4 +273,38 @@ module.exports = function(app, io) {
                 Response.Internal(res, err)
         });
     });
+
+    // Update sort options of an audit
+    app.put("/api/audits/:auditId/sortfindings", acl.hasPermission('audits:update'), function(req, res) {
+        var update = {};
+        // Optional parameters
+        if (req.body.sortFindings) update.sortFindings = req.body.sortFindings;
+
+        Audit.updateSortFindings(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
+        .then(msg => {
+            io.to(req.params.auditId).emit('updateAudit');
+            Response.Ok(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Update findings order (swap 2 indexes)
+    app.put("/api/audits/:auditId/movefinding", acl.hasPermission('audits:update'), function(req, res) {
+        if (typeof req.body.oldIndex === 'undefined' || typeof req.body.newIndex === 'undefined') {
+            Response.BadParameters(res, 'Missing some required parameters: oldIndex, newIndex');
+            return;
+        }
+        
+        var move = {};
+        // Required parameters
+        move.oldIndex = req.body.oldIndex;
+        move.newIndex = req.body.newIndex;
+
+        Audit.moveFindingPosition(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, move)
+        .then(msg => {
+            io.to(req.params.auditId).emit('updateAudit');
+            Response.Ok(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
+    });
 }

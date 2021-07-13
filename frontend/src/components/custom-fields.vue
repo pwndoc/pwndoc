@@ -292,10 +292,6 @@ export default {
             return options
             .filter(e => e.locale === this.locale)
             .map(e => {return {label: e.value, value: e.value}})
-        },
-
-        test: function(val) {
-            console.log(val)
         }
     }
 }
