@@ -20,7 +20,8 @@ export default {
                 {name: 'firstname', label: 'Firstname', field: 'firstname', align: 'left', sortable: true},
                 {name: 'lastname', label: 'Lastname', field: 'lastname', align: 'left', sortable: true},
                 {name: 'role', label: 'Role', field: 'role', align: 'left', sortable: true},
-                {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
+                {name: 'email', label: 'Email', field: 'email', align: 'left', sortable: true},
+                {name: 'action', label: '', field: 'action', align: 'left', sortable: false}
             ],
             // Datatable pagination
             pagination: {
@@ -35,7 +36,7 @@ export default {
                 {label:'All', value:0}
             ],
             // Search filter
-            search: {username: '', firstname: '', lastname: '', role: ''},
+            search: {username: '', firstname: '', lastname: '', role: '', email: ''},
             customFilter: Utils.customFilter,
             // Errors messages
             errors: {lastname: '', firstname: '', username: ''},
@@ -44,7 +45,9 @@ export default {
                 lastname: '', 
                 firstname: '', 
                 username: '',
-                role: ''
+                role: '',
+                email: '',
+                phone: ''
             },
             // Username to identify collab to update
             idUpdate: '',
@@ -81,8 +84,11 @@ export default {
                 this.errors.username = "Username required";
             if (!this.currentCollab.password)
                 this.errors.password = "Password required";
-
-            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password)
+            if (!this.currentCollab.email)
+                this.errors.email = "Email required";
+            if (!this.currentCollab.phone)
+                this.errors.phone = "Phone required";
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password || this.errors.email || this.errors.phone)
                 return;
 
             CollabService.createCollab(this.currentCollab)
@@ -190,6 +196,7 @@ export default {
             this.errors.firstname = '';
             this.errors.username = '';
             this.errors.password = '';
+            this.errors.email = '';
         },
 
         cleanCurrentCollab: function() {
@@ -198,6 +205,8 @@ export default {
             this.currentCollab.username = '';
             this.currentCollab.role = 'user';
             this.currentCollab.password = '';
+            this.currentCollab.email = '';
+            this.currentCollab.phone = '';
         },
 
         dblClick: function(evt, row) {

@@ -7,7 +7,7 @@ export default {
     data: () => {
         return {
             user: {},
-            errors: {username: "", firstname:"", lastname: "", currentPassword: "", newPassword: ""}
+            errors: {username: "", firstname:"", lastname: "", currentPassword: "", newPassword: "", email:"", phone:""}
         }
     },
 
@@ -34,6 +34,10 @@ export default {
                 this.errors.firstname = "Firstname required";
             if (!this.user.lastname)
                 this.errors.lastname = "Lastname required";
+            if (!this.user.email)
+                this.errors.email = "Email required";
+            if (!this.user.phone)
+                this.errors.phone = "Phone Number required";
             if (!this.user.currentPassword)
                 this.errors.currentPassword = "Current Password required";
             if (this.user.newPassword !== this.user.confirmPassword)
@@ -66,6 +70,8 @@ export default {
             this.errors.username = '';
             this.errors.firstname = '';
             this.errors.lastname = '';
+            this.errors.email = '';
+            this.errors.phone = '';
             this.errors.currentPassword = '';
             this.errors.newPassword = '';
         }

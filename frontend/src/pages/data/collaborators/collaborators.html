@@ -1,211 +1,136 @@
 <div>
-<div class="row">
-    <div class="col-md-10 col-12 offset-md-1 q-mt-md">
-        <q-table
-            class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
-            :columns="dtHeaders"
-            :data="collabs"
-            :filter="search"
-            :filter-method="customFilter"
-            :pagination.sync="pagination"
-            row-key="username"
-            :loading="loading"
-            @row-dblclick="dblClick"
-        >
-            <template v-slot:top>
-                <q-space />
-                <q-btn 
-                v-if="UserService.isAllowed('users:create')"
-                unelevated
-                label="Add Collaborator" 
-                color="secondary"
-                no-caps
-                @click="cleanCurrentCollab(); $refs.createModal.show()"
-                />
-            </template>
-
-            <template v-slot:top-row="props">
-                <q-tr>
-                    <q-td style="width: 25%">
-                        <q-input 
-                        dense
-                        color="secondary"
-                        label="Search..."
-                        v-model="search.username"
-                        clearable
-                        outlined
-                        bg-color="white"
-                        />
-                    </q-td>
-                    <q-td style="width: 25%">
-                        <q-input 
-                        dense
-                        color="secondary"
-                        label="Search..."
-                        v-model="search.firstname"
-                        clearable
-                        outlined
-                        bg-color="white"
-                        />
-                    </q-td>
-                    <q-td style="width: 25%">
-                        <q-input 
-                        dense
-                        color="secondary"
-                        label="Search..."
-                        v-model="search.lastname"
-                        clearable
-                        outlined
-                        bg-color="white"
-                        />
-                    </q-td>
-                    <q-td style="width: 25%">
-                        <q-select 
-                        dense
-                        color="secondary"
-                        label="Search..."
-                        v-model="search.role"
-                        clearable
-                        :options="roles"
-                        options-sanitize
-                        outlined
-                        bg-color="white"
-                        />
-                    </q-td>
-                    <q-td></q-td>
-                </q-tr>
-            </template>
-
-            <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                <q-btn v-if="UserService.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
-                </q-btn>
-                <q-btn v-if="UserService.isAllowed('users:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCollab(props.row)">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
-                </q-btn>
-            </q-td>  
-
-            <template v-slot:bottom="scope">
-                <span v-if="collabs.length === 1">1 Collaborator</span>                
-                <span v-else>{{collabs.length}} Collaborators</span>   
-                <q-space />
-                <span>Results per page:</span>
-                <q-select
-                class="q-px-md"
-                v-model="pagination.rowsPerPage"
-                :options="rowsPerPageOptions"
-                emit-value
-                map-options
-                dense
-                options-dense
-                options-cover
-                borderless
-                />
-                <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />            
-            </template> 
+    <div class="row">
+        <div class="col-md-10 col-12 offset-md-1 q-mt-md">
+            <q-table
+                class="sticky-header-table"
+                card-class="bg-grey-1"
+                table-header-class="bg-grey-1"
+                :columns="dtHeaders"
+                :data="collabs"
+                :filter="search"
+                :filter-method="customFilter"
+                :pagination.sync="pagination"
+                row-key="username"
+                :loading="loading"
+                @row-dblclick="dblClick"
+            >
+                <template v-slot:top>
+                    <q-space />
+                    <q-btn 
+                    v-if="UserService.isAllowed('users:create')"
+                    unelevated
+                    label="Add Collaborator" 
+                    color="secondary"
+                    no-caps
+                    @click="cleanCurrentCollab(); $refs.createModal.show()"
+                    />
+                </template>
     
-        </q-table>
+                <template v-slot:top-row="props">
+                    <q-tr>
+                        <q-td style="width: 25%">
+                            <q-input 
+                            dense
+                            color="secondary"
+                            label="Search..."
+                            v-model="search.username"
+                            clearable
+                            outlined
+                            bg-color="white"
+                            />
+                        </q-td>
+                        <q-td style="width: 25%">
+                            <q-input 
+                            dense
+                            color="secondary"
+                            label="Search..."
+                            v-model="search.firstname"
+                            clearable
+                            outlined
+                            bg-color="white"
+                            />
+                        </q-td>
+                        <q-td style="width: 25%">
+                            <q-input 
+                            dense
+                            color="secondary"
+                            label="Search..."
+                            v-model="search.lastname"
+                            clearable
+                            outlined
+                            bg-color="white"
+                            />
+                        </q-td>
+                        <q-td style="width: 25%">
+                            <q-select 
+                            dense
+                            color="secondary"
+                            label="Search..."
+                            v-model="search.role"
+                            clearable
+                            :options="roles"
+                            options-sanitize
+                            outlined
+                            bg-color="white"
+                            />
+                        </q-td>
+                        <q-td style="width: 25%">
+                            <q-input 
+                            dense
+                            color="secondary"
+                            label="Search..."
+                            v-model="search.email"
+                            clearable
+                            outlined
+                            bg-color="white"
+                            />
+                        </q-td>
+                    </q-tr>
+                </template>
+    
+                <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
+                    <q-btn v-if="UserService.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
+                    </q-btn>
+                    <q-btn v-if="UserService.isAllowed('users:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCollab(props.row)">
+                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
+                    </q-btn>
+                </q-td>  
+    
+                <template v-slot:bottom="scope">
+                    <span v-if="collabs.length === 1">1 Collaborator</span>                
+                    <span v-else>{{collabs.length}} Collaborators</span>   
+                    <q-space />
+                    <span>Results per page:</span>
+                    <q-select
+                    class="q-px-md"
+                    v-model="pagination.rowsPerPage"
+                    :options="rowsPerPageOptions"
+                    emit-value
+                    map-options
+                    dense
+                    options-dense
+                    options-cover
+                    borderless
+                    />
+                    <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />            
+                </template> 
+        
+            </q-table>
+        </div>
     </div>
-</div>
-
-<q-dialog ref="createModal" persistent @hide="cleanErrors()">
-    <q-card style="width:800px" class="bg-grey-1">
-        <q-bar class="bg-primary text-white">
-            <div class="q-toolbar-title">
-                Add Collaborator
-            </div>
-            <q-space />
-            <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
-        </q-bar>
-        
-        <q-card-section>
-            <q-input
-            label='Username *'
-            autofocus
-            class="col-md-12"
-            :error="!!errors.username"
-            :error-message="errors.username"
-            hide-bottom-space
-            @keyup.enter="createCollab()"
-            v-model="currentCollab.username"
-            outlined
-            bg-color="white"
-            />
-        </q-card-section>
-        <q-card-section>
-            <q-input
-            label='Firstname *'
-            class="col-md-12"
-            :error="!!errors.firstname"
-            :error-message="errors.firstname"
-            hide-bottom-space
-            @keyup.enter="createCollab()"
-            v-model="currentCollab.firstname"
-            outlined
-            bg-color="white"
-            />
-        </q-card-section>  
-        <q-card-section>
-            <q-input
-            label='Lastname *'
-            class="col-md-12"
-            :error="!!errors.lastname"
-            :error-message="errors.lastname"
-            hide-bottom-space
-            @keyup.enter="createCollab()"
-            v-model="currentCollab.lastname"
-            outlined
-            bg-color="white"
-            />
-        </q-card-section>
-        <q-card-section>
-            <q-select
-            label="Role *"
-            class="col-md-12"
-            v-model="currentCollab.role"
-            :options=roles
-            @keyup.enter="createCollab()"
-            options-sanitize
-            outlined
-            bg-color="white"
-            />
-        </q-card-section>
-        <q-card-section>
-            <q-input 
-            v-model="currentCollab.password" 
-            label="Password *" 
-            type="password"
-            :error="!!errors.password" 
-            :error-message="errors.password"
-            hide-bottom-space
-            @keyup.enter="createCollab()"
-            outlined
-            bg-color="white"
-            />
-        </q-card-section>
-
-        <q-separator />
-
-        <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.createModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" unelevated @click="createCollab()">Create</q-btn>
-        </q-card-actions>
-    </q-card>
-</q-dialog>
-
-<q-dialog ref="editModal" persistent @hide="cleanErrors()">
-    <q-card style="width:800px" class="bg-grey-1">
-        <q-bar class="bg-primary text-white">
-            <div class="q-toolbar-title">
-                Edit Collaborator
-            </div>
-            <q-space />
-            <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
-        </q-bar>
-        
-        <q-card-section>
+    
+    <q-dialog ref="createModal" persistent @hide="cleanErrors()">
+        <q-card style="width:800px" class="bg-grey-1">
+            <q-bar class="bg-primary text-white">
+                <div class="q-toolbar-title">
+                    Add Collaborator
+                </div>
+                <q-space />
+                <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+            </q-bar>
+            
+            <q-card-section>
                 <q-input
                 label='Username *'
                 autofocus
@@ -213,7 +138,7 @@
                 :error="!!errors.username"
                 :error-message="errors.username"
                 hide-bottom-space
-                @keyup.enter="updateCollab()"
+                @keyup.enter="createCollab()"
                 v-model="currentCollab.username"
                 outlined
                 bg-color="white"
@@ -226,7 +151,7 @@
                 :error="!!errors.firstname"
                 :error-message="errors.firstname"
                 hide-bottom-space
-                @keyup.enter="updateCollab()"
+                @keyup.enter="createCollab()"
                 v-model="currentCollab.firstname"
                 outlined
                 bg-color="white"
@@ -239,8 +164,145 @@
                 :error="!!errors.lastname"
                 :error-message="errors.lastname"
                 hide-bottom-space
-                @keyup.enter="updateCollab()"
+                @keyup.enter="createCollab()"
                 v-model="currentCollab.lastname"
+                outlined
+                bg-color="white"
+                />
+            </q-card-section>
+            <q-card-section>
+                <q-input
+                label='Email *'
+                class="col-md-12"
+                :error="!!errors.email"
+                :error-message="errors.email"
+                hide-bottom-space
+                @keyup.enter="createCollab()"
+                v-model="currentCollab.email"
+                outlined
+                bg-color="white"
+                />
+            </q-card-section>
+            <q-card-section>
+                <q-input
+                label='Phone *'
+                class="col-md-12"
+                :error="!!errors.phone"
+                :error-message="errors.phone"
+                hide-bottom-space
+                @keyup.enter="createCollab()"
+                v-model="currentCollab.phone"
+                outlined
+                bg-color="white"
+                />
+            </q-card-section>
+            <q-card-section>
+                <q-select
+                label="Role *"
+                class="col-md-12"
+                v-model="currentCollab.role"
+                :options=roles
+                @keyup.enter="createCollab()"
+                options-sanitize
+                outlined
+                bg-color="white"
+                />
+            </q-card-section>
+            <q-card-section>
+                <q-input 
+                v-model="currentCollab.password" 
+                label="Password *" 
+                type="password"
+                :error="!!errors.password" 
+                :error-message="errors.password"
+                hide-bottom-space
+                @keyup.enter="createCollab()"
+                outlined
+                bg-color="white"
+                />
+            </q-card-section>
+    
+            <q-separator />
+    
+            <q-card-actions align="right">
+                <q-btn color="primary" outline @click="$refs.createModal.hide()">Cancel</q-btn>
+                <q-btn color="secondary" unelevated @click="createCollab()">Create</q-btn>
+            </q-card-actions>
+        </q-card>
+    </q-dialog>
+    
+    <q-dialog ref="editModal" persistent @hide="cleanErrors()">
+        <q-card style="width:800px" class="bg-grey-1">
+            <q-bar class="bg-primary text-white">
+                <div class="q-toolbar-title">
+                    Edit Collaborator
+                </div>
+                <q-space />
+                <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
+            </q-bar>
+            
+            <q-card-section>
+                    <q-input
+                    label='Username *'
+                    autofocus
+                    class="col-md-12"
+                    :error="!!errors.username"
+                    :error-message="errors.username"
+                    hide-bottom-space
+                    @keyup.enter="updateCollab()"
+                    v-model="currentCollab.username"
+                    outlined
+                    bg-color="white"
+                    />
+                </q-card-section>
+                <q-card-section>
+                    <q-input
+                    label='Firstname *'
+                    class="col-md-12"
+                    :error="!!errors.firstname"
+                    :error-message="errors.firstname"
+                    hide-bottom-space
+                    @keyup.enter="updateCollab()"
+                    v-model="currentCollab.firstname"
+                    outlined
+                    bg-color="white"
+                    />
+                </q-card-section>  
+                <q-card-section>
+                    <q-input
+                    label='Lastname *'
+                    class="col-md-12"
+                    :error="!!errors.lastname"
+                    :error-message="errors.lastname"
+                    hide-bottom-space
+                    @keyup.enter="updateCollab()"
+                    v-model="currentCollab.lastname"
+                    outlined
+                    bg-color="white"
+                    />
+                </q-card-section>
+                <q-card-section>
+                <q-input
+                label='Email *'
+                class="col-md-12"
+                :error="!!errors.email"
+                :error-message="errors.email"
+                hide-bottom-space
+                @keyup.enter="updateCollab()"
+                v-model="currentCollab.email"
+                outlined
+                bg-color="white"
+                />
+            </q-card-section>
+            <q-card-section>
+                <q-input
+                label='Phone *'
+                class="col-md-12"
+                :error="!!errors.Phone"
+                :error-message="errors.phone"
+                hide-bottom-space
+                @keyup.enter="updateCollab()"
+                v-model="currentCollab.phone"
                 outlined
                 bg-color="white"
                 />
@@ -267,13 +329,13 @@
                 bg-color="white"
                 />
             </q-card-section>
-
-        <q-separator />
-
-        <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.editModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" unelevated @click="updateCollab()">Update</q-btn>
-        </q-card-actions>
-    </q-card>
-</q-dialog>
-</div>
+    
+            <q-separator />
+    
+            <q-card-actions align="right">
+                <q-btn color="primary" outline @click="$refs.editModal.hide()">Cancel</q-btn>
+                <q-btn color="secondary" unelevated @click="updateCollab()">Update</q-btn>
+            </q-card-actions>
+        </q-card>
+    </q-dialog>
+    </div>

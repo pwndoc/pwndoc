@@ -116,6 +116,8 @@ module.exports = function(app) {
         user.password = req.body.password;
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
+        user.email = req.body.email;
+        user.phone = req.body.phone;
 
         //Optionals params
         user.role = req.body.role || 'user';
@@ -188,6 +190,8 @@ module.exports = function(app) {
         if (req.body.newPassword) user.newPassword = req.body.newPassword;
         if (req.body.firstname) user.firstname = req.body.firstname;
         if (req.body.lastname) user.lastname = req.body.lastname;
+        if (req.body.email) user.email = req.body.email;
+        if (req.body.phone) user.phone = req.body.phone;
 
         User.updateProfile(req.decodedToken.username, user)
         .then(msg => {
@@ -206,6 +210,8 @@ module.exports = function(app) {
         if (req.body.password) user.password = req.body.password;
         if (req.body.firstname) user.firstname = req.body.firstname;
         if (req.body.lastname) user.lastname = req.body.lastname;
+        if (req.body.email) user.email = req.body.email;
+        if (req.body.phone) user.phone = req.body.phone;
         if (req.body.role) user.role = req.body.role;
 
         User.updateUser(req.params.id, user)

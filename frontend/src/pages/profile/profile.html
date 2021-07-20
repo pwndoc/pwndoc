@@ -55,6 +55,32 @@
                         </q-item>
                         <q-item>
                             <q-item-section>
+                                <q-input 
+                                v-model="user.email" 
+                                label="Email" 
+                                stack-label 
+                                :error="!!errors.email"
+                                :error-message="errors.email"
+                                outlined
+                                bg-color="white"
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
+                                <q-input 
+                                v-model="user.phone" 
+                                label="Phone" 
+                                stack-label 
+                                :error="!!errors.phone"
+                                :error-message="errors.phone"
+                                outlined
+                                bg-color="white"
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section>
                                 <q-field borderless :error="!!errors.newPassword" :error-message="errors.newPassword">
                                     <q-input 
                                     class="col-md-6 col-6 q-pr-sm" 
