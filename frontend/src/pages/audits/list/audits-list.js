@@ -1,5 +1,6 @@
 import { Dialog, Notify } from 'quasar';
 
+import AuditStateIcon from 'components/audit-state-icon'
 import Breadcrumb from 'components/breadcrumb'
 
 import AuditService from '@/services/audit'
@@ -29,6 +30,7 @@ export default {
                 {name: 'users', label: 'Participants', align: 'left', sortable: true},
                 {name: 'date', label: 'Date', field: row => row.createdAt.split('T')[0], align: 'left', sortable: true},
                 {name: 'connected', label: '', align: 'left', sortable: false},
+                {name: 'reviews', label: '', align: 'left', sortable: false},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             visibleColumns: ['name', 'language', 'company', 'users', 'date', 'action'],
@@ -49,6 +51,7 @@ export default {
             search: {finding: '', name: '', language: '', company: '', users: '', date: ''},
             myAudits: false,
             displayConnected: false,
+            displayReadyForReview: false,
             // Errors messages
             errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
@@ -57,6 +60,7 @@ export default {
     },
 
     components: {
+        AuditStateIcon,
         Breadcrumb
     },
 
@@ -64,7 +68,9 @@ export default {
         this.search.finding = this.$route.params.finding;
 
         if (this.UserService.isAllowed('audits:users-connected'))
-            this.visibleColumns = ['name', 'language', 'company', 'users', 'date', 'connected', 'action']
+            this.visibleColumns.push('connected')
+        if (this.$settings.reviews.enabled)
+            this.visibleColumns.push('reviews')
 
         this.getAudits();
         this.getLanguages();
@@ -273,7 +279,8 @@ export default {
                     users.indexOf(usersTerm) > -1 &&
                     date.indexOf(dateTerm) > -1 &&
                     ((this.myAudits && users.indexOf(username) > -1) || !this.myAudits) &&
-                    ((this.displayConnected && row.connected && row.connected.length > 0) || !this.displayConnected)
+                    ((this.displayConnected && row.connected && row.connected.length > 0) || !this.displayConnected) &&
+                    ((this.displayReadyForReview && users.indexOf(username) < 0 && row.state === 'REVIEW') || !this.displayReadyForReview)
             })
         },
 

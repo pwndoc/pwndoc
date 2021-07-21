@@ -728,6 +728,7 @@
                                 @cvssChange="update.cvssv3 = $event"
                                 @cvssScoreChange="update.cvssScore = $event"
                                 @cvssSeverityChange="update.cvssSeverity = $event"
+                                readonly
                                 />
                             </q-card-section>
                             <q-card-section>
@@ -800,6 +801,7 @@
                                     custom-element="QCardSection"
                                     :diff="currentVulnerability.details[currentDetailsIndex].customFields"
                                     :locale="currentLanguage"
+                                    readonly
                                     />
                                 </div>
                             </q-expansion-item>

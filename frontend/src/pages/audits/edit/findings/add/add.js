@@ -5,9 +5,14 @@ import Breadcrumb from 'components/breadcrumb';
 import VulnService from '@/services/vulnerability';
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
-import Utils from '@/services/utils'
+import Utils from '@/services/utils';
 
 export default {
+    props: {
+        frontEndAuditState: Number,
+        parentState: String,
+        parentApprovals: Array
+    },
     data: () => {
         return {
             finding: {},
@@ -47,7 +52,8 @@ export default {
             // Vulnerability categories
             vulnCategories: [],
 
-            htmlEncode: Utils.htmlEncode
+            htmlEncode: Utils.htmlEncode,
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 

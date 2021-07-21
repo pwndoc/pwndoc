@@ -1,5 +1,5 @@
 <template>
-<q-card flat bordered class="editor full-width" :class="affixRelativeElement">
+<q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
     <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix">
         <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
             <q-toolbar class="editor-toolbar">
@@ -126,6 +126,7 @@
                     accept="image/*"
                     class="hidden"
                     @change="importImage($event.target.files)"
+                    :disabled="!editable"
                     />
                     <q-icon name="image" />
                 </label>
@@ -157,7 +158,7 @@
         </editor-menu-bar>
     </affix>
     <q-separator />
-    <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor" />
+    <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor"/>
     <div v-else class="editor__content q-pa-sm">
         <div class="ProseMirror" v-html="diffContent"></div>
     </div>
@@ -266,18 +267,22 @@ export default {
                 return;
             }
             var content = this.htmlEncode(this.value)
-            this.editor.setContent(content)
+            this.editor.setContent(content);
+       },
+
+       editable (value) {
+           this.editor.setOptions({editable: this.editable})
        }
     },
 
     mounted: function() {
         this.affixRelativeElement += '-'+Math.floor((Math.random()*1000000) + 1)
+        this.editor.setOptions({editable: this.editable})
         if (typeof this.value === "undefined" || this.value === this.editor.getHTML()) {
             return;
         }
         var content = this.htmlEncode(this.value)
         this.editor.setContent(content)
-        this.editor.setOptions({editable: this.editable})
     },
 
     beforeDestroy() {

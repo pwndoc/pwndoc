@@ -1,6 +1,6 @@
 <div>
-<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`">
-    <div slot="buttons">
+    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
+    <div slot="buttons" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
         <q-btn-dropdown 
         class="q-mr-sm" 
         label="Import" 

@@ -40,6 +40,9 @@ services:
     networks:
       - backend
 
+volumes:
+  mongo-data:
+
 networks:
   backend:
       driver: bridge

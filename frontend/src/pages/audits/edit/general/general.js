@@ -8,11 +8,18 @@ import AuditService from '@/services/audit';
 import ClientService from '@/services/client';
 import CompanyService from '@/services/company';
 import CollabService from '@/services/collaborator';
+import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
 export default {
+    props: {
+        frontEndAuditState: Number,
+        parentState: String,
+        parentApprovals: Array
+
+    },
     data: () => {
         return {
             // Set audit ID
@@ -26,13 +33,15 @@ export default {
                 client: {},
                 company: {},
                 collaborators: [],
+                reviewers: [],
                 date: "",
                 date_start: "",
                 date_end: "",
                 scope: [],
                 language: "",
                 template: "",
-                customFields: []
+                customFields: [],
+                approvals: []
             },
             auditOrig: {},
             // List of existing clients
@@ -41,6 +50,8 @@ export default {
             selectClients: [],
             // List of existing Collaborators
             collaborators: [],
+            // List of existing reviewers
+            reviewers: [],
             // List of existing Companies
             companies: [],
             // List of filtered companies
@@ -52,7 +63,8 @@ export default {
             // List of existing audit types
             auditTypes: [],
             // List of CustomFields
-            customFields: []
+            customFields: [],
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -100,7 +112,8 @@ export default {
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
                 e.preventDefault();
-                this.updateAuditGeneral();
+                if (this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT)
+                    this.updateAuditGeneral();
             }
         },
 
@@ -114,7 +127,8 @@ export default {
             .then((data) => {
                 this.audit = data.data.datas;
                 this.auditOrig = this.$_.cloneDeep(this.audit);
-                this.getCollaborators()
+                this.getCollaborators();
+                this.getReviewers();
             })
             .catch((err) => {              
                 console.log(err.response)
@@ -193,6 +207,20 @@ export default {
             })
         },
 
+        // Get Reviewers list
+        getReviewers: function() {
+            ReviewerService.getReviewers()
+            .then((data) => {
+                var creatorId = ""
+                if (this.audit.creator)
+                    creatorId = this.audit.creator._id
+                this.reviewers = data.data.datas.filter(e => e._id !== creatorId)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+        },
+
         // Get Templates list
         getTemplates: function() {
             TemplateService.getTemplates()
@@ -228,7 +256,6 @@ export default {
 
         // Filter client options when selecting company
         filterClients: function() {
-            this.audit.client = null
             if (this.audit.company) {
                 this.selectClients = [];
                 this.clients.map(client => {
@@ -271,7 +298,6 @@ export default {
                 const needle = Utils.normalizeString(val)
                 this.selectCompanies = this.companies.filter(v => Utils.normalizeString(v.name).indexOf(needle) > -1)
             })
-          }
-
+        }
     }
 }

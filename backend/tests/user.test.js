@@ -1,8 +1,9 @@
 /* 
-  3 Users at the end:
+  4 Users at the end:
     admin:admin2 (admin)
     user2:user2 (user)
     report:report (report)
+    reviewer:reviewer (reviewer)
 */
 
 module.exports = function(request) {
@@ -156,6 +157,22 @@ module.exports = function(request) {
         done()
       })
 
+      it('Create user with role reviewer', async done => {
+        var user = {
+          username: 'reviewer',
+          password: 'reviewer',
+          firstname: 'reviewer',
+          lastname: 'reviewer',
+          role: 'reviewer'
+        }
+        var response = await request.post('/api/users', user, options)
+        expect(response.status).toBe(201)
+
+        response = await request.post('/api/users/token', user)
+        expect(response.status).toBe(200)
+        done()
+      })
+
       it('Get user profile', async done => {
         const expected = {
           username: 'user',
@@ -231,7 +248,7 @@ module.exports = function(request) {
         expect(response.status).toBe(404)
 
         var response = await request.get('/api/users', options)
-        expect(response.data.datas).toHaveLength(3)
+        expect(response.data.datas).toHaveLength(4)
         done()
       })
     })

@@ -8,8 +8,15 @@
         >
             <i class="fa fa-home fa-lg"></i>
         </q-btn>
-        <p v-if="typeof(title) === 'undefined'" class="breadcrumb-title">{{bread[last].name}}</p>
-        <p v-else class="breadcrumb-title">{{title}}</p>
+        <span v-if="typeof(title) === 'undefined'" class="breadcrumb-title">{{bread[last].name}}</span>
+        <div v-else-if="$settings.reviews.enabled && state !== 'EDIT'" class="breadcrumb-title">
+            <span class="text-bold">{{title}}</span> 
+            <audit-state-icon class="q-mx-sm" :approvals="approvals" :state="state"/>
+        </div>
+        <div v-else class="q-mt-md">
+            <span class="text-bold">{{title}}</span> 
+        </div>
+        <q-space />
         <q-breadcrumbs v-if="typeof(buttons) === 'undefined'" separator="/" active-color="secondary" color="light" align="right">
             <q-breadcrumbs-el v-for="breadcrumb in bread" :label="breadcrumb.name" :to="breadcrumb.path" :key="breadcrumb.path" />
         </q-breadcrumbs>
@@ -20,10 +27,15 @@
 </template>
 
 <script>
+import AuditStateIcon from 'components/audit-state-icon';
 
 export default {
     name: 'breadcrumb',
-    props: ['buttons', 'title'],
+    props: ['buttons', 'title', 'approvals', 'state'],
+
+    components: {
+        AuditStateIcon
+    },
 
     data: function() {
         return {
@@ -61,11 +73,7 @@ export default {
 }
 
 .breadcrumb-title {
-    font-weight: bold
-    vertical-align: middle
-    margin-right: auto;
-    margin-top: 17px
-    margin-left: 20px
+    margin-top: 11px
 }
 
 .breadcrumb-buttons {
@@ -74,5 +82,10 @@ export default {
 
 .card-breadcrumb>.q-breadcrumbs {
     margin-top: 17px
+}
+
+.approvedMark {
+    margin-left: 10px;
+    font-size: 1.25em!important;
 }
 </style>

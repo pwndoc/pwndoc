@@ -28,6 +28,7 @@
                         ref="basiceditor_custom" 
                         v-model="field.text" 
                         :noSync="noSyncEditor"
+                        :editable="!readonly"
                         /> 
                     </template>
 
@@ -42,7 +43,7 @@
                 :label='field.customField.label'
                 stack-label
                 v-model="field.text"
-                :readonly="diff !== null"
+                :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -61,7 +62,7 @@
                 :label='field.customField.label'
                 stack-label
                 v-model="field.text"
-                :readonly="diff !== null"
+                :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -72,7 +73,7 @@
                     <template v-slot:append>
                         <q-icon name="event" class="cursor-pointer">
                         <q-popup-proxy ref="qDateProxyField" transition-show="scale" transition-hide="scale">
-                            <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text" @input="$refs.qDateProxyField.forEach(e => e.hide())" />
+                            <q-date :readonly="readonly" first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text" @input="$refs.qDateProxyField.forEach(e => e.hide())" />
                         </q-popup-proxy>
                         </q-icon>
                     </template>
@@ -94,7 +95,7 @@
                 clearable
                 options-sanitize
                 outlined 
-                :readonly="diff !== null"
+                :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -121,7 +122,7 @@
                 clearable
                 options-sanitize
                 outlined 
-                :readonly="diff !== null"
+                :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -139,6 +140,7 @@
                         :tabindex="scope.tabindex"
                         color="blue-grey-5"
                         text-color="white"
+                        :disable="readonly"
                         >
                             {{scope.opt}}
                         </q-chip>
@@ -154,7 +156,7 @@
                 :hint="field.description"
                 hide-bottom-space
                 outlined
-                :readonly="diff !== null"
+                :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -164,6 +166,7 @@
                         type="checkbox"
                         v-model="field.text"
                         :options="getOptionsGroup(field.customField.options)"
+                        :disable="readonly"
                         />
                     </template>
                     <template v-slot:label>
@@ -181,7 +184,7 @@
                 :hint="field.description"
                 hide-bottom-space
                 outlined
-                :readonly="diff !== null"
+                :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'red-1':'white'"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -191,6 +194,7 @@
                         type="radio"
                         v-model="field.text"
                         :options="getOptionsGroup(field.customField.options)"
+                        :disable="readonly"
                         />
                     </template>
                     <template v-slot:label>
@@ -221,6 +225,10 @@ export default {
         diff: {
             type: Array,
             default: null
+        },
+        readonly: {
+            type: Boolean,
+            default: false
         },
         locale: {
             type: String,

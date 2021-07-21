@@ -37,6 +37,7 @@ require('./models/vulnerability-category');
 require('./models/custom-section');
 require('./models/custom-field');
 require('./models/image');
+require('./models/settings');
 
 // Socket IO configuration
 var getSockets = function(room) {

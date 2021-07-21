@@ -12,6 +12,11 @@ import VulnService from '@/services/vulnerability';
 import Utils from '@/services/utils';
 
 export default {
+    props: {
+        frontEndAuditState: Number,
+        parentState: String,
+        parentApprovals: Array
+    },
     data: () => {
         return {
             finding: {},
@@ -19,7 +24,8 @@ export default {
             selectedTab: "definition",
             proofsTabVisited: false,
             detailsTabVisited: false,
-            vulnTypes: []
+            vulnTypes: [],
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -92,10 +98,8 @@ export default {
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
                 e.preventDefault();
-                // if (e.timeStamp - lastSave > 5000) {
+                if (this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT)
                     this.updateFinding();
-                    // lastSave = e.timeStamp;
-                // }
             }
         },
 

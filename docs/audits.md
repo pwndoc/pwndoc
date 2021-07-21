@@ -69,3 +69,33 @@ Saving can be done with the upper right button or by the most acclaimed feature:
 Add any Custom Section previously defined in [Custom Data](/data?id=custom-sections).
 
 ![Custom Sections](/_images/audit_custom_section_add.png)
+
+## Reviews
+
+To be able to use the review process, the feature must first be activated in the settings. A role with the `audits:review` permission should also be added. This new role will be able to review audits and approve them. The roles page gives more details on the permissions of the application. During the whole audit review life cycle, the states, given that the user has enough permissions, can be changed using buttons located on the top left of the audit edit page. 
+
+Once this is done, a reviewer can be added to an audit by the creator or a collaborator. This reviewer will then be able to read the content of the audit. The creator and the collaborators can also mark the audit as ready to be reviewed. This action will change the state of the audit from `EDIT` to `REVIEW`.
+
+![Adding a reviewer](/_images/adding_reviewer.png)
+
+![Marking as ready for review](/_images/mark_for_review.png)
+
+When an audit is in the `REVIEW` state, a reviewer can give his approval of an audit. The minimal number of approvals before an audit is approved is set in the application's settings page. To know who already approved an audit and how far along it is to be approved, it is possible to hover the mouse over the audit state icon. A tooltip will appear, giving you details on the audit's state. 
+
+![Approving an audit](/_images/approving_report.png)
+
+The tooltip giving information on the audit's current state. Here, two approvals are needed for an audit to be approved. The audit is still in the review phase, even if one person approved it already. 
+
+![Information in the tooltip](/_images/audit_state_tooltip.png)
+
+Once enough approvals are given for an audit to be approved, the audit passes to the `APPROVED` state. In this state, the report is ready to be downloaded and sent to the client. 
+
+![Audit is now approved](/_images/approved_audit.png)
+
+The states of the audits can also be seen from the audit list page. 
+
+![Audit list page](/_images/audit_list_states.png)
+
+The audit edit page, when then review mode is activated, follows the following state machine diagram. Different states show different UI elements. Keep in mind that the Report role here is viewing a report for which he is neither a the creator nor collaborator. Otherwise, on his own reports, his graph would be similar to the Collaborator shown here. Also, the reviewer role, here, has only `audits:review` permission, and not `audits:review-all`. 
+
+![Audit edit view state diagram](/_images/edit_state_graph.png)

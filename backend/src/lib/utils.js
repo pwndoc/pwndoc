@@ -30,3 +30,14 @@ function generateUUID() {
     return require('crypto').randomBytes(32).toString('hex')
 }
 exports.generateUUID = generateUUID
+
+var getObjectPaths = (obj, prefix = '') =>
+  Object.keys(obj).reduce((res, el) => {
+    if( Array.isArray(obj[el]) ) {
+      return [...res, prefix + el];
+    } else if( typeof obj[el] === 'object' && obj[el] !== null ) {
+      return [...res, ...getObjectPaths(obj[el], prefix + el + '.')];
+    }
+    return [...res, prefix + el];
+  }, [])
+exports.getObjectPaths = getObjectPaths

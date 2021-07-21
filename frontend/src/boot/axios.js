@@ -28,6 +28,11 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // 401 after settings request (needed since it is called on app loading)
+    if (error.response.status === 401 && originalRequest.url.endsWith('/settings/public')) {
+      return Promise.reject(error)
+    }
+
     // All other 401 calls
     if (error.response.status === 401) {
       if (!refreshPending) {
@@ -38,9 +43,7 @@ axiosInstance.interceptors.response.use(
           requestsQueue = []
         })
         .catch(err => {
-          Router.push('/login')
-          return Promise.reject(error)
-          
+          Router.push('/login')          
         })
         .finally(() => {
           refreshPending = false

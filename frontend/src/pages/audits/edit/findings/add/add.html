@@ -1,6 +1,6 @@
 <div>
-<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`">
-</breadcrumb>
+    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
+    </breadcrumb>
 
 <div class="row q-col-gutter-md q-pa-md">
     <div class="col-md-10 offset-md-1">

@@ -4,11 +4,34 @@
 		<q-splitter horizontal v-model="splitterRatio" :limits="[50, 80]" style="height: 100%">
 			<template v-slot:before>
 				<q-list class="home-drawer">
-					<q-item>
-						<q-item-section>Sections</q-item-section>
-						<q-item-section side>
-							<q-btn flat dense size="sm" color="info" icon="fa fa-download" @click="generateReport">
+					<q-item style="padding:0px">
+						<q-item-section class="q-mx-md">Sections</q-item-section>
+						<template v-if="$settings.reviews.enabled">
+						<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="secondary" label="Submit Review" no-caps @click="toggleAskReview" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Mark audit as ready for review</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
+							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="amber-9" label="Cancel Review" no-caps @click="toggleAskReview" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Make changes to the audit</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN].includes(frontEndAuditState)">
+							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="green" label="Approve" no-caps @click="toggleApproval" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Approve this audit</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
+							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="warning" label="Remove Approval" no-caps @click="toggleApproval" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Remove audit approval</q-tooltip> 
+							</q-btn>
+						</q-item-section>
+						</template>
+						<q-item-section side class="topButtonSection">
+							<q-btn flat color="info" @click="generateReport">
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
+								<i class="fa fa-download fa-lg"></i>
 							</q-btn>
 						</q-item-section>
 					</q-item>
@@ -38,7 +61,6 @@
 						<div v-for="(user,idx) in networkUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
 					</div>
 
-
 					<div v-if="!currentAuditType || !currentAuditType.hidden.includes('findings')">
 						<q-separator class="q-my-sm" />
 						<q-item>
@@ -53,6 +75,7 @@
 								round
 								dense
 								color="secondary"
+								v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
 								/>
 							</q-item-section>
 						</q-item>
@@ -63,7 +86,7 @@
 									<q-item-label header>{{categoryFindings.category}}</q-item-label>
 								</q-item-section>
 								<q-item-section avatar>
-									<q-btn icon="sort" flat>
+									<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 										<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Sort Options</q-tooltip>
 										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left" content-class="bg-grey-1">
 											<q-item>
@@ -135,7 +158,7 @@
 										class="cursor-pointer"
 										:to="'/audits/'+auditId+'/findings/'+finding._id"
 										>
-											<q-item-section side v-if="!categoryFindings.sortOption.sortAuto">
+											<q-item-section side v-if="!categoryFindings.sortOption.sortAuto && frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 												<q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
 											</q-item-section>
 											<q-item-section side>
@@ -143,7 +166,7 @@
 													class="text-white"
 													size="sm"
 													square
-													:color="getFindingColor(finding)"
+													:style="`background: ${getFindingColor(finding)}`"
 												>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
 											</q-item-section>
 											<q-item-section>
@@ -162,7 +185,6 @@
 						</div>
 						<q-separator class="q-my-sm" />
 					</div>
-					
 					<q-list v-for="section of audit.sections" :key="section._id">
 						<q-item :to="'/audits/'+auditId+'/sections/'+section._id">
 							<q-item-section avatar>
@@ -203,7 +225,7 @@
 			
 		</q-splitter>
 	</q-drawer>
-	<router-view :key="$route.fullPath" />
+	<router-view :key="$route.fullPath" :frontEndAuditState="frontEndAuditState" :parentState="audit.state" :parentApprovals="audit.approvals" />
 	</div>
 </template>
 
@@ -214,6 +236,7 @@ import draggable from 'vuedraggable'
 import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
+import Utils from '@/services/utils';
 
 export default {
 		data () {
@@ -229,7 +252,9 @@ export default {
 					customFields: [],
 					auditTypes: [],
 					vulnCategories: [],
-					findingList: []
+					findingList: [],
+					frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
+					AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
 				}
 		},
 
@@ -299,13 +324,32 @@ export default {
 
 		methods: {
 			getFindingColor: function(finding) {
-				if (finding.cvssSeverity && finding.cvssSeverity !== "None") {
-					if (finding.cvssSeverity === "Low") return "green"
-					if (finding.cvssSeverity === "Medium") return "orange"
-					if (finding.cvssSeverity === "High") return "red"
-					if (finding.cvssSeverity === "Critical") return "black"
+				const SEVERITIES = ["Low", "Medium", "High", "Critical"];
+
+				let severity = "None";
+				if (finding.cvssSeverity && SEVERITIES.indexOf(finding.cvssSeverity) >= 0) {
+					severity = finding.cvssSeverity;
 				}
-				return "light-blue";
+
+				if(this.$settings.report) {
+					const severityColorName = `${severity.toLowerCase()}Color`;
+					const cvssColors = this.$settings.report.public.cvssColors;
+
+					return cvssColors[severityColorName] || cvssColors.noneColor;
+				} else {
+					switch(severity) {
+						case "Low": 
+							return "green";
+						case "Medium":
+							return "orange";
+						case "High":
+							return "red";
+						case "Critical":
+							return "black";
+						default:
+							return "blue";
+					}
+				}
 			},
 
 			// Sockets handle
@@ -330,6 +374,50 @@ export default {
 					this.getAudit();
 				})
 			},
+			// Tells the UI if the user is supposed to be reviewing the audit
+			isUserAReviewer: function() {
+				var isAuthor = this.audit.creator._id === UserService.user.id;
+				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
+				var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
+				var hasReviewAll = UserService.isAllowed('audits:review-all');
+				return !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
+			},
+
+			// Tells the UI if the user is supposed to be editing the audit
+			isUserAnEditor: function() {
+				var isAuthor = this.audit.creator._id === UserService.user.id;
+				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
+				var hasUpdateAll = UserService.isAllowed('audits:update-all');
+				return (isAuthor || isCollaborator || hasUpdateAll);
+			},
+
+			userHasAlreadyApproved: function() {
+				return this.audit.approvals.some((element) => element._id === UserService.user.id);
+			},
+
+			getUIState: function() {
+				if(!this.$settings.reviews.enabled || this.audit.state === "EDIT") {
+					this.frontEndAuditState = this.isUserAnEditor() ? Utils.AUDIT_VIEW_STATE.EDIT : Utils.AUDIT_VIEW_STATE.EDIT_READONLY;
+				} 
+				else if (this.audit.state === "REVIEW") {
+					if (!this.isUserAReviewer()) {
+						this.frontEndAuditState = this.isUserAnEditor()? Utils.AUDIT_VIEW_STATE.REVIEW_EDITOR : Utils.AUDIT_VIEW_STATE.REVIEW_READONLY;
+						return;
+					}
+					if (this.isUserAnEditor()) {
+						this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN;
+						return;
+					}
+					this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW;
+				} 
+				else if (this.audit.state === "APPROVED") {
+					if (!this.isUserAReviewer()) {
+						this.frontEndAuditState = Utils.AUDIT_VIEW_STATE.APPROVED_READONLY;
+					} else {
+						this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.APPROVED_APPROVED : Utils.AUDIT_VIEW_STATE.APPROVED
+					}
+				}
+			},
 
 			getAudit: function() {
 				DataService.getVulnerabilityCategories() // Vuln Categories must exist before getting audit data for handling default sort options
@@ -338,7 +426,8 @@ export default {
 					return AuditService.getAudit(this.auditId)
 				})
 				.then((data) => {
-					this.audit = data.data.datas
+					this.audit = data.data.datas;
+					this.getUIState();
 					this.getSections()
 					if (this.loading)
 						this.handleSocket()
@@ -484,6 +573,50 @@ export default {
 						this.getAudit()
 					})
 				}
+			},
+
+			toggleAskReview: function() {
+				AuditService.updateReadyForReview(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
+				.then(() => {
+					this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
+					this.getUIState();
+					Notify.create({
+						message: 'Audit review status updated successfully',
+						color: 'positive',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
+				.catch((err) => {     
+					console.log(err)
+					Notify.create({
+						message: err.response.data.datas || err.message,
+						color: 'negative',
+						textColor:'white',
+						position: 'top-right'
+					})
+				});
+			},
+
+			toggleApproval: function() {
+				AuditService.toggleApproval(this.auditId)
+				.then(() => {
+					Notify.create({
+						message: 'Audit approval updated successfully',
+						color: 'positive',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
+				.catch((err) => {          
+					console.log(err)
+					Notify.create({
+						message: err.response.data.datas || err.message,
+						color: 'negative',
+						textColor:'white',
+						position: 'top-right'
+					})
+				});
 			}
 		}
 }
@@ -538,5 +671,10 @@ export default {
 .edit-drawer {
 	// height: 70%;
 
+}
+
+.topButtonSection {
+    padding-left: 0px!important;
+	padding-right: 0px!important;
 }
 </style>

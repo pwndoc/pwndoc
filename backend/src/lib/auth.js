@@ -71,7 +71,9 @@ var builtInRoles = {
             'vulnerabilities:read',
             'vulnerability-updates:create',
             // Custom Fields
-            'custom-fields:read'
+            'custom-fields:read',
+            // Settings
+            'settings:read-public'
         ]
     },
     admin: {

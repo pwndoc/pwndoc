@@ -1,5 +1,5 @@
 <div>
-<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`">
+    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
     <div slot="buttons">
         <q-btn
         color="orange"
@@ -14,50 +14,54 @@
         label="Delete"
         no-caps
         @click="deleteFinding()"
+        v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
         />
-        <q-btn color="positive" label="Save (ctrl+s)" no-caps @click="updateFinding()" />
+        <q-btn color="positive" label="Save (ctrl+s)" no-caps @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
     </div>
 </breadcrumb>
 
-<div class="row q-col-gutter-md q-pt-md">
+<div class="row">
     <q-tabs v-model="selectedTab" align="left" indicator-color="primary" class="bg-white full-width">
         <q-tab name="definition" default label="Definition" />
         <q-tab name="proofs" label="Proofs"/>
         <q-tab name="details" label="Details" />
+        <template v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"> 
         <q-separator vertical />
         <q-toggle label="Completed" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
+        </template>
         <q-space />
     </q-tabs>
 
-    <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 col-12 offset-md-2" @before-transition="syncEditors" @transition="updateOrig" >
+    <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 col-12 offset-md-2 q-mt-md" @before-transition="syncEditors" @transition="updateOrig" >
         <q-tab-panel name="definition">
             <q-card class="bg-grey-1">
                 <q-card-section class="row q-col-gutter-md">
-                        <q-input class="col-md-8 col-12" label="Title *" stack-label v-model="finding.title" outlined bg-color="white" />
-                        <q-select 
-                        class="col-md-4 col-12"
-                        label="Type"
-                        v-model="finding.vulnType" 
-                        :options="vulnTypesLang" 
-                        option-value="name" 
-                        option-label="name" 
-                        emit-value 
-                        map-options
-                        options-sanitize
-                        outlined
-                        bg-color="white"
-                        />
-                        <q-field class="col-md-12" borderless label="Description" stack-label>
-                            <template v-slot="control">
-                                <basic-editor ref="basiceditor_description" noSync v-model="finding.description" />
-                            </template>
-                        </q-field>
-                        <q-field class="col-md-12" borderless label="Observation" stack-label>
-                            <template v-slot="control">
-                                <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" />
-                            </template>
-                        </q-field>
-                        <textarea-array class="col-12" label="References (One per line)" v-model="finding.references" />
+                    <q-input class="col-md-8 col-12" label="Title *" stack-label v-model="finding.title" outlined bg-color="white" :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
+                    <q-select 
+                    class="col-md-4 col-12"
+                    label="Type"
+                    v-model="finding.vulnType" 
+                    :options="vulnTypesLang" 
+                    option-value="name" 
+                    option-label="name" 
+                    emit-value 
+                    map-options
+                    options-sanitize
+                    outlined
+                    bg-color="white"
+                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                    />
+                    <q-field class="col-md-12" borderless label="Description" stack-label>
+                        <template v-slot="control">
+                            <basic-editor ref="basiceditor_description" noSync v-model="finding.description" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                        </template>
+                    </q-field>
+                    <q-field class="col-md-12" borderless label="Observation" stack-label>
+                        <template v-slot="control">
+                            <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                        </template>
+                    </q-field>
+                    <textarea-array class="col-12" label="References (One per line)" v-model="finding.references" :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
                 </q-card-section>
 
                 <q-expansion-item 
@@ -71,6 +75,7 @@
                     v-model="finding.customFields" 
                     custom-element="QCardSection" 
                     no-sync-editor
+                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                     :locale="$parent.audit.language"
                     />
                 </q-expansion-item>
@@ -82,7 +87,7 @@
                 <div class="col-12">
                     <q-card class="bg-grey-1">
                         <q-card-section>
-                            <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" />
+                            <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
                         </q-card-section>
                     </q-card>
                 </div>
@@ -95,7 +100,7 @@
                 <q-card-section>
                     <q-field borderless>
                         <template v-slot="control">
-                            <basic-editor v-model="finding.scope" :toolbar="['format', 'marks', 'list']" />
+                            <basic-editor v-model="finding.scope" :toolbar="['format', 'marks', 'list']" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
                         </template>
                     </q-field>
                 </q-card-section>
@@ -106,6 +111,7 @@
                     :cvssString="finding.cvssv3"
                     :cvssScore="finding.cvssScore"
                     :cvssSeverity="finding.cvssSeverity"
+                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                     @cvssChange="finding.cvssv3 = $event"
                     @cvssScoreChange="finding.cvssScore = $event"
                     @cvssSeverityChange="finding.cvssSeverity = $event"
@@ -113,45 +119,47 @@
                 </div>
             </q-card>
             <q-card class="q-mt-md bg-grey-1">
-            <q-card-section>Course of actions</q-card-section>
-            <q-separator />
-            <q-card-section>
-                <div class="q-col-gutter-md row">
-                    <q-select
-                    label="Remediation Difficulty"
-                    stack-label
-                    class="col-md-6 col-12"
-                    v-model="finding.remediationComplexity"
-                    :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
-                    map-options
-                    emit-value
-                    options-sanitize
-                    outlined
-                    bg-color="white"
-                    />
-                    <q-select
-                    label="Priority"
-                    stack-label
-                    class="col-md-6 col-12"
-                    v-model="finding.priority"
-                    :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
-                    map-options
-                    emit-value
-                    options-sanitize
-                    outlined
-                    bg-color="white"
-                    />
-                </div>
-            </q-card-section>
-            <q-card-section>
-                <q-field class="col-md-12" borderless label="Remediation" stack-label>
-                    <template v-slot="control">
-                        <basic-editor ref="basiceditor_remediation" noSync v-model="finding.remediation" />
-                    </template>
-                </q-field>
-            </q-card-section>
-        </q-card>
-    </q-tab-panel>
+                <q-card-section>Course of actions</q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="q-col-gutter-md row">
+                        <q-select
+                        label="Remediation Difficulty"
+                        stack-label
+                        class="col-md-6 col-12"
+                        v-model="finding.remediationComplexity"
+                        :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        bg-color="white"
+                        :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                        />
+                        <q-select
+                        label="Priority"
+                        stack-label
+                        class="col-md-6 col-12"
+                        v-model="finding.priority"
+                        :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        bg-color="white"
+                        :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                        />
+                    </div>
+                </q-card-section>
+                <q-card-section>
+                    <q-field class="col-md-12" borderless label="Remediation" stack-label>
+                        <template v-slot="control">
+                            <basic-editor ref="basiceditor_remediation" noSync v-model="finding.remediation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                        </template>
+                    </q-field>
+                </q-card-section>
+            </q-card>
+        </q-tab-panel>
     </q-tab-panels>
 </div>
 </div>

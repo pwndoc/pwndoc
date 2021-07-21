@@ -2,4 +2,9 @@
 
 <script src='./audits-list.js'></script>
 
-<style></style>
+<style>
+.icon-next-to-button {
+    padding: 0 12px;
+    font-size: 1.5em!important;
+}
+</style>

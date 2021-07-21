@@ -3,10 +3,17 @@ import { Notify, Dialog } from 'quasar';
 import Breadcrumb from 'components/breadcrumb';
 
 import AuditService from '@/services/audit';
+import Utils from '@/services/utils';
 
 export default {
+    props: {
+        frontEndAuditState: Number,
+        parentState: String,
+        parentApprovals: Array
+    },
     data: () => {
         return {
+            auditId: null,
             audit: {
                 // scope: []
             },
@@ -29,7 +36,8 @@ export default {
                 page: 1,
                 rowsPerPage: 20,
                 sortBy: 'port'
-            }
+            },
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -40,7 +48,7 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getAuditNetwork();
-
+        
         this.$socket.emit('menu', {menu: 'network', room: this.auditId});
 
         // save on ctrl+s
@@ -80,7 +88,8 @@ export default {
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
                 e.preventDefault();
-                this.updateAuditNetwork();
+                if (this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT)
+                    this.updateAuditNetwork();
             }
         },
 

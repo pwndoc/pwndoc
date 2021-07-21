@@ -9,6 +9,11 @@ import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
 export default {
+    props: {
+        frontEndAuditState: Number,
+        parentState: String,
+        parentApprovals: Array
+    },
     data: () => {
         return {
             // Set audit ID
@@ -20,7 +25,8 @@ export default {
             },
             sectionOrig: {},
             // List of CustomFields
-            customFields: []
+            customFields: [],
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
         }
     },
 
@@ -79,7 +85,8 @@ export default {
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
                 e.preventDefault();
-                this.updateSection();
+                if (this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT)
+                    this.updateSection();
             }
         },
 

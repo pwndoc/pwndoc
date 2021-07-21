@@ -9,7 +9,7 @@ var utils = require('./utils');
 var html2ooxml = require('./html2ooxml');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
-var reportConfig = require('../config/report.json');
+var Settings = require('mongoose').model('Settings');
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
@@ -19,7 +19,7 @@ async function generateDoc(audit) {
 
     var zip = new JSZip(content);
 
-    var settings = JSON.parse(fs.readFileSync(`${__basedir}/config/app-settings.json`));
+    var settings = await Settings.getAll();
 
     var opts = {};
     // opts.centered = true;
@@ -60,8 +60,8 @@ async function generateDoc(audit) {
         return [0,0]
     }
 
-    if (settings.imageBorder && settings.imageBorderColor)
-        opts.border = settings.imageBorderColor.replace('#', '')
+    if (settings.report.private.imageBorder && settings.report.private.imageBorderColor)
+        opts.border = settings.report.private.imageBorderColor.replace('#', '')
 
     try {
         var imageModule = new ImageModule(opts);
@@ -70,7 +70,7 @@ async function generateDoc(audit) {
         console.log(err)
     }
     var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
-    cvssHandle(preppedAudit);
+    cvssHandle(preppedAudit, settings);
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
     try {
@@ -212,13 +212,13 @@ var angularParser = function(tag) {
 }
 
 // For each finding, add cvssColor, cvssObj and criteria colors parameters
-function cvssHandle(data) {
+function cvssHandle(data, settings) {
     // Header title colors
-    var noneColor = reportConfig.cvss_colors.none_color; //default of blue ("4A86E8")
-    var lowColor = reportConfig.cvss_colors.low_color; //default of green ("008000")
-    var mediumColor = reportConfig.cvss_colors.medium_color; //default of yellow ("f9a009")
-    var highColor = reportConfig.cvss_colors.high_color; //default of red ("fe0000")
-    var criticalColor = reportConfig.cvss_colors.critical_color; //default of black ("212121")
+    var noneColor = settings.report.public.cvssColors.noneColor.replace('#', ''); //default of blue ("#4A86E8")
+    var lowColor = settings.report.public.cvssColors.lowColor.replace('#', ''); //default of green ("#008000")
+    var mediumColor = settings.report.public.cvssColors.mediumColor.replace('#', ''); //default of yellow ("#f9a009")
+    var highColor = settings.report.public.cvssColors.highColor.replace('#', ''); //default of red ("#fe0000")
+    var criticalColor = settings.report.public.cvssColors.criticalColor.replace('#', ''); //default of black ("#212121")
 
     var cellNoneColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + noneColor + '"/></w:tcPr>';
     var cellLowColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColor+'"/></w:tcPr>';
