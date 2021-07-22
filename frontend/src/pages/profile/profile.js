@@ -34,10 +34,6 @@ export default {
                 this.errors.firstname = "Firstname required";
             if (!this.user.lastname)
                 this.errors.lastname = "Lastname required";
-            if (!this.user.email)
-                this.errors.email = "Email required";
-            if (!this.user.phone)
-                this.errors.phone = "Phone Number required";
             if (!this.user.currentPassword)
                 this.errors.currentPassword = "Current Password required";
             if (this.user.newPassword !== this.user.confirmPassword)

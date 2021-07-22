@@ -110,10 +110,10 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
         query.populate('template')
-        query.populate('creator', 'username firstname lastname role')
+        query.populate('creator', 'username firstname lastname email phone role')
         query.populate('company')
         query.populate('client')
-        query.populate('collaborators', 'username firstname lastname role')
+        query.populate('collaborators', 'username firstname lastname email phone role')
         query.populate('customFields.customField', 'label fieldType text')
         query.populate({
             path: 'findings',

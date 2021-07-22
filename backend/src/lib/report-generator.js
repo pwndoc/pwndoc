@@ -347,7 +347,7 @@ async function prepAuditData(data) {
             firstname: collab.firstname || "undefined",
             lastname: collab.lastname || "undefined",
             email: collab.email || "undefined",
-            email: collab.phone || "undefined",
+            phone: collab.phone || "undefined",
             role: collab.role || "undefined"
         })
     })

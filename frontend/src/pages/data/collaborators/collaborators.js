@@ -84,11 +84,7 @@ export default {
                 this.errors.username = "Username required";
             if (!this.currentCollab.password)
                 this.errors.password = "Password required";
-            if (!this.currentCollab.email)
-                this.errors.email = "Email required";
-            if (!this.currentCollab.phone)
-                this.errors.phone = "Phone required";
-            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password || this.errors.email || this.errors.phone)
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password)
                 return;
 
             CollabService.createCollab(this.currentCollab)
