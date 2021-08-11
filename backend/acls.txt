@@ -1,0 +1,334 @@
+# Query: (acl\\.hasPermission\\(.*\\),)+
+# Flags: RegExp
+# Including: backend/
+# ContextLines: 1
+
+80 results - 8 files
+
+backend/src/routes/audit.js:
+   11    // Get audits list of user (all for admin) with regex filter on findings
+   12:   app.get("/api/audits", acl.hasPermission("audits:read"), function (req, res) {
+   13      var getSockets = function (room) {
+
+   61      "/api/audits",
+   62:     acl.hasPermission("audits:create"),
+   63      function (req, res) {
+
+   88      "/api/audits/:auditId",
+   89:     acl.hasPermission("audits:delete"),
+   90      function (req, res) {
+
+  105      "/api/audits/:auditId",
+  106:     acl.hasPermission("audits:read"),
+  107      function (req, res) {
+
+  120      "/api/audits/:auditId/general",
+  121:     acl.hasPermission("audits:read"),
+  122      function (req, res) {
+
+  135      "/api/audits/:auditId/general",
+  136:     acl.hasPermission("audits:update"),
+  137      function (req, res) {
+
+  180      "/api/audits/:auditId/network",
+  181:     acl.hasPermission("audits:read"),
+  182      function (req, res) {
+
+  195      "/api/audits/:auditId/network",
+  196:     acl.hasPermission("audits:update"),
+  197      function (req, res) {
+
+  215      "/api/audits/:auditId/findings",
+  216:     acl.hasPermission("audits:update"),
+  217      function (req, res) {
+
+  266      "/api/audits/:auditId/findings",
+  267:     acl.hasPermission("audits:read"),
+  268      function (req, res) {
+
+  281      "/api/audits/:auditId/findings/:findingId",
+  282:     acl.hasPermission("audits:read"),
+  283      function (req, res) {
+
+  297      "/api/audits/:auditId/findings/:findingId",
+  298:     acl.hasPermission("audits:update"),
+  299      function (req, res) {
+
+  345      "/api/audits/:auditId/findings/:findingId",
+  346:     acl.hasPermission("audits:update"),
+  347      function (req, res) {
+
+  364      "/api/audits/:auditId/sections",
+  365:     acl.hasPermission("audits:update"),
+  366      function (req, res) {
+
+  398      "/api/audits/:auditId/sections/:sectionId",
+  399:     acl.hasPermission("audits:read"),
+  400      function (req, res) {
+
+  414      "/api/audits/:auditId/sections/:sectionId",
+  415:     acl.hasPermission("audits:update"),
+  416      function (req, res) {
+
+  441      "/api/audits/:auditId/sections/:sectionId",
+  442:     acl.hasPermission("audits:update"),
+  443      function (req, res) {
+
+  460      "/api/audits/:auditId/generate",
+  461:     acl.hasPermission("audits:read"),
+  462      function (req, res) {
+
+backend/src/routes/client.js:
+   7      // Get clients list
+   8:     app.get("/api/clients", acl.hasPermission('clients:read'), function(req, res) {
+   9          Client.getAll()
+
+  14      // Create client
+  15:     app.post("/api/clients", acl.hasPermission('clients:create'), function(req, res) {
+  16          if (!req.body.email) {
+
+  39      // Update client
+  40:     app.put("/api/clients/:id", acl.hasPermission('clients:update'), function(req, res) {
+  41          var client = {};
+
+  57      // Delete client
+  58:     app.delete("/api/clients/:id", acl.hasPermission('clients:delete'), function(req, res) {
+  59          Client.delete(req.params.id)
+
+backend/src/routes/company.js:
+   7      // Get companies list
+   8:     app.get("/api/companies", acl.hasPermission('companies:read'), function(req, res) {
+   9          Company.getAll()
+
+  14      // Create company
+  15:     app.post("/api/companies", acl.hasPermission('companies:create'), function(req, res) {
+  16          if (!req.body.name) {
+
+  33      // Update company
+  34:     app.put("/api/companies/:id", acl.hasPermission('companies:update'), function(req, res) {
+  35          var company = {};
+
+  45      // Delete company
+  46:     app.delete("/api/companies/:id", acl.hasPermission('companies:delete'), function(req, res) {
+  47          Company.delete(req.params.id)
+
+backend/src/routes/data.js:
+   20      "/api/data/roles",
+   21:     acl.hasPermission("roles:read"),
+   22      function (req, res) {
+
+   36      "/api/data/languages",
+   37:     acl.hasPermission("languages:read"),
+   38      function (req, res) {
+
+   47      "/api/data/languages",
+   48:     acl.hasPermission("languages:create"),
+   49      function (req, res) {
+
+   80      "/api/data/languages/:locale(*)",
+   81:     acl.hasPermission("languages:delete"),
+   82      function (req, res) {
+
+   93      "/api/data/languages",
+   94:     acl.hasPermission("languages:update"),
+   95      function (req, res) {
+
+  132      "/api/data/audit-types",
+  133:     acl.hasPermission("audit-types:read"),
+  134      function (req, res) {
+
+  143      "/api/data/audit-types",
+  144:     acl.hasPermission("audit-types:create"),
+  145      function (req, res) {
+
+  175      "/api/data/audit-types/:name(*)",
+  176:     acl.hasPermission("audit-types:delete"),
+  177      function (req, res) {
+
+  188      "/api/data/audit-types",
+  189:     acl.hasPermission("audit-types:update"),
+  190      function (req, res) {
+
+  227      "/api/data/vulnerability-types",
+  228:     acl.hasPermission("vulnerability-types:read"),
+  229      function (req, res) {
+
+  238      "/api/data/vulnerability-types",
+  239:     acl.hasPermission("vulnerability-types:create"),
+  240      function (req, res) {
+
+  270      "/api/data/vulnerability-types/:name(*)",
+  271:     acl.hasPermission("vulnerability-types:delete"),
+  272      function (req, res) {
+
+  283      "/api/data/vulnerability-types",
+  284:     acl.hasPermission("vulnerability-types:update"),
+  285      function (req, res) {
+
+  322      "/api/data/vulnerability-categories",
+  323:     acl.hasPermission("vulnerability-categories:read"),
+  324      function (req, res) {
+
+  333      "/api/data/vulnerability-categories",
+  334:     acl.hasPermission("vulnerability-categories:create"),
+  335      function (req, res) {
+
+  360      "/api/data/vulnerability-categories",
+  361:     acl.hasPermission("vulnerability-categories:update"),
+  362      function (req, res) {
+
+  416      "/api/data/vulnerability-categories/:name(*)",
+  417:     acl.hasPermission("vulnerability-categories:delete"),
+  418      function (req, res) {
+
+  431      "/api/data/sections",
+  432:     acl.hasPermission("sections:read"),
+  433      function (req, res) {
+
+  442      "/api/data/sections/:locale",
+  443:     acl.hasPermission("sections:read"),
+  444      function (req, res) {
+
+  453      "/api/data/sections",
+  454:     acl.hasPermission("sections:create"),
+  455      function (req, res) {
+
+  490      "/api/data/sections/:field/:locale(*)",
+  491:     acl.hasPermission("sections:delete"),
+  492      function (req, res) {
+
+  503      "/api/data/sections",
+  504:     acl.hasPermission("sections:update"),
+  505      function (req, res) {
+
+  549      "/api/data/custom-fields",
+  550:     acl.hasPermission("custom-fields:read"),
+  551      function (req, res) {
+
+  560      "/api/data/custom-fields",
+  561:     acl.hasPermission("custom-fields:create"),
+  562      function (req, res) {
+
+  607      "/api/data/custom-fields",
+  608:     acl.hasPermission("custom-fields:update"),
+  609      function (req, res) {
+
+  658      "/api/data/custom-fields/:fieldId",
+  659:     acl.hasPermission("custom-fields:delete"),
+  660      function (req, res) {
+
+backend/src/routes/image.js:
+   7      // Get image
+   8:     app.get("/api/images/:imageId", acl.hasPermission('images:read'), function(req, res) {
+   9          Image.getOne(req.params.imageId)
+
+  14      // Create image
+  15:     app.post("/api/images/", acl.hasPermission('images:create'), function(req, res) {
+  16          if (!req.body.value) {
+
+  34      // Delete image
+  35:     app.delete("/api/images/:imageId", acl.hasPermission('images:delete'), function(req, res) {
+  36          Image.delete(req.params.imageId)
+
+  45      // Download image file
+  46:     app.get("/api/images/download/:imageId", acl.hasPermission('images:read'), function(req, res) {
+  47          Image.getOne(req.params.imageId)
+
+backend/src/routes/template.js:
+   9      // Get templates list
+  10:     app.get("/api/templates", acl.hasPermission('templates:read'), function(req, res) {
+  11          Template.getAll()
+
+  16      // Create template
+  17:     app.post("/api/templates", acl.hasPermission('templates:create'), function(req, res) {
+  18          if (!req.body.name || !req.body.file || !req.body.ext) {
+
+  42      // Update template
+  43:     app.put("/api/templates/:templateId", acl.hasPermission('templates:update'), function(req, res) {
+  44          if (req.body.name && !utils.validFilename(req.body.name)) {
+
+  82      // Delete template
+  83:     app.delete("/api/templates/:templateId", acl.hasPermission('templates:delete'), function(req, res) {
+  84          Template.delete(req.params.templateId)
+
+  98       // Download template file
+  99:      app.get("/api/templates/download/:templateId", acl.hasPermission('templates:read'), function(req, res) {
+  100          Template.getOne(req.params.templateId)
+
+backend/src/routes/user.js:
+    8      // Check token validity
+    9:     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
+   10          Response.Ok(res, req.cookies['token']);
+
+   13      // Remove token cookie
+   14:     app.get("/api/users/destroytoken", acl.hasPermission('validtoken'), function(req, res) {
+   15          res.clearCookie('token')
+
+   45      // Get all users
+   46:     app.get("/api/users", acl.hasPermission('users:read'), function(req, res) {
+   47          User.getAll()
+
+   52      // Get user self
+   53:     app.get("/api/users/me", acl.hasPermission('validtoken'), function(req, res) {
+   54          User.getByUsername(req.decodedToken.username)
+
+   59      // Get user by username
+   60:     app.get("/api/users/:username", acl.hasPermission('users:read'), function(req, res) {
+   61          User.getByUsername(req.params.username)
+
+   66      // Create user
+   67:     app.post("/api/users", acl.hasPermission('users:create'), function(req, res) {
+   68          if (!req.body.username || !req.body.password || !req.body.firstname || !req.body.lastname) {
+
+  127      // Update my profile
+  128:     app.put("/api/users/me", acl.hasPermission('validtoken'), function(req, res) {
+  129          if (!req.body.currentPassword ||
+
+  159      // Update any user (admin only)
+  160:     app.put("/api/users/:id", acl.hasPermission('users:update'), function(req, res) {
+  161          var user = {};
+
+  175      // Delete any user (admin only)
+  176:     app.delete("/api/users/:id", acl.hasPermission('users:delete'), function(req, res) {
+  177          User.deleteOne({_id: req.params.id})
+
+backend/src/routes/vulnerability.js:
+   10      "/api/vulnerabilities",
+   11:     acl.hasPermission("vulnerabilities:read"),
+   12      function (req, res) {
+
+   21      "/api/vulnerabilities/export",
+   22:     acl.hasPermission("vulnerabilities:read"),
+   23      function (req, res) {
+
+   32      "/api/vulnerabilities",
+   33:     acl.hasPermission("vulnerabilities:create"),
+   34      function (req, res) {
+
+  122      "/api/vulnerabilities/:vulnerabilityId",
+  123:     acl.hasPermission("vulnerabilities:update"),
+  124      function (req, res) {
+
+  185      "/api/vulnerabilities/:vulnerabilityId",
+  186:     acl.hasPermission("vulnerabilities:delete"),
+  187      function (req, res) {
+
+  196      "/api/vulnerabilities",
+  197:     acl.hasPermission("vulnerabilities:delete-all"),
+  198      function (req, res) {
+
+  207      "/api/vulnerabilities/:locale",
+  208:     acl.hasPermission("vulnerabilities:read"),
+  209      function (req, res) {
+
+  218      "/api/vulnerabilities/finding/:locale",
+  219:     acl.hasPermission("vulnerability-updates:create"),
+  220      function (req, res) {
+
+  261      "/api/vulnerabilities/updates/:vulnId",
+  262:     acl.hasPermission("vulnerabilities:update"),
+  263      function (req, res) {
+
+  272      "/api/vulnerabilities/merge/:vulnId",
+  273:     acl.hasPermission("vulnerabilities:update"),
+  274      function (req, res) {

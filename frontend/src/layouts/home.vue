@@ -32,7 +32,7 @@
           flat
           icon="fa fa-user-circle"
           no-caps
-          :label="userService.user.username"
+          :label="$auth.user.name"
         >
           <q-list>
             <q-item clickable @click="$router.push('/profile')">
@@ -63,14 +63,9 @@ import UserService from "@/services/user";
 
 export default {
   name: "LayoutHome",
-  data() {
-    return {
-      userService: UserService,
-    };
-  },
 
   methods: {
-    logout: function () {
+    logout: function() {
       UserService.destroyToken();
     },
   },

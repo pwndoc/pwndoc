@@ -4,8 +4,6 @@ import routes from "./routes";
 import AuthConfig from "../config/auth";
 import { Auth0Plugin } from "../auth";
 
-console.log(AuthConfig);
-
 Vue.use(Auth0Plugin, {
   domain: AuthConfig.domain,
   clientId: AuthConfig.clientId,

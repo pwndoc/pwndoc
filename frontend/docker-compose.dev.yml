@@ -1,8 +1,7 @@
-version: '3'
+version: "3"
 services:
-
   pwndoc-frontend:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.dev
     image: yeln4ts/pwndoc:frontend-dev
@@ -16,6 +15,7 @@ services:
       - ./quasar.conf.js:/app/quasar.conf.js
       - ./package.json:/app/package.json
       - ./package-lock.json:/app/package-lock.json
+      - ./.env:/app/.env
     restart: always
     ports:
       - 8081:8081

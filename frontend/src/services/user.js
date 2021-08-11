@@ -1,89 +1,101 @@
-var jwtDecode = require('jwt-decode');
-import Vue from 'vue';
+var jwtDecode = require("jwt-decode");
+import Vue from "vue";
 
-import Router from '../router'
+import Router from "../router";
 
 export default {
-    user: null,
+  user: null,
 
-    getToken(username, password) {
-        return new Promise((resolve, reject) => {
-            var params = {username: username, password: password};
-            Vue.prototype.$axios.post(`users/token`, params)
-            .then((response) => {
-                var token = response.data.datas.token;
-                this.user = jwtDecode(token);
-                resolve();
-            })
-            .catch((error) => {
-                console.log(error)
-                reject(error);
-            })
+  //   getToken(username, password) {
+  //     return new Promise((resolve, reject) => {
+  //       //   const accessToken = Vue.prototype.$auth.getTokenSilently();
+
+  //       var params = { username: username, password: password };
+  //       Vue.prototype.$axios
+  //         .post(`users/token`, params)
+  //         .then((response) => {
+  //           var token = response.data.datas.token;
+  //           this.user = jwtDecode(token);
+  //           resolve();
+  //         })
+  //         .catch((error) => {
+  //           console.log(error);
+  //           reject(error);
+  //         });
+  //     });
+  //   },
+
+  destroyToken() {
+    Vue.prototype.$axios
+      .get("users/destroytoken")
+      .then(() => {
+        // Router.push("/login");
+      })
+      .catch((err) => console.log(err));
+  },
+
+  checkToken() {
+    return new Promise((resolve, reject) => {
+      Vue.prototype.$axios
+        .get(`users/checktoken`)
+        .then((data) => {
+          var token = data.data.datas;
+          var decoded = jwtDecode(token);
+          if (decoded) {
+            this.user = decoded;
+            resolve();
+          } else reject("InvalidToken");
+          resolve();
         })
-    },
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  },
 
-    destroyToken() {
-        Vue.prototype.$axios.get('users/destroytoken')
-        .then(() => {
-            Router.push('/login');
+  initUser(username, firstname, lastname, password) {
+    return new Promise((resolve, reject) => {
+      var params = {
+        username: username,
+        password: password,
+        firstname: firstname,
+        lastname: lastname,
+      };
+      Vue.prototype.$axios
+        .post(`users/init`, params)
+        .then((response) => {
+          var token = response.data.datas.token;
+          this.user = jwtDecode(token);
+          resolve();
         })
-        .catch(err => console.log(err))
-    },
+        .catch((error) => {
+          console.log(error);
+          reject(error);
+        });
+    });
+  },
 
-    checkToken() {
-        return new Promise((resolve, reject) => {
-            Vue.prototype.$axios.get(`users/checktoken`)
-            .then(data => {
-                var token = data.data.datas
-                var decoded = jwtDecode(token);
-                if (decoded) {
-                    this.user = decoded;
-                    resolve();
-                }
-                else
-                    reject('InvalidToken');
-                resolve()
-            })
-            .catch((error) => {
-                reject(error);
-            })
-        })
-    },
+  isInit() {
+    return Vue.prototype.$axios.get(`users/init`, { timeout: 10000 });
+  },
 
-    initUser(username, firstname, lastname, password) {
-        return new Promise((resolve, reject) => {
-            var params = {username: username, password: password, firstname: firstname, lastname: lastname};
-            Vue.prototype.$axios.post(`users/init`, params)
-            .then((response) => {
-                var token = response.data.datas.token;
-                this.user = jwtDecode(token);
-                resolve();
-            })
-            .catch((error) => {
-                console.log(error)
-                reject(error);
-            })
-        })
-    },
+  //   isAuth() {
+  //     return this.user !== null;
+  //   },
 
-    isInit() {
-        return (Vue.prototype.$axios.get(`users/init`, {timeout: 10000}));
-    },
+  isAllowed(role) {
+    return true;
+    // return (
+    //   this.user.roles &&
+    //   (this.user.roles.includes(role) || this.user.roles === "*")
+    // );
+  },
 
-    isAuth() {
-        return (this.user !== null);
-    },
+  getProfile: function() {
+    return Vue.prototype.$axios.get(`users/me`);
+  },
 
-    isAllowed(role) {
-        return (this.user.roles && (this.user.roles.includes(role) || this.user.roles === '*'))
-    },
-
-    getProfile: function() {
-        return Vue.prototype.$axios.get(`users/me`);
-    },
-
-    updateProfile: function(user) {
-        return Vue.prototype.$axios.put(`users/me`, user);
-    },
-
-}
+  updateProfile: function(user) {
+    return Vue.prototype.$axios.put(`users/me`, user);
+  },
+};

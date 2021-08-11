@@ -19,11 +19,15 @@ roles.json
 *.njsproj
 *.sln
 
-# backup files
+# Backup files
 !backup/config/pwndoc.yml
 backup
 
-# history files
+# History files
 .history
 
+# SSL Certificates
 ssl
+
+# Environment Variables
+.env
