@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.4.0 (2021-08-23)
+
+### Enhancements
+
+- Update JWT generation [`15f3dc0`](https://github.com/pwndoc/pwndoc/commit/15f3dc0e212eda465e05fda0feb002d1bce2939d)
+    - JWT is now dynamically generated
+    - config files moved to on location
+- Update Session management using refresh token [`ff1b868`](https://github.com/pwndoc/pwndoc/commit/ff1b868cec55f5b6c7a91e15a2b0b1f4324121ab)
+    - A refresh token has been introduced allowing to request for a new token
+    - Token is now valid for 15min and refreshtoken for 7days
+    - So now when updating a user (role or remove) it will take maximum 15min (or page refresh) to invalidate the old token
+    - Each refresh token is associated with a sessionId allowing to have multiple sessions on different devices
+- Add different options to sort Audit findings [`32dd337`](https://github.com/pwndoc/pwndoc/commit/32dd3373695dd1d3d4c1e6d045540ab06631f6d7)
+    - The automatic sorting parameter can now be customized for each vulnerability category
+    - Custom fields can be used as sorting parameter (input, date, radio and select)
+    - Default sorting can be set in **Custom data > Vulnerability Categories**
+    - Manual sorting of findings is also possible now with drag&drop
+
+### Merged
+- Add Audit reviews and approval feature [`02d144d`](https://github.com/pwndoc/pwndoc/commit/02d144db4b58aec98a9870f5b7743589754298ce). Thanks [`@lm-sec`](https://github.com/lm-sec) and [`@alexandre-lavoie`](https://github.com/alexandre-lavoie)
+    - Add a new process (disabled by default) to handle Audit approbation
+    - Update Settings
+    - Add readonly visual on Audits when user cannot edit
+
+### Fixed
+
+- Fix issue in HTML editor [`63c6359`](https://github.com/pwndoc/pwndoc/commit/63c6359bbadfd220646e04972e9e8afa8051e0d2)
+    - Toolbar styles could be applied by using their HTML tags directly in the editor resulting in visual bugs
+- Fix issue in textarea-array component [`dd5b51f`](https://github.com/pwndoc/pwndoc/commit/dd5b51f18d7bd8ec67cb55fa4b1c298b5a8ebce9)
+    - Removed trim function since it caused issues with resetting cursor at end of input when deleting and reaching a space. It is taken care of by the trim option in mongoose
+- Fix database compatibility issue [`361cd0a`](https://github.com/pwndoc/pwndoc/commit/361cd0a8171bafc5cab3ab6db67b0d1f0f03832f)
+    - Fix the mongodb version to avoid compatibility issue with newer versions for now
+
+### UPDATE ATTENTION
+
+- After updating, Settings will be reset to default
+
 ## 0.3.0 (2021-06-07)
 
 ### Enhancements
