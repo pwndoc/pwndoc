@@ -127,7 +127,7 @@ expressions.filters.convertDate = function(input, s) {
 expressions.filters.convertDateLocale = function(input, locale, style) {
     var date = new Date(input);
     if (date != "Invalid Date") {
-        var options = { year: 'numeric', month: 'numeric', day: 'numeric'}
+        var options = { year: 'numeric', month: '2-digit', day: '2-digit'}
 
         if (style === "full")
             options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}
