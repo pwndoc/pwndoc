@@ -168,7 +168,7 @@ export default {
             var blob = new Blob([JSON.stringify(response.data)], {type: "application/json"});
             var link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.download = response.headers['content-disposition'].split('"')[1];
+            link.download = decodeURIComponent(response.headers['content-disposition'].split('"')[1]);
             document.body.appendChild(link);
             link.click();
             link.remove();
