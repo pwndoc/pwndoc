@@ -73,9 +73,9 @@ export default {
   methods: {
     calculateScore() {
       if (!!this.impact && !!this.probability) {
-        const maxScore = 5 ** 2;
+        const maxScore = 10;
         this.score =
-          Math.round(((this.impact * this.probability) / maxScore) * 100) / 10;
+          Math.round(((this.impact + this.probability) / maxScore) * 100) / 10;
         this.severity = this.calculateSeverity(this.score);
 
         this.$emit("riskScoreChange", this.score);
