@@ -2,11 +2,11 @@
     <q-card>
         <q-card-section class="row">
             <div class="col-md-6">
-            CVSSv3 Base Score
+            {{$t('cvss.title')}}
             </div>
             <q-space />
             <div class="scoreRating" :class="severity">
-                <span class="baseSeverity" v-if="!score || score < 0.1">Select values for all base metrics to generate score</span>
+                <span class="baseSeverity" v-if="!score || score < 0.1">{{$t('cvss.infoWhenNoScore')}}</span>
                 <div v-else>
                     <span class="baseMetricScore">{{score}}</span>
                     <span class="baseSeverity">({{severity}})</span>
@@ -16,7 +16,7 @@
         <q-separator />
         <q-card-section class="row q-col-gutter-md">
             <div class="col-md-6">
-                <div class="q-my-sm text-weight-bold">Attack Vector</div>
+                <div class="q-my-sm text-weight-bold">{{$t('cvss.attackVector')}}</div>
                 <q-btn-toggle
                     class="group-btn"
                     v-model="cvssObj.AV"
@@ -26,7 +26,7 @@
                     :options="cvssItems.AV"
                     :readonly="readonly"
                 />
-                <div class="q-my-sm text-weight-bold">Attack Complexity</div>
+                <div class="q-my-sm text-weight-bold">{{$t('cvss.attackComplexity')}}</div>
                 <q-btn-toggle
                     class="group-btn"
                     v-model="cvssObj.AC"
@@ -36,7 +36,7 @@
                     :options="cvssItems.AC"
                     :readonly="readonly"
                 />
-                <div class="q-my-sm text-weight-bold">Privileges Required</div>
+                <div class="q-my-sm text-weight-bold">{{$t('cvss.privilegesRequired')}}</div>
                 <q-btn-toggle
                     class="group-btn"
                     v-model="cvssObj.PR"
@@ -46,7 +46,7 @@
                     :options="cvssItems.PR"
                     :readonly="readonly"
                 />
-                <div class="q-my-sm text-weight-bold">User Interaction</div>
+                <div class="q-my-sm text-weight-bold">{{$t('cvss.userInteraction')}}</div>
                 <q-btn-toggle
                     class="group-btn"
                     v-model="cvssObj.UI"
@@ -58,7 +58,7 @@
                 />
             </div>
             <div class="col-md-6">
-                <div class="q-my-sm text-weight-bold">Scope</div>
+                <div class="q-my-sm text-weight-bold">{{$t('cvss.scope')}}</div>
                 <q-btn-toggle
                     class="group-btn"
                     v-model="cvssObj.S"
@@ -68,7 +68,7 @@
                     :options="cvssItems.S"
                     :readonly="readonly"
                 />
-                <div class="q-my-sm text-weight-bold">Confidentiality Impact</div>
+                <div class="q-my-sm text-weight-bold">{{$t('cvss.confidentialityImpact')}}</div>
                 <q-btn-toggle
                     class="group-btn"
                     v-model="cvssObj.C"
@@ -78,7 +78,7 @@
                     :options="cvssItems.C"
                     :readonly="readonly"
                 />
-                <div class="q-my-sm text-weight-bold">Integrity Impact</div>
+                <div class="q-my-sm text-weight-bold">{{$t('cvss.integrityImpact')}}</div>
                 <q-btn-toggle
                     class="group-btn"
                     v-model="cvssObj.I"
@@ -88,7 +88,7 @@
                     :options="cvssItems.I"
                     :readonly="readonly"
                 />
-                <div class="q-my-sm text-weight-bold">Availability Impact</div>
+                <div class="q-my-sm text-weight-bold">{{$t('cvss.availabilityImpact')}}</div>
                 <q-btn-toggle
                     class="group-btn"
                     v-model="cvssObj.A"
@@ -105,6 +105,7 @@
 </template>
 
 <script>
+import { $t } from '@/boot/i18n'
 
 export default {
     name: 'cvss-calculator',
@@ -113,14 +114,14 @@ export default {
     data: function() {
         return {
             cvssItems: {
-                AV: [{label: "Network", value: "N"}, {label: "Adjacent Network", value: "A"}, {label: "Local", value: "L"}, {label: "Physical", value: "P"}],
-                AC: [{label: "Low", value: "L"}, {label: "High", value: "H"}],
-                PR: [{label: "None", value: "N"}, {label: "Low", value: "L"}, {label: "High", value: "H"}],
-                UI: [{label: "None", value: "N"}, {label: "Required", value: "R"}],
-                S: [{label: "Unchanged", value: "U"}, {label: "Changed", value: "C"}],
-                C: [{label: "None", value: "N"}, {label: "Low", value: "L"}, {label: "High", value: "H"}],
-                I: [{label: "None", value: "N"}, {label: "Low", value: "L"}, {label: "High", value: "H"}],
-                A: [{label: "None", value: "N"}, {label: "Low", value: "L"}, {label: "High", value: "H"}]
+                AV: [{label: $t("cvss.network"), value: "N"}, {label: $t("cvss.adjacentNetwork"), value: "A"}, {label: $t("cvss.local"), value: "L"}, {label: $t("cvss.physical"), value: "P"}],
+                AC: [{label: $t("cvss.low"), value: "L"}, {label: $t("cvss.high"), value: "H"}],
+                PR: [{label: $t("cvss.none"), value: "N"}, {label: $t("cvss.low"), value: "L"}, {label: $t("cvss.high"), value: "H"}],
+                UI: [{label: $t("cvss.none"), value: "N"}, {label: $t("cvss.required"), value: "R"}],
+                S: [{label: $t("cvss.unchanged"), value: "U"}, {label: $t("cvss.changed"), value: "C"}],
+                C: [{label: $t("cvss.none"), value: "N"}, {label: $t("cvss.low"), value: "L"}, {label: $t("cvss.high"), value: "H"}],
+                I: [{label: $t("cvss.none"), value: "N"}, {label: $t("cvss.low"), value: "L"}, {label: $t("cvss.high"), value: "H"}],
+                A: [{label: $t("cvss.none"), value: "N"}, {label: $t("cvss.low"), value: "L"}, {label: $t("cvss.high"), value: "H"}]
             },
             cvssObj: {},
             cvssLocal: this.cvssString,

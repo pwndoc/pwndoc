@@ -3,18 +3,15 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-card>
             <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
-                <div class="text-h6">Vulnerabilities</div>
+                <div class="text-h6">{{$t('nav.vulnerabilities')}}</div>
             </q-card-section>
             <q-separator />
             <div v-if="UserService.isAllowed('vulnerabilities:create')">
                 <q-card-section>
-                    <div class="text-bold">Import Vulnerabilities</div>
+                    <div class="text-bold">{{$t('importVulnerabilities')}}</div>
                 </q-card-section>
                 <q-card-section>
-                    <div class="text-grey-8">
-                        Import Vulnerabilities from a .yml or .json file. (Serpico format accepted)<br />
-                        This allows you to easily import a batch of vulnerabilities templates.
-                    </div>
+                    <div class="text-grey-8" v-html="$t('importVulnerabilitiesInfo')"></div>
                 </q-card-section>
                 <q-card-section>
                     <input
@@ -27,7 +24,7 @@
                     @change="importVulnerabilities($event.target.files)"
                     />
                     <q-btn 
-                    label="Import"
+                    :label="$t('import')"
                     color="secondary"
                     flat
                     class="bg-secondary text-white"
@@ -37,14 +34,14 @@
                 <q-separator />
             </div>
             <q-card-section>
-                <div class="text-bold">Export Vulnerabilities</div>
+                <div class="text-bold">{{$t('exportVulnerabilities')}}</div>
             </q-card-section>
             <q-card-section>
-                    <div class="text-grey-8">Export Vulnerabilities to yaml format. This export can easily be re-imported afterward</div>
+                    <div class="text-grey-8" v-html="$t('exportVulnerabilitiesInfo')"></div>
                 </q-card-section>
                 <q-card-section>
                     <q-btn 
-                    label="Export"
+                    :label="$t('export')"
                     color="secondary"
                     flat
                     class="bg-secondary text-white"
@@ -54,17 +51,14 @@
                 <q-separator />
                 <div v-if="UserService.isAllowed('vulnerabilities:delete-all')">
                     <q-card-section>
-                        <div class="text-bold">Delete All Vulnerabilities</div>
+                        <div class="text-bold">{{$t('deleteAllVulnerabilities')}}</div>
                     </q-card-section>
                     <q-card-section>
-                        <div class="text-grey-8">
-                            Delete all existing vulnerabilities.<br />
-                            <strong>This action is definitive!!</strong>
-                        </div>
+                        <div class="text-grey-8" v-html="$t('deleteAllVulnerabilitiesInfo')"></div>
                     </q-card-section>
                     <q-card-section>
                         <q-btn 
-                        label="Delete All"
+                        :label="$t('btn.deleteAll')"
                         flat
                         class="bg-negative text-white"
                         @click="deleteAllVulnerabilities"
@@ -77,7 +71,7 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-card>
             <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
-                <div class="text-h6">Audits</div>
+                <div class="text-h6">{{$t('nav.audits')}}</div>
             </q-card-section>
             <q-separator />
             <q-card-section>

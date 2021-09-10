@@ -13,6 +13,8 @@ import TemplateService from '@/services/template';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
+import { $t } from '@/boot/i18n'
+
 export default {
     props: {
         frontEndAuditState: Number,
@@ -99,10 +101,10 @@ export default {
             next();
         else {
             Dialog.create({
-                title: 'There are unsaved changes !',
-                message: `Do you really want to leave ?`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.thereAreUnsavedChanges'),
+                message: $t('msg.doYouWantToLeave'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
@@ -141,7 +143,7 @@ export default {
             this.$nextTick(() => {
                 if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
                     Notify.create({
-                        message: 'Please fill all required Fields',
+                        message: $t('msg.fieldRequired'),
                         color: 'negative',
                         textColor:'white',
                         position: 'top-right'
@@ -152,7 +154,7 @@ export default {
                 .then(() => {
                     this.auditOrig = this.$_.cloneDeep(this.audit);
                     Notify.create({
-                        message: 'Audit updated successfully',
+                        message: $t('msg.auditUpdateOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'

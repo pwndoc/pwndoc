@@ -4,6 +4,8 @@ import Vue from 'vue'
 import CompanyService from '@/services/company'
 import Utils from '@/services/utils'
 
+import { $t } from '@/boot/i18n'
+
 export default {
     data: () => {
         return {
@@ -13,8 +15,8 @@ export default {
             loading: true,
             // Datatable headers
             dtHeaders: [
-                {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-                {name: 'logo', label: 'Logo', field: 'logo', align: 'left', sortable: true},
+                {name: 'name', label: $t('name'), field: 'name', align: 'left', sortable: true},
+                {name: 'logo', label: $t('logo'), field: 'logo', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -64,7 +66,7 @@ export default {
         createCompany: function() {
             this.cleanErrors();
             if (!this.currentCompany.name)
-                this.errors.lastname = "Name required";
+                this.errors.lastname = $t('msg.nameRequired');
 
             if (this.errors.name)
                 return;
@@ -74,7 +76,7 @@ export default {
                 this.getCompanies();
                 this.$refs.createModal.hide();
                 Notify.create({
-                    message: 'Company created successfully',
+                    message: $t('msg.companyCreatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -94,7 +96,7 @@ export default {
         updateCompany: function() {
             this.cleanErrors();
             if (!this.currentCompany.name)
-                this.errors.lastname = "Name required";
+                this.errors.lastname = $t('msg.nameRequired');
 
             if (this.errors.name)
                 return;
@@ -104,7 +106,7 @@ export default {
                 this.getCompanies();
                 this.$refs.editModal.hide();
                 Notify.create({
-                    message: 'Company updated successfully',
+                    message: $t('msg.companyUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -125,7 +127,7 @@ export default {
             .then(() => {
                 this.getCompanies();
                 Notify.create({
-                    message: 'Company deleted successfully',
+                    message: $t('msg.companyDeletedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -143,10 +145,10 @@ export default {
 
         confirmDeleteCompany: function(company) {
             Dialog.create({
-                title: 'Confirm Suppression',
-                message: `Company «${company.name}» will be permanently deleted`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.confirmSuppression'),
+                message: `${$t('company')} «${company.name}» ${$t('msg.deleteNotice')}`,
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => this.deleteCompany(company._id))
         },
