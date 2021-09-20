@@ -4,8 +4,14 @@ import messages from '@/i18n'
 
 Vue.use(VueI18n)
 
+var language = localStorage.getItem("system_language");
+if (!language) {
+    language = "en-US";
+    localStorage.setItem("system_language", language);
+}
+
 const i18n = new VueI18n({
-  locale: 'zh-CN',
+  locale: language,
   fallbackLocale: 'en-US',
   messages
 })

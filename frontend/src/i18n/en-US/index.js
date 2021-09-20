@@ -1,4 +1,7 @@
 export default {
+    displayLanguage: 'Display Language',
+    changeDisplayLanguage: 'Change default display language for this platform.',
+    changeDisplayLanguageInfo: 'Please notice that this change did not effect for the language in generating reports.',
     nav: {
         audits: 'Audits',
         vulnerabilities: 'Vulnerabilities',

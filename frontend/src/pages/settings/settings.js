@@ -4,6 +4,7 @@ import SettingsService from '@/services/settings'
 import UserService from '@/services/user'
 
 import { $t } from 'boot/i18n'
+import LanguageSelector from '@/components/language-selector';
 
 export default {
     data: () => {
@@ -15,6 +16,9 @@ export default {
             settingsOrig : {},
             canEdit: false
         }
+    },
+    components: {
+        LanguageSelector
     },
     beforeRouteEnter(to, from, next) {
         if (!UserService.isAllowed('settings:read'))

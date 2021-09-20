@@ -1,4 +1,7 @@
 export default {
+    displayLanguage: '界面显示语言',
+    changeDisplayLanguage: '为平台设置默认的显示语言',
+    changeDisplayLanguageInfo: '请注意：该项设置并不会改变生成报告中语言显示',
     nav: {
         audits: '项目审计',
         vulnerabilities: '漏洞管理',

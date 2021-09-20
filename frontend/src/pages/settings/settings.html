@@ -3,6 +3,27 @@
     <div class="col-md-8 col-12 offset-md-2 q-mt-md">
 
         <q-card class="q-my-md">
+          <q-card-section class="q-py-none bg-blue-grey-5 text-white">
+              <q-item style="padding:0px;">
+                  <q-item-section class="col-md-11">
+                      <div class="text-h6">{{$t('displayLanguage')}}</div>
+                  </q-item-section>
+              </q-item>
+          </q-card-section>
+          <q-card-section>
+            <div class="text-bold">{{$t('changeDisplayLanguage')}}</div>
+            <br/>
+            <div class="text-grey-8">{{$t('changeDisplayLanguageInfo')}}</div>
+            <br/>
+            <q-item>
+              <q-item-section class="col-md-2">
+                <language-selector></language-selector>
+              </q-item-section>
+            </q-item>
+          </q-card-section>
+        </q-card>
+
+        <q-card class="q-my-md">
             <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                 <q-item style="padding:0px;">
                     <q-item-section class="col-md-11">
