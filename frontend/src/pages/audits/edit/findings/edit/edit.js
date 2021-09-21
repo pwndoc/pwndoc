@@ -11,6 +11,8 @@ import DataService from '@/services/data';
 import VulnService from '@/services/vulnerability';
 import Utils from '@/services/utils';
 
+import { $t } from '@/boot/i18n'
+
 export default {
     props: {
         frontEndAuditState: Number,
@@ -57,10 +59,10 @@ export default {
         Utils.syncEditors(this.$refs)
         if (this.unsavedChanges()) {
             Dialog.create({
-            title: 'There are unsaved changes !',
-            message: `Do you really want to leave ?`,
-            ok: {label: 'Confirm', color: 'negative'},
-            cancel: {label: 'Cancel', color: 'white'}
+            title: $t('msg.thereAreUnsavedChanges'),
+            message: $t('msg.doYouWantToLeave'),
+            ok: {label: $t('btn.confirm'), color: 'negative'},
+            cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
@@ -73,10 +75,10 @@ export default {
 
         if (this.unsavedChanges()) {
             Dialog.create({
-            title: 'There are unsaved changes !',
-            message: `Do you really want to leave ?`,
-            ok: {label: 'Confirm', color: 'negative'},
-            cancel: {label: 'Cancel', color: 'white'}
+            title: $t('msg.thereAreUnsavedChanges'),
+            message: $t('msg.doYouWantToLeave'),
+            ok: {label: $t('btn.confirm'), color: 'negative'},
+            cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
@@ -161,7 +163,7 @@ export default {
             this.$nextTick(() => {
                 if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
                     Notify.create({
-                        message: 'Please fill all required Fields',
+                        message: $t('msg.fieldRequired'),
                         color: 'negative',
                         textColor:'white',
                         position: 'top-right'
@@ -173,7 +175,7 @@ export default {
                 .then(() => {
                     this.findingOrig = this.$_.cloneDeep(this.finding);
                     Notify.create({
-                        message: 'Finding updated successfully',
+                        message: $t('msg.findingUpdateOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'
@@ -192,16 +194,16 @@ export default {
 
         deleteFinding: function() {
             Dialog.create({
-                title: 'Delete current Finding ?',
-                message: `This action can't be cancelled`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.deleteFindingConfirm'),
+                message: $t('msg.deleteFindingNotice'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => {
                 AuditService.deleteFinding(this.auditId, this.findingId)
                 .then(() => {
                     Notify.create({
-                        message: 'Finding deleted successfully',
+                        message: $t('msg.findingDeleteOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'

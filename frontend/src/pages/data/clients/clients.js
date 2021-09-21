@@ -5,6 +5,8 @@ import ClientService from '@/services/client'
 import CompanyService from '@/services/company'
 import Utils from '@/services/utils'
 
+import { $t } from '@/boot/i18n'
+
 export default {
     data: () => {
         return {
@@ -16,10 +18,10 @@ export default {
             companies: [],
             // Datatable headers
             dtHeaders: [
-                {name: 'firstname', label: 'Firstname', field: 'firstname', align: 'left', sortable: true},
-                {name: 'lastname', label: 'Lastname', field: 'lastname', align: 'left', sortable: true},
-                {name: 'email', label: 'Email', field: 'email', align: 'left', sortable: true},
-                {name: 'company', label: 'Company', field: row => (row.company)?row.company.name:'', align: 'left', sortable: true},
+                {name: 'firstname', label: $t('firstname'), field: 'firstname', align: 'left', sortable: true},
+                {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
+                {name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true},
+                {name: 'company', label: $t('company'), field: row => (row.company)?row.company.name:'', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -75,11 +77,11 @@ export default {
         createClient: function() {
             this.cleanErrors();
             if (!this.currentClient.lastname)
-                this.errors.lastname = "Lastname required";
+                this.errors.lastname = $t('msg.lastnameRequired');
             if (!this.currentClient.firstname)
-                this.errors.firstname = "Firstname required";
+                this.errors.firstname = $t('msg.firstnameRequired');
             if (!this.currentClient.email)
-                this.errors.email = "Email required";
+                this.errors.email = $t('msg.emailRequired');
             
             if (this.errors.lastname || this.errors.firstname || this.errors.email)
                 return;
@@ -89,7 +91,7 @@ export default {
                 this.getClients();
                 this.$refs.createModal.hide();
                 Notify.create({
-                    message: 'Client created successfully',
+                    message: $t('msg.clientCreatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -108,11 +110,11 @@ export default {
         updateClient: function() {
             this.cleanErrors();
             if (!this.currentClient.lastname)
-                this.errors.lastname = "Lastname required";
+                this.errors.lastname = $t('msg.lastnameRequired');
             if (!this.currentClient.firstname)
-                this.errors.firstname = "Firstname required";
+                this.errors.firstname = $t('msg.firstnameRequired');
             if (!this.currentClient.email)
-                this.errors.email = "Email required";
+                this.errors.email = $t('msg.emailRequired');
             
             if (this.errors.lastname || this.errors.firstname || this.errors.email)
                 return;
@@ -122,7 +124,7 @@ export default {
                 this.getClients();
                 this.$refs.editModal.hide();
                 Notify.create({
-                    message: 'Client updated successfully',
+                    message: $t('msg.clientUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -143,7 +145,7 @@ export default {
             .then(() => {
                 this.getClients();
                 Notify.create({
-                    message: 'Client deleted successfully',
+                    message: $t('msg.clientDeletedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -161,10 +163,10 @@ export default {
 
         confirmDeleteClient: function(client) {
             Dialog.create({
-                title: 'Confirm Suppression',
-                message: `Client «${client.name}» will be permanently deleted`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.confirmSuppression'),
+                message: `${$t('client')} «${client.name}» ${$t('msg.deleteNotice')}`,
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => this.deleteClient(client._id))
         },

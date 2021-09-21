@@ -19,7 +19,7 @@
                 <q-btn 
                 v-if="UserService.isAllowed('templates:create')"
                 unelevated
-                label="Create Template"
+                :label="$t('createTemplate')"
                 color="secondary" 
                 no-caps
                 @click="cleanCurrentTemplate; $refs.createModal.show()"
@@ -32,7 +32,7 @@
                         <q-input 
                         dense
                         color="secondary"
-                        label="Search..."
+                        :label="$t('search')"
                         v-model="search.name"
                         clearable
                         outlined
@@ -43,7 +43,7 @@
                         <q-input 
                         dense
                         color="secondary"
-                        label="Search..."
+                        :label="$t('search')"
                         v-model="search.ext"
                         clearable
                         outlined
@@ -56,21 +56,21 @@
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                 <q-btn v-if="UserService.isAllowed('templates:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                 </q-btn>
                 <q-btn size="sm" flat color="info" icon="fa fa-download" @click="downloadTemplate(props.row)">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download</q-tooltip>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.download')}}</q-tooltip>
                 </q-btn>
                 <q-btn v-if="UserService.isAllowed('templates:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteTemplate(props.row)">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                 </q-btn>
             </q-td>
             
             <template v-slot:bottom="scope">
-                <span v-if="templates.length === 1">1 Template</span>                
-                <span v-else>{{templates.length}} Templates</span>     
+                <span v-if="templates.length === 1">1 {{$t('quantifier')}}{{$t('template')}}</span>                
+                <span v-else>{{templates.length}} {{$t('quantifier')}}{{$t('templates')}}</span>     
                 <q-space />
-                <span>Results per page:</span>
+                <span>{{$t('resultsPerPage')}}</span>
                 <q-select
                 class="q-px-md"
                 v-model="pagination.rowsPerPage"
@@ -93,7 +93,7 @@
     <q-card style="width:800px" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
-                Create Template
+                {{$t('createTemplate')}}
             </div>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
@@ -102,7 +102,7 @@
         <q-card-section>
             <div class="row">
                 <q-input
-                label='Name *'
+                :label="$t('name')+' *'"
                 autofocus
                 class="col-md-12 col-12"
                 stack-label
@@ -118,7 +118,7 @@
                     <template v-slot:control>
                         <q-uploader
                         class="col-md-12 col-12"
-                        label='File *'
+                        :label="$t('file')+' *'"
                         accept='.doc,.docx,.docm,.ppt,.pptx'
                         hide-upload-btn
                         @added="handleFile"
@@ -131,8 +131,8 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.createModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" unelevated @click="createTemplate()">Create</q-btn>
+            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
+            <q-btn color="secondary" unelevated @click="createTemplate()">{{$t('btn.create')}}</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
@@ -141,7 +141,7 @@
     <q-card style="width:800px" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
-                Edit Template
+                {{$t('editTemplate')}}
             </div>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
@@ -150,7 +150,7 @@
         <q-card-section>
             <div class="row">
                 <q-input
-                label='Name *'
+                :label="$t('name')+' *'"
                 autofocus
                 class="col-md-12 col-12"
                 stack-label
@@ -166,7 +166,7 @@
                     <template v-slot:control>
                         <q-uploader
                         class="col-md-12"
-                        label='File *'
+                        :label="$t('file')+' *'"
                         accept='.doc,.docx,.docm,.ppt,.pptx'
                         hide-upload-btn
                         @added="handleFile"
@@ -179,8 +179,8 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.editModal.hide()">Cancel</q-btn>
-            <q-btn color="secondary" unelevated @click="updateTemplate()">Update</q-btn>
+            <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
+            <q-btn color="secondary" unelevated @click="updateTemplate()">{{$t('btn.update')}}</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>

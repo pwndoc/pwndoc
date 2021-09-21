@@ -3,6 +3,9 @@ import { Notify, Dialog } from 'quasar'
 import SettingsService from '@/services/settings'
 import UserService from '@/services/user'
 
+import { $t } from 'boot/i18n'
+import LanguageSelector from '@/components/language-selector';
+
 export default {
     data: () => {
         return {
@@ -14,6 +17,9 @@ export default {
             canEdit: false
         }
     },
+    components: {
+        LanguageSelector
+    },
     beforeRouteEnter(to, from, next) {
         if (!UserService.isAllowed('settings:read'))
             next('/audits')
@@ -23,10 +29,10 @@ export default {
     beforeRouteLeave (to, from , next) {
         if (this.unsavedChanges()) {
             Dialog.create({
-            title: 'There are unsaved changes !',
-            message: `Do you really want to leave ?`,
-            ok: {label: 'Confirm', color: 'negative'},
-            cancel: {label: 'Cancel', color: 'white'}
+            title: $t('msg.thereAreUnsavedChanges'),
+            message: $t('msg.doYouWantToLeave'),
+            ok: {label: $t('btn.comfirm'), color: 'negative'},
+            cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
@@ -81,7 +87,7 @@ export default {
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.$settings.refresh();
                 Notify.create({
-                    message: "Settings updated successfully",
+                    message: $t('settingsUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -99,10 +105,10 @@ export default {
 
         revertToDefaults: function() {
             Dialog.create({
-                title: 'Reverting settings !',
-                message: `Do you really wish to revert the settings to the defaults? You will lose all current settings.`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.revertingSettings'),
+                message: $t('msg.revertingSettingsConfirm'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(async () => {
                 this.loading = true;
@@ -110,7 +116,7 @@ export default {
                 this.$settings.refresh();
                 this.getSettings();
                 Notify.create({
-                    message: "Settings reverted successfully",
+                    message: $t('settingsUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -126,30 +132,30 @@ export default {
                     var settings = JSON.parse(fileReader.result);
                     if (typeof settings === 'object') {
                         Dialog.create({
-                            title: 'Importing settings !',
-                            message: `Do you really wish to import the new settings? You will lose all current settings that are replaced.`,
-                            ok: {label: 'Confirm', color: 'negative'},
-                            cancel: {label: 'Cancel', color: 'white'}
+                            title: $t('msg.importingSettings'),
+                            message: $t('msg.importingSettingsConfirm'),
+                            ok: {label: $t('btn.confirm'), color: 'negative'},
+                            cancel: {label: $t('btn.cancel'), color: 'white'}
                         })
                         .onOk(async () => {
                             this.loading = true;
                             await SettingsService.updateSettings(settings);
                             this.getSettings();
                             Notify.create({
-                                message: "Settings imported successfully",
+                                message: $t('msg.settingsImportedOk'),
                                 color: 'positive',
                                 textColor:'white',
                                 position: 'top-right'
                             })
                         })
                     } else {
-                        throw "JSON must be an object.";
+                        throw $t('err.jsonMustBeAnObject');
                     }
                 }
                 catch (err) {
                     console.log(err);
-                    var errMsg = "Error importing settings"
-                    if (err.message) errMsg = `Error while parsing JSON content: ${err.message}`;
+                    var errMsg = $t('err.importingSettingsError')
+                    if (err.message) errMsg = $t('err.errorWhileParsingJsonContent',[err.message]);
                     Notify.create({
                         message: errMsg,
                         color: 'negative',

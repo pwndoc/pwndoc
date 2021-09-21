@@ -5,32 +5,32 @@
 			<template v-slot:before>
 				<q-list class="home-drawer">
 					<q-item style="padding:0px">
-						<q-item-section class="q-mx-md">Sections</q-item-section>
+						<q-item-section class="q-mx-md">{{$t('sections')}}</q-item-section>
 						<template v-if="$settings.reviews.enabled">
 						<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="secondary" label="Submit Review" no-caps @click="toggleAskReview" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Mark audit as ready for review</q-tooltip> 
+							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="secondary" :label="$t('btn.topButtonSection.submitReview')" no-caps @click="toggleAskReview" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.submitReview')}}</q-tooltip> 
 							</q-btn>
 						</q-item-section>
 						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
-							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="amber-9" label="Cancel Review" no-caps @click="toggleAskReview" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Make changes to the audit</q-tooltip> 
+							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="amber-9" :label="$t('btn.topButtonSection.cancelReview')" no-caps @click="toggleAskReview" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.cancelReview')}}</q-tooltip> 
 							</q-btn>
 						</q-item-section>
 						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN].includes(frontEndAuditState)">
-							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="green" label="Approve" no-caps @click="toggleApproval" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Approve this audit</q-tooltip> 
+							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="green" :label="$t('btn.topButtonSection.approve')" no-caps @click="toggleApproval" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.approve')}}</q-tooltip> 
 							</q-btn>
 						</q-item-section>
 						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
-							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="warning" label="Remove Approval" no-caps @click="toggleApproval" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Remove audit approval</q-tooltip> 
+							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="warning" :label="$t('btn.topButtonSection.removeApproval')" no-caps @click="toggleApproval" >
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.removeApproval')}}</q-tooltip> 
 							</q-btn>
 						</q-item-section>
 						</template>
 						<q-item-section side class="topButtonSection">
 							<q-btn flat color="info" @click="generateReport">
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Download Report</q-tooltip> 
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.downloadReport')}}</q-tooltip> 
 								<i class="fa fa-download fa-lg"></i>
 							</q-btn>
 						</q-item-section>
@@ -40,7 +40,7 @@
 						<q-item-section avatar>
 							<q-icon name="fa fa-cog"></q-icon>
 						</q-item-section>
-						<q-item-section>General Information</q-item-section>
+						<q-item-section>{{$t('generalInformation')}}</q-item-section>
 					</q-item>
 					
 					<div class="row">
@@ -54,7 +54,7 @@
 						<q-item-section avatar>
 							<q-icon name="fa fa-globe"></q-icon>
 						</q-item-section>
-						<q-item-section>Network Scan</q-item-section>
+						<q-item-section>{{$t('networkScan')}}</q-item-section>
 					</q-item>
 
 					<div class="row">
@@ -67,7 +67,7 @@
 							<q-item-section avatar>
 								<q-icon name="fa fa-list"></q-icon>
 							</q-item-section>
-							<q-item-section>Findings ({{audit.findings.length || 0}})</q-item-section>
+							<q-item-section>{{$t('findings')}} ({{audit.findings.length || 0}})</q-item-section>
 							<q-item-section avatar>
 								<q-btn
 								@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
@@ -87,13 +87,13 @@
 								</q-item-section>
 								<q-item-section avatar>
 									<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-										<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Sort Options</q-tooltip>
+										<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
 										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left" content-class="bg-grey-1">
 											<q-item>
 												<q-item-section>
 													<q-toggle 
 													v-model="categoryFindings.sortOption.sortAuto" 
-													label="Automatic Sorting"
+													:label="$t('automaticSorting')"
 													@input="updateSortFindings"
 													/>
 												</q-item-section>
@@ -101,7 +101,7 @@
 											<q-separator />
 											<q-item>
 												<q-item-section>
-													<q-item-label>Sort By</q-item-label>
+													<q-item-label>{{$t('sortBy')}}</q-item-label>
 												</q-item-section>
 											</q-item>
 											<q-item>
@@ -121,7 +121,7 @@
 													<q-btn 
 													flat
 													icon="fa fa-long-arrow-alt-up"
-													label="Ascending"
+													:label="$t('ascending')"
 													dense
 													no-caps
 													align="left"
@@ -136,7 +136,7 @@
 													<q-btn 
 													flat
 													icon="fa fa-long-arrow-alt-down"
-													label="Descending"
+													:label="$t('descending')"
 													dense
 													no-caps
 													align="left"
@@ -207,7 +207,7 @@
 						<q-item-section avatar>
 							<q-icon name="fa fa-user"></q-icon>
 						</q-item-section>
-						<q-item-section>Users Connected</q-item-section>	
+						<q-item-section>{{$t('usersConnected')}}</q-item-section>	
 					</q-item>
 					<q-list dense>
 						<q-item v-for="user of users" :key="user._id">
@@ -215,7 +215,7 @@
 								<q-chip :style="{'background-color':user.color}" square size="sm" />
 							</q-item-section>
 							<q-item-section>
-								<span v-if="user.me">{{user.username}} (me)</span>
+								<span v-if="user.me">{{user.username}} ({{$t('me')}})</span>
 								<span v-else>{{user.username}}</span>
 							</q-item-section>
 						</q-item>
@@ -237,6 +237,8 @@ import AuditService from '@/services/audit';
 import UserService from '@/services/user';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
+
+import { $t } from '@/boot/i18n';
 
 export default {
 		data () {
@@ -532,9 +534,9 @@ export default {
 
 			getSortOptions: function(category) {
 				var options = [
-					{label: 'CVSS Score', value: 'cvssScore'},
-					{label: 'Priority', value: 'priority'},
-					{label: 'Remediation Difficulty', value: 'remediationComplexity'}
+					{label: $t('cvssScore'), value: 'cvssScore'},
+					{label: $t('priority'), value: 'priority'},
+					{label: $t('remediationDifficulty'), value: 'remediationComplexity'}
 				]
 				var allowedFieldTypes = ['date', 'input', 'radio', 'select']
 				this.customFields.forEach(e => {
@@ -581,7 +583,7 @@ export default {
 					this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
 					this.getUIState();
 					Notify.create({
-						message: 'Audit review status updated successfully',
+						message: $t('msg.auditReviewUpdateOk'),
 						color: 'positive',
 						textColor:'white',
 						position: 'top-right'
@@ -602,7 +604,7 @@ export default {
 				AuditService.toggleApproval(this.auditId)
 				.then(() => {
 					Notify.create({
-						message: 'Audit approval updated successfully',
+						message: $t('msg.auditApprovalUpdateOk'),
 						color: 'positive',
 						textColor:'white',
 						position: 'top-right'

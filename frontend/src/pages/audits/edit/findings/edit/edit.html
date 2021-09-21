@@ -4,30 +4,30 @@
         <q-btn
         color="orange"
         class="q-mr-sm"
-        label="Propose Creation / Update in Vulnerability Database"
+        :label="$t('btn.backupFinding')"
         no-caps
         @click="backupFinding()"
         />
         <q-btn
         color="negative"
         class="q-mr-sm"
-        label="Delete"
+        :label="$t('btn.delete')"
         no-caps
         @click="deleteFinding()"
         v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
         />
-        <q-btn color="positive" label="Save (ctrl+s)" no-caps @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
+        <q-btn color="positive" :label="$t('btn.save')+'(ctrl+s)'" no-caps @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
     </div>
 </breadcrumb>
 
 <div class="row">
     <q-tabs v-model="selectedTab" align="left" indicator-color="primary" class="bg-white full-width">
-        <q-tab name="definition" default label="Definition" />
-        <q-tab name="proofs" label="Proofs"/>
-        <q-tab name="details" label="Details" />
+        <q-tab name="definition" default :label="$t('definition')" />
+        <q-tab name="proofs" :label="$t('proofs')"/>
+        <q-tab name="details" :label="$t('details')" />
         <template v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"> 
         <q-separator vertical />
-        <q-toggle label="Completed" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
+        <q-toggle :label="$t('completed')" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
         </template>
         <q-space />
     </q-tabs>
@@ -36,10 +36,10 @@
         <q-tab-panel name="definition">
             <q-card class="bg-grey-1">
                 <q-card-section class="row q-col-gutter-md">
-                    <q-input class="col-md-8 col-12" label="Title *" stack-label v-model="finding.title" outlined bg-color="white" :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
+                    <q-input class="col-md-8 col-12" :label="$t('title')+' *'" stack-label v-model="finding.title" outlined bg-color="white" :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
                     <q-select 
                     class="col-md-4 col-12"
-                    label="Type"
+                    :label="$t('type')"
                     v-model="finding.vulnType" 
                     :options="vulnTypesLang" 
                     option-value="name" 
@@ -51,21 +51,21 @@
                     bg-color="white"
                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                     />
-                    <q-field class="col-md-12" borderless label="Description" stack-label>
+                    <q-field class="col-md-12" borderless :label="$t('description')" stack-label>
                         <template v-slot="control">
                             <basic-editor ref="basiceditor_description" noSync v-model="finding.description" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
                         </template>
                     </q-field>
-                    <q-field class="col-md-12" borderless label="Observation" stack-label>
+                    <q-field class="col-md-12" borderless :label="$t('observation')" stack-label>
                         <template v-slot="control">
                             <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
                         </template>
                     </q-field>
-                    <textarea-array class="col-12" label="References (One per line)" v-model="finding.references" :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
+                    <textarea-array class="col-12" :label="$t('references')" v-model="finding.references" :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
                 </q-card-section>
 
                 <q-expansion-item 
-                label="Custom Fields"
+                :label="$t('customFields')"
                 v-if="finding.customFields && finding.customFields.length > 0"
                 default-opened
                 header-class="bg-blue-grey-5 text-white" 
@@ -95,7 +95,7 @@
         </q-tab-panel>
         <q-tab-panel name="details">
             <q-card class="bg-grey-1">
-                <q-card-section>Affected Assets</q-card-section>
+                <q-card-section>{{$t('affectedAssets')}}</q-card-section>
                 <q-separator />
                 <q-card-section>
                     <q-field borderless>
@@ -119,16 +119,16 @@
                 </div>
             </q-card>
             <q-card class="q-mt-md bg-grey-1">
-                <q-card-section>Course of actions</q-card-section>
+                <q-card-section>{{$t('courseOfActions')}}</q-card-section>
                 <q-separator />
                 <q-card-section>
                     <div class="q-col-gutter-md row">
                         <q-select
-                        label="Remediation Difficulty"
+                        :label="$t('remediationDifficulty')"
                         stack-label
                         class="col-md-6 col-12"
                         v-model="finding.remediationComplexity"
-                        :options="[{label: 'Easy', value: 1},{label: 'Medium', value: 2},{label: 'Complex', value: 3}]"
+                        :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
                         map-options
                         emit-value
                         options-sanitize
@@ -137,11 +137,11 @@
                         :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                         />
                         <q-select
-                        label="Priority"
+                        :label="$t('priority')"
                         stack-label
                         class="col-md-6 col-12"
                         v-model="finding.priority"
-                        :options="[{label: 'Low', value: 1},{label: 'Medium', value: 2},{label: 'High', value: 3},{label: 'Urgent', value: 4}]"
+                        :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
                         map-options
                         emit-value
                         options-sanitize
@@ -152,7 +152,7 @@
                     </div>
                 </q-card-section>
                 <q-card-section>
-                    <q-field class="col-md-12" borderless label="Remediation" stack-label>
+                    <q-field class="col-md-12" borderless :label="$t('remediation')" stack-label>
                         <template v-slot="control">
                             <basic-editor ref="basiceditor_remediation" noSync v-model="finding.remediation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
                         </template>

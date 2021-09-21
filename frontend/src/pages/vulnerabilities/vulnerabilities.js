@@ -11,6 +11,8 @@ import DataService from '@/services/data'
 import UserService from '@/services/user'
 import Utils from '@/services/utils'
 
+import { $t } from 'boot/i18n'
+
 export default {
     data: () => {
         return {
@@ -21,9 +23,9 @@ export default {
             loading: true,
             // Datatable headers
             dtHeaders: [
-                {name: 'title', label: 'Title', field: 'title', align: 'left', sortable: true},
-                {name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true},
-                {name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true},
+                {name: 'title', label: $t('title'), field: 'title', align: 'left', sortable: true},
+                {name: 'category', label: $t('category'), field: 'category', align: 'left', sortable: true},
+                {name: 'type', label: $t('type'), field: 'type', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -200,7 +202,7 @@ export default {
             this.cleanErrors();
             var index = this.currentVulnerability.details.findIndex(obj => obj.title !== '');
             if (index < 0)
-                this.errors.title = "Title required";
+                this.errors.title = $t('err.titleRequired');
             
             if (this.errors.title)
                 return;
@@ -210,7 +212,7 @@ export default {
                 this.getVulnerabilities();
                 this.$refs.createModal.hide();
                 Notify.create({
-                    message: 'Vulnerability created successfully',
+                    message: $t('msg.vulnerabilityCreatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -230,7 +232,7 @@ export default {
             this.cleanErrors();
             var index = this.currentVulnerability.details.findIndex(obj => obj.title !== '');
             if (index < 0)
-                this.errors.title = "Title required";
+                this.errors.title = $t('err.titleRequired');
             
             if (this.errors.title)
                 return;
@@ -241,7 +243,7 @@ export default {
                 this.$refs.editModal.hide();
                 this.$refs.updatesModal.hide();
                 Notify.create({
-                    message: 'Vulnerability updated successfully',
+                    message: $t('msg.vulnerabilityUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -262,7 +264,7 @@ export default {
             .then(() => {
                 this.getVulnerabilities();
                 Notify.create({
-                    message: 'Vulnerability deleted successfully',
+                    message: $t('msg.vulnerabilityDeletedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -280,10 +282,10 @@ export default {
 
         confirmDeleteVulnerability: function(row) {
             Dialog.create({
-                title: 'Confirm Suppression',
-                message: `Vulnerability will be permanently deleted`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.confirmSuppression'),
+                message: $t('msg.vulnerabilityWillBeDeleted'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => this.deleteVulnerability(row._id))
         },
@@ -318,10 +320,10 @@ export default {
 
         editChangeCategory: function(category) {
             Dialog.create({
-                title: 'Confirm Category change',
-                message: `Custom Fields display could be impacted when changing Category`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.confirmCategoryChange'),
+                message: $t('msg.categoryChangingNotice'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => {
                 if (category){
@@ -404,7 +406,7 @@ export default {
         getDtTitle: function(row) {
             var index = row.details.findIndex(obj => obj.locale === this.dtLanguage);
             if (index < 0 || !row.details[index].title)
-                return "Not defined for this language yet";
+                return $t('err.notDefinedLanguage');
             else
                 return row.details[index].title;         
         },
@@ -433,8 +435,8 @@ export default {
                 }
                 else if (sortBy === 'category') {
                     (descending)
-                        ? data.sort((a, b) => (b.category || 'No Category').localeCompare(a.category || 'No Category'))
-                        : data.sort((a, b) => (a.category || 'No Category').localeCompare(b.category || 'No Category'))
+                        ? data.sort((a, b) => (b.category || $t('noCategory')).localeCompare(a.category || $t('noCategory')))
+                        : data.sort((a, b) => (a.category || $t('noCategory')).localeCompare(b.category || $t('noCategory')))
                 }
                 return data;
             }
@@ -444,7 +446,7 @@ export default {
             var result = rows && rows.filter(row => {
                 var title = this.getDtTitle(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var type = this.getDtType(row).toLowerCase()
-                var category = (row.category || "No Category").toLowerCase()
+                var category = (row.category || $t('noCategory')).toLowerCase()
                 var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.type || "").toLowerCase()
@@ -474,7 +476,7 @@ export default {
             .then(() => {
                 this.getVulnerabilities();
                 Notify.create({
-                    message: 'Vulnerability merge successfully',
+                    message: $t('msg.vulnerabilityMergeOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
