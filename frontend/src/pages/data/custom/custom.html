@@ -245,7 +245,7 @@
                                                         v-if="auditType.templates && auditType.templates[idx]"
                                                         readonly
                                                         v-model="auditType.templates[idx].template"
-                                                        :label="`${language.language} {{$t('template')}}`"
+                                                        :label="`${language.language} ${$t('template')}`"
                                                         :options="templates" 
                                                         option-value="_id"
                                                         option-label="name"
@@ -292,7 +292,7 @@
                                                 <q-item-section>
                                                     <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
                                                     <q-checkbox v-model="auditType.hidden" disable val="network" :label="$t('networkScan')" />
-                                                    <q-checkbox v-model="auditType.hidden" disable val="findings" label="$t('findings')" />
+                                                    <q-checkbox v-model="auditType.hidden" disable val="findings" :label="$t('findings')" />
                                                 </q-item-section>
                                             </q-item>
                                         </q-expansion-item>
