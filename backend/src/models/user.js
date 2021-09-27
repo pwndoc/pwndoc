@@ -11,6 +11,8 @@ var UserSchema = new Schema({
     password:       {type: String, required: true},
     firstname:      {type: String, required: true},
     lastname:       {type: String, required: true},
+    email:          {type: String, required: false},
+    phone:          {type: String, required: false},
     role:           {type: String, default: 'user'},
     refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
@@ -41,7 +43,7 @@ UserSchema.statics.create = function (user) {
 UserSchema.statics.getAll = function () {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname role');
+        query.select('username firstname lastname email phone role');
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -56,7 +58,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname role');
+        query.select('username firstname lastname email phone role');
         query.exec()
         .then(function(row) {
             if (row)
@@ -83,6 +85,8 @@ UserSchema.statics.updateProfile = function (username, user) {
                 if (user.username) row.username = user.username;
                 if (user.firstname) row.firstname = user.firstname;
                 if (user.lastname) row.lastname = user.lastname;
+                if (user.email) row.email = user.email;
+                if (user.phone) row.phone = user.phone;
                 if (user.newPassword) row.password = bcrypt.hashSync(user.newPassword, 10);
 
                 payload.id = row._id;
@@ -90,6 +94,8 @@ UserSchema.statics.updateProfile = function (username, user) {
                 payload.role = row.role;
                 payload.firstname = row.firstname;
                 payload.lastname = row.lastname;
+                payload.email = row.email;
+                payload.phone = row.phone;
                 payload.roles = auth.acl.getRoles(payload.role)
 
                 return row.save();
@@ -167,6 +173,8 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                 payload.role = row.role
                 payload.firstname = row.firstname
                 payload.lastname = row.lastname
+                payload.email = row.email
+                payload.phone = row.phone
                 payload.roles = auth.acl.getRoles(payload.role)
 
                 token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '15 minutes'})

@@ -26,6 +26,7 @@ export default {
         valid: 'Valid',
         new: 'New',
         updates: 'Updates',
+        edit: 'Edit',
     },
     tooltip: {
         usersConnected: 'Users on the Audit:',

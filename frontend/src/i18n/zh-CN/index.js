@@ -26,6 +26,7 @@ export default {
         valid: '有效的',
         new: '新的',
         updates: '有更新的',
+        edit: '编辑',
     },
     tooltip: {
         usersConnected: '正在做审计的用户',
@@ -234,7 +235,7 @@ export default {
     lastname: '姓',
     email: '邮箱',
     function: '职能',
-    phone: '座机',
+    phone: '电话',
     cell: '手机',
     role: '角色',
     collatorator: '审计员',
