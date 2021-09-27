@@ -22,7 +22,8 @@ export default {
                 {name: 'firstname', label: $t('firstname'), field: 'firstname', align: 'left', sortable: true},
                 {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
                 {name: 'role', label: $t('role'), field: 'role', align: 'left', sortable: true},
-                {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
+                {name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true},
+                {name: 'action', label: '', field: 'action', align: 'left', sortable: false}
             ],
             // Datatable pagination
             pagination: {
@@ -37,7 +38,7 @@ export default {
                 {label:'All', value:0}
             ],
             // Search filter
-            search: {username: '', firstname: '', lastname: '', role: ''},
+            search: {username: '', firstname: '', lastname: '', role: '', email: ''},
             customFilter: Utils.customFilter,
             // Errors messages
             errors: {lastname: '', firstname: '', username: ''},
@@ -46,7 +47,9 @@ export default {
                 lastname: '', 
                 firstname: '', 
                 username: '',
-                role: ''
+                role: '',
+                email: '',
+                phone: ''
             },
             // Username to identify collab to update
             idUpdate: '',
@@ -192,6 +195,7 @@ export default {
             this.errors.firstname = '';
             this.errors.username = '';
             this.errors.password = '';
+            this.errors.email = '';
         },
 
         cleanCurrentCollab: function() {
@@ -200,6 +204,8 @@ export default {
             this.currentCollab.username = '';
             this.currentCollab.role = 'user';
             this.currentCollab.password = '';
+            this.currentCollab.email = '';
+            this.currentCollab.phone = '';
         },
 
         dblClick: function(evt, row) {

@@ -9,7 +9,7 @@ export default {
     data: () => {
         return {
             user: {},
-            errors: {username: "", firstname:"", lastname: "", currentPassword: "", newPassword: ""}
+            errors: {username: "", firstname:"", lastname: "", currentPassword: "", newPassword: "", email:"", phone:""}
         }
     },
 
@@ -68,6 +68,8 @@ export default {
             this.errors.username = '';
             this.errors.firstname = '';
             this.errors.lastname = '';
+            this.errors.email = '';
+            this.errors.phone = '';
             this.errors.currentPassword = '';
             this.errors.newPassword = '';
         }
