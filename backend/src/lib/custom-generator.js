@@ -13,6 +13,13 @@ exports.apply = apply;
 
 var filters = {};
 
+// split value in select
+expressions.filters.splitSelector = function(input){
+    var selts = [];
+    input.map(one=>{selts.push({selval: one});});
+    return selts;
+}
+
 // Convert input CVSS criteria into French: {input | criteriaFR}
 expressions.filters.criteriaFR = function(input) {
     var pre = '<w:p><w:r><w:t>';
