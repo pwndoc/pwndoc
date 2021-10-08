@@ -80,6 +80,8 @@ export default {
         collaboratorDeletedOk: 'Collaborator deleted successfully',
         nameRequired: 'Name required',
         fileRequired: 'File required',
+        languageRequired: 'Language required',
+        assessmentRequired: 'Assessment required',
         companyCreatedOk: 'Company created successfully',
         companyUpdatedOk: 'Company updated successfully',
         companyDeletedOk: 'Company deleted successfully',
@@ -104,6 +106,8 @@ export default {
         vulnerabilityMergeOk: 'Vulnerability merge successfully',
         tryingToContactBackend: '<p>Trying to contact backend</p>',
         wrongContactingBackend: 'Something went wrong contacting backend',
+        auditWillBeDeleted: 'Audit «${0}» will be permanently deleted',
+        auditDeletedOk: 'Audit deleted successfully',
     },
     err: {
         notDefinedLanguage: 'Not defined for this language',

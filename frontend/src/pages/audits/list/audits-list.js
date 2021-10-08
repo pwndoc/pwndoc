@@ -127,11 +127,11 @@ export default {
         createAudit: function() {
             this.cleanErrors();
             if (!this.currentAudit.name)
-                this.errors.name = "Name required";
+                this.errors.name = $t('msg.nameRequired');
             if (!this.currentAudit.language)
-                this.errors.language = "Language required";
+                this.errors.language = $t('msg.languageRequired');
             if (!this.currentAudit.auditType)
-                this.errors.auditType = "Assessment required";
+                this.errors.auditType = $t('msg.assessmentRequired');
                 
             
             if (this.errors.name || this.errors.language || this.errors.auditType)
@@ -157,7 +157,7 @@ export default {
             .then(() => {
                 this.getAudits();
                 Notify.create({
-                    message: 'Audit deleted successfully',
+                    message: $t('msg.auditDeletedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -175,10 +175,10 @@ export default {
 
         confirmDeleteAudit: function(audit) {
             Dialog.create({
-                title: 'Confirm Suppression',
-                message: `Audit «${audit.name}» will be permanently deleted`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.confirmSuppression'),
+                message: $t('msg.auditWillBeDeleted',[audit.name]),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => this.deleteAudit(audit._id))
         },

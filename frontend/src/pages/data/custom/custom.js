@@ -525,7 +525,7 @@ export default {
          // Delete custom field
          deleteCustomField: function(customField) {
             Dialog.create({
-                title: 'Confirm Suppression',
+                title: $t('confirmSuppression'),
                 message: `
                 <div class="row">
                     <div class="col-md-2">

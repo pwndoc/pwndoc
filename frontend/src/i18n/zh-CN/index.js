@@ -80,6 +80,8 @@ export default {
         collaboratorDeletedOk: '审计员删除成功',
         nameRequired: "名称未填写",
         fileRequired: '文件未上传',
+        languageRequired: '语言未填写',
+        assessmentRequired: '需要审核',
         companyCreatedOk: '公司创建成功',
         companyUpdatedOk: '公司更新成功',
         companyDeletedOk: '公司删除成功',
@@ -104,6 +106,8 @@ export default {
         vulnerabilityMergeOk: '漏洞合并成功',
         tryingToContactBackend: '<p>尝试连接后端服务</p>',
         wrongContactingBackend: '连接后端服务失败',
+        auditWillBeDeleted: '审计项目 «${0}» 将会被永久删除',
+        auditDeletedOk: '审计项目删除成功',
     },
     err: {
         notDefinedLanguage: '没有定义这种语言',
