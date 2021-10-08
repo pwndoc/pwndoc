@@ -106,7 +106,7 @@ export default {
         vulnerabilityMergeOk: '漏洞合并成功',
         tryingToContactBackend: '<p>尝试连接后端服务</p>',
         wrongContactingBackend: '连接后端服务失败',
-        auditWillBeDeleted: '审计项目 «${0}» 将会被永久删除',
+        auditWillBeDeleted: '审计项目 «{0}» 将会被永久删除',
         auditDeletedOk: '审计项目删除成功',
     },
     err: {
