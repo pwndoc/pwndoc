@@ -27,6 +27,8 @@ export default {
         new: 'New',
         updates: 'Updates',
         edit: 'Edit',
+        verifyCancel: 'Verify & Cancel',
+        verifySetup: 'Verify & Setup',
     },
     tooltip: {
         usersConnected: 'Users on the Audit:',
@@ -108,6 +110,10 @@ export default {
         wrongContactingBackend: 'Something went wrong contacting backend',
         auditWillBeDeleted: 'Audit «${0}» will be permanently deleted',
         auditDeletedOk: 'Audit deleted successfully',
+        totpSetupOk: 'TOTP setup successful',
+        totpVerifyFailed: 'TOTP verify failed',
+        totpCancelConfirm: 'TOTP is protecting your account !\nAre you sure you want to cancel TOTP ?',
+        totpCancelOk: 'TOTP canceled successful',
     },
     err: {
         notDefinedLanguage: 'Not defined for this language',
@@ -353,4 +359,21 @@ export default {
     languageMoveToLeft: 'Language (Move to left)',
     merge: 'Merge',
     goBack: 'Go back',
+    totpToken: 'TOTP Token',
+    totpLeaveBlank: 'Leave blank if TOTP not set',
+    totpEnabled: 'TOTP Enabled',
+    totpMustEnableByUser: 'TOTP must be enabled by user',
+    totpSettings: 'TOTP Settings',
+    totpEnabledInfo: 'TOTP is enabled and your account is under protect!',
+    totpTurnOff: 'Turn OFF TOTP',
+    totp6DigitCode: '6-digit code',
+    usingTotpWhenLogin: 'Using TOTP when login ?',
+    totpSetupManual: `2-Step Verification
+    <ol>
+        <li>Install an Authenticator App from your phone's store.</li>
+        <li>Open the Authenticator App.</li>
+        <li>Tap the Add icon or the Begin Setup button.</li>
+        <li>Choose Scan a Barcode, and scan using your phone.</li>
+        <li>Enter the generated token below to check and enable TOTP.</li>
+    </ol>`,
   }

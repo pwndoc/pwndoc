@@ -27,6 +27,8 @@ export default {
         new: '新的',
         updates: '有更新的',
         edit: '编辑',
+        verifyCancel: '校验并关闭',
+        verifySetup: '校验并开启',
     },
     tooltip: {
         usersConnected: '正在做审计的用户',
@@ -108,6 +110,10 @@ export default {
         wrongContactingBackend: '连接后端服务失败',
         auditWillBeDeleted: '审计项目 «{0}» 将会被永久删除',
         auditDeletedOk: '审计项目删除成功',
+        totpSetupOk: '动态口令设置成功',
+        totpVerifyFailed: '动态口令校验失败',
+        totpCancelConfirm: '动态口令正在保护你的账户！\n你确定要将它关闭吗？',
+        totpCancelOk: '动态口令关闭成功',
     },
     err: {
         notDefinedLanguage: '没有定义这种语言',
@@ -353,4 +359,21 @@ export default {
     languageMoveToLeft: '语言（移动到左侧）',
     merge: '合并',
     goBack: '返回',
+    totpToken: '动态口令',
+    totpLeaveBlank: '如果没有设置动态口令，此处留空',
+    totpEnabled: '动态口令启用',
+    totpMustEnableByUser: '动态口令只能由用户自行启用',
+    totpSettings: '动态口令设置',
+    totpEnabledInfo: '动态口令已启用，将持续保证你的账户安全！',
+    totpTurnOff: '关闭动态口令',
+    totp6DigitCode: '6位纯数字动态口令',
+    usingTotpWhenLogin: '开启动态口令以便在登录时使用？',
+    totpSetupManual: `两步验证流程
+    <ol>
+        <li>在你的手机中安装一个支持动态口令身份验证的应用，譬如微软或谷歌的 Authenticator 。</li>
+        <li>打开身份验证应用，</li>
+        <li>点击“添加”图标或“设置”按钮，</li>
+        <li>选择扫描二维码功能，然后用手机扫描屏幕上出现的二维码。</li>
+        <li>输入生成的动态口令到下方，以便验证和启动动态口令功能。</li>
+    </ol>`,
   }

@@ -106,6 +106,24 @@
                         <template v-slot:prepend><q-icon name="fa fa-key" /></template>
                     </q-input>
                 </q-card-section>
+                <q-card-section>
+                    <q-input
+                    :label="$t('totpToken')"
+                    :error="!!errors.totpToken"
+                    :error-message="errors.totpToken"
+                    hide-bottom-space
+                    v-model="totpToken"
+                    :placeholder="$t('totpLeaveBlank')"
+                    outlined
+                    bg-color="white"
+                    for="totpToken"
+                    type="password"
+                    maxlength=6
+                    @keyup.enter="getToken()"
+                    >
+                        <template v-slot:prepend><q-icon name="fa fa-unlock-alt" /></template>
+                    </q-input>
+                </q-card-section>
 
                 <q-card-section align="center">
                     <q-btn color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
@@ -131,6 +149,7 @@ export default {
             firstname: "",
             lastname: "",
             password: "",
+            totpToken: "",
             errors: {alert: "", username: "", password: "", firstname: "", lastname: ""}
         }
     },
@@ -205,13 +224,16 @@ export default {
             if (this.errors.username || this.errors.password)
                 return;
 
-            UserService.getToken(this.username, this.password)
+            UserService.getToken(this.username, this.password, this.totpToken)
             .then(async () => {
                 await this.$settings.refresh();
                 this.$router.push('/');
             })
             .catch(err => {
-                this.errors.alert = $t('err.invalidCredentials');
+                let errmsg = $t('err.invalidCredentials');
+                if (err.response.data.datas)
+                    errmsg = err.response.data.datas;
+                this.errors.alert = errmsg;
             })
         }
     }

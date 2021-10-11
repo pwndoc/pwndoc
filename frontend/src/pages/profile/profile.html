@@ -1,6 +1,120 @@
 <div>
     <div class="row">
         <div class="col-md-8 col-12 offset-md-2 q-mt-md">
+            <q-card class="q-my-md">
+                <q-card-section class="q-py-none bg-blue-grey-5 text-white">
+                    <q-item style="padding:0px;">
+                        <q-item-section class="col-md-11">
+                            <div class="text-h6">{{$t('displayLanguage')}}</div>
+                        </q-item-section>
+                    </q-item>
+                </q-card-section>
+                <q-card-section>
+                  <div class="text-bold">{{$t('changeDisplayLanguage')}}</div>
+                  <br />
+                  <div class="text-grey-8">{{$t('changeDisplayLanguageInfo')}}</div>
+                  <br />
+                  <q-item>
+                      <q-item-section class="col-md-2">
+                          <language-selector></language-selector>
+                      </q-item-section>
+                  </q-item>
+                  </q-card-section>
+            </q-card>
+
+            <q-card class="bg-grey-1">
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+                    <div class="text-h6">{{$t('totpSettings')}}</div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section class="row">
+                    <!-- Setup TOTP -->
+                    <q-list class="col-md-6 col-12" :class="user.totpEnabled !== true ? '' : 'hidden'">
+                        <q-item>
+                            <q-item-section>
+                                <q-toggle 
+                                v-model="totpEnabled" 
+                                :label="$t('usingTotpWhenLogin')"
+                                @input="getTotpQrcode" 
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item class="row" :class="totpSetupPane ? '' : 'hidden'">
+                            <q-item-section v-html="$t('totpSetupManual')"></q-item-section>
+                            <q-item-section class="col-4">
+                                <q-img :src="totpQrcode"/>
+                            </q-item-section>
+                        </q-item>
+                        <q-item :class="totpSetupPane ? '' : 'hidden'">
+                            <q-item-section>
+                                <q-input 
+                                v-model="totpToken" 
+                                :label="$t('totpToken')" 
+                                stack-label 
+                                type="text"
+                                autocomplete="off"
+                                inputmode="numeric"
+                                maxlength="6"
+                                :placeholder="$t('totp6DigitCode')"
+                                :error="!!errors.totpToken" 
+                                :error-message="errors.totpToken"
+                                @keyup.enter="setupTotp"
+                                outlined
+                                bg-color="white"
+                                >
+                                    <template v-slot:append>
+                                        <q-btn :label="$t('btn.verifySetup')" unelevated color="secondary" @click="setupTotp" />
+                                    </template>
+                                </q-input>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                    <!-- Cancel TOTP -->
+                    <q-list class="col-md-6 col-12" :class="user.totpEnabled === true ? '' : 'hidden'">
+                        <q-item>
+                            <q-banner 
+                            inline-actions class="text-white bg-secondary"
+                            >
+                                {{$t('totpEnabledInfo')}}
+                                <template v-slot:action>
+                                    <q-btn 
+                                    flat 
+                                    color="white" 
+                                    :label="$t('totpTurnOff')" 
+                                    @click="totpCancelPane = true"
+                                    />
+                                </template>
+                            </q-banner>
+                        </q-item>
+                        <q-item :class="totpCancelPane ? '' : 'hidden'">
+                            <q-item-section>
+                                <q-input 
+                                v-model="totpToken" 
+                                :label="$t('totpToken')" 
+                                stack-label 
+                                type="text"
+                                autocomplete="off"
+                                inputmode="numeric"
+                                maxlength="6"
+                                :placeholder="$t('totp6DigitCode')"
+                                :error="!!errors.totpToken" 
+                                :error-message="errors.totpToken"
+                                @keyup.enter="cancelTotp"
+                                outlined
+                                bg-color="white"
+                                >
+                                    <template v-slot:append>
+                                        <q-btn :label="$t('btn.verifyCancel')" unelevated color="negative" @click="cancelTotp" />
+                                    </template>
+                                </q-input>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+                <q-separator />
+            </q-card>
+
+      
             <q-card class="bg-grey-1">
                 <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
                     <div class="text-h6">{{$t('updateUserInformation')}}</div>

@@ -10,12 +10,13 @@ export default {
         role: "",
         firstname: "",
         lastname: "",
+        totpEnabled: false,
         roles: ""
     },
 
-    getToken(username, password) {
+    getToken(username, password, totpToken) {
         return new Promise((resolve, reject) => {
-            var params = {username: username, password: password};
+            var params = {username: username, password: password, totpToken: totpToken};
             Vue.prototype.$axios.post(`users/token`, params)
             .then((response) => {
                 var token = response.data.datas.token;
@@ -103,6 +104,18 @@ export default {
 
     updateProfile: function(user) {
         return Vue.prototype.$axios.put(`users/me`, user);
+    },
+
+    getTotpQrCode: function() {
+        return Vue.prototype.$axios.get(`users/totpqrcode`);
+    },
+
+    setupTotp: function(totpToken, totpSecret) {
+        return Vue.prototype.$axios.post(`users/totpsetup`,{totpToken: totpToken, totpSecret: totpSecret});
+    },
+
+    cancelTotp: function(totpToken) {
+        return Vue.prototype.$axios.post(`users/totpcancel`,{totpToken: totpToken});
     },
 
 }
