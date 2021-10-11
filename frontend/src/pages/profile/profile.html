@@ -99,6 +99,107 @@
                             </q-item-section>
                         </q-item>
                     </q-list>
+                    <!-- Setup TOTP -->
+                    <q-list class="col-md-6 col-12" :class="user.totpEnabled !== true ? '' : 'hidden'">
+                        <q-item>
+                            <q-item-section>
+                                <q-toggle 
+                                v-model="totpEnabled" 
+                                label="Using TOTP when login ?"
+                                @input="getTotpQrcode" 
+                                />
+                            </q-item-section>
+                        </q-item>
+                        <q-item class="row" :class="totpSetupPane ? '' : 'hidden'">
+                            <q-item-section>
+                                2-Step Verification
+                                <ol>
+                                    <li>
+                                        Install an Authenticator App from your phone's store.
+                                    </li>
+                                    <li>
+                                        Open the Authenticator App.
+                                    </li>
+                                    <li>
+                                        Tap the Add icon or the Begin Setup button.
+                                    </li>
+                                    <li>
+                                        Choose Scan a Barcode, and scan using your phone.
+                                    </li>
+                                    <li>
+                                        Enter the generated token below to check and enable TOTP.
+                                    </li>
+                                </ol>
+                            </q-item-section>
+                            <q-item-section class="col-4">
+                                <q-img :src="totpQrcode"/>
+                            </q-item-section>
+                        </q-item>
+                        <q-item :class="totpSetupPane ? '' : 'hidden'">
+                            <q-item-section>
+                                <q-input 
+                                v-model="totpToken" 
+                                label="TOTP Token" 
+                                stack-label 
+                                type="text"
+                                autocomplete="off"
+                                inputmode="numeric"
+                                maxlength="6"
+                                placeholder="6-digit code"
+                                :error="!!errors.totpToken" 
+                                :error-message="errors.totpToken"
+                                @keyup.enter="setupTotp"
+                                outlined
+                                bg-color="white"
+                                >
+                                    <template v-slot:append>
+                                        <q-btn label="Verify & Setup" unelevated color="secondary" @click="setupTotp" />
+                                    </template>
+                                </q-input>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                    <!-- Cancel TOTP -->
+                    <q-list class="col-md-6 col-12" :class="user.totpEnabled === true ? '' : 'hidden'">
+                        <q-item>
+                            <q-banner 
+                            inline-actions class="text-white bg-secondary"
+                            >
+                                TOTP is enabled and your account is under protect!
+                                <template v-slot:action>
+                                    <q-btn 
+                                    flat 
+                                    color="white" 
+                                    label="Turn OFF TOTP" 
+                                    @click="totpCancelPane = true"
+                                    />
+                                </template>
+                            </q-banner>
+                        </q-item>
+                        <q-item :class="totpCancelPane ? '' : 'hidden'">
+                            <q-item-section>
+                                <q-input 
+                                v-model="totpToken" 
+                                label="TOTP Token" 
+                                stack-label 
+                                type="text"
+                                autocomplete="off"
+                                inputmode="numeric"
+                                maxlength="6"
+                                placeholder="6-digit code"
+                                :error="!!errors.totpToken" 
+                                :error-message="errors.totpToken"
+                                @keyup.enter="cancelTotp"
+                                outlined
+                                bg-color="white"
+                                >
+                                    <template v-slot:append>
+                                        <q-btn label="Verify & Cancel" unelevated color="negative" @click="cancelTotp" />
+                                    </template>
+                                </q-input>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
                 </q-card-section>
                 <q-separator />
             </q-card>

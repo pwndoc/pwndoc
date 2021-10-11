@@ -6,14 +6,53 @@ var jwt = require('jsonwebtoken');
 var auth = require('../lib/auth.js');
 const { generateUUID } = require('../lib/utils.js');
 
+var QRCode = require('qrcode');
+var OTPAuth = require('otpauth');
+
 var UserSchema = new Schema({
     username:       {type: String, unique: true, required: true},
     password:       {type: String, required: true},
     firstname:      {type: String, required: true},
     lastname:       {type: String, required: true},
     role:           {type: String, default: 'user'},
+    totpEnabled:    {type: Boolean, default: false},
+    totpSecret:      {type: String, default: ''},
     refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
+
+var totpConfig = {
+    issuer: 'pwndoc',
+    label: '',
+    algorithm: 'SHA1',
+    digits: 6,
+    period: 30,
+    secret: ''
+};
+
+//check TOTP token 
+var checkTotpToken = function(token, secret) {
+    if (!token)
+        throw({fn: 'Unauthorized', message: 'TOTP token required'});
+    if (token.length !== 6)
+        throw({fn: 'Unauthorized', message: 'Invalid TOTP token length'});
+    if(!secret)
+        throw({fn: 'Unauthorized', message: 'TOTP secret required'});
+
+    let newConfig = totpConfig;
+    newConfig.secret = secret;
+    let totp = new OTPAuth.TOTP(newConfig);
+    let delta = totp.validate({
+        token: token,
+        window: 5,
+    });
+    //The token is valid in 2 windows in the past and the future, current window is 0.
+    if ( delta === null) {
+        throw({fn: 'Unauthorized', message: 'Wrong TOTP token.'});
+    }else if (delta < -2 || delta > 2) {
+        throw({fn: 'Unauthorized', message: 'TOTP token out of window.'});
+    }
+    return true;
+};
 
 /*
 *** Statics ***
@@ -41,7 +80,7 @@ UserSchema.statics.create = function (user) {
 UserSchema.statics.getAll = function () {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname role');
+        query.select('username firstname lastname role totpEnabled');
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -56,7 +95,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname role');
+        query.select('username firstname lastname role totpEnabled');
         query.exec()
         .then(function(row) {
             if (row)
@@ -84,6 +123,7 @@ UserSchema.statics.updateProfile = function (username, user) {
                 if (user.firstname) row.firstname = user.firstname;
                 if (user.lastname) row.lastname = user.lastname;
                 if (user.newPassword) row.password = bcrypt.hashSync(user.newPassword, 10);
+                if (typeof(user.totpEnabled)=='boolean') row.totpEnabled = user.totpEnabled;
 
                 payload.id = row._id;
                 payload.username = row.username;
@@ -234,6 +274,80 @@ UserSchema.statics.removeSession = function (userId, sessionId) {
     })
 }
 
+// gen totp QRCode url
+UserSchema.statics.getTotpQrcode = function (username) {
+    return new Promise((resolve, reject) => {
+        let newConfig = totpConfig;
+        newConfig.label = username;
+        const secret = new OTPAuth.Secret({ 
+            size: 10,
+        }).base32;
+        newConfig.secret = secret;
+    
+        let totp = new OTPAuth.TOTP(newConfig);
+        let totpUrl = totp.toString();
+
+        QRCode.toDataURL(totpUrl, function (err, url) {
+            resolve({
+                totpQrCode: url,
+                totpSecret: secret,
+            });
+        });
+    })
+}
+
+// verify TOTP and Setup enabled status and secret code
+UserSchema.statics.setupTotp = function (token, secret, username){
+    return new Promise((resolve, reject) => {
+        checkTotpToken(token, secret);
+        
+        var query = this.findOne({username: username});
+        query.exec()
+        .then(function(row) {
+            if (!row)
+                throw({errmsg: 'User not found'});
+            else if (row.totpEnabled === true)
+                throw({errmsg: 'TOTP already enabled by this user'});
+            else {
+                row.totpEnabled = true;
+                row.totpSecret = secret;
+                return row.save();
+            }
+        })
+        .then(function() {
+            resolve({msg: true});
+        })
+        .catch(function(err) {
+            reject(err);
+        })
+    })
+}
+
+// verify TOTP and Cancel enabled status and secret code
+UserSchema.statics.cancelTotp = function (token, username){
+    return new Promise((resolve, reject) => {
+        var query = this.findOne({username: username});
+        query.exec()
+        .then(function(row) {
+            if (!row)
+                throw({errmsg: 'User not found'});
+            else if (row.totpEnabled !== true)
+                throw({errmsg: 'TOTP is not enabled yet'});
+            else {
+                checkTotpToken(token, row.totpSecret);
+                row.totpEnabled = false;
+                row.totpSecret = '';
+                return row.save();
+            }
+        })
+        .then(function() {
+            resolve({msg: 'TOTP is canceled.'});
+        })
+        .catch(function(err) {
+            reject(err);
+        })
+    })
+}
 
 /*
 *** Methods ***
@@ -246,6 +360,11 @@ UserSchema.methods.getToken = function (userAgent) {
         var query = User.findOne({username: user.username});
         query.exec()
         .then(function(row) {
+            //check TOTP token
+            if (row && row.totpEnabled === true) {
+                checkTotpToken(user.totpToken, row.totpSecret);
+            }
+
             if (row && bcrypt.compareSync(user.password, row.password)) {
                 var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
                 return User.updateRefreshToken(refreshToken, userAgent)

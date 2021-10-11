@@ -44,7 +44,8 @@ export default {
                 lastname: '', 
                 firstname: '', 
                 username: '',
-                role: ''
+                role: '',
+                totpEnabled: false
             },
             // Username to identify collab to update
             idUpdate: '',

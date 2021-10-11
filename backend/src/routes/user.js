@@ -65,6 +65,7 @@ module.exports = function(app) {
         //Required params
         user.username = req.body.username;
         user.password = req.body.password;
+        user.totpToken =req.body.totpToken;
 
         user.getToken(req.headers['user-agent'])
         .then(msg => {
@@ -111,6 +112,27 @@ module.exports = function(app) {
         .catch(err => Response.Internal(res, err))
     });
 
+    //get TOTP Qrcode URL
+    app.get("/api/users/totpqrcode", acl.hasPermission('validtoken'), function(req, res) {
+        User.getTotpQrcode(req.decodedToken.username)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    //setup TOTP
+    app.post("/api/users/totpsetup", acl.hasPermission('validtoken'), function(req, res) {
+        User.setupTotp(req.body.totpToken, req.body.totpSecret, req.decodedToken.username)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    //cancel TOTP
+    app.post("/api/users/totpcancel", acl.hasPermission('validtoken'), function(req, res) {
+        User.cancelTotp(req.body.totpToken, req.decodedToken.username)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
     // Get user by username
     app.get("/api/users/:username", acl.hasPermission('users:read'), function(req, res) {
         User.getByUsername(req.params.username)
@@ -131,6 +153,7 @@ module.exports = function(app) {
         user.password = req.body.password;
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
+        user.totpEnabled = false;
 
         //Optionals params
         user.role = req.body.role || 'user';
@@ -153,6 +176,7 @@ module.exports = function(app) {
         user.password = req.body.password;
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
+        user.totpEnabled = false;
         user.role = 'admin';
 
         User.getAll()
@@ -222,6 +246,7 @@ module.exports = function(app) {
         if (req.body.firstname) user.firstname = req.body.firstname;
         if (req.body.lastname) user.lastname = req.body.lastname;
         if (req.body.role) user.role = req.body.role;
+        if (typeof(req.body.totpEnabled)=='boolean') user.totpEnabled = req.body.totpEnabled;
 
         User.updateUser(req.params.id, user)
         .then(msg => Response.Ok(res, msg))

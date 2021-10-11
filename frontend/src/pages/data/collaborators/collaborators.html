@@ -267,7 +267,15 @@
                 bg-color="white"
                 />
             </q-card-section>
-
+            <q-card-section>
+                <q-toggle 
+                v-model="currentCollab.totpEnabled" 
+                label="TOTP Enabled ?"
+                :disable="currentCollab.totpEnabled===true ? false : true"
+                title="TOTP must be enabled by user"
+                @input=""
+                />
+            </q-card-section>
         <q-separator />
 
         <q-card-actions align="right">

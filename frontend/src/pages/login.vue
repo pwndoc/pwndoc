@@ -106,6 +106,24 @@
                         <template v-slot:prepend><q-icon name="fa fa-key" /></template>
                     </q-input>
                 </q-card-section>
+                <q-card-section>
+                    <q-input
+                    label="TOTP Token"
+                    :error="!!errors.totpToken"
+                    :error-message="errors.totpToken"
+                    hide-bottom-space
+                    v-model="totpToken"
+                    placeholder="Leave blank if TOTP not set"
+                    outlined
+                    bg-color="white"
+                    for="totpToken"
+                    type="password"
+                    maxlength=6
+                    @keyup.enter="getToken()"
+                    >
+                        <template v-slot:prepend><q-icon name="fa fa-unlock-alt" /></template>
+                    </q-input>
+                </q-card-section>
 
                 <q-card-section align="center">
                     <q-btn color="blue" class="full-width" unelevated no-caps @click="getToken()">Login</q-btn>
@@ -129,6 +147,7 @@ export default {
             firstname: "",
             lastname: "",
             password: "",
+            totpToken: "",
             errors: {alert: "", username: "", password: "", firstname: "", lastname: ""}
         }
     },
@@ -203,13 +222,16 @@ export default {
             if (this.errors.username || this.errors.password)
                 return;
 
-            UserService.getToken(this.username, this.password)
+            UserService.getToken(this.username, this.password, this.totpToken)
             .then(async () => {
                 await this.$settings.refresh();
                 this.$router.push('/');
             })
             .catch(err => {
-                this.errors.alert = "Invalid credentials";
+                let errmsg = "Invalid credentials";
+                if (err.response.data.datas)
+                    errmsg = err.response.data.datas;
+                this.errors.alert = errmsg;
             })
         }
     }
