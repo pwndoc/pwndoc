@@ -117,7 +117,7 @@
                     outlined
                     bg-color="white"
                     for="totpToken"
-                    type="password"
+                    type="text"
                     maxlength=6
                     @keyup.enter="getToken()"
                     >
