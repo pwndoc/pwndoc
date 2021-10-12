@@ -118,6 +118,8 @@
                     bg-color="white"
                     for="totpToken"
                     type="text"
+                    autocomplete="off"
+                    inputmode="numeric"
                     maxlength=6
                     @keyup.enter="getToken()"
                     >
