@@ -258,7 +258,7 @@ export default {
 
         // Filter client options when selecting company
         filterClients: function() {
-            if (this.audit.company) {
+            if (this.audit.company && this.audit.company.name !== undefined) {
                 this.selectClients = [];
                 this.clients.map(client => {
                     if (client.company && client.company.name === this.audit.company.name) this.selectClients.push(client)
