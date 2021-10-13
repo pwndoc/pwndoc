@@ -91,6 +91,14 @@ export default {
         document.addEventListener('keydown', this._listener, false)
     },
 
+    watch: {
+        'audit.company': {
+            handler: function() {
+                this.filterClients();
+            },
+        }
+    },
+
     destroyed: function() {
         document.removeEventListener('keydown', this._listener, false)
     },
@@ -261,7 +269,8 @@ export default {
             if (this.audit.company && this.audit.company.name !== undefined) {
                 this.selectClients = [];
                 this.clients.map(client => {
-                    if (client.company && client.company.name === this.audit.company.name) this.selectClients.push(client)
+                    if (client.company && client.company.name === this.audit.company.name) 
+                        this.selectClients.push(client);
                 })
             }
             else
