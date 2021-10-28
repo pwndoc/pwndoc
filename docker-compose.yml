@@ -28,7 +28,9 @@ services:
     links:
       - mongodb
     networks: 
-      - backend
+      backend:
+        aliases:
+          - pwndoc-backend
 
   pwndoc-frontend:
     build: ./frontend
