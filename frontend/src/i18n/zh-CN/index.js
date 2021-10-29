@@ -362,6 +362,7 @@ export default {
     totpToken: '动态口令',
     totpLeaveBlank: '如果没有设置动态口令，此处留空',
     totpEnabled: '动态口令启用',
+    totpDisabled: '动态口令未启用',
     totpMustEnableByUser: '动态口令只能由用户自行启用',
     totpSettings: '动态口令设置',
     totpEnabledInfo: '动态口令已启用，将持续保证你的账户安全！',
@@ -376,4 +377,6 @@ export default {
         <li>选择扫描二维码功能，然后用手机扫描屏幕上出现的二维码。</li>
         <li>输入生成的动态口令到下方，以便验证和启动动态口令功能。</li>
     </ol>`,
+    accountEnabled: '账户启用',
+    accountDisabled: '账户锁定',
   }

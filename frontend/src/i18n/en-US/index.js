@@ -362,6 +362,7 @@ export default {
     totpToken: 'TOTP Token',
     totpLeaveBlank: 'Leave blank if TOTP not set',
     totpEnabled: 'TOTP Enabled',
+    totpDisabled: 'TOTP Disabled',
     totpMustEnableByUser: 'TOTP must be enabled by user',
     totpSettings: 'TOTP Settings',
     totpEnabledInfo: 'TOTP is enabled and your account is under protect!',
@@ -376,4 +377,6 @@ export default {
         <li>Choose Scan a Barcode, and scan using your phone.</li>
         <li>Enter the generated token below to check and enable TOTP.</li>
     </ol>`,
+    accountEnabled: 'Account enabled',
+    accountDisabled: 'Account disabled',
   }

@@ -156,6 +156,7 @@ module.exports = function(app) {
         user.email = req.body.email;
         user.phone = req.body.phone;
         user.totpEnabled = false;
+        user.enabled = true;
 
         //Optionals params
         user.role = req.body.role || 'user';
@@ -179,6 +180,7 @@ module.exports = function(app) {
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
         user.totpEnabled = false;
+        user.enabled = true;
         user.role = 'admin';
 
         User.getAll()
@@ -252,7 +254,8 @@ module.exports = function(app) {
         if (req.body.email) user.email = req.body.email;
         if (req.body.phone) user.phone = req.body.phone;
         if (req.body.role) user.role = req.body.role;
-        if (typeof(req.body.totpEnabled)=='boolean') user.totpEnabled = req.body.totpEnabled;
+        if (typeof(req.body.totpEnabled) == 'boolean') user.totpEnabled = req.body.totpEnabled;
+        if (typeof(req.body.enabled) === 'boolean') user.enabled = req.body.enabled;
 
         User.updateUser(req.params.id, user)
         .then(msg => Response.Ok(res, msg))

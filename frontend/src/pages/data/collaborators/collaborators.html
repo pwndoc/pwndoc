@@ -86,6 +86,8 @@
                             />
                         </q-td>
                         <q-td></q-td>
+                        <q-td></q-td>
+                        <q-td></q-td>
                     </q-tr>
                 </template>
 
@@ -333,10 +335,14 @@
             <q-card-section>
                 <q-toggle 
                 v-model="currentCollab.totpEnabled" 
-                :label="$t('totpEnabled')+' ?'"
+                :label="currentCollab.totpEnabled ? $t('totpEnabled') : $t('totpDisabled')"
                 :disable="currentCollab.totpEnabled===true ? false : true"
                 :title="$t('totpMustEnableByUser')"
                 @input=""
+                />
+                <q-toggle 
+                v-model="currentCollab.enabled" 
+                :label="currentCollab.enabled ? $t('accountEnabled') : $t('accountDisabled')"
                 />
             </q-card-section>
             <q-separator />
