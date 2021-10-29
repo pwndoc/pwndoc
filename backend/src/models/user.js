@@ -247,12 +247,13 @@ UserSchema.methods.getToken = function (userAgent) {
         var query = User.findOne({username: user.username});
         query.exec()
         .then(function(row) {
+            if (row && row.enabled === false) 
+                throw({fn: 'Unauthorized', message: 'Account disabled'});
+
             if (row && bcrypt.compareSync(user.password, row.password)) {
                 var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
                 return User.updateRefreshToken(refreshToken, userAgent)
             }
-            else if (row.enabled === false) 
-                throw({fn: 'Unauthorized', message: 'Account disabled'});
             else
                 throw({fn: 'Unauthorized', message: 'Invalid credentials'});
         })
