@@ -131,6 +131,7 @@ module.exports = function(app) {
         user.password = req.body.password;
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
+        user.enabled = true;
 
         //Optionals params
         user.role = req.body.role || 'user';
@@ -153,6 +154,7 @@ module.exports = function(app) {
         user.password = req.body.password;
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
+        user.enabled = true;
         user.role = 'admin';
 
         User.getAll()
@@ -222,6 +224,7 @@ module.exports = function(app) {
         if (req.body.firstname) user.firstname = req.body.firstname;
         if (req.body.lastname) user.lastname = req.body.lastname;
         if (req.body.role) user.role = req.body.role;
+        if (req.body.enabled === true || req.body.enabled === false) user.enabled = req.body.enabled;
 
         User.updateUser(req.params.id, user)
         .then(msg => Response.Ok(res, msg))

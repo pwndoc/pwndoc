@@ -12,6 +12,7 @@ var UserSchema = new Schema({
     firstname:      {type: String, required: true},
     lastname:       {type: String, required: true},
     role:           {type: String, default: 'user'},
+    enabled:        {type: Boolean, default: true},
     refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
 
@@ -41,7 +42,7 @@ UserSchema.statics.create = function (user) {
 UserSchema.statics.getAll = function () {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname role');
+        query.select('username firstname lastname role enabled');
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -56,7 +57,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname role');
+        query.select('username firstname lastname role enabled');
         query.exec()
         .then(function(row) {
             if (row)
@@ -250,6 +251,8 @@ UserSchema.methods.getToken = function (userAgent) {
                 var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
                 return User.updateRefreshToken(refreshToken, userAgent)
             }
+            else if (row.enabled === false) 
+                throw({fn: 'Unauthorized', message: 'Account disabled'});
             else
                 throw({fn: 'Unauthorized', message: 'Invalid credentials'});
         })

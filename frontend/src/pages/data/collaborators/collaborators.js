@@ -20,6 +20,7 @@ export default {
                 {name: 'firstname', label: 'Firstname', field: 'firstname', align: 'left', sortable: true},
                 {name: 'lastname', label: 'Lastname', field: 'lastname', align: 'left', sortable: true},
                 {name: 'role', label: 'Role', field: 'role', align: 'left', sortable: true},
+                {name: 'enabled', label: 'Account Enabled', field: 'enabled', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination

@@ -75,6 +75,7 @@
                         />
                     </q-td>
                     <q-td></q-td>
+                    <q-td></q-td>
                 </q-tr>
             </template>
 
@@ -265,6 +266,12 @@
                 @keyup.enter="updateCollab()"
                 outlined
                 bg-color="white"
+                />
+            </q-card-section>
+            <q-card-section>
+                <q-toggle 
+                v-model="currentCollab.enabled" 
+                :label="currentCollab.enabled ? 'Account enabled' : 'Account disabled'"
                 />
             </q-card-section>
 

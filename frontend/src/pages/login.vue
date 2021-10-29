@@ -209,7 +209,7 @@ export default {
                 this.$router.push('/');
             })
             .catch(err => {
-                this.errors.alert = "Invalid credentials";
+                this.errors.alert = err.response.data.datas;
             })
         }
     }
