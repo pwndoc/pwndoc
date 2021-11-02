@@ -346,6 +346,8 @@ async function prepAuditData(data) {
             username: collab.username || "undefined",
             firstname: collab.firstname || "undefined",
             lastname: collab.lastname || "undefined",
+            email: collab.email || "undefined",
+            phone: collab.phone || "undefined",
             role: collab.role || "undefined"
         })
     })
@@ -398,6 +400,8 @@ async function prepAuditData(data) {
         result.creator.username = data.creator.username || "undefined"
         result.creator.firstname = data.creator.firstname || "undefined"
         result.creator.lastname = data.creator.lastname || "undefined"
+        result.creator.email = data.creator.email || "undefined"
+        result.creator.phone = data.creator.phone || "undefined"
         result.creator.role = data.creator.role || "undefined"
     }
 
