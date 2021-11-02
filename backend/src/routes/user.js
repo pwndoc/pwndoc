@@ -5,6 +5,7 @@ module.exports = function(app) {
     var acl = require('../lib/auth').acl;
     var jwtRefreshSecret = require('../lib/auth').jwtRefreshSecret
     var jwt = require('jsonwebtoken')
+    var _ = require('lodash')
 
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
@@ -134,6 +135,8 @@ module.exports = function(app) {
 
         //Optionals params
         user.role = req.body.role || 'user';
+        if (req.body.email) user.email = req.body.email;
+        if (req.body.phone) user.phone = req.body.phone;
 
         User.create(user)
         .then(msg => Response.Created(res, 'User created successfully'))
@@ -203,6 +206,8 @@ module.exports = function(app) {
         if (req.body.newPassword) user.newPassword = req.body.newPassword;
         if (req.body.firstname) user.firstname = req.body.firstname;
         if (req.body.lastname) user.lastname = req.body.lastname;
+        if (!_.isNil(req.body.email)) user.email = req.body.email;
+        if (!_.isNil(req.body.phone)) user.phone = req.body.phone;
 
         User.updateProfile(req.decodedToken.username, user)
         .then(msg => {
@@ -221,6 +226,8 @@ module.exports = function(app) {
         if (req.body.password) user.password = req.body.password;
         if (req.body.firstname) user.firstname = req.body.firstname;
         if (req.body.lastname) user.lastname = req.body.lastname;
+        if (!_.isNil(req.body.email)) user.email = req.body.email;
+        if (!_.isNil(req.body.phone)) user.phone = req.body.phone;
         if (req.body.role) user.role = req.body.role;
 
         User.updateUser(req.params.id, user)
