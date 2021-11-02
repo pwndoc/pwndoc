@@ -165,7 +165,7 @@
 </div>
 
 <q-dialog v-if="languages.length > 0" ref="createModal" maximized position="right" persistent @hide="cleanCurrentVulnerability()">
-    <q-card :style="($q.screen.gt.md)?'width: 50vw':''" class="bg-grey-1">
+    <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 <span v-if="currentCategory">Add Vulnerability ({{currentCategory.name}})</span>
@@ -310,7 +310,7 @@
 </q-dialog>
 
 <q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="UserService.isAllowed('vulnerabilities:update')" @hide="cleanCurrentVulnerability()">
-    <q-card :style="($q.screen.gt.md)?'width: 50vw':''" class="bg-grey-1">
+    <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'" class="bg-grey-1">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 <span v-if="currentVulnerability.category">Edit Vulnerability ({{currentVulnerability.category}})</span>
