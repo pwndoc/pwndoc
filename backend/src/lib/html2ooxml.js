@@ -70,6 +70,10 @@ function html2ooxml(html, style = '') {
             else if (tag === "ol") {
                 list_state.push('number')
             }
+			else if (tag === "a") {
+				cRunProperties.link = attribs.href
+				
+            }
             else if (tag === "li") {
                 var level = list_state.length - 1
                 if (level >= 0 && list_state[level] === 'bullet')
@@ -87,7 +91,11 @@ function html2ooxml(html, style = '') {
         ontext(text) {
             if (text && cParagraph) {
                 cRunProperties.text = text
-                cParagraph.addChildElement(new docx.TextRun(cRunProperties))
+				if(cRunProperties.link){
+					cParagraph.addChildElement(doc.createHyperlink(cRunProperties.link,text))
+				} else {
+					cParagraph.addChildElement(new docx.TextRun(cRunProperties))
+				}
             }
         },
 
@@ -101,6 +109,9 @@ function html2ooxml(html, style = '') {
             }
             else if (tag === "b" || tag === "strong") {
                 delete cRunProperties.bold
+            }
+			else if (tag === "a") {
+                delete cRunProperties.link
             }
             else if (tag === "i" || tag === "em") {
                 delete cRunProperties.italics
