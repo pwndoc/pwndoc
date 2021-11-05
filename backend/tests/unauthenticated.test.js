@@ -70,9 +70,6 @@ module.exports = function(request) {
         response = await request.get('/api/data/sections')
         expect(response.status).toBe(401)
 
-        response = await request.get('/api/data/sections/en')
-        expect(response.status).toBe(401)
-
         response = await request.post('/api/data/sections')
         expect(response.status).toBe(401)
 
@@ -214,16 +211,10 @@ module.exports = function(request) {
         response = await request.delete('/api/audits/1234/findings/1234')
         expect(response.status).toBe(401)
 
-        response = await request.post('/api/audits/1234/sections')
-        expect(response.status).toBe(401)
-
         response = await request.get('/api/audits/1234/sections/1234')
         expect(response.status).toBe(401)
 
         response = await request.put('/api/audits/1234/sections/1234')
-        expect(response.status).toBe(401)
-
-        response = await request.delete('/api/audits/1234/sections/1234')
         expect(response.status).toBe(401)
 
         response = await request.get('/api/audits/1234/generate')

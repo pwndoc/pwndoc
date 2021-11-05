@@ -31,7 +31,7 @@ module.exports = function(request) {
     var options = {headers: {}}
     beforeAll(async done => {
       var response = await request.post('/api/users/token', {username: 'admin', password: 'admin2'})
-      options.headers.Cookie = `token=${response.data.datas.token}` // Set header Cookie for next requests
+      options.headers.Cookie = `token=JWT ${response.data.datas.token}` // Set header Cookie for next requests
       done()
     })
 
