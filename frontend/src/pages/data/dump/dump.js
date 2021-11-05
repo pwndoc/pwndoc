@@ -5,6 +5,8 @@ import YAML from 'js-yaml'
 import VulnerabilityService from '@/services/vulnerability'
 import UserService from '@/services/user'
 
+import { $t } from '@/boot/i18n'
+
 export default {
     data: () => {
         return {
@@ -41,14 +43,14 @@ export default {
                 var message = "";
                 var color = "positive";
                 if (data.data.datas.duplicates === 0) {
-                    message = `All <strong>${data.data.datas.created}</strong> vulnerabilities created`;
+                    message = $t('importVulnerabilitiesOk',[data.data.datas.created]);
                 }
                 else if (data.data.datas.created === 0 && data.data.datas.duplicates > 0) {
-                    message = `All <strong>${data.data.datas.duplicates.length}</strong> vulnerabilities title already exist`;
+                    message = $t('importVulnerabilitiesAllExists',[data.data.datas.duplicates.length]);
                     color = "negative";
                 }
                 else {
-                    message = `<strong>${data.data.datas.created}</strong> vulnerabilities created<br /><strong>${data.data.datas.duplicates.length}</strong> vulnerabilities title already exist`;
+                    message = $t('importVulnerabilitiesPartial',[data.data.datas.created,data.data.datas.duplicates.length]);
                     color = "orange";
                 }
                 Notify.create({
@@ -99,12 +101,12 @@ export default {
                                         this.vulnerabilities.push(vulnFile);
                                 }
                                 else
-                                    throw new Error ('Invalid YAML format detected')
+                                    throw new Error ($t('invalidYamlFormat'))
                             }
                             catch(err) {
                                 console.log(err);
                                 var errMsg = err;
-                                if (err.mark) errMsg = `Parsing Error: line ${err.mark.line}, column: ${err.mark.column}`;
+                                if (err.mark) errMsg = $t('err.parsingError2',[err.mark.line,err.mark.column]);                              
                                 Notify.create({
                                     message: errMsg,
                                     color: 'negative',
@@ -128,12 +130,12 @@ export default {
                                         this.vulnerabilities.push(vulnFile);
                                 }
                                 else
-                                    throw new Error ('Invalid JSON format detected')
+                                    throw new Error ($t('err.invalidJsonFormat'))
                             }
                             catch(err) {
                                 console.log(err);
                                 var errMsg = err;
-                                if (err.message) errMsg = `Parsing Error: ${err.message}`;
+                                if (err.message) errMsg = $t('err.parsingError1',[err.message]);
                                 Notify.create({
                                     message: errMsg,
                                     color: 'negative',
@@ -234,16 +236,16 @@ export default {
 
         deleteAllVulnerabilities: function() {
             Dialog.create({
-                title: 'Confirm Suppression',
-                message: `All Vulnerabilities will be permanently deleted`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.confirmSuppression'),
+                message: $t('msg.allVulnerabilitesDeleteNotice'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => {
                 VulnerabilityService.deleteAllVulnerabilities()
                 .then(() => {
                     Notify.create({
-                        message: 'All vulnerabilities deleted successfully',
+                        message: $t('msg.allVulnerabilitesDeleteOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'

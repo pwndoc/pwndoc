@@ -6,6 +6,8 @@ import UserService from '@/services/user'
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
 
+import { $t } from '@/boot/i18n'
+
 export default {
     data: () => {
         return {
@@ -16,12 +18,12 @@ export default {
             loading: true,
             // Datatable headers
             dtHeaders: [
-                {name: 'username', label: 'Username', field: 'username', align: 'left', sortable: true},
-                {name: 'firstname', label: 'Firstname', field: 'firstname', align: 'left', sortable: true},
-                {name: 'lastname', label: 'Lastname', field: 'lastname', align: 'left', sortable: true},
-                {name: 'email', label: 'Email', field: 'email', align: 'left', sortable: true},
-                {name: 'role', label: 'Role', field: 'role', align: 'left', sortable: true},
-                {name: 'action', label: '', field: 'action', align: 'left', sortable: false}
+                {name: 'username', label: $t('username'), field: 'username', align: 'left', sortable: true},
+                {name: 'firstname', label: $t('firstname'), field: 'firstname', align: 'left', sortable: true},
+                {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
+                {name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true},
+                {name: 'role', label: $t('role'), field: 'role', align: 'left', sortable: true},
+                {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
             pagination: {
@@ -77,13 +79,14 @@ export default {
         createCollab: function() {
             this.cleanErrors();
             if (!this.currentCollab.lastname)
-                this.errors.lastname = "Lastname required";
+                this.errors.lastname = $t('msg.lastnameRequired');
             if (!this.currentCollab.firstname)
-                this.errors.firstname = "Firstname required";
+                this.errors.firstname = $t('msg.firstnameRequired');
             if (!this.currentCollab.username)
-                this.errors.username = "Username required";
+                this.errors.username = $t('msg.usernameRequired');
             if (!this.currentCollab.password)
-                this.errors.password = "Password required";
+                this.errors.password = $t('msg.passwordRequired');
+
             if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password)
                 return;
 
@@ -92,7 +95,7 @@ export default {
                 this.getCollabs();
                 this.$refs.createModal.hide();
                 Notify.create({
-                    message: 'Collaborator created successfully',
+                    message: $t('msg.collaboratorCreatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -111,11 +114,11 @@ export default {
         updateCollab: function() {
             this.cleanErrors();
             if (!this.currentCollab.lastname)
-                this.errors.lastname = "Lastname required";
+                this.errors.lastname = $t('msg.lastnameRequired');
             if (!this.currentCollab.firstname)
-                this.errors.firstname = "Firstname required";
+                this.errors.firstname = $t('msg.firstnameRequired');
             if (!this.currentCollab.username)
-                this.errors.username = "Username required";
+                this.errors.username = $t('msg.usernameRequired');
 
             if (this.errors.lastname || this.errors.firstname || this.errors.username)
                 return;
@@ -125,7 +128,7 @@ export default {
                 this.getCollabs();
                 this.$refs.editModal.hide();
                 Notify.create({
-                    message: 'Collaborator updated successfully',
+                    message: $t('msg.collaboratorUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -146,7 +149,7 @@ export default {
             .then(() => {
                 this.getCollabs();
                 Notify.create({
-                    message: 'Collaborator deleted successfully',
+                    message: $t('msg.collaboratorDeletedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -174,10 +177,10 @@ export default {
 
         confirmDeleteCollab: function(collab) {
             Dialog.create({
-                title: 'Confirm Suppression',
-                message: `Collaborator «${collab.username}» will be permanently deleted`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
+                title: $t('msg.confirmSuppression'),
+                message: `${$t('collaborator')} «${collab.username}» ${$t('msg.deleteNotice')}`,
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => this.deleteCollab(collab._id))
         },
