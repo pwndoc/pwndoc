@@ -57,10 +57,9 @@ module.exports = function(request) {
           password: 'admin'
         }
         var response = await request.post('/api/users/token', user)
-      
         expect(response.status).toBe(200)
         expect(response.data.datas.token).toBeDefined()
-        expect(response.data.datas.token).toContain('JWT')
+        expect(response.data.datas.token).toContain('eyJ')
         done()
       })
 
@@ -85,7 +84,7 @@ module.exports = function(request) {
       
         expect(response.status).toBe(200)
         expect(response.data.datas.token).toBeDefined()
-        options.headers.Cookie = `token=${response.data.datas.token}` // Set header Cookie for next requests
+        options.headers.Cookie = `token=JWT ${response.data.datas.token}` // Set header Cookie for next requests
         done()
       })
 
