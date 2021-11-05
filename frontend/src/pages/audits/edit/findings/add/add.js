@@ -7,6 +7,8 @@ import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
+import { $t } from '@/boot/i18n'
+
 export default {
     props: {
         frontEndAuditState: Number,
@@ -23,9 +25,9 @@ export default {
             loading: true,
             // Headers for vulnerabilities datatable
             dtVulnHeaders: [
-                {name: 'title', label: 'Title', field: row => row.detail.title, align: 'left', sortable: true},
-                {name: 'category', label: 'Category', field: 'category', align: 'left', sortable: true},
-                {name: 'vulnType', label: 'Type', field: row => row.detail.vulnType, align: 'left', sortable: true},
+                {name: 'title', label: $t('title'), field: row => row.detail.title, align: 'left', sortable: true},
+                {name: 'category', label: $t('category'), field: 'category', align: 'left', sortable: true},
+                {name: 'vulnType', label: $t('vulnType'), field: row => row.detail.vulnType, align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Pagination for vulnerabilities datatable
@@ -74,13 +76,13 @@ export default {
     computed: {
         vulnCategoriesOptions: function() {
             return this.$_.uniq(this.$_.map(this.vulnerabilities, vuln => {
-                return vuln.category || 'No Category'
+                return vuln.category || $t('noCategory')
             }))
         },
 
         vulnTypeOptions: function() {
             return this.$_.uniq(this.$_.map(this.vulnerabilities, vuln => {
-                return vuln.detail.vulnType || 'Undefined'
+                return vuln.detail.vulnType || $t('undefined')
             }))
         }
     },
@@ -124,16 +126,16 @@ export default {
         getDtTitle: function(row) {
             var index = row.details.findIndex(obj => obj.locale === this.dtLanguage.locale);
             if (index < 0)
-                return "Not defined for this language yet";
+                return $t('err.notDefinedLanguage');
             else
                 return row.details[index].title;         
         },
 
         customFilter: function(rows, terms, cols, getCellValue) {
             var result = rows && rows.filter(row => {
-                var title = (row.detail.title || "Not defined for this language").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                var type = (row.detail.vulnType || "Undefined").toLowerCase()
-                var category = (row.category || "No Category").toLowerCase()
+                var title = (row.detail.title || $t('err.notDefinedLanguage')).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                var type = (row.detail.vulnType || $t('undefined')).toLowerCase()
+                var category = (row.category || $t('noCategory')).toLowerCase()
                 var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.vulnType || "").toLowerCase()
@@ -171,7 +173,7 @@ export default {
                 .then(() => {
                     this.findingTitle = "";
                     Notify.create({
-                        message: 'Finding created successfully',
+                        message: $t('msg.findingCreateOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'
@@ -229,7 +231,7 @@ export default {
                 .then(() => {
                     this.findingTitle = "";
                     Notify.create({
-                        message: 'Finding created successfully',
+                        message: $t('msg.findingCreateOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'

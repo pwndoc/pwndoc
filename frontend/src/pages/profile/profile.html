@@ -3,13 +3,13 @@
         <div class="col-md-8 col-12 offset-md-2 q-mt-md">
             <q-card class="bg-grey-1">
                 <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
-                    <div class="text-h6">Update User Information</div>
+                    <div class="text-h6">{{$t('updateUserInformation')}}</div>
                 </q-card-section>
                 <q-separator />
                 <q-card-section class="row">
                     <q-list class="col-md-6 col-12">
                         <q-item>
-                            <q-item-section side>Role</q-item-section>
+                            <q-item-section side>{{$t('role')}}</q-item-section>
                             <q-item-section side>
                                 <q-chip square :label="user.role" class="text-white" :color="(user.role === 'admin')?'orange':'info'" />
                             </q-item-section>
@@ -18,7 +18,7 @@
                             <q-item-section>
                                 <q-input 
                                 v-model="user.username" 
-                                label="Username" 
+                                :label="$t('username')" 
                                 stack-label 
                                 :error="!!errors.username"
                                 :error-message="errors.username" 
@@ -31,7 +31,7 @@
                             <q-item-section>
                                 <q-input 
                                 v-model="user.firstname" 
-                                label="Firstname" 
+                                :label="$t('firstname')" 
                                 stack-label
                                 :error="!!errors.firstname"
                                 :error-message="errors.firstname"
@@ -44,7 +44,7 @@
                             <q-item-section>
                                 <q-input 
                                 v-model="user.lastname" 
-                                label="Lastname" 
+                                :label="$t('lastname')" 
                                 stack-label 
                                 :error="!!errors.lastname"
                                 :error-message="errors.lastname"
@@ -81,7 +81,7 @@
                                     <q-input 
                                     class="col-md-6 col-6 q-pr-sm" 
                                     v-model="user.newPassword" 
-                                    label="New Password" 
+                                    :label="$t('newPassword')" 
                                     stack-label 
                                     type="password"
                                     clearable
@@ -91,7 +91,7 @@
                                     <q-input 
                                     class="col-md-6 col-6 q-pl-sm" 
                                     v-model="user.confirmPassword" 
-                                    label="Confirm Password" 
+                                    :label="$t('confirmPassword')" 
                                     stack-label 
                                     type="password"
                                     outlined
@@ -105,7 +105,7 @@
                             <q-item-section>
                                 <q-input 
                                 v-model="user.currentPassword" 
-                                label="Current Password *" 
+                                :label="$t('currentPassword')" 
                                 stack-label 
                                 type="password"
                                 :error="!!errors.currentPassword" 
@@ -115,7 +115,7 @@
                                 bg-color="white"
                                 >
                                     <template v-slot:append>
-                                        <q-btn label="Update" unelevated color="secondary" @click="updateProfile" />
+                                        <q-btn :label="$t('btn.update')" unelevated color="secondary" @click="updateProfile" />
                                     </template>
                                 </q-input>
                             </q-item-section>

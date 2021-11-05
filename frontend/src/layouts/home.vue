@@ -8,21 +8,21 @@
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-fingerprint" />
             </q-item-section>
-            <q-item-section>Audits</q-item-section>
+            <q-item-section>{{$t('nav.audits')}}</q-item-section>
             </q-item>
 
             <q-item to='/vulnerabilities' active-class="text-green">
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-shield-alt" />
             </q-item-section>
-            <q-item-section>Vulnerabilities</q-item-section>
+            <q-item-section>{{$t('nav.vulnerabilities')}}</q-item-section>
             </q-item>
 
             <q-item to='/data' active-class="text-green">
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-database" />
             </q-item-section>
-            <q-item-section>Data</q-item-section>
+            <q-item-section>{{$t('nav.data')}}</q-item-section>
             </q-item>
 
             <q-space />
@@ -32,19 +32,19 @@
               <q-item-section avatar style="min-width:0" class="q-pr-sm">
                   <q-icon name="fa fa-cog" />
               </q-item-section>
-              <q-item-section>Settings</q-item-section>
+              <q-item-section>{{$t('settings')}}</q-item-section>
               </q-item>
             </div>
             <q-btn-dropdown auto-close flat icon="fa fa-user-circle" no-caps :label="userService.user.username">
                 <q-list>
                   <q-item clickable @click="$router.push('/profile')">
                     <q-item-section side><q-icon size="xs" name="fa fa-id-card" /></q-item-section>
-                    <q-item-section>Profile</q-item-section>
+                    <q-item-section>{{$t('profile')}}</q-item-section>
                   </q-item>
                   <q-separator />
                   <q-item clickable @click="logout()">
                     <q-item-section side><q-icon size="xs" name="fa fa-sign-out-alt" /></q-item-section>
-                    <q-item-section>Logout</q-item-section>
+                    <q-item-section>{{$t('logout')}}</q-item-section>
                   </q-item>
                 </q-list>
             </q-btn-dropdown>

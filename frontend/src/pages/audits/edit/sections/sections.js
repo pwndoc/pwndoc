@@ -8,6 +8,8 @@ import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
+import { $t } from '@/boot/i18n'
+
 export default {
     props: {
         frontEndAuditState: Number,
@@ -55,10 +57,10 @@ export default {
         Utils.syncEditors(this.$refs)
         if (this.unsavedChanges()) {
             Dialog.create({
-            title: 'There are unsaved changes !',
-            message: `Do you really want to leave ?`,
-            ok: {label: 'Confirm', color: 'negative'},
-            cancel: {label: 'Cancel', color: 'white'}
+            title: $t('msg.thereAreUnsavedChanges'),
+            message: $t('msg.doYouWantToLeave'),
+            ok: {label: $t('btn.confirm'), color: 'negative'},
+            cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
@@ -70,10 +72,10 @@ export default {
         Utils.syncEditors(this.$refs)
         if (this.unsavedChanges()) {
             Dialog.create({
-            title: 'There are unsaved changes !',
-            message: `Do you really want to leave ?`,
-            ok: {label: 'Confirm', color: 'negative'},
-            cancel: {label: 'Cancel', color: 'white'}
+            title: $t('msg.thereAreUnsavedChanges'),
+            message: $t('msg.doYouWantToLeave'),
+            ok: {label: $t('btn.confirm'), color: 'negative'},
+            cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
@@ -116,7 +118,7 @@ export default {
             this.$nextTick(() => {
                 if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
                     Notify.create({
-                        message: 'Please fill all required Fields',
+                        message: $t('msg.fieldRequired'),
                         color: 'negative',
                         textColor:'white',
                         position: 'top-right'
@@ -127,7 +129,7 @@ export default {
                 .then(() => {
                     this.sectionOrig = this.$_.cloneDeep(this.section);
                     Notify.create({
-                        message: 'Section updated successfully',
+                        message: $t('msg.sectionUpdateOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'

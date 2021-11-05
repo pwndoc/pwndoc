@@ -8,6 +8,8 @@ import Utils from '@/services/utils'
 import UserService from '@/services/user'
 import TemplateService from '@/services/template'
 
+import { $t } from '@/boot/i18n'
+
 export default {
     data: () => {
         return {
@@ -35,13 +37,13 @@ export default {
             editCategories: [],
             editCategory: false,
             sortValueOptions: [
-                {label: 'CVSS Score', value: 'cvssScore'},
-                {label: 'Priority', value: 'priority'},
-                {label: 'Remediation Complexity', value: 'remediationComplexity'}
+                {label: $t('cvssScore'), value: 'cvssScore'},
+                {label: $t('priority'), value: 'priority'},
+                {label: $t('remediationDifficulty'), value: 'remediationComplexity'}
             ],
             sortOrderOptions: [
-                {label: 'Ascending', value: 'asc'},
-                {label: 'Descending', value: 'desc'}
+                {label: $t('ascending'), value: 'asc'},
+                {label: $t('descending'), value: 'desc'}
             ],
 
             customFields: [],
@@ -59,20 +61,20 @@ export default {
             },
             cfLocale: "",
             cfDisplayOptions: [
-                {label: 'Audit General', value: 'general'},
-                {label: 'Audit Finding', value: 'finding'},
-                {label: 'Audit Section', value: 'section'},
-                {label: 'Vulnerability', value: 'vulnerability'}
+                {label: $t('auditGeneral'), value: 'general'},
+                {label: $t('auditFinding'), value: 'finding'},
+                {label: $t('auditSection'), value: 'section'},
+                {label: $t('vulnerability'), value: 'vulnerability'}
             ],
             cfComponentOptions: [
-                {label: 'Checkbox', value: 'checkbox', icon: 'check_box'},
-                {label: 'Date', value: 'date', icon: 'event'},
-                {label: 'Editor', value: 'text', icon: 'mdi-format-pilcrow'},
-                {label: 'Input', value: 'input', icon: 'title'},
-                {label: 'Radio', value: 'radio', icon: 'radio_button_checked'},
-                {label: 'Select', value: 'select', icon: 'far fa-caret-square-down'},
-                {label: 'Select Multiple', value: 'select-multiple', icon: 'filter_none'},
-                {label: 'Space', value: 'space', icon: 'space_bar'}
+                {label: $t('checkbox'), value: 'checkbox', icon: 'check_box'},
+                {label: $t('date'), value: 'date', icon: 'event'},
+                {label: $t('editor'), value: 'text', icon: 'mdi-format-pilcrow'},
+                {label: $t('input'), value: 'input', icon: 'title'},
+                {label: $t('radio'), value: 'radio', icon: 'radio_button_checked'},
+                {label: $t('select'), value: 'select', icon: 'far fa-caret-square-down'},
+                {label: $t('selectMultiple'), value: 'select-multiple', icon: 'filter_none'},
+                {label: $t('space'), value: 'space', icon: 'space_bar'}
             ],
             newCustomOption: "",
 
@@ -433,9 +435,9 @@ export default {
 
         getSortOptions: function(category) {
             var options = [
-                {label: 'CVSS Score', value: 'cvssScore'},
-                {label: 'Priority', value: 'priority'},
-                {label: 'Remediation Complexity', value: 'remediationComplexity'}
+                {label: $t('cvssScore'), value: 'cvssScore'},
+                {label: $t('priority'), value: 'priority'},
+                {label: $t('remediationComplexity'), value: 'remediationComplexity'}
             ]
             var allowedFieldTypes = ['date', 'input', 'radio', 'select']
             this.customFields.forEach(e => {
@@ -536,8 +538,8 @@ export default {
                     </div>
                 </div>
                 `,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'},
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'},
                 html: true,
                 style: "width: 600px"
             })

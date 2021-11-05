@@ -3,6 +3,8 @@ import Vue from 'vue'
 
 import UserService from '@/services/user'
 
+import { $t } from 'boot/i18n'
+
 export default {
     data: () => {
         return {
@@ -29,15 +31,15 @@ export default {
         updateProfile: function() {
             this.cleanErrors();
             if (!this.user.username)
-                this.errors.username = "Username required";
+                this.errors.username = $t('msg.usernameRequired');
             if (!this.user.firstname)
-                this.errors.firstname = "Firstname required";
+                this.errors.firstname = $t('msg.firstnameRequired');
             if (!this.user.lastname)
-                this.errors.lastname = "Lastname required";
+                this.errors.lastname = $t('msg.lastnameRequired');
             if (!this.user.currentPassword)
-                this.errors.currentPassword = "Current Password required";
+                this.errors.currentPassword = $t('msg.currentPasswordRequired');
             if (this.user.newPassword !== this.user.confirmPassword)
-                this.errors.newPassword = "New Password and Confirm Password are differents";
+                this.errors.newPassword = $t('msg.confirmPasswordDifferents');
             
             if (this.errors.username || this.errors.firstname || this.errors.lastname || this.errors.currentPassword || this.errors.newPassword)
                 return;
@@ -46,7 +48,7 @@ export default {
             .then((data) => {
                 UserService.refreshToken()
                 Notify.create({
-                    message: 'Profile updated successfully',
+                    message: $t('msg.profileUpdateOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
