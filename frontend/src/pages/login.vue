@@ -16,7 +16,7 @@
             <div v-if="init">
                 <q-card-section>
                     <q-input
-                    label="Username"
+                    :label="$t('username')"
                     :error="!!errors.username"
                     :error-message="errors.username"
                     hide-bottom-space
@@ -30,7 +30,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
-                    label="Firstname"
+                    :label="$t('firstname')"
                     :error="!!errors.firstname"
                     :error-message="errors.firstname"
                     hide-bottom-space
@@ -42,7 +42,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
-                    label="Lastname"
+                    :label="$t('lastname')"
                     :error="!!errors.lastname"
                     :error-message="errors.lastname"
                     hide-bottom-space
@@ -54,7 +54,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
-                    label="Password"
+                    :label="$t('password')"
                     :error="!!errors.password"
                     :error-message="errors.password"
                     hide-bottom-space
@@ -68,7 +68,7 @@
                 </q-card-section>
 
                 <q-card-section align="center">
-                    <q-btn color="blue" class="full-width" unelevated no-caps @click="initUser()">Register First User</q-btn>
+                    <q-btn color="blue" class="full-width" unelevated no-caps @click="initUser()">{{$t('registerFirstUser')}}</q-btn>
                 </q-card-section>
             </div>
             
@@ -76,7 +76,7 @@
 
                 <q-card-section>
                     <q-input
-                    label="Username"
+                    :label="$t('username')"
                     :error="!!errors.username"
                     :error-message="errors.username"
                     hide-bottom-space
@@ -92,7 +92,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
-                    label="Password"
+                    :label="$t('password')"
                     :error="!!errors.password"
                     :error-message="errors.password"
                     hide-bottom-space
@@ -108,7 +108,7 @@
                 </q-card-section>
 
                 <q-card-section align="center">
-                    <q-btn color="blue" class="full-width" unelevated no-caps @click="getToken()">Login</q-btn>
+                    <q-btn color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
                 </q-card-section>
             </div>
         </q-card>
@@ -119,6 +119,8 @@
 <script>
 import {Loading} from 'quasar';
 import UserService from '@/services/user';
+
+import { $t } from '@/boot/i18n'
 
 export default {
     data () {
@@ -135,8 +137,8 @@ export default {
 
     created: function() {
         if (this.$route.query.tokenError)
-            if (this.$route.query.tokenError === "2") this.errors.alert = "Expired token";
-            else this.errors.alert = "Invalid token";
+            if (this.$route.query.tokenError === "2") this.errors.alert = $t('err.expiredToken');
+            else this.errors.alert = $t('err.invalidToken');
         this.checkInit();
     },
 
@@ -151,7 +153,7 @@ export default {
         },
 
         checkInit() {
-            Loading.show({message: '<p>Trying to contact backend</p>', customClass: 'loading', backgroundColor: 'blue-grey-8'});
+            Loading.show({message: $t('msg.tryingToContactBackend'), customClass: 'loading', backgroundColor: 'blue-grey-8'});
             UserService.isInit()
             .then((data) => {
                 Loading.hide();
@@ -160,7 +162,7 @@ export default {
             })
             .catch(err => {
                 Loading.show({
-                    message: "<i class='material-icons'>wifi_off</i><br /><p>Something went wrong contacting backend</p>", 
+                    message: `<i class='material-icons'>wifi_off</i><br /><p>${$t('msg.wrongContactingBackend')}</p>`, 
                     spinner: null, 
                     backgroundColor: 'red-10', 
                     customClass: 'loading-error'})
@@ -171,13 +173,13 @@ export default {
          initUser() {
             this.cleanErrors();
             if (!this.username)
-                this.errors.username = "Username required";
+                this.errors.username = $t('msg.usernameRequired');
             if (!this.password)
-                this.errors.password = "Password required";
+                this.errors.password = $t('msg.passwordRequired');
             if (!this.firstname)
-                this.errors.firstname = "Firstname required";
+                this.errors.firstname = $t('msg.firstnameRequired');
             if (!this.lastname)
-                this.errors.lastname = "Lastname required";
+                this.errors.lastname = $t('msg.lastnameRequired');
 
             if (this.errors.username || this.errors.password || this.errors.firstname || this.errors.lastname)
                 return;
@@ -196,9 +198,9 @@ export default {
         getToken() {
             this.cleanErrors();
             if (!this.username)
-                this.errors.username = "Username required";
+                this.errors.username = $t('msg.usernameRequired');
             if (!this.password)
-                this.errors.password = "Password required";
+                this.errors.password = $t('msg.passwordRequired');
 
             if (this.errors.username || this.errors.password)
                 return;
@@ -209,7 +211,7 @@ export default {
                 this.$router.push('/');
             })
             .catch(err => {
-                this.errors.alert = "Invalid credentials";
+                this.errors.alert = $t('err.invalidCredentials');
             })
         }
     }
