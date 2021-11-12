@@ -73,8 +73,7 @@
             </div>
             
             <div v-else>
-
-                <q-card-section>
+                <q-card-section v-show="step === 0">
                     <q-input
                     :label="$t('username')"
                     :error="!!errors.username"
@@ -90,7 +89,7 @@
                         <template v-slot:prepend><q-icon name="fa fa-user" /></template>
                     </q-input>
                 </q-card-section>
-                <q-card-section>
+                <q-card-section v-show="step === 0">
                     <q-input
                     :label="$t('password')"
                     :error="!!errors.password"
@@ -104,6 +103,38 @@
                     @keyup.enter="getToken()"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-key" /></template>
+                    </q-input>
+                </q-card-section>
+                <q-card-section v-show="step === 1">
+                    <q-item class="q-pl-none">
+                        <q-item-section avatar style="min-width:0" class="q-pr-sm">
+                            <q-btn dense flat size="sm" icon="mdi-arrow-left" style="top:-8px" @click="step=0;totpToken=''">
+                            <q-tooltip>{{$t('goBack')}}</q-tooltip>
+                            </q-btn>
+                        </q-item-section>
+                        <q-item-section>
+                            <p class="text-left text-h6 text-center text-vertical">{{$t('twoStepVerification')}}</p>
+                        </q-item-section>
+                    </q-item>
+                    <q-item class="q-pl-none">
+                    <q-item-section avatar class="no-padding">
+                        <q-icon name="mdi-cellphone-key" size="70px" />
+                    </q-item-section>
+                    <q-item-section>
+                        <p>{{$t('twoStepVerificationMessage')}}</p>
+                    </q-item-section>
+                    </q-item>
+                    <q-input
+                    ref="totptoken"
+                    v-model="totpToken"
+                    placeholder="Enter 6-digit code"
+                    outlined
+                    bg-color="white"
+                    for="totpToken"
+                    maxlength=6
+                    @keyup.enter="getToken()"
+                    >
+                        <template v-slot:prepend><q-icon name="fa fa-unlock-alt" /></template>
                     </q-input>
                 </q-card-section>
 
@@ -131,6 +162,8 @@ export default {
             firstname: "",
             lastname: "",
             password: "",
+            totpToken: "",
+            step: 0,
             errors: {alert: "", username: "", password: "", firstname: "", lastname: ""}
         }
     },
@@ -205,13 +238,24 @@ export default {
             if (this.errors.username || this.errors.password)
                 return;
 
-            UserService.getToken(this.username, this.password)
+            UserService.getToken(this.username, this.password, this.totpToken)
             .then(async () => {
                 await this.$settings.refresh();
                 this.$router.push('/');
             })
             .catch(err => {
-                this.errors.alert = $t('err.invalidCredentials');
+                if (err.response.status === 422) {
+                    this.step = 1
+                    this.$nextTick(() => {
+                        this.$refs.totptoken.focus()
+                    })
+                }
+                else {
+                    let errmsg = $t('err.invalidCredentials');
+                    if (err.response.data.datas)
+                        errmsg = err.response.data.datas;
+                    this.errors.alert = errmsg;
+                }
             })
         }
     }

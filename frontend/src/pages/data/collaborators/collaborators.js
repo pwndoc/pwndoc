@@ -49,7 +49,8 @@ export default {
                 username: '',
                 role: '',
                 email: '',
-                phone: ''
+                phone: '',
+                totpEnabled: false
             },
             // Username to identify collab to update
             idUpdate: '',

@@ -9,6 +9,10 @@ export default {
     data: () => {
         return {
             user: {},
+            totpEnabled: false,
+            totpQrcode: "",
+            totpSecret: "",
+            totpToken: "",
             errors: {username: "", firstname:"", lastname: "", currentPassword: "", newPassword: ""}
         }
     },
@@ -22,9 +26,77 @@ export default {
             UserService.getProfile()
             .then((data) => {
                 this.user = data.data.datas;
+                this.totpEnabled = this.user.totpEnabled;
             })
             .catch((err) => {
                 console.log(err)
+            })
+        },
+
+        getTotpQrcode: function() {
+            if(this.totpEnabled && !this.user.totpEnabled){
+                UserService.getTotpQrCode()
+                .then((data)=>{
+                    let res = data.data.datas;
+                    this.totpQrcode = res.totpQrCode;
+                    this.totpSecret = res.totpSecret;
+                    this.$refs.totpEnableInput.focus();
+                })
+                .catch((err)=>{
+                    console.log(err);
+                })
+            }
+            else if (!this.totpEnabled && this.user.totpEnabled) {
+                this.$nextTick(() => {this.$refs.totpDisableInput.focus()})
+            }
+            else {
+                this.totpQrcode = "";
+                this.totpSecret = "";
+                this.totpToken = "";
+            }
+        },
+
+        setupTotp: function() {
+            UserService.setupTotp(this.totpToken, this.totpSecret)
+            .then((data)=>{
+                this.user.totpEnabled = true;
+                this.totpToken = "";
+                Notify.create({
+                    message: 'TOTP successfully enabled',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err)=>{
+                Notify.create({
+                    message: 'TOTP verification failed',
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+        cancelTotp: function() {
+            UserService.cancelTotp(this.totpToken)
+            .then(()=>{
+                this.user.totpEnabled = false;
+                this.totpToken = "";
+                Notify.create({
+                    message: 'TOTP successfully disabled',
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch(()=>{
+                Notify.create({
+                    message: 'TOTP verification failed',
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
             })
         },
 

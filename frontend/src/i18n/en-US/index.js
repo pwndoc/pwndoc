@@ -348,4 +348,6 @@ export default {
     languageMoveToLeft: 'Language (Move to left)',
     merge: 'Merge',
     goBack: 'Go back',
+    twoStepVerification: '2-Step Verification',
+    twoStepVerificationMessage: 'Open your authentication app and enter the security code it provides.'
   }
