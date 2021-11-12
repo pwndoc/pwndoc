@@ -305,6 +305,7 @@ function cvssStrToObject(cvss) {
 
 async function prepAuditData(data) {
     var result = {}
+    data = checkIfTemplate(data)
     result.name = data.name || "undefined"
     result.auditType = data.auditType || "undefined"
     result.location = data.location || "undefined"
@@ -462,4 +463,43 @@ async function splitHTMLParagraphs(data) {
     return result
 }
 
+function jsonPathToValue(jsonData, path) {
+    if (!(jsonData instanceof Object) || typeof (path) === "undefined") {
+        return null
+    }
+    path = path.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties
+    path = path.replace(/^\./, ''); // strip a leading dot
+    var pathArray = path.split('.');
+    for (var i = 0, n = pathArray.length; i < n; ++i) {
+        var key = pathArray[i];
+        if (key in jsonData) {
+            if (jsonData[key] !== null) {
+                jsonData = jsonData[key];
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+    return jsonData;
+}  
+
+function checkIfTemplate(o,originalData=''){
+    if(originalData==''){
+        originalData=o
+        o = {...o.toObject() }
+    } 
+    var regexp = /\{_\{([a-zA-Z0-9\_\.\s]{1,})\}_\}/gm;
+    Object.getOwnPropertyNames(o).forEach(function(key) {
+        if(o[key] !== null && typeof o[key] === "object" ){
+            o[key] = checkIfTemplate(o[key],originalData)
+        } else {
+            if(typeof o[key]==='string'){
+                o[key]  = o[key].replaceAll(regexp, (match, word) =>  jsonPathToValue(originalData,word.trim()) || '')
+            } 
+        }
+    })
+    return o
+}
 
