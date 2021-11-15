@@ -83,12 +83,6 @@
                     >
                         <q-icon name="format_strikethrough" />
                     </q-btn>
-					<q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.link() }"
-                    @click="setUrl(commands.link)"
-                    >
-                        <q-icon name="insert_link" />
-                    </q-btn>
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('marks') !== -1" />
 
@@ -188,8 +182,7 @@ import {
   Strike,
   Underline,
   History,
-  TrailingNode,
-  Link 
+  TrailingNode
 } from 'tiptap-extensions'
 
 import CustomImage from './editor-image'
@@ -210,7 +203,7 @@ export default {
         toolbar: {
             type: Array,
             default: function() {
-                return ['format','link', 'marks', 'list', 'code', 'image']
+                return ['format', 'marks', 'list', 'code', 'image']
             }
         },
         noAffix: {
@@ -246,7 +239,6 @@ export default {
                     new Code(),
                     new Italic(),
                     new Strike(),
-                    new Link(),
                     new Underline(),
                     new History(),
                     new CustomImage(),
@@ -362,29 +354,6 @@ export default {
 
             fileReader.readAsDataURL(file);
         },
-		 setUrl(command) {
-		  const state = this.editor.state
-
-		  // get marks, if any from selected area
-		  const { from, to } = state.selection
-		  let marks = []
-		  state.doc.nodesBetween(from, to, (node) => {
-			marks = [...marks, ...node.marks]
-		  })
-
-		  const mark = marks.find((markItem) => markItem.type.name === 'link')
-
-		  let urlSetting = ''
-
-		  if (mark && mark.attrs.href) {
-			const presetURL = mark.attrs.href
-			prompt('Please update url', presetURL) // let a user see the previously set URL
-		  } else {
-			urlSetting = prompt('Please add url', '') // a clean prompt, has had no anchor
-		  }
-
-		  command({ href: urlSetting })
-		},
 
         updateHTML() {
             this.json = this.editor.getJSON()
