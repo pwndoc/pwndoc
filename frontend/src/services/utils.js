@@ -47,6 +47,8 @@ export default {
     .replace(/ΩΠг\/h5ΏΠг/g, '</h5>')
     .replace(/ΩΠгh6ΏΠг/g, '<h6>')
     .replace(/ΩΠг\/h6ΏΠг/g, '</h6>')
+	.replace(/ΩΠгa.+?href="(.*?)".+?rel="(.*?)".*?ΏΠг/g, '<a href="$1" rel="$2">')
+	.replace(/ΩΠг\/aΏΠг/g, '</a>')
 
     return result
   },
