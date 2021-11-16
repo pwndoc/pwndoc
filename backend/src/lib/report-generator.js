@@ -470,7 +470,7 @@ function checkIfTemplate(o,originalData=''){
             o[key] = checkIfTemplate(o[key],originalData)
         } else {
             if(typeof o[key]==='string'){
-                o[key]  = o[key].replaceAll(regexp, (match, word) =>  _.get(originalData,word.trim(),'')
+                o[key]  = o[key].replaceAll(regexp, (match, word) =>  _.get(originalData,word.trim(),''))
             } 
         }
     })
