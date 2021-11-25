@@ -53,5 +53,19 @@ expressions.filters.convertDateFR = function(input, s) {
     }
 }
 
+// Count vulnerability by category
+// Example: {findings | countCategory: 'MyWebCategory'}
+expressions.filters.countCategory = function(input, category) {
+    if(!input) return input;
+    var count = 0;
+
+    for(var i = 0; i < input.length; i++){
+        if(input[i].category === category){
+            count += 1;
+        }
+    }
+    return count;
+}
+
 exports.expressions = expressions
 
