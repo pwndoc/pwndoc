@@ -423,7 +423,7 @@ async function prepAuditData(data) {
         }
         result[section.field] = formatSection
     }
-    
+    result = replaceSubTemplating(result)
     return result
 }
 
@@ -462,4 +462,15 @@ async function splitHTMLParagraphs(data) {
     return result
 }
 
+
+function replaceSubTemplating(o, originalData = o){
+    var regexp = /\{_\{([a-zA-Z0-9\[\]\_\.]{1,})\}_\}/gm;
+    Object.getOwnPropertyNames(o).forEach(function(key) {
+        if(o[key] !== null && typeof o[key] === "object" )
+            o[key] = replaceSubTemplating(o[key], originalData)
+        else if(typeof o[key] === 'string')
+            o[key]  = o[key].replaceAll(regexp, (match, word) =>  _.get(originalData,word.trim(),''))
+    })
+    return o
+}
 
