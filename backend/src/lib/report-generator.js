@@ -305,7 +305,6 @@ function cvssStrToObject(cvss) {
 
 async function prepAuditData(data) {
     var result = {}
-    data = checkIfTemplate(data)
     result.name = data.name || "undefined"
     result.auditType = data.auditType || "undefined"
     result.location = data.location || "undefined"
@@ -424,7 +423,7 @@ async function prepAuditData(data) {
         }
         result[section.field] = formatSection
     }
-    
+    result = checkIfTemplate(result)
     return result
 }
 
@@ -463,27 +462,6 @@ async function splitHTMLParagraphs(data) {
     return result
 }
 
-function jsonPathToValue(jsonData, path) {
-    if (!(jsonData instanceof Object) || typeof (path) === "undefined") {
-        return null
-    }
-    path = path.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties
-    path = path.replace(/^\./, ''); // strip a leading dot
-    var pathArray = path.split('.');
-    for (var i = 0, n = pathArray.length; i < n; ++i) {
-        var key = pathArray[i];
-        if (key in jsonData) {
-            if (jsonData[key] !== null) {
-                jsonData = jsonData[key];
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
-    return jsonData;
-}  
 
 function checkIfTemplate(o,originalData=''){
     if(originalData==''){
@@ -496,7 +474,7 @@ function checkIfTemplate(o,originalData=''){
             o[key] = checkIfTemplate(o[key],originalData)
         } else {
             if(typeof o[key]==='string'){
-                o[key]  = o[key].replaceAll(regexp, (match, word) =>  jsonPathToValue(originalData,word.trim()) || '')
+                o[key]  = o[key].replaceAll(regexp, (match, word) =>  _.get(originalData,word.trim(),''))
             } 
         }
     })
