@@ -352,7 +352,7 @@ async function prepAuditData(data) {
         })
     })
     result.language = data.language || "undefined"
-    result.scope = data.scope || []
+    result.scope = data.scope.toObject() || []
 
     result.findings = []
     for (finding of data.findings) {
@@ -423,7 +423,7 @@ async function prepAuditData(data) {
         }
         result[section.field] = formatSection
     }
-    result = replaceSubTemplating(result)
+    replaceSubTemplating(result)
     return result
 }
 
@@ -462,15 +462,14 @@ async function splitHTMLParagraphs(data) {
     return result
 }
 
-
 function replaceSubTemplating(o, originalData = o){
     var regexp = /\{_\{([a-zA-Z0-9\[\]\_\.]{1,})\}_\}/gm;
-    Object.getOwnPropertyNames(o).forEach(function(key) {
-        if(o[key] !== null && typeof o[key] === "object" )
-            o[key] = replaceSubTemplating(o[key], originalData)
-        else if(typeof o[key] === 'string')
-            o[key]  = o[key].replaceAll(regexp, (match, word) =>  _.get(originalData,word.trim(),''))
-    })
-    return o
+    if (Array.isArray(o))
+        o.forEach(key => replaceSubTemplating(key, originalData))
+    else if (typeof o === 'object' && !!o) {
+        Object.keys(o).forEach(key => {
+            if (typeof o[key] === 'string') o[key] = o[key].replace(regexp, (match, word) =>  _.get(originalData,word.trim(),''))
+            else replaceSubTemplating(o[key], originalData)
+        })
+    }
 }
-
