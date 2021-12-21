@@ -371,7 +371,7 @@ async function prepAuditData(data) {
             poc: await splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
             status: finding.status || "",
-            category: finding.category || "",
+            category: finding.category || "No Category",
             identifier: "IDX-" + utils.lPad(finding.identifier)
         }
         if (finding.customFields) {
@@ -394,6 +394,12 @@ async function prepAuditData(data) {
         }
         result.findings.push(tmpFinding)
     }
+
+    result.categories = _
+        .chain(result.findings)
+        .groupBy("category")
+        .map((value,key) => {return {categoryName:key, categoryFindings:value}})
+        .value()
 
     result.creator = {}
     if (data.creator) {

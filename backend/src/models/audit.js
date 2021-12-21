@@ -375,9 +375,9 @@ AuditSchema.statics.createFinding = (isAdmin, auditId, userId, finding) => {
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             else {
                 var sortOption = row.sortFindings.find(e => e.category === (finding.category || 'No Category'))
-                if (sortOption && sortOption.sortAuto)
+                if ((sortOption && sortOption.sortAuto) || !sortOption) // if sort is set to automatic or undefined then we sort (default sort will be applied to undefined sortOption)
                     return Audit.updateSortFindings(isAdmin, auditId, userId, null)
-                else
+                else // if manual sorting then we do not sort
                     resolve("Audit Finding created succesfully")
             }
         })
@@ -653,11 +653,16 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
         .then(row => {
             var _ = require('lodash')
             var findings = []
+            var categoriesOrder = row.map(e => e.name)
+            categoriesOrder.push("undefined") // Put uncategorized findings at the end
 
             // Group findings by category
             var findingList = _
             .chain(audit.findings)
             .groupBy("category")
+            .toPairs()
+            .sort((a,b) => categoriesOrder.indexOf(a[0]) - categoriesOrder.indexOf(b[0]))
+            .fromPairs()
             .map((value, key) => {
                 if (key === 'undefined') key = 'No Category'
                 var sortOption = audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
