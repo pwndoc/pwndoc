@@ -7,7 +7,7 @@ function html2ooxml(html, style = '') {
         return html
     if (!html.match(/^<.+>/))
         html = `<p>${html}</p>`
-    var doc = new docx.Document();
+    var doc = new docx.Document({sections:[]});
     var paragraphs = []
     var cParagraph = null
     var cRunProperties = {}
@@ -82,6 +82,12 @@ function html2ooxml(html, style = '') {
             else if (tag === "code") {
                 cRunProperties.style = "CodeChar"
             }
+            else if (tag === "legend" && attribs && attribs.alt !== "undefined") {
+                cParagraph = new docx.Paragraph({style: "Caption", alignment: docx.AlignmentType.CENTER})
+                cParagraph.addChildElement(new docx.TextRun("Figure "))
+                cParagraph.addChildElement(new docx.SimpleField('SEQ Figure', '1'))
+                cParagraph.addChildElement(new docx.TextRun(` - ${attribs.alt}`))
+            }
         },
 
         ontext(text) {
@@ -92,7 +98,7 @@ function html2ooxml(html, style = '') {
         },
 
         onclosetag(tag) {
-            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'img'].includes(tag)) {
+            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'img', 'legend'].includes(tag)) {
                 paragraphs.push(cParagraph)
                 cParagraph = null
                 cParagraphProperties = {}
@@ -133,7 +139,7 @@ function html2ooxml(html, style = '') {
     parser.write(html)
     parser.end()
 
-    var prepXml = doc.document.body.prepForXml()
+    var prepXml = doc.documentWrapper.document.body.prepForXml({})
     var filteredXml = prepXml["w:body"].filter(e => {return Object.keys(e)[0] === "w:p"})
     var dataXml = xml(filteredXml)
 
