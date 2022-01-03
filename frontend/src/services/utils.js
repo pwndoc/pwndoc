@@ -8,7 +8,7 @@ export default {
     .replace(/</g, 'ΩΠг')
     .replace(/>/g, 'ΏΠг')
     .replace(/ΩΠгimg.+?src="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<img src="$1" alt="$2">')
-    .replace(/ΩΠгlegend.+?alt="(.*?)".*?ΏΠг/g, '<legend alt="$1">')
+    .replace(/ΩΠгlegend.+?label="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<legend label="$1" alt="$2">')
     .replace(/ΩΠг\/legendΏΠг/g, '</legend>')
     .replace(/ΩΠгpΏΠг/g, '<p>')
     .replace(/ΩΠг\/pΏΠг/g, '</p>')

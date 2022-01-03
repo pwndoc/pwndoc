@@ -148,11 +148,13 @@
 
                 <div v-if="toolbar.indexOf('caption') !== -1">
                     <q-tooltip :delay="500" content-class="text-bold">Insert Caption</q-tooltip>
-                    <q-btn flat size="sm" dense
-                    @click="commands.caption"
-                    >
-                        <q-icon name="subtitles" />
-                    </q-btn>
+                    <q-btn-dropdown flat size="sm" dense icon="subtitles">
+                        <q-list dense>
+                            <q-item v-for="caption of $settings.report.public.captions" :key="caption" clickable v-close-popup @click="commands.caption({label: caption, alt: ''})">
+                                <q-item-section>{{caption}}</q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-btn-dropdown>
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
 

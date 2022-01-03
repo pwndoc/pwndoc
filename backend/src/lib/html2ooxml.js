@@ -83,9 +83,10 @@ function html2ooxml(html, style = '') {
                 cRunProperties.style = "CodeChar"
             }
             else if (tag === "legend" && attribs && attribs.alt !== "undefined") {
+                var label = attribs.label || "Figure"
                 cParagraph = new docx.Paragraph({style: "Caption", alignment: docx.AlignmentType.CENTER})
-                cParagraph.addChildElement(new docx.TextRun("Figure "))
-                cParagraph.addChildElement(new docx.SimpleField('SEQ Figure', '1'))
+                cParagraph.addChildElement(new docx.TextRun(`${label} `))
+                cParagraph.addChildElement(new docx.SimpleField(`SEQ ${label}`, '1'))
                 cParagraph.addChildElement(new docx.TextRun(` - ${attribs.alt}`))
             }
         },
