@@ -4,6 +4,7 @@
         <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
             <q-toolbar class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">
+                    <q-tooltip :delay="500" content-class="text-bold">Text Format</q-tooltip>
                     <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel" style="width:42px" class="text-bold">
                         <q-list dense>
                             <q-item 
@@ -60,6 +61,7 @@
                     :class="{ 'is-active': isActive.bold() }"
                     @click="commands.bold"
                     >
+                        <q-tooltip :delay="500" content-class="text-bold">Bold</q-tooltip>
                         <q-icon name="format_bold" />
                     </q-btn>
 
@@ -67,6 +69,7 @@
                     :class="{ 'is-active': isActive.italic() }"
                     @click="commands.italic"
                     >
+                        <q-tooltip :delay="500" content-class="text-bold">Italic</q-tooltip>
                         <q-icon name="format_italic" />
                     </q-btn>
 
@@ -74,6 +77,7 @@
                     :class="{ 'is-active': isActive.underline() }"
                     @click="commands.underline"
                     >
+                        <q-tooltip :delay="500" content-class="text-bold">Underline</q-tooltip>
                         <q-icon name="format_underline" />
                     </q-btn>
 
@@ -81,6 +85,7 @@
                     :class="{ 'is-active': isActive.strike() }"
                     @click="commands.strike"
                     >
+                        <q-tooltip :delay="500" content-class="text-bold">Strikethrough</q-tooltip>
                         <q-icon name="format_strikethrough" />
                     </q-btn>
                 </div>
@@ -91,6 +96,7 @@
                     :class="{ 'is-active': isActive.bullet_list() }"
                     @click="commands.bullet_list"
                     >
+                        <q-tooltip :delay="500" content-class="text-bold">Bullets</q-tooltip>
                         <q-icon name="format_list_bulleted" />
                     </q-btn>
 
@@ -98,6 +104,7 @@
                     :class="{ 'is-active': isActive.ordered_list() }"
                     @click="commands.ordered_list"
                     >
+                        <q-tooltip :delay="500" content-class="text-bold">Numbering</q-tooltip>
                         <q-icon name="format_list_numbered" />
                     </q-btn>
                 </div>
@@ -108,6 +115,7 @@
                     :class="{ 'is-active': isActive.code() }"
                     @click="commands.code"
                     >
+                        <q-tooltip :delay="500" content-class="text-bold">Code</q-tooltip>
                         <q-icon name="code" />
                     </q-btn>
 
@@ -115,32 +123,52 @@
                     :class="{ 'is-active': isActive.code_block() }"
                     @click="commands.code_block"
                     >
+                        <q-tooltip :delay="500" content-class="text-bold">Code Block</q-tooltip>
                         <q-icon name="mdi-console" />
                     </q-btn>
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
-
-                <label class="cursor-pointer" v-if="toolbar.indexOf('image') !== -1">
-                    <input
-                    type="file"
-                    accept="image/*"
-                    class="hidden"
-                    @change="importImage($event.target.files)"
-                    :disabled="!editable"
-                    />
-                    <q-icon name="image" />
-                </label>
+                    
+                <div v-if="toolbar.indexOf('image') !== -1">
+                    <q-tooltip :delay="500" content-class="text-bold">Insert Image</q-tooltip>
+                    <q-btn flat size="sm" dense>
+                        <label class="cursor-pointer">
+                            <input
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            @change="importImage($event.target.files)"
+                            :disabled="!editable"
+                            />
+                            <q-icon name="image" />
+                        </label>
+                    </q-btn>
+                </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('image') !== -1" />
+
+                <div v-if="toolbar.indexOf('caption') !== -1">
+                    <q-tooltip :delay="500" content-class="text-bold">Insert Caption</q-tooltip>
+                    <q-btn-dropdown flat size="sm" dense icon="subtitles">
+                        <q-list dense>
+                            <q-item v-for="caption of $settings.report.public.captions" :key="caption" clickable v-close-popup @click="commands.caption({label: caption, alt: ''})">
+                                <q-item-section>{{caption}}</q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-btn-dropdown>
+                </div>
+                <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
 
                 <q-btn flat size="sm" dense
                 @click="commands.undo"
                 >
+                    <q-tooltip :delay="500" content-class="text-bold">Undo</q-tooltip>
                     <q-icon name="undo" />
                 </q-btn>
 
                 <q-btn flat size="sm" dense
                 @click="commands.redo"
                 >
+                    <q-tooltip :delay="500" content-class="text-bold">Redo</q-tooltip>
                     <q-icon name="redo" />
                 </q-btn>
 
@@ -186,6 +214,7 @@ import {
 } from 'tiptap-extensions'
 
 import CustomImage from './editor-image'
+import Caption from './editor-caption'
 
 const Diff = require('diff')
 
@@ -203,7 +232,7 @@ export default {
         toolbar: {
             type: Array,
             default: function() {
-                return ['format', 'marks', 'list', 'code', 'image']
+                return ['format', 'marks', 'list', 'code', 'image', 'caption']
             }
         },
         noAffix: {
@@ -242,6 +271,7 @@ export default {
                     new Underline(),
                     new History(),
                     new CustomImage(),
+                    new Caption(),
                     new TrailingNode({node: 'paragraph', notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']})
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {

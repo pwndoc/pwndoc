@@ -113,6 +113,30 @@
                         </q-item>
                     </q-list>
                 </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-bold">{{$t('captions')}}</div>
+                    <br/>
+                    <div class="text-grey-8">{{$t('captionsDescription')}}</div>
+                    <br/>
+                    <q-item>
+                        <q-item-section class="col-md-6">
+                            <q-select
+                            label="Caption Labels'"
+                            stack-label
+                            outlined
+                            v-model="settings.report.public.captions"
+                            use-input
+                            use-chips
+                            multiple
+                            hide-dropdown-icon
+                            options-sanitize
+                            input-debounce="0"
+                            new-value-mode="add-unique"
+                        />
+                        </q-item-section>
+                    </q-item>
+                </q-card-section>
             </div>
         </q-card>
 
