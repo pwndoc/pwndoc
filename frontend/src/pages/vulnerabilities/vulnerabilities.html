@@ -236,12 +236,8 @@
         <q-card-section>
             <div class="col-md-12">
                 <cvss-calculator
-                :cvssString="currentVulnerability.cvssv3"
-                :cvssScore="currentVulnerability.cvssScore"
-                :cvssSeverity="currentVulnerability.cvssSeverity"
-                @cvssChange="currentVulnerability.cvssv3 = $event"
+                v-model="currentVulnerability.cvssv3"
                 @cvssScoreChange="currentVulnerability.cvssScore = $event"
-                @cvssSeverityChange="currentVulnerability.cvssSeverity = $event"
                 />
             </div>
         </q-card-section>
@@ -407,12 +403,8 @@
         <q-card-section>
             <div class="col-md-12">
                 <cvss-calculator
-                :cvssString="currentVulnerability.cvssv3"
-                :cvssScore="currentVulnerability.cvssScore"
-                :cvssSeverity="currentVulnerability.cvssSeverity"
-                @cvssChange="currentVulnerability.cvssv3 = $event"
+                v-model="currentVulnerability.cvssv3"
                 @cvssScoreChange="currentVulnerability.cvssScore = $event"
-                @cvssSeverityChange="currentVulnerability.cvssSeverity = $event"
                 />
             </div>
         </q-card-section>
@@ -559,12 +551,8 @@
                     </q-card-section>
                     <q-card-section>
                         <cvss-calculator
-                        :cvssString="currentVulnerability.cvssv3"
-                        :cvssScore="currentVulnerability.cvssScore"
-                        :cvssSeverity="currentVulnerability.cvssSeverity"
-                        @cvssChange="currentVulnerability.cvssv3 = $event"
+                        v-model="currentVulnerability.cvssv3"
                         @cvssScoreChange="currentVulnerability.cvssScore = $event"
-                        @cvssSeverityChange="currentVulnerability.cvssSeverity = $event"
                         />
                     </q-card-section>
                     <q-card-section>
@@ -722,12 +710,8 @@
                             <q-card-section>
                                 <cvss-calculator
                                 :class="(currentVulnerability.cvssv3 !== update.cvssv3)?'bg-red-1':''"
-                                :cvssString="update.cvssv3"
-                                :cvssScore="update.cvssScore"
-                                :cvssSeverity="update.cvssSeverity"
-                                @cvssChange="update.cvssv3 = $event"
+                                v-model="update.cvssv3"
                                 @cvssScoreChange="update.cvssScore = $event"
-                                @cvssSeverityChange="update.cvssSeverity = $event"
                                 readonly
                                 />
                             </q-card-section>

@@ -167,7 +167,7 @@
 													size="sm"
 													square
 													:style="`background: ${getFindingColor(finding)}`"
-												>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
+												>{{getFindingSeverity(finding).substring(0,1)}}</q-chip>
 											</q-item-section>
 											<q-item-section>
 												<span>{{finding.title}}</span>
@@ -326,12 +326,7 @@ export default {
 
 		methods: {
 			getFindingColor: function(finding) {
-				const SEVERITIES = ["Low", "Medium", "High", "Critical"];
-
-				let severity = "None";
-				if (finding.cvssSeverity && SEVERITIES.indexOf(finding.cvssSeverity) >= 0) {
-					severity = finding.cvssSeverity;
-				}
+				let severity = this.getFindingSeverity(finding)
 
 				if(this.$settings.report) {
 					const severityColorName = `${severity.toLowerCase()}Color`;
@@ -352,6 +347,14 @@ export default {
 							return "blue";
 					}
 				}
+			},
+
+			getFindingSeverity: function(finding) {
+				let severity = "None"
+				let cvss = CVSS31.calculateCVSSFromVector(finding.cvssv3)
+				if (cvss.success)
+					severity = cvss.baseSeverity
+				return severity
 			},
 
 			// Sockets handle

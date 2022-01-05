@@ -10,16 +10,17 @@ var html2ooxml = require('./html2ooxml');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
 var Settings = require('mongoose').model('Settings');
+var CVSS31 = require('./cvsscalc31.js');
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
     var templatePath = `${__basedir}/../report-templates/${audit.template.name}.${audit.template.ext || 'docx'}`
-    var preppedAudit = await prepAuditData(audit)
     var content = fs.readFileSync(templatePath, "binary");
-
+    
     var zip = new JSZip(content);
-
+    
     var settings = await Settings.getAll();
+    var preppedAudit = await prepAuditData(audit, settings)
 
     var opts = {};
     // opts.centered = true;
@@ -70,7 +71,6 @@ async function generateDoc(audit) {
         console.log(err)
     }
     var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
-    cvssHandle(preppedAudit, settings);
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
     try {
@@ -211,39 +211,8 @@ var angularParser = function(tag) {
     };
 }
 
-// For each finding, add cvssColor, cvssObj and criteria colors parameters
-function cvssHandle(data, settings) {
-    // Header title colors
-    var noneColor = settings.report.public.cvssColors.noneColor.replace('#', ''); //default of blue ("#4A86E8")
-    var lowColor = settings.report.public.cvssColors.lowColor.replace('#', ''); //default of green ("#008000")
-    var mediumColor = settings.report.public.cvssColors.mediumColor.replace('#', ''); //default of yellow ("#f9a009")
-    var highColor = settings.report.public.cvssColors.highColor.replace('#', ''); //default of red ("#fe0000")
-    var criticalColor = settings.report.public.cvssColors.criticalColor.replace('#', ''); //default of black ("#212121")
-
-    var cellNoneColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + noneColor + '"/></w:tcPr>';
-    var cellLowColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColor+'"/></w:tcPr>';
-    var cellMediumColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+mediumColor+'"/></w:tcPr>';
-    var cellHighColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+highColor+'"/></w:tcPr>';
-    var cellCriticalColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+criticalColor+'"/></w:tcPr>';
-
-    if (data.findings) {
-        for (var i=0; i<data.findings.length; i++) {
-            // Global CVSS color depending on Severity
-            if (data.findings[i].cvssSeverity === "Low") { data.findings[i].cvssColor = cellLowColor}
-            else if (data.findings[i].cvssSeverity === "Medium") { data.findings[i].cvssColor = cellMediumColor}
-            else if (data.findings[i].cvssSeverity === "High") { data.findings[i].cvssColor = cellHighColor}
-            else if (data.findings[i].cvssSeverity === "Critical") { data.findings[i].cvssColor = cellCriticalColor}
-            else { data.findings[i].cvssColor = cellNoneColor} ;
-
-            // Convert CVSS string to object in cvssObj parameter
-            var cvssObj = cvssStrToObject(data.findings[i].cvssv3);
-            data.findings[i].cvssObj = cvssObj;
-         }
-    }
-}
-
 function cvssStrToObject(cvss) {
-    var res = {AV: "", AC: "", PR: "", UI: "", S: "", C: "", I: "", A: ""};
+    var res = {AV:'', AC:'', PR:'', UI:'', S:'', C:'', I:'', A:'', E:'', RL:'', RC:'', CR:'', IR:'', AR:'', MAV:'', MAC:'', MPR:'', MUI:'', MS:'', MC:'', MI:'', MA:''};
     if (cvss) {
         var temp = cvss.split('/');
         for (var i=0; i<temp.length; i++) {
@@ -295,6 +264,104 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "H") res.A = "High"
                     else res.A = elt[1];
                     break;
+                case "E":
+                    if (elt[1] === "X") res.E = "Not Defined"
+                    else if (elt[1] === "U") res.E = "Unproven"
+                    else if (elt[1] === "P") res.E = "Proof-of-Concept"
+                    else if (elt[1] === "F") res.E = "Functional"
+                    else if (elt[1] === "H") res.E = "High"
+                    else res.E = elt[1];
+                    break;
+                case "RL":
+                    if (elt[1] === "X") res.RL = "Not Defined"
+                    else if (elt[1] === "O") res.RL = "Official Fix"
+                    else if (elt[1] === "T") res.RL = "Temporary Fix"
+                    else if (elt[1] === "W") res.RL = "Workaround"
+                    else if (elt[1] === "U") res.RL = "Unavailable"
+                    else res.RL = elt[1];
+                    break;
+                case "RC":
+                    if (elt[1] === "X") res.RC = "Not Defined"
+                    else if (elt[1] === "U") res.RC = "Unknown"
+                    else if (elt[1] === "R") res.RC = "Reasonable"
+                    else if (elt[1] === "C") res.RC = "Confirmed"
+                    else res.RC = elt[1];
+                    break;
+                case "CR":
+                    if (elt[1] === "X") res.CR = "Not Defined"
+                    else if (elt[1] === "L") res.CR = "Low"
+                    else if (elt[1] === "M") res.CR = "Medium"
+                    else if (elt[1] === "H") res.CR = "High"
+                    else res.CR = elt[1];
+                    break;
+                case "IR":
+                    if (elt[1] === "X") res.IR = "Not Defined"
+                    else if (elt[1] === "L") res.IR = "Low"
+                    else if (elt[1] === "M") res.IR = "Medium"
+                    else if (elt[1] === "H") res.IR = "High"
+                    else res.IR = elt[1];
+                    break;
+                case "AR":
+                    if (elt[1] === "X") res.AR = "Not Defined"
+                    else if (elt[1] === "L") res.AR = "Low"
+                    else if (elt[1] === "M") res.AR = "Medium"
+                    else if (elt[1] === "H") res.AR = "High"
+                    else res.AR = elt[1];
+                    break;
+                case "MAV":
+                    if (elt[1] === "X") res.MAV = "Not Defined"
+                    else if (elt[1] === "N") res.MAV = "Network"
+                    else if (elt[1] === "A") res.MAV = "Adjacent Network"
+                    else if (elt[1] === "L") res.MAV = "Local"
+                    else if (elt[1] === "P") res.MAV = "Physical"
+                    else res.MAV = elt[1];
+                    break;
+                case "MAC":
+                    if (elt[1] === "X") res.MAC = "Not Defined"
+                    else if (elt[1] === "L") res.MAC = "Low"
+                    else if (elt[1] === "H") res.MAC = "High"
+                    else res.MAC = elt[1];
+                    break;
+                case "MPR":
+                    if (elt[1] === "X") res.MPR = "Not Defined"
+                    else if (elt[1] === "N") res.MPR = "None"
+                    else if (elt[1] === "L") res.MPR = "Low"
+                    else if (elt[1] === "H") res.MPR = "High"
+                    else res.MPR = elt[1];
+                    break;
+                case "MUI":
+                    if (elt[1] === "X") res.MUI = "Not Defined"
+                    else if (elt[1] === "N") res.MUI = "None"
+                    else if (elt[1] === "R") res.MUI = "Required"
+                    else res.MUI = elt[1];
+                    break;
+                case "MS":
+                    if (elt[1] === "X") res.MS = "Not Defined"
+                    else if (elt[1] === "U") res.MS = "Unchanged"
+                    else if (elt[1] === "C") res.MS = "Changed"
+                    else res.MS = elt[1];
+                    break;
+                case "MC":
+                    if (elt[1] === "X") res.MC = "Not Defined"
+                    if (elt[1] === "N") res.MC = "None"
+                    else if (elt[1] === "L") res.MC = "Low"
+                    else if (elt[1] === "H") res.MC = "High"
+                    else res.MC = elt[1];
+                    break;
+                case "MI":
+                    if (elt[1] === "X") res.MI = "Not Defined"
+                    else if (elt[1] === "N") res.MI = "None"
+                    else if (elt[1] === "L") res.MI = "Low"
+                    else if (elt[1] === "H") res.MI = "High"
+                    else res.MI = elt[1];
+                    break;
+                case "MA":
+                    if (elt[1] === "X") res.MA = "Not Defined"
+                    else if (elt[1] === "N") res.MA = "None"
+                    else if (elt[1] === "L") res.MA = "Low"
+                    else if (elt[1] === "H") res.MA = "High"
+                    else res.MA = elt[1];
+                    break;
                 default:
                     break;
             }
@@ -303,7 +370,20 @@ function cvssStrToObject(cvss) {
     return res
 }
 
-async function prepAuditData(data) {
+async function prepAuditData(data, settings) {
+    /** CVSS Colors for table cells */
+    var noneColor = settings.report.public.cvssColors.noneColor.replace('#', ''); //default of blue ("#4A86E8")
+    var lowColor = settings.report.public.cvssColors.lowColor.replace('#', ''); //default of green ("#008000")
+    var mediumColor = settings.report.public.cvssColors.mediumColor.replace('#', ''); //default of yellow ("#f9a009")
+    var highColor = settings.report.public.cvssColors.highColor.replace('#', ''); //default of red ("#fe0000")
+    var criticalColor = settings.report.public.cvssColors.criticalColor.replace('#', ''); //default of black ("#212121")
+
+    var cellNoneColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="' + noneColor + '"/></w:tcPr>';
+    var cellLowColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColor+'"/></w:tcPr>';
+    var cellMediumColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+mediumColor+'"/></w:tcPr>';
+    var cellHighColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+highColor+'"/></w:tcPr>';
+    var cellCriticalColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+criticalColor+'"/></w:tcPr>';
+
     var result = {}
     result.name = data.name || "undefined"
     result.auditType = data.auditType || "undefined"
@@ -356,6 +436,7 @@ async function prepAuditData(data) {
 
     result.findings = []
     for (finding of data.findings) {
+        var tmpCVSS = CVSS31.calculateCVSSFromVector(finding.cvssv3);
         var tmpFinding = {
             title: finding.title || "",
             vulnType: finding.vulnType || "",
@@ -365,15 +446,37 @@ async function prepAuditData(data) {
             remediationComplexity: finding.remediationComplexity || "",
             priority: finding.priority || "",
             references: finding.references || [],
-            cvssv3: finding.cvssv3 || "",
-            cvssScore: finding.cvssScore || "",
-            cvssSeverity: finding.cvssSeverity || "",
             poc: await splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
             status: finding.status || "",
             category: finding.category || "No Category",
             identifier: "IDX-" + utils.lPad(finding.identifier)
         }
+        // Handle CVSS
+        tmpFinding.cvss = {
+            vectorString: finding.cvssv3 || "",
+            baseMetricScore: tmpCVSS.baseMetricScore || "",
+            baseSeverity: tmpCVSS.baseSeverity || "",
+            temporalMetricScore: tmpCVSS.temporalMetricScore || "",
+            temporalSeverity: tmpCVSS.temporalSeverity || "",
+            environmentalMetricScore: tmpCVSS.environmentalMetricScore || "",
+            environmentalSeverity: tmpCVSS.environmentalSeverity || ""
+        }
+        if (tmpCVSS.baseImpact) 
+            tmpFinding.cvss.baseImpact = _.round(tmpCVSS.baseImpact, 1)
+        else
+            tmpFinding.cvss.baseImpact = ""
+        if (tmpCVSS.baseExploitability)
+            tmpFinding.cvss.baseExploitability = _.round(tmpCVSS.baseExploitability, 1)
+        else
+            tmpFinding.cvss.baseExploitability = ""
+        if (tmpCVSS.baseSeverity === "Low") tmpFinding.cvss.cellColor = cellLowColor
+        else if (tmpCVSS.baseSeverity === "Medium") tmpFinding.cvss.cellColor = cellMediumColor
+        else if (tmpCVSS.baseSeverity === "High") tmpFinding.cvss.cellColor = cellHighColor
+        else if (tmpCVSS.baseSeverity === "Critical") tmpFinding.cvss.cellColor = cellCriticalColor
+        else tmpFinding.cvss.cellColor = cellNoneColor
+        tmpFinding.cvssObj = cvssStrToObject(tmpCVSS.vectorString)
+
         if (finding.customFields) {
             for (field of finding.customFields) {
                 // For retrocompatibility of findings with old customFields 
@@ -400,7 +503,7 @@ async function prepAuditData(data) {
         .groupBy("category")
         .map((value,key) => {return {categoryName:key, categoryFindings:value}})
         .value()
-
+    
     result.creator = {}
     if (data.creator) {
         result.creator.username = data.creator.username || "undefined"

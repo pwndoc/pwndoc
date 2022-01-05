@@ -108,13 +108,9 @@
             <q-card class="q-mt-md bg-grey-1">
                 <div class="col-12">
                     <cvss-calculator 
-                    :cvssString="finding.cvssv3"
-                    :cvssScore="finding.cvssScore"
-                    :cvssSeverity="finding.cvssSeverity"
-                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    @cvssChange="finding.cvssv3 = $event"
+                    v-model="finding.cvssv3"
                     @cvssScoreChange="finding.cvssScore = $event"
-                    @cvssSeverityChange="finding.cvssSeverity = $event"
+                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                     />
                 </div>
             </q-card>
