@@ -77,6 +77,8 @@
             temporalSeverity
             environmentalMetricScore
             environmentalSeverity
+            baseImpact
+            baseExploitability
             cellColor
         }
     }
