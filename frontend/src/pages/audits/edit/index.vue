@@ -230,7 +230,7 @@
 </template>
 
 <script>
-import { Notify } from 'quasar';
+import { Notify, QSpinnerGears } from 'quasar';
 import draggable from 'vuedraggable'
 
 import AuditService from '@/services/audit';
@@ -502,6 +502,13 @@ export default {
 			},
 
 			generateReport: function() {
+				const downloadNotif = Notify.create({
+					spinner: QSpinnerGears,
+					message: 'Generating the Report',
+					color: "blue",
+					timeout: 0,
+					group: false
+				})
 				AuditService.generateAuditReport(this.auditId)
 				.then(response => {
 					var blob = new Blob([response.data], {type: "application/octet-stream"});
@@ -511,6 +518,14 @@ export default {
 					document.body.appendChild(link);
 					link.click();
 					link.remove();
+					
+					downloadNotif({
+						icon: 'done',
+						spinner: false,
+						message: 'Report successfully generated',
+						color: 'green',
+						timeout: 2500
+					})
 				})
 				.catch( async err => {
 					var message = "Error generating template"
@@ -519,6 +534,7 @@ export default {
 						var blobData = await this.BlobReader(blob)
 						message = JSON.parse(blobData).datas
 					}
+					downloadNotif()
 					Notify.create({
 						message: message,
 						type: 'negative',
