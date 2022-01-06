@@ -11,6 +11,8 @@ var _ = require('lodash');
 var Image = require('mongoose').model('Image');
 var Settings = require('mongoose').model('Settings');
 var CVSS31 = require('./cvsscalc31.js');
+var translate = require('../translate')
+var $t
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
@@ -19,6 +21,9 @@ async function generateDoc(audit) {
     
     var zip = new JSZip(content);
     
+    translate.setLocale(audit.language)
+    $t = translate.translate
+
     var settings = await Settings.getAll();
     var preppedAudit = await prepAuditData(audit, settings)
 
@@ -187,6 +192,13 @@ expressions.filters.count = function(input, severity) {
     return count;
 }
 
+// Translate using locale from 'translate' folder
+// Example: {input | translate: 'fr'}
+expressions.filters.translate = function(input, locale) {
+    if (!input) return input
+    return $t(input, locale)
+}
+
 // Compile all angular expressions
 var angularParser = function(tag) {
     expressions = {...expressions, ...customGenerator.expressions};
@@ -224,45 +236,53 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "L") res.AV = "Local"
                     else if (elt[1] === "P") res.AV = "Physical"
                     else res.AV = elt[1];
+                    res.AV = $t(res.AV)
                     break;
                 case "AC":
                     if (elt[1] === "L") res.AC = "Low"
                     else if (elt[1] === "H") res.AC = "High"
                     else res.AC = elt[1];
+                    res.AC = $t(res.AC)
                     break;
                 case "PR":
                     if (elt[1] === "N") res.PR = "None"
                     else if (elt[1] === "L") res.PR = "Low"
                     else if (elt[1] === "H") res.PR = "High"
                     else res.PR = elt[1];
+                    res.PR = $t(res.PR)
                     break;
                 case "UI":
                     if (elt[1] === "N") res.UI = "None"
                     else if (elt[1] === "R") res.UI = "Required"
                     else res.UI = elt[1];
+                    res.UI = $t(res.UI)
                     break;
                 case "S":
                     if (elt[1] === "U") res.S = "Unchanged"
                     else if (elt[1] === "C") res.S = "Changed"
                     else res.S = elt[1];
+                    res.S = $t(res.S)
                     break;
                 case "C":
                     if (elt[1] === "N") res.C = "None"
                     else if (elt[1] === "L") res.C = "Low"
                     else if (elt[1] === "H") res.C = "High"
                     else res.C = elt[1];
+                    res.C = $t(res.C)
                     break;
                 case "I":
                     if (elt[1] === "N") res.I = "None"
                     else if (elt[1] === "L") res.I = "Low"
                     else if (elt[1] === "H") res.I = "High"
                     else res.I = elt[1];
+                    res.I = $t(res.I)
                     break;
                 case "A":
                     if (elt[1] === "N") res.A = "None"
                     else if (elt[1] === "L") res.A = "Low"
                     else if (elt[1] === "H") res.A = "High"
                     else res.A = elt[1];
+                    res.A = $t(res.A)
                     break;
                 case "E":
                     if (elt[1] === "X") res.E = "Not Defined"
@@ -271,6 +291,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "F") res.E = "Functional"
                     else if (elt[1] === "H") res.E = "High"
                     else res.E = elt[1];
+                    res.E = $t(res.E)
                     break;
                 case "RL":
                     if (elt[1] === "X") res.RL = "Not Defined"
@@ -279,6 +300,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "W") res.RL = "Workaround"
                     else if (elt[1] === "U") res.RL = "Unavailable"
                     else res.RL = elt[1];
+                    res.RL = $t(res.RL)
                     break;
                 case "RC":
                     if (elt[1] === "X") res.RC = "Not Defined"
@@ -286,6 +308,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "R") res.RC = "Reasonable"
                     else if (elt[1] === "C") res.RC = "Confirmed"
                     else res.RC = elt[1];
+                    res.RC = $t(res.RC)
                     break;
                 case "CR":
                     if (elt[1] === "X") res.CR = "Not Defined"
@@ -293,6 +316,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "M") res.CR = "Medium"
                     else if (elt[1] === "H") res.CR = "High"
                     else res.CR = elt[1];
+                    res.CR = $t(res.CR)
                     break;
                 case "IR":
                     if (elt[1] === "X") res.IR = "Not Defined"
@@ -300,6 +324,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "M") res.IR = "Medium"
                     else if (elt[1] === "H") res.IR = "High"
                     else res.IR = elt[1];
+                    res.IR = $t(res.IR)
                     break;
                 case "AR":
                     if (elt[1] === "X") res.AR = "Not Defined"
@@ -307,6 +332,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "M") res.AR = "Medium"
                     else if (elt[1] === "H") res.AR = "High"
                     else res.AR = elt[1];
+                    res.AR = $t(res.AR)
                     break;
                 case "MAV":
                     if (elt[1] === "X") res.MAV = "Not Defined"
@@ -315,12 +341,14 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "L") res.MAV = "Local"
                     else if (elt[1] === "P") res.MAV = "Physical"
                     else res.MAV = elt[1];
+                    res.MAV = $t(res.MAV)
                     break;
                 case "MAC":
                     if (elt[1] === "X") res.MAC = "Not Defined"
                     else if (elt[1] === "L") res.MAC = "Low"
                     else if (elt[1] === "H") res.MAC = "High"
                     else res.MAC = elt[1];
+                    res.MAC = $t(res.MAC)
                     break;
                 case "MPR":
                     if (elt[1] === "X") res.MPR = "Not Defined"
@@ -328,18 +356,21 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "L") res.MPR = "Low"
                     else if (elt[1] === "H") res.MPR = "High"
                     else res.MPR = elt[1];
+                    res.MPR = $t(res.MPR)
                     break;
                 case "MUI":
                     if (elt[1] === "X") res.MUI = "Not Defined"
                     else if (elt[1] === "N") res.MUI = "None"
                     else if (elt[1] === "R") res.MUI = "Required"
                     else res.MUI = elt[1];
+                    res.MUI = $t(res.MUI)
                     break;
                 case "MS":
                     if (elt[1] === "X") res.MS = "Not Defined"
                     else if (elt[1] === "U") res.MS = "Unchanged"
                     else if (elt[1] === "C") res.MS = "Changed"
                     else res.MS = elt[1];
+                    res.MS = $t(res.MS)
                     break;
                 case "MC":
                     if (elt[1] === "X") res.MC = "Not Defined"
@@ -347,6 +378,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "L") res.MC = "Low"
                     else if (elt[1] === "H") res.MC = "High"
                     else res.MC = elt[1];
+                    res.MC = $t(res.MC)
                     break;
                 case "MI":
                     if (elt[1] === "X") res.MI = "Not Defined"
@@ -354,6 +386,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "L") res.MI = "Low"
                     else if (elt[1] === "H") res.MI = "High"
                     else res.MI = elt[1];
+                    res.MI = $t(res.MI)
                     break;
                 case "MA":
                     if (elt[1] === "X") res.MA = "Not Defined"
@@ -361,6 +394,7 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "L") res.MA = "Low"
                     else if (elt[1] === "H") res.MA = "High"
                     else res.MA = elt[1];
+                    res.MA = $t(res.MA)
                     break;
                 default:
                     break;
@@ -386,7 +420,7 @@ async function prepAuditData(data, settings) {
 
     var result = {}
     result.name = data.name || "undefined"
-    result.auditType = data.auditType || "undefined"
+    result.auditType = $t(data.auditType) || "undefined"
     result.location = data.location || "undefined"
     result.date = data.date || "undefined"
     result.date_start = data.date_start || "undefined"
@@ -439,7 +473,7 @@ async function prepAuditData(data, settings) {
         var tmpCVSS = CVSS31.calculateCVSSFromVector(finding.cvssv3);
         var tmpFinding = {
             title: finding.title || "",
-            vulnType: finding.vulnType || "",
+            vulnType: $t(finding.vulnType) || "",
             description: await splitHTMLParagraphs(finding.description),
             observation: await splitHTMLParagraphs(finding.observation),
             remediation: await splitHTMLParagraphs(finding.remediation),
@@ -449,7 +483,7 @@ async function prepAuditData(data, settings) {
             poc: await splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
             status: finding.status || "",
-            category: finding.category || "No Category",
+            category: $t(finding.category) || $t("No Category"),
             identifier: "IDX-" + utils.lPad(finding.identifier)
         }
         // Handle CVSS
@@ -516,7 +550,7 @@ async function prepAuditData(data, settings) {
 
     for (section of data.sections) {
         var formatSection = { 
-            name: section.name
+            name: $t(section.name)
         }
         if (section.text) // keep text for retrocompatibility
             formatSection.text = await splitHTMLParagraphs(section.text)
