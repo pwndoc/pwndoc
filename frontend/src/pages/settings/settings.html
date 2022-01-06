@@ -1,5 +1,4 @@
-<div v-if="!initialLoading">
-<div class="row">
+<div v-if="!loading" class="row">
     <div class="col-md-8 col-12 offset-md-2 q-mt-md">
 
         <q-card class="q-my-md">
@@ -23,7 +22,7 @@
           </q-card-section>
         </q-card>
 
-        <q-card class="q-my-md">
+        <q-card v-if="UserService.isAllowed('settings:read')" class="q-my-md">
             <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                 <q-item style="padding:0px;">
                     <q-item-section class="col-md-11">
@@ -140,7 +139,7 @@
             </div>
         </q-card>
 
-        <q-card class="q-my-lg">
+        <q-card v-if="UserService.isAllowed('settings:read')" class="q-my-lg">
             <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                 <q-item style="padding:0px;">
                     <q-item-section class="col-11">
@@ -282,6 +281,4 @@
             </q-card-section>
         </q-card>
     </div>
-</div>
-</div>
-        
+</div>        
