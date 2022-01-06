@@ -62,7 +62,7 @@ function html2ooxml(html, style = '') {
                     cParagraph = new docx.Paragraph({style: "Code"})
                 }
                 else
-                    cParagraph.addChildElement(new docx.Run({}).break())
+                    cParagraph.addChildElement(new docx.Run({break: 1}))
             }
             else if (tag === "ul") {
                 list_state.push('bullet')
