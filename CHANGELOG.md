@@ -51,8 +51,6 @@
 - Update : python no longer existe in apk repo now it's python3 [`91d10f4`](https://github.com/pwndoc/pwndoc/commit/91d10f49f287e6a9cc429602ee4953ae83c54ded)
 - Fix issues related to sub-templating [`631bc0a`](https://github.com/pwndoc/pwndoc/commit/631bc0a8571879b3683b2d160d09075763c3d345)
 
-### Removed
-
 ### UPDATE ATTENTION
 
 - Changes to CVSS data require to update Word templates to avoid report generation errors
@@ -83,9 +81,6 @@
         }
     }
     ```
-
-
-### BREAKING CHANGES
 
 ## 0.4.0 (2021-08-23)
 
