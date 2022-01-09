@@ -57,7 +57,6 @@
                                 label="Email" 
                                 stack-label 
                                 outlined
-                                bg-color="white"
                                 />
                             </q-item-section>
                         </q-item>
@@ -68,7 +67,6 @@
                                 label="Phone" 
                                 stack-label 
                                 outlined
-                                bg-color="white"
                                 />
                             </q-item-section>
                         </q-item>
@@ -165,7 +163,6 @@
                                     placeholder="Enter 6-digit code"
                                     @keyup.enter="setupTotp"
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:append>
                                             <q-btn label="Enable" unelevated color="secondary" @click="setupTotp" />
@@ -199,7 +196,6 @@
                                     placeholder="Enter 6-digit code"
                                     @keyup.enter="cancelTotp"
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:append>
                                             <q-btn label="Disable" unelevated color="negative" @click="cancelTotp" />

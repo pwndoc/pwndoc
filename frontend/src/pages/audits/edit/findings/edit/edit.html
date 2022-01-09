@@ -21,7 +21,7 @@
 </breadcrumb>
 
 <div class="row">
-    <q-tabs v-model="selectedTab" align="left" indicator-color="primary" :class="'full-width' + this.$q.dark.isActive ? '' : ' bg-white'">
+    <q-tabs v-model="selectedTab" align="left" indicator-color="primary" :class="'full-width' + (this.$q.dark.isActive ? '' : ' bg-white')">
         <q-tab name="definition" default :label="$t('definition')" />
         <q-tab name="proofs" :label="$t('proofs')"/>
         <q-tab name="details" :label="$t('details')" />

@@ -3,8 +3,6 @@
         <div class="col-md-10 col-12 offset-md-1 q-mt-md">
             <q-table
                 class="sticky-header-table"
-                card-class="bg-grey-1"
-                table-header-class="bg-grey-1"
                 :columns="dtHeaders"
                 :data="collabs"
                 :filter="search"
@@ -36,7 +34,6 @@
                             v-model="search.username"
                             clearable
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                         <q-td style="width: 20%">
@@ -47,7 +44,6 @@
                             v-model="search.firstname"
                             clearable
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                         <q-td style="width: 20%">
@@ -58,7 +54,6 @@
                             v-model="search.lastname"
                             clearable
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                         <q-td style="width: 20%">
@@ -69,7 +64,6 @@
                             v-model="search.email"
                             clearable
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                         <q-td style="width: 20%">
@@ -82,7 +76,6 @@
                             :options="roles"
                             options-sanitize
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                     </q-tr>
@@ -121,7 +114,7 @@
     </div>
     
     <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px" class="bg-grey-1">
+        <q-card style="width:800px">
             <q-bar class="bg-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('addCollaborator')}}
@@ -141,7 +134,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.username"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -154,7 +146,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.firstname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>  
             <q-card-section>
@@ -167,7 +158,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.lastname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -178,7 +168,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.email"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -189,7 +178,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.phone"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -201,7 +189,6 @@
                 @keyup.enter="createCollab()"
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -214,7 +201,6 @@
                 hide-bottom-space
                 @keyup.enter="createCollab()"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
     
@@ -228,7 +214,7 @@
     </q-dialog>
     
     <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px" class="bg-grey-1">
+        <q-card style="width:800px">
             <q-bar class="bg-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('editCollaborator')}}
@@ -282,7 +268,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.email"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -293,7 +278,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.phone"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>

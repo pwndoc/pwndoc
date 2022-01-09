@@ -1,6 +1,6 @@
 <div>
 
-    <q-tabs v-model="selectedTab" no-caps align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width">
+    <q-tabs v-model="selectedTab" no-caps align="left" indicator-color="primary" :active-bg-color="this.$q.dark.isActive ? '' : 'grey-3'" :class="'full-width' + (this.$q.dark.isActive ? '' : ' bg-white')">
         <q-tab name="languages" default :label="$t('languages')" />
         <q-tab name="audit-types" :label="$t('auditTypes')" />
         <q-tab name="vulnerability-types" :label="$t('vulnerabilityTypes')" />
@@ -886,7 +886,7 @@
                 </q-card>
 
                 <!-- Preview -->
-                <q-card class="q-mt-md bg-grey-1" v-if="canDisplayCustomFields()">
+                <q-card class="q-mt-md" v-if="canDisplayCustomFields()">
                     <q-card-section class="row">
                         <q-select 
                         v-model="cfLocale"
@@ -908,7 +908,7 @@
                                 <q-item-section avatar v-if="UserService.isAllowed('custom-fields:update')">
                                     <q-btn flat color="grey" icon="mdi-arrow-split-horizontal" class="handle" dense size="sm" />
                                     <q-btn flat color="primary" icon="mdi-pencil" dense size="sm">
-                                        <q-menu content-style="width: 300px" anchor="top left" self="top end" content-class="bg-grey-1">
+                                        <q-menu content-style="width: 300px" anchor="top left" self="top end">
                                             
                                             <q-item v-if="field.fieldType !== 'space'">
                                                 <q-item-section>
