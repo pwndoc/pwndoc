@@ -1,8 +1,8 @@
 <div>
     <div class="row">
         <div class="col-md-8 col-12 offset-md-2 q-mt-md">
-            <q-card class="bg-grey-1">
-                <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
+            <q-card class="">
+                <q-card-section class="q-py-xs">
                     <div class="text-h6">Update User Information</div>
                 </q-card-section>
                 <q-separator />
@@ -22,8 +22,7 @@
                                 stack-label 
                                 :error="!!errors.username"
                                 :error-message="errors.username" 
-                                outlined
-                                bg-color="white"
+                                outlined                                
                                 />
                             </q-item-section>
                         </q-item>
@@ -35,8 +34,7 @@
                                 stack-label
                                 :error="!!errors.firstname"
                                 :error-message="errors.firstname"
-                                outlined
-                                bg-color="white"
+                                outlined                                
                                 />
                             </q-item-section>
                         </q-item>
@@ -48,8 +46,7 @@
                                 stack-label 
                                 :error="!!errors.lastname"
                                 :error-message="errors.lastname"
-                                outlined
-                                bg-color="white"
+                                outlined                                
                                 />
                             </q-item-section>
                         </q-item>
@@ -63,8 +60,7 @@
                                     stack-label 
                                     type="password"
                                     clearable
-                                    outlined
-                                    bg-color="white"
+                                    outlined                                    
                                     />
                                     <q-input 
                                     class="col-md-6 col-6 q-pl-sm" 
@@ -72,8 +68,7 @@
                                     label="Confirm Password" 
                                     stack-label 
                                     type="password"
-                                    outlined
-                                    bg-color="white"
+                                    outlined                                    
                                     clearable
                                     />
                                 </q-field>
@@ -89,8 +84,7 @@
                                 :error="!!errors.currentPassword" 
                                 :error-message="errors.currentPassword"
                                 @keyup.enter="updateProfile"
-                                outlined
-                                bg-color="white"
+                                outlined                                
                                 >
                                     <template v-slot:append>
                                         <q-btn label="Update" unelevated color="secondary" @click="updateProfile" />

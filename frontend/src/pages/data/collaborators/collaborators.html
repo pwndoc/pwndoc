@@ -3,8 +3,6 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-table
             class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :data="collabs"
             :filter="search"
@@ -36,7 +34,6 @@
                         v-model="search.username"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 25%">
@@ -47,7 +44,6 @@
                         v-model="search.firstname"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 25%">
@@ -58,7 +54,6 @@
                         v-model="search.lastname"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 25%">
@@ -71,7 +66,6 @@
                         :options="roles"
                         options-sanitize
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>
@@ -111,7 +105,7 @@
 </div>
 
 <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-    <q-card style="width:800px" class="bg-grey-1">
+    <q-card style="width:800px">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 Add Collaborator
@@ -131,7 +125,6 @@
             @keyup.enter="createCollab()"
             v-model="currentCollab.username"
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -144,7 +137,6 @@
             @keyup.enter="createCollab()"
             v-model="currentCollab.firstname"
             outlined
-            bg-color="white"
             />
         </q-card-section>  
         <q-card-section>
@@ -157,7 +149,6 @@
             @keyup.enter="createCollab()"
             v-model="currentCollab.lastname"
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -169,7 +160,6 @@
             @keyup.enter="createCollab()"
             options-sanitize
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -182,7 +172,6 @@
             hide-bottom-space
             @keyup.enter="createCollab()"
             outlined
-            bg-color="white"
             />
         </q-card-section>
 
@@ -196,7 +185,7 @@
 </q-dialog>
 
 <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-    <q-card style="width:800px" class="bg-grey-1">
+    <q-card style="width:800px">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 Edit Collaborator
@@ -216,7 +205,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.username"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -229,7 +217,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.firstname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>  
             <q-card-section>
@@ -242,7 +229,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.lastname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -254,7 +240,6 @@
                 @keyup.enter="updateCollab()"
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </q-card-section>   
             <q-card-section>
@@ -264,7 +249,6 @@
                 type="password"
                 @keyup.enter="updateCollab()"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
 
