@@ -3,8 +3,6 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-table
             class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :data="companies"
             :filter="search"
@@ -35,7 +33,6 @@
                         v-model="search.name"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>
@@ -100,7 +97,6 @@
                     @keyup.enter="createCompany()"
                     v-model="currentCompany.name" 
                     outlined
-                    bg-color="white"
                     />
                 <q-uploader
                     ref="addUploader"
@@ -143,7 +139,6 @@
                     @keyup.enter="updateCompany()"
                     v-model="currentCompany.name"
                     outlined
-                    bg-color="white"
                     />
                 <q-uploader
                     ref="addUploader"

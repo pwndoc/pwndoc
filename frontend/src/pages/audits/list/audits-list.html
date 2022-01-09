@@ -9,8 +9,6 @@
     <div v-if="languages.length > 0 && auditTypes.length > 0" class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
             class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :visible-columns="visibleColumns"
             :data="audits"
@@ -30,7 +28,6 @@
                 v-model="search.finding"
                 @keyup.enter="getAudits"
                 outlined
-                bg-color="white"
                 >
                     <template v-slot:append>
                         <q-btn flat icon="search" @click="getAudits" />
@@ -66,7 +63,6 @@
                             clearable
                             :autofocus="col.name === 'name'"
                             outlined
-                            bg-color="white"
                             />
                         </div>
                         <div v-else-if="col.name === 'company'">
@@ -83,7 +79,6 @@
                                 clearable
                                 options-sanitize
                                 outlined
-                                bg-color="white"
                                 />
                         </div>
                         <div v-else-if="col.name === 'language'">
@@ -100,7 +95,6 @@
                             clearable
                             options-sanitize
                             outlined
-                            bg-color="white"
                             />
                         </div>
                     </q-td>

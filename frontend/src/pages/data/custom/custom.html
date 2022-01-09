@@ -14,7 +14,7 @@
 
             <!-- LANGUAGES -->
             <q-tab-panel name="languages">
-                <q-card class="bg-grey-1">
+                <q-card>
                     <q-card-section>
                         <div class="text-grey-8">{{$t('languageUsedInAuditsAndVuls')}}</div>
                     </q-card-section>
@@ -31,7 +31,6 @@
                                     lazy-rules="ondemand"
                                     @keyup.enter="createLanguage"
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                                 <q-item-section>
@@ -44,7 +43,6 @@
                                     lazy-rules="ondemand"
                                     @keyup.enter="createLanguage"
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                                 <q-item-section side>
@@ -54,7 +52,7 @@
                         </div>
                         
                         <div v-if="!editLanguage" class="col-md-6 col-12">
-                            <q-card flat bordered v-if="languages.length > 0" class="bg-grey-1">
+                            <q-card flat bordered v-if="languages.length > 0">
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('listOfLanguages')}}</div>
                                     <q-space />
@@ -71,7 +69,6 @@
                                             v-model="language.language"
                                             readonly
                                             outlined
-                                            bg-color="white"
                                             />
                                         </q-item-section>
                                         <q-item-section>
@@ -80,7 +77,6 @@
                                             v-model="language.locale"
                                             readonly
                                             outlined
-                                            bg-color="white"
                                             />
                                         </q-item-section>
                                     </q-item>
@@ -88,7 +84,7 @@
                             </q-card>
                         </div>
                         <div v-else class="col-md-6 col-12">
-                            <q-card flat bordered class="bg-grey-1">
+                            <q-card flat bordered>
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('editLanguages')}}</div>
                             </q-toolbar>
@@ -104,7 +100,6 @@
                                                 :label="$t('language')"
                                                 v-model="language.language"
                                                 outlined
-                                                bg-color="white"
                                                 />
                                             </q-item-section>
                                             <q-item-section>
@@ -112,7 +107,6 @@
                                                 :label="$t('locale')"
                                                 v-model="language.locale"
                                                 outlined
-                                                bg-color="white"
                                                 />
                                             </q-item-section>
                                             <q-item-section side >
@@ -133,7 +127,7 @@
 
             <!-- AUDIT TYPES -->
             <q-tab-panel name="audit-types">
-                <q-card class="bg-grey-1">
+                <q-card>
                     <q-card-section>
                         <div class="text-grey-8">{{$t('auditTypesUsedInAudits')}}</div>
                     </q-card-section>
@@ -151,7 +145,6 @@
                                     lazy-rules="ondemand"
                                     @keyup.enter="createAuditType"
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:label>
                                             {{$t('name')}} <span class="text-red">*</span>
@@ -172,7 +165,6 @@
                                         options-sanitize
                                         map-options
                                         outlined
-                                        bg-color="white"
                                         :rules="[val => !!val || 'Field is required']"
                                         lazy-rules="ondemand"
                                         >
@@ -197,7 +189,6 @@
                                     map-options 
                                     options-sanitize
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:selected-item="scope">
                                             <q-chip
@@ -226,7 +217,7 @@
                         </div>
 
                         <div v-if="!editAuditType" class="col-md-6 col-12">
-                            <q-card flat bordered v-if="auditTypes.length > 0" class="bg-grey-1">
+                            <q-card flat bordered v-if="auditTypes.length > 0">
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('listOfAuditTypes')}}</div>
                                     <q-space />
@@ -252,7 +243,6 @@
                                                         map-options 
                                                         options-sanitize
                                                         outlined
-                                                        bg-color="white"
                                                         />
                                                     </div>
                                                 </q-item-section>
@@ -272,7 +262,6 @@
                                                     map-options 
                                                     options-sanitize
                                                     outlined
-                                                    bg-color="white"
                                                     >
                                                         <template v-slot:selected-item="scope">
                                                             <q-chip
@@ -301,7 +290,7 @@
                             </q-card>
                         </div>
                         <div v-else class="col-md-6 col-12">
-                            <q-card flat bordered class="bg-grey-1">
+                            <q-card flat bordered>
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('editAuditTypes')}}</div>
                             </q-toolbar>
@@ -325,7 +314,6 @@
                                                             :rules="[val => !!val || 'Name is required']"
                                                             lazy-rules="ondemand"
                                                             outlined
-                                                            bg-color="white"
                                                             >
                                                                 <template v-slot:label>
                                                                     {{$t('name')}} <span class="text-red">*</span>
@@ -348,7 +336,6 @@
                                                                 map-options
                                                                 emit-value
                                                                 outlined
-                                                                bg-color="white"
                                                                 :rules="[val => !!val || 'Field is required']"
                                                                 lazy-rules="ondemand"
                                                                 >
@@ -368,7 +355,6 @@
                                                                 options-sanitize
                                                                 map-options
                                                                 outlined
-                                                                bg-color="white"
                                                                 :rules="[val => !!val || 'Field is required']"
                                                                 lazy-rules="ondemand"
                                                                 >
@@ -393,7 +379,6 @@
                                                             map-options 
                                                             options-sanitize
                                                             outlined
-                                                            bg-color="white"
                                                             >
                                                                 <template v-slot:selected-item="scope">
                                                                     <q-chip
@@ -440,7 +425,7 @@
 
             <!-- VULNERABILITY TYPES -->
             <q-tab-panel name="vulnerability-types">
-                <q-card class="bg-grey-1">
+                <q-card>
                     <q-card-section>
                         <div class="text-grey-8">{{$t('createVulnerabilityTypes')}}</div>
                     </q-card-section>
@@ -458,7 +443,6 @@
                                     map-options 
                                     options-sanitize
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                             </q-item>
@@ -472,7 +456,6 @@
                                     :error-message="errors.vulnType"
                                     @keyup.enter="createVulnerabilityType"
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                                 <q-item-section side>
@@ -482,7 +465,7 @@
                         </div>
 
                         <div v-if="!editVulnType" class="col-md-6 col-12">
-                            <q-card flat bordered v-if="vulnTypes.length > 0" class="bg-grey-1">
+                            <q-card flat bordered v-if="vulnTypes.length > 0">
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('vulnerabilityTypesList')}}</div>
                                     <q-space />
@@ -498,14 +481,13 @@
                                         v-model="vulnType.name"
                                         readonly
                                         outlined
-                                        bg-color="white"
                                         />
                                     </q-item-section>
                                 </q-item>
                             </q-card>
                         </div>
                         <div v-else class="col-md-6 col-12">
-                            <q-card flat bordered class="bg-grey-1">
+                            <q-card flat bordered>
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('editVulnerabilityTypes')}}</div>
                             </q-toolbar>
@@ -521,7 +503,6 @@
                                                 :label="$t('name')"
                                                 v-model="vulnType.name"
                                                 outlined
-                                                bg-color="white"
                                                 />
                                             </q-item-section>
                                             <q-item-section side >
@@ -545,7 +526,7 @@
 
             <!-- VULNERABILITY CATEGORIES -->
             <q-tab-panel name="vulnerability-categories">
-                <q-card class="bg-grey-1">
+                <q-card>
                     <q-card-section>
                         <div class="text-grey-8">{{$t('createVulnerabilityCategories')}}</div>
                     </q-card-section>
@@ -561,7 +542,6 @@
                                     :error-message="errors.vulnCat"
                                     @keyup.enter="createVulnerabilityCategory"
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                             </q-item>
@@ -577,7 +557,6 @@
                                     emit-value
                                     map-options
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                                 <q-item-section>
@@ -588,7 +567,6 @@
                                     emit-value
                                     map-options
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                                 <q-item-section>
@@ -605,7 +583,7 @@
                         </div>
 
                         <div v-if="!editCategory" class="col-md-6 col-12">
-                            <q-card flat bordered v-if="vulnCategories.length > 0" class="bg-grey-1">
+                            <q-card flat bordered v-if="vulnCategories.length > 0">
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('listOfCategories')}}</div>
                                     <q-space />
@@ -621,7 +599,6 @@
                                             v-model="vulnCat.name"
                                             readonly
                                             outlined
-                                            bg-color="white"
                                             />
                                         </q-item-section>
                                         <q-item-section>
@@ -632,7 +609,6 @@
                                             map-options
                                             readonly
                                             outlined
-                                            bg-color="white"
                                             />
                                         </q-item-section>
                                         <q-item-section>
@@ -643,7 +619,6 @@
                                             map-options
                                             readonly
                                             outlined
-                                            bg-color="white"
                                             />
                                         </q-item-section>
                                         <q-item-section>
@@ -657,7 +632,7 @@
                             </q-card>
                         </div>
                         <div v-else class="col-md-6 col-12">
-                            <q-card flat bordered class="bg-grey-1">
+                            <q-card flat bordered>
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('editCategories')}}</div>
                             </q-toolbar>
@@ -673,7 +648,6 @@
                                                 :label="$t('name')"
                                                 v-model="vulnCat.name"
                                                 outlined
-                                                bg-color="white"
                                                 />
                                             </q-item-section>
                                             <q-item-section>
@@ -684,7 +658,6 @@
                                                 emit-value
                                                 map-options
                                                 outlined
-                                                bg-color="white"
                                                 />
                                             </q-item-section>
                                             <q-item-section>
@@ -695,7 +668,6 @@
                                                 emit-value
                                                 map-options
                                                 outlined
-                                                bg-color="white"
                                                 />
                                             </q-item-section>
                                             <q-item-section>
@@ -722,7 +694,7 @@
 
             <!-- CUSTOM FIELDS -->
             <q-tab-panel name="custom-fields">
-                <q-card class="bg-grey-1">
+                <q-card>
                     <q-card-section>
                         <div class="text-grey-8">{{$t('createAndManageCustomFields')}}</div>
                     </q-card-section>
@@ -737,7 +709,6 @@
                                 map-options
                                 @input="newCustomField.displaySub = ''"
                                 outlined dense
-                                bg-color="white"
                                 />
                             </q-item-section>
                             <q-item-section class="col-md-3">
@@ -754,7 +725,6 @@
                                 stack-label
                                 clearable
                                 outlined dense
-                                bg-color="white"
                                 />
                                 <q-select
                                 v-if="newCustomField.display === 'section'"
@@ -769,7 +739,6 @@
                                 stack-label
                                 clearable
                                 outlined dense
-                                bg-color="white"
                                 />
                             </q-item-section>
                         </q-item>
@@ -788,7 +757,6 @@
                                         lazy-rules="ondemand"
                                         hide-bottom-space
                                         outlined dense
-                                        bg-color="white"
                                         >
                                             <template v-slot:selected-item="scope">
                                                 <q-icon :name="scope.opt.icon" />
@@ -824,7 +792,6 @@
                                         lazy-rules="ondemand"
                                         hide-bottom-space
                                         outlined dense
-                                        bg-color="white"
                                         />
                                     </q-item-section>
                                 </q-item>
@@ -836,7 +803,6 @@
                                         clearable
                                         @keyup.enter="createCustomField"
                                         outlined dense
-                                        bg-color="white"
                                         />
                                     </q-item-section>
                                 </q-item>
@@ -847,7 +813,6 @@
                                         v-model="newCustomField.size"
                                         :options="[1,2,3,4,5,6,7,8,9,10,11,12]"
                                         outlined dense
-                                        bg-color="white"
                                         />
                                     </q-item-section>
        
@@ -857,7 +822,6 @@
                                         v-model="newCustomField.offset"
                                         :options="[0,1,2,3,4,5,6,7,8,9,10,11,12]"
                                         outlined dense
-                                        bg-color="white"
                                         />
                                     </q-item-section>
                                 </q-item>
@@ -883,13 +847,12 @@
                                         map-options 
                                         options-sanitize
                                         outlined dense
-                                        bg-color="white"
                                         />
                                     </q-item-section>
                                 </q-item>
                                 <q-item v-if="newCustomFieldLangOptions.length > 0">
                                     <q-item-section>
-                                        <q-list bordered separator dense class="bg-white">
+                                        <q-list bordered separator dense>
                                             <q-item v-for="(option,idx) of newCustomFieldLangOptions" :key="idx">
                                                 <q-item-section>
                                                     {{option.value}}
@@ -907,7 +870,6 @@
                                         :label="$t('addOption')"
                                         v-model="newCustomOption"
                                         outlined dense
-                                        bg-color="white"
                                         @keyup.enter="addCustomFieldOption(newCustomField.options)"
                                         />
                                     </q-item-section>
@@ -936,7 +898,6 @@
                         map-options 
                         options-sanitize
                         outlined
-                        bg-color="white"
                         class="col-md-2 col-12"
                         />
                     </q-card-section>
@@ -956,7 +917,6 @@
                                                     v-model="field.label"
                                                     clearable
                                                     outlined dense
-                                                    bg-color="white"
                                                     />
                                                 </q-item-section>
                                             </q-item>
@@ -968,7 +928,6 @@
                                                     clearable
                                                     @clear="field.description = ''"
                                                     outlined dense
-                                                    bg-color="white"
                                                     />
                                                 </q-item-section>
                                             </q-item>
@@ -979,7 +938,6 @@
                                                     v-model="field.size"
                                                     :options="[1,2,3,4,5,6,7,8,9,10,11,12]"
                                                     outlined dense
-                                                    bg-color="white"
                                                     />
                                                 </q-item-section>
                                                 <q-item-section>
@@ -988,7 +946,6 @@
                                                     v-model="field.offset"
                                                     :options="[0,1,2,3,4,5,6,7,8,9,10,11,12]"
                                                     outlined dense
-                                                    bg-color="white"
                                                     />
                                                 </q-item-section>
                                             </q-item>
@@ -998,13 +955,12 @@
                                                     :label="$t('required')"
                                                     v-model="field.required"
                                                     outlined dense
-                                                    bg-color="white"
                                                     />
                                                 </q-item-section>
                                             </q-item>
                                             <q-item v-if="['select', 'select-multiple', 'checkbox', 'radio'].includes(field.fieldType)">
                                                 <q-item-section>
-                                                    <q-list bordered separator dense class="bg-white">
+                                                    <q-list bordered separator dense>
                                                         <q-item v-for="(option,idx) of getFieldLangOptions(field.options)" :key="idx">
                                                             <q-item-section>
                                                                 {{option.value}}
@@ -1022,7 +978,6 @@
                                                     :label="$t('addOption')"
                                                     v-model="newCustomOption"
                                                     outlined dense
-                                                    bg-color="white"
                                                     @keyup.enter="addCustomFieldOption(field.options)"
                                                     />
                                                 </q-item-section>
@@ -1063,7 +1018,6 @@
                                     :hint="field.description"
                                     hide-bottom-space
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:label>
                                             {{field.label}} <span v-if="field.required" class="text-red">*</span>
@@ -1078,7 +1032,6 @@
                                     :hint="field.description"
                                     hide-bottom-space
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:append>
                                             <q-icon name="event" class="cursor-pointer">
@@ -1105,7 +1058,6 @@
                                     clearable
                                     options-sanitize
                                     outlined 
-                                    bg-color="white"
                                     >
                                         <template v-slot:label>
                                             {{field.label}} <span v-if="field.required" class="text-red">*</span>
@@ -1128,7 +1080,6 @@
                                     clearable
                                     options-sanitize
                                     outlined 
-                                    bg-color="white"
                                     >
                                         <template v-slot:label>
                                             {{field.label}} <span v-if="field.required" class="text-red">*</span>
@@ -1154,7 +1105,6 @@
                                     :hint="field.description"
                                     hide-bottom-space
                                     outlined 
-                                    bg-color="white"
                                     >
                                         <template v-slot:control>
                                             <q-option-group
@@ -1175,7 +1125,6 @@
                                     :hint="field.description"
                                     hide-bottom-space
                                     outlined 
-                                    bg-color="white"
                                     >
                                         <template v-slot:control>
                                             <q-option-group
@@ -1202,7 +1151,7 @@
 
             <!-- SECTIONS -->
             <q-tab-panel name="custom-sections">
-                <q-card class="bg-grey-1">
+                <q-card>
                     <q-card-section>
                         <div class="text-grey-8">{{$t('createCustomSections')}}</div>
                     </q-card-section>
@@ -1219,7 +1168,6 @@
                                     hide-bottom-space
                                     @keyup.enter="createSection"
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                                 <q-item-section>
@@ -1232,7 +1180,6 @@
                                     hide-bottom-space
                                     @keyup.enter="createSection"
                                     outlined
-                                    bg-color="white"
                                     />
                                 </q-item-section>
                                 <q-item-section>
@@ -1241,7 +1188,6 @@
                                     v-model="newSection.icon"
                                     @keyup.enter="createSection"
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:append>
                                             <q-avatar>
@@ -1257,7 +1203,7 @@
                         </div>
 
                         <div v-if="!editSection" class="col-md-6">
-                            <q-card flat bordered v-if="sections.length > 0" class="bg-grey-1">
+                            <q-card flat bordered v-if="sections.length > 0">
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('listOfSections')}}</div>
                                     <q-space />
@@ -1274,7 +1220,6 @@
                                             v-model="section.name"
                                             readonly
                                             outlined
-                                            bg-color="white"
                                             />
                                         </q-item-section>
                                         <q-item-section>
@@ -1283,7 +1228,6 @@
                                             v-model="section.field"
                                             readonly
                                             outlined
-                                            bg-color="white"
                                             />
                                         </q-item-section>
                                         <q-item-section>
@@ -1293,7 +1237,6 @@
                                             v-model="section.icon"
                                             readonly
                                             outlined
-                                            bg-color="white"
                                             >
                                                 <template v-slot:append>
                                                     <q-avatar>
@@ -1307,7 +1250,7 @@
                             </q-card>
                         </div>
                         <div v-else class="col-md-6">
-                            <q-card flat bordered class="bg-grey-1">
+                            <q-card flat bordered>
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('editSections')}}</div>
                                 </q-toolbar>
@@ -1324,7 +1267,6 @@
                                                     :label="$t('name')"
                                                     v-model="section.name"
                                                     outlined
-                                                    bg-color="white"
                                                     />
                                                 </q-item-section>
                                                 <q-item-section>
@@ -1332,7 +1274,6 @@
                                                     :label="$t('field')"
                                                     v-model="section.field"
                                                     outlined
-                                                    bg-color="white"
                                                     />
                                                 </q-item-section>
                                                 <q-item-section>
@@ -1341,7 +1282,6 @@
                                                     stack-label
                                                     v-model="section.icon"
                                                     outlined
-                                                    bg-color="white"
                                                     >
                                                         <template v-slot:append>
                                                             <q-avatar>

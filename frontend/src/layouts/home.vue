@@ -1,5 +1,5 @@
 <template>
-  <q-layout ref="layout" view="hHr LpR lFf" class="home-background">
+  <q-layout ref="layout" view="hHr LpR lFf" :class="$q.dark.isActive ? '' : 'home-background'">
     <q-header>
         <q-toolbar color="primary">
             <img src="pwndoc-logo-white.png" style="max-height:50px;" />
@@ -35,6 +35,10 @@
               </q-item>
             <q-btn-dropdown auto-close flat icon="fa fa-user-circle" no-caps :label="userService.user.username">
                 <q-list>
+                  <q-item clickable @click="toggleDarkMode()">
+                    <q-item-section side><q-icon size="xs" :name="$q.dark.isActive ? 'fa fa-sun' : 'fa fa-moon'" /></q-item-section>
+                    <q-item-section>{{ $q.dark.isActive ? 'Light' : 'Dark'}}-Mode</q-item-section>
+                  </q-item>
                   <q-item clickable @click="$router.push('/profile')">
                     <q-item-section side><q-icon size="xs" name="fa fa-id-card" /></q-item-section>
                     <q-item-section>{{$t('profile')}}</q-item-section>

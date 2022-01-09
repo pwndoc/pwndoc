@@ -6,8 +6,6 @@
     <div v-else class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
             class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :data="computedVulnerabilities"
             :filter="search"
@@ -31,7 +29,6 @@
                 emit-value
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
                 <q-toggle :label="$t('btn.valid')" v-model="search.valid" :true-value=0 />
                 <q-toggle :label="$t('btn.new')" color="light-blue" v-model="search.new" :true-value=1 />
@@ -80,7 +77,6 @@
                         clearable
                         autofocus
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -93,7 +89,6 @@
                         :options="vulnCategoriesOptions"
                         options-sanitize
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -106,7 +101,6 @@
                         :options="vulnTypeOptions"
                         options-sanitize
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>
@@ -165,7 +159,7 @@
 </div>
 
 <q-dialog v-if="languages.length > 0" ref="createModal" maximized position="right" persistent @hide="cleanCurrentVulnerability()">
-    <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'" class="bg-grey-1">
+    <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 <span v-if="currentCategory">{{$t('addVulnerability')}} ({{currentCategory.name}})</span>
@@ -188,7 +182,6 @@
                 @keyup.enter="createVulnerability()"
                 v-model="currentVulnerability.details[currentDetailsIndex].title"
                 outlined
-                bg-color="white"
                 />
                 <q-select 
                 class="col-md-2"
@@ -201,7 +194,6 @@
                 map-options
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
                 <q-select
                 :label="$t('language')"
@@ -215,7 +207,6 @@
                 emit-value
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </div>
         </q-card-section>
@@ -260,7 +251,6 @@
                 emit-value
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
                 <q-select
                 :label="$t('remediationPriority')"
@@ -272,7 +262,6 @@
                 emit-value
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </div>
         </q-card-section>
@@ -306,7 +295,7 @@
 </q-dialog>
 
 <q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="UserService.isAllowed('vulnerabilities:update')" @hide="cleanCurrentVulnerability()">
-    <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'" class="bg-grey-1">
+    <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
@@ -355,7 +344,6 @@
                 @keyup.enter="updateVulnerability()"
                 v-model="currentVulnerability.details[currentDetailsIndex].title"
                 outlined
-                bg-color="white"
                 />
                 <q-select 
                 class="col-md-2"
@@ -368,7 +356,6 @@
                 map-options
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
                 <q-select
                 :label="$t('language')"
@@ -382,7 +369,6 @@
                 emit-value
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </div>
         </q-card-section>
@@ -427,7 +413,6 @@
                 emit-value
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
                 <q-select
                 :label="$t('remediationPriority')"
@@ -439,7 +424,6 @@
                 emit-value
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </div>
         </q-card-section>
@@ -504,7 +488,6 @@
                         v-model="currentVulnerability.details[currentDetailsIndex].title" 
                         readonly
                         outlined
-                        bg-color="white"
                         />
                         <q-select 
                         class="col-md-2"
@@ -517,7 +500,6 @@
                         map-options
                         options-sanitize
                         outlined
-                        bg-color="white"
                         />
                         <q-select
                         :label="$t('language')"
@@ -532,7 +514,6 @@
                         readonly
                         options-sanitize
                         outlined
-                        bg-color="white"
                         />
                     </q-card-section>
                     <q-card-section>
@@ -573,7 +554,6 @@
                         emit-value
                         options-sanitize
                         outlined
-                        bg-color="white"
                         />
                         <q-select
                         :label="$t('remediationPriority')"
@@ -585,7 +565,6 @@
                         emit-value
                         options-sanitize
                         outlined
-                        bg-color="white"
                         />
                     </q-card-section>
                     <q-card-section>
@@ -637,7 +616,6 @@
                                 v-model="update.title"
                                 readonly
                                 outlined
-                                bg-color="white"
                                 />
                                 <q-select 
                                 class="col-md-2"
@@ -666,7 +644,6 @@
                                 readonly
                                 options-sanitize
                                 outlined
-                                bg-color="white"
                                 />
                             </q-card-section>
                             <q-card-section>
@@ -798,7 +775,7 @@
 </q-dialog>
 
 <q-dialog persistent ref="mergeModal">
-    <q-card style="width: 1000px; max-width: 1000px; height: 60vh" class="bg-grey-1">
+    <q-card style="width: 1000px; max-width: 1000px; height: 60vh">
         <q-bar class="bg-primary text-white">
             <span>{{$t('mergeVulnerabilities')}}</span>
             <q-space />
@@ -822,7 +799,6 @@
                     @input="mergeVulnLeft = ''"
                     options-sanitize
                     outlined
-                    bg-color="white"
                     />
                 </q-card-section>
                 <q-card-section class="card-section-merge">
@@ -854,7 +830,6 @@
                     @input="mergeVulnRight = ''"
                     options-sanitize
                     outlined
-                    bg-color="white"
                     />
                 </q-card-section>
                 <q-card-section class="card-section-merge">

@@ -7,7 +7,7 @@
 
 <div class="row q-col-gutter-md q-pa-md">
     <div class="col-md-8 offset-md-2">
-        <q-card class="bg-grey-1">
+        <q-card>
             <!-- For retrocompatibility, test if section.text exists -->
             <q-card-section v-if="section.text"> 
                 <basic-editor ref="basiceditor_section" noSync v-model="section.text" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
