@@ -9,6 +9,7 @@ module.exports = function (ctx) {
       'axios',
       'affix',
       'auth',
+      'darkmode',
       'lodash',
       'socketio',
       'settings'
