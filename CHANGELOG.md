@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.2 (2022-01-12)
+
+### Fixed
+
+- Update Default Template [`5764df8`](https://github.com/pwndoc/pwndoc/commit/5764df8b853db851914ee5f47359973ba02ba50a)
+
+- Fix template count function [`31b6577`](https://github.com/pwndoc/pwndoc/commit/31b6577eb9a4382eb2b6ecf8807421b044d897fa)
+  - Close #237
+
+- Fix numbering issue in ooxml conversion [`cb9883c`](https://github.com/pwndoc/pwndoc/commit/cb9883c99073ce29c2c04a8a8ca49fd256370b94)
+  - Close #236
+
+## 0.5.1 (2022-01-06)
+
+### Fixed
+
+- Fix break call from docxjs [`02c8b0b`](https://github.com/pwndoc/pwndoc/commit/02c8b0bd2f38c4f026eabdcd3827e6c219f9a6ef)
+- Fix HTML encoding issue in HTML editor [`d0d12dc`](https://github.com/pwndoc/pwndoc/commit/d0d12dc98a4be7ea866395e8379b75994cdcf47d)
+
 ## 0.5.0 (2022-01-06)
 
 ### Enhancements
