@@ -45,7 +45,7 @@ export default {
         this.getFinding();
         this.getVulnTypes();
 
-        this.$socket.emit('menu', {menu: 'editFinding', finding: this.findingId, room: this.auditId});
+        this.$socket.io.emit('menu', {menu: 'editFinding', finding: this.findingId, room: this.auditId});
 
         // save on ctrl+s
         document.addEventListener('keydown', this._listener, false);

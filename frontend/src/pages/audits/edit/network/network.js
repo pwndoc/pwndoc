@@ -51,7 +51,7 @@ export default {
         this.auditId = this.$route.params.auditId;
         this.getAuditNetwork();
         
-        this.$socket.emit('menu', {menu: 'network', room: this.auditId});
+        this.$socket.io.emit('menu', {menu: 'network', room: this.auditId});
 
         // save on ctrl+s
         var lastSave = 0;

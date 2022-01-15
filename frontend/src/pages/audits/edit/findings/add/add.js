@@ -70,7 +70,7 @@ export default {
         this.getVulnerabilities();
         this.getVulnerabilityCategories()
 
-        this.$socket.emit('menu', {menu: 'addFindings', room: this.auditId});
+        this.$socket.io.emit('menu', {menu: 'addFindings', room: this.auditId});
     },
 
     computed: {

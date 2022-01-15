@@ -84,7 +84,7 @@ export default {
         this.getLanguages();
         this.getAuditTypes();
 
-        this.$socket.emit('menu', {menu: 'general', room: this.auditId});
+        this.$socket.io.emit('menu', {menu: 'general', room: this.auditId});
 
         // save on ctrl+s
         // var lastSave = 0;

@@ -43,7 +43,7 @@ export default {
         this.sectionId = this.$route.params.sectionId;
         this.getSection();
 
-        this.$socket.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
+        this.$socket.io.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
 
         // save on ctrl+s
         document.addEventListener('keydown', this._listener, false)
