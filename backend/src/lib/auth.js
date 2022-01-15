@@ -119,10 +119,19 @@ class ACL {
         return $role.inherits.some(role => this.isAllowed(role, permission))
     }
 
-    hasPermission (permission) {
+    hasPermission (permission, directToken) {
         var Response = require('./httpResponse')
         var jwt = require('jsonwebtoken')
 
+        if(directToken == null) {
+            // direct verification - not as middleware
+            jwt.verify(directToken, jwtSecret, (err, decoded) => {
+                if (err) {
+                    return false;
+                }              
+                return permission === "validtoken" || this.isAllowed(decoded.role, permission);
+            })
+        }
         return (req, res, next) => {
             if (!req.cookies['token']) {
                 Response.Unauthorized(res, 'No token provided')
