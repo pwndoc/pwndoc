@@ -85,6 +85,7 @@
                     bg-color="white"
                     for="username"
                     @keyup.enter="getToken()"
+                    :disable="loginLoading"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-user" /></template>
                     </q-input>
@@ -101,6 +102,7 @@
                     for="password"
                     type="password"
                     @keyup.enter="getToken()"
+                    :disable="loginLoading"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-key" /></template>
                     </q-input>
@@ -139,7 +141,7 @@
                 </q-card-section>
 
                 <q-card-section align="center">
-                    <q-btn color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
+                    <q-btn :loading="loginLoading" color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
                 </q-card-section>
             </div>
         </q-card>
@@ -164,7 +166,8 @@ export default {
             password: "",
             totpToken: "",
             step: 0,
-            errors: {alert: "", username: "", password: "", firstname: "", lastname: ""}
+            errors: {alert: "", username: "", password: "", firstname: "", lastname: ""},
+            loginLoading: false
         }
     },
 
@@ -238,6 +241,7 @@ export default {
             if (this.errors.username || this.errors.password)
                 return;
 
+            this.loginLoading = true;
             UserService.getToken(this.username, this.password, this.totpToken)
             .then(async () => {
                 await this.$settings.refresh();
@@ -257,6 +261,9 @@ export default {
                     this.errors.alert = errmsg;
                 }
             })
+            .finally(() => {
+                this.loginLoading = false;
+            });
         }
     }
 }
