@@ -135,6 +135,7 @@
                     for="totpToken"
                     maxlength=6
                     @keyup.enter="getToken()"
+                    :disable="loginLoading"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-unlock-alt" /></template>
                     </q-input>
