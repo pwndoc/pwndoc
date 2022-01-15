@@ -7,6 +7,7 @@ var https = require('https').Server({
 var io = require('socket.io')(https);
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
+var acl = require('./lib/auth').acl;
 
 // Get configuration
 var env = process.env.NODE_ENV || 'dev';
@@ -47,6 +48,20 @@ var getSockets = function(room) {
 }
 
 io.on('connection', (socket) => {
+  let jwt = socket.handshake.headers.cookie.match(/token=(JWT[^;]+)/);
+  if(jwt == null) {
+    socket.disconnect();
+    return;
+  }
+  if(jwt.length != 2) {
+    socket.disconnect();
+    return;
+  }
+  jwt = jwt[1];
+  if(!acl.hasPermission("websocket:connect", jwt)) {
+    socket.disconnect();
+    return;
+  }
   socket.on('join', (data) => {
     console.log(`user ${data.username} joined room ${data.room}`)
     socket.username = data.username;
