@@ -76,13 +76,13 @@ export default {
         CustomFields
     },
 
-    mounted: function() {
+    mounted: async function() {
         this.auditId = this.$route.params.auditId;
-        this.getAuditGeneral();
-        this.getClients();
-        this.getTemplates();
-        this.getLanguages();
-        this.getAuditTypes();
+        await this.getAuditGeneral();
+        await this.getClients();
+        await this.getTemplates();
+        await this.getLanguages();
+        await this.getAuditTypes();
 
         this.$socket.emit('menu', {menu: 'general', room: this.auditId});
 
@@ -121,7 +121,7 @@ export default {
 
         // Get Audit datas from uuid
         getAuditGeneral: function() {
-            DataService.getCustomFields()
+            return DataService.getCustomFields()
             .then((data) => {
                 this.customFields = data.data.datas
                 return AuditService.getAuditGeneral(this.auditId)
@@ -173,7 +173,7 @@ export default {
 
         // Get Clients list
         getClients: function() {
-            ClientService.getClients()
+            return ClientService.getClients()
             .then((data) => {
                 this.clients = data.data.datas;
                 this.getCompanies();
@@ -185,7 +185,7 @@ export default {
 
         // Get Companies list
         getCompanies: function() {
-            CompanyService.getCompanies()
+            return CompanyService.getCompanies()
             .then((data) => {
                 this.companies = data.data.datas;
                 this.filterClients()
@@ -197,7 +197,7 @@ export default {
 
         // Get Collaborators list
         getCollaborators: function() {
-            CollabService.getCollabs()
+            return CollabService.getCollabs()
             .then((data) => {
                 var creatorId = ""
                 if (this.audit.creator)
@@ -211,7 +211,7 @@ export default {
 
         // Get Reviewers list
         getReviewers: function() {
-            ReviewerService.getReviewers()
+            return ReviewerService.getReviewers()
             .then((data) => {
                 var creatorId = ""
                 if (this.audit.creator)
@@ -225,7 +225,7 @@ export default {
 
         // Get Templates list
         getTemplates: function() {
-            TemplateService.getTemplates()
+            return TemplateService.getTemplates()
             .then((data) => {
                 this.templates = data.data.datas;
             })
@@ -236,7 +236,7 @@ export default {
 
         // Get Languages list
         getLanguages: function() {
-            DataService.getLanguages()
+            return DataService.getLanguages()
             .then((data) => {
                 this.languages = data.data.datas;
             })
@@ -247,7 +247,7 @@ export default {
 
         // Get Audit types
         getAuditTypes: function() {
-            DataService.getAuditTypes()
+            return DataService.getAuditTypes()
             .then((data) => {
                 this.auditTypes = data.data.datas;
             })
@@ -260,7 +260,7 @@ export default {
         filterClients: function() {
             if (this.audit.company) {
                 this.selectClients = [];
-                this.clients.map(client => {
+                this.clients.forEach(client => {
                     if (client.company && client.company.name === this.audit.company.name) this.selectClients.push(client)
                 })
             }
