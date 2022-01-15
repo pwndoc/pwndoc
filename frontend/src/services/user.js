@@ -35,6 +35,8 @@ export default {
             .then((response) => {
                 var token = response.data.datas.token;
                 this.user = jwtDecode(token);
+                Vue.prototype.$socket.disconnect();
+                Vue.prototype.$socket.connect();
                 resolve()
             })
             .catch(err => {
