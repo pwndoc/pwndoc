@@ -239,17 +239,22 @@
             
             <q-card-section>
                 <q-input
-                :label="$t('username')+' *'"
-                autofocus
-                class="col-md-12"
-                :error="!!errors.username"
-                :error-message="errors.username"
-                hide-bottom-space
-                @keyup.enter="updateCollab()"
-                v-model="currentCollab.username"
-                outlined
-                bg-color="white"
-                />
+                    :label="$t('username')+' *'"
+                    autofocus
+                    class="col-md-12"
+                    :error="!!errors.username"
+                    :error-message="errors.username"
+                    hide-bottom-space
+                    @keyup.enter="updateCollab()"
+                    v-model="currentCollab.username"
+                    outlined
+                    bg-color="white"
+                    :disable="currentCollab.ldapEnabled"
+                >
+                    <template v-slot:append v-if="currentCollab.ldapEnabled">
+                        <q-chip square :label="$t('LDAP')" class="text-white" color="purple" />
+                    </template>
+                </q-input>
             </q-card-section>
             <q-card-section>
                 <q-input
@@ -262,6 +267,7 @@
                 v-model="currentCollab.firstname"
                 outlined
                 bg-color="white"
+                :disable="currentCollab.ldapEnabled"
                 />
             </q-card-section>  
             <q-card-section>
@@ -275,6 +281,7 @@
                 v-model="currentCollab.lastname"
                 outlined
                 bg-color="white"
+                :disable="currentCollab.ldapEnabled"
                 />
             </q-card-section>
             <q-card-section>
@@ -286,6 +293,7 @@
                 v-model="currentCollab.email"
                 outlined
                 bg-color="white"
+                :disable="currentCollab.ldapEnabled"
                 />
             </q-card-section>
             <q-card-section>
@@ -311,7 +319,7 @@
                 bg-color="white"
                 />
             </q-card-section>   
-            <q-card-section>
+            <q-card-section v-if="!currentCollab.ldapEnabled">
                 <q-input 
                 v-model="currentCollab.password" 
                 :label="$t('password')" 

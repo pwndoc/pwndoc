@@ -50,7 +50,8 @@ export default {
                 role: '',
                 email: '',
                 phone: '',
-                totpEnabled: false
+                totpEnabled: false,
+                ldapEnabled: false,
             },
             // Username to identify collab to update
             idUpdate: '',
