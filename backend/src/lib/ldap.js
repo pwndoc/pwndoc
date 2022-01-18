@@ -64,7 +64,10 @@ function auth(username, password) {
       .then(() => search(client, username))
       .then((resp) => {
         client.unbind();
-        resolve(resp);
+        resolve({
+          displayName: resp[config[env].ldap.displayNameAttr || "displayName"],
+          mail: resp[config[env].ldap.mailAttr || "mail"],
+        });
       })
       .catch((e) => {
         reject(e);

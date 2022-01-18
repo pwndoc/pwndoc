@@ -10,7 +10,9 @@
         "ldap": {
             "ldapEnabled": false,
             "address": "ldaps://someserver:636",
-            "userDN": "uid=%u,ou=Users,dc=example,dc=org"
+            "userDN": "uid=%u,ou=Users,dc=example,dc=org",
+            "mailAttr": "mail",
+            "displayNameAttr": "displayName"
         }
     },
     "prod": {
@@ -24,7 +26,9 @@
         "ldap": {
             "ldapEnabled": false,
             "address": "ldaps://someserver:636",
-            "userDN": "uid=%u,ou=Users,dc=example,dc=org"
+            "userDN": "uid=%u,ou=Users,dc=example,dc=org",
+            "mailAttr": "mail",
+            "displayNameAttr": "displayName"
         }
     },
     "test": {
@@ -38,7 +42,9 @@
         "ldap": {
             "ldapEnabled": false,
             "address": "ldaps://someserver:636",
-            "userDN": "uid=%u,ou=Users,dc=example,dc=org"
+            "userDN": "uid=%u,ou=Users,dc=example,dc=org",
+            "mailAttr": "mail",
+            "displayNameAttr": "displayName"
         }
     }
 }
