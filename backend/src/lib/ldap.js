@@ -52,8 +52,8 @@ function bind(client, username, password) {
   });
 }
 
-module.exports = (username, password) =>
-  new Promise((resolve, reject) => {
+function auth(username, password) {
+  return new Promise((resolve, reject) => {
     let client = ldap.createClient({
       url: config[env].ldap.address,
     });
@@ -70,3 +70,9 @@ module.exports = (username, password) =>
         reject(e);
       });
   });
+}
+
+module.exports = {
+  auth,
+  enabled: config[env].ldap.ldapEnabled,
+};

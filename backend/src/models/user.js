@@ -5,11 +5,8 @@ var jwt = require('jsonwebtoken');
 
 var auth = require('../lib/auth.js');
 const { generateUUID } = require('../lib/utils.js');
-var _ = require('lodash')
-
-var env = process.env.NODE_ENV || 'dev'
-var config = require('../config/config.json')
 var ldap = require('../lib/ldap');
+var _ = require('lodash')
 
 var QRCode = require('qrcode');
 var OTPAuth = require('otpauth');
@@ -377,12 +374,12 @@ UserSchema.methods.getToken = async function (userAgent) {
     let loginResult = false;
     if(row) {
         console.log("Starting login as", user.username, row);
-        if(!config[env].ldap.ldapEnabled && row.ldapEnabled) {
+        if(!ldap.enabled && row.ldapEnabled) {
             // ldap enabled user, but ldap is disabled in config
             throw({fn: 'Unauthorized', message: 'No LDAP-connection specified'});
-        } else if(config[env].ldap.ldapEnabled === true && row.ldapEnabled) {
+        } else if(ldap.enabled === true && row.ldapEnabled) {
             try {
-                let ldapResult = await ldap(user.username, user.password);
+                let ldapResult = await ldap.auth(user.username, user.password);
                 let nameParts = ldapResult.displayName.split(" ");
                 row.lastname = nameParts.splice(nameParts.length -1, 1)[0];
                 row.firstname = nameParts.join(" ");
@@ -403,10 +400,10 @@ UserSchema.methods.getToken = async function (userAgent) {
         }
     } else {
         console.log("Starting login as nobody", user.username, row);
-        if(config[env].ldap.ldapEnabled === true) {
+        if(ldap.enabled === true) {
             // create a new user
             try {
-                let ldapResult = await ldap(user.username, user.password);
+                let ldapResult = await ldap.auth(user.username, user.password);
                 let nameParts = ldapResult.displayName.split(" ");
                 let newUser = new User();
                 newUser.username = user.username;
