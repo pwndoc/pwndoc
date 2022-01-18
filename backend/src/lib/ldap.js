@@ -54,6 +54,10 @@ function bind(client, username, password) {
 
 function auth(username, password) {
   return new Promise((resolve, reject) => {
+    if(!username.match(/^[a-zA-Z0-9\.\_\-@]+$/)) {
+      reject({code: 49}); // invalid username
+      return;
+    }
     let client = ldap.createClient({
       url: config[env].ldap.address,
     });
