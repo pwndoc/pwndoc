@@ -13,6 +13,9 @@
                             <q-item-section side>
                                 <q-chip square :label="user.role" class="text-white" :color="(user.role === 'admin')?'orange':'info'" />
                             </q-item-section>
+                            <q-item-section side v-if="user.ldapEnabled">
+                                <q-chip square :label="$t('LDAP')" class="text-white" color="purple" />
+                            </q-item-section>
                         </q-item>
                         <q-item>
                             <q-item-section>
@@ -24,6 +27,7 @@
                                 :error-message="errors.username" 
                                 outlined
                                 bg-color="white"
+                                :disable="user.ldapEnabled"
                                 />
                             </q-item-section>
                         </q-item>
@@ -37,6 +41,7 @@
                                 :error-message="errors.firstname"
                                 outlined
                                 bg-color="white"
+                                :disable="user.ldapEnabled"
                                 />
                             </q-item-section>
                         </q-item>
@@ -50,6 +55,7 @@
                                 :error-message="errors.lastname"
                                 outlined
                                 bg-color="white"
+                                :disable="user.ldapEnabled"
                                 />
                             </q-item-section>
                         </q-item>
@@ -61,6 +67,7 @@
                                 stack-label 
                                 outlined
                                 bg-color="white"
+                                :disable="user.ldapEnabled"
                                 />
                             </q-item-section>
                         </q-item>
@@ -75,7 +82,7 @@
                                 />
                             </q-item-section>
                         </q-item>
-                        <q-item>
+                        <q-item v-if="!user.ldapEnabled">
                             <q-item-section>
                                 <q-field borderless :error="!!errors.newPassword" :error-message="errors.newPassword">
                                     <q-input 
@@ -101,7 +108,7 @@
                                 </q-field>
                             </q-item-section>
                         </q-item>
-                        <q-item>
+                        <q-item v-if="!user.ldapEnabled">
                             <q-item-section>
                                 <q-input 
                                 v-model="user.currentPassword" 
