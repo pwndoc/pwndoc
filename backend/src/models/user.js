@@ -115,48 +115,61 @@ UserSchema.statics.getByUsername = function (username) {
 }
 
 // Update user with password verification (for updating my profile)
-UserSchema.statics.updateProfile = function (username, user) {
-    return new Promise((resolve, reject) => {
-        var query = this.findOne({username: username});
-        var payload = {};
-        query.exec()
-        .then(function(row) {
-            if (!row)
-                throw({fn: 'NotFound', message: 'User not found'});
-            else if (bcrypt.compareSync(user.password, row.password)) {
-                if (user.username) row.username = user.username;
-                if (user.firstname) row.firstname = user.firstname;
-                if (user.lastname) row.lastname = user.lastname;
-                if (!_.isNil(user.email)) row.email = user.email;
-                if (!_.isNil(user.phone)) row.phone = user.phone;
-                if (user.newPassword) row.password = bcrypt.hashSync(user.newPassword, 10);
-                if (typeof(user.totpEnabled)=='boolean') row.totpEnabled = user.totpEnabled;
-
-                payload.id = row._id;
-                payload.username = row.username;
-                payload.role = row.role;
-                payload.firstname = row.firstname;
-                payload.lastname = row.lastname;
-                payload.email = row.email;
-                payload.phone = row.phone;
-                payload.roles = auth.acl.getRoles(payload.role)
-
-                return row.save();
+UserSchema.statics.updateProfile = async function (username, user) {
+    var query = this.findOne({username: username});
+    var payload = {};
+    var row = await query.exec();
+    if (!row)
+        throw({fn: 'NotFound', message: 'User not found'});
+    else {
+        let authorized = false;
+        if(ldap.enabled && row.ldapEnabled) {
+            try {
+                await ldap.auth(username, user.password);
+                authorized = true;
+            } catch(e) {
+                if(e.code != 49) {
+                    throw({fn: 'Unauthorized', message: 'Internal error'});
+                }
             }
-            else
-                throw({fn: 'Unauthorized', message: 'Current password is invalid'});
-        })
-        .then(function() {
-            var token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '15 minutes'});
-            resolve({token: `JWT ${token}`});
-        })
-        .catch(function(err) {
+        } else {
+            authorized = bcrypt.compareSync(user.password, row.password);
+        }
+        if(!authorized) {
+            throw({fn: 'Unauthorized', message: 'Current password is invalid'});
+        }
+        if(!ldap.enabled || !row.ldapEnabled) {
+            if (user.username) row.username = user.username;
+            if (user.firstname) row.firstname = user.firstname;
+            if (user.lastname) row.lastname = user.lastname;
+            if (!_.isNil(user.email)) row.email = user.email;
+            if (user.newPassword) row.password = bcrypt.hashSync(user.newPassword, 10);
+        }
+        if (!_.isNil(user.phone)) row.phone = user.phone;
+        if (typeof(user.totpEnabled)=='boolean') row.totpEnabled = user.totpEnabled;
+
+        payload.id = row._id;
+        payload.username = row.username;
+        payload.role = row.role;
+        payload.firstname = row.firstname;
+        payload.lastname = row.lastname;
+        payload.email = row.email;
+        payload.phone = row.phone;
+        payload.roles = auth.acl.getRoles(payload.role)
+        try {
+            await row.save();
+        }
+        catch(err) {
             if (err.code === 11000)
-                reject({fn: 'BadParameters', message: 'Username already exists'});
+                throw {fn: 'BadParameters', message: 'Username already exists'};
             else
-                reject(err);
-        })
-    })
+                throw err;
+        }
+        var token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '15 minutes'});
+        return {token: `JWT ${token}`};
+    }
+
+
 
 }
 
@@ -369,11 +382,9 @@ UserSchema.methods.getToken = async function (userAgent) {
     var user = this;
     var query = User.findOne({username: user.username});
     var row = await query.exec();
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
     
     let loginResult = false;
     if(row) {
-        console.log("Starting login as", user.username, row);
         if(!ldap.enabled && row.ldapEnabled) {
             // ldap enabled user, but ldap is disabled in config
             throw({fn: 'Unauthorized', message: 'No LDAP-connection specified'});
@@ -386,20 +397,17 @@ UserSchema.methods.getToken = async function (userAgent) {
                 row.email = ldapResult.mail;
                 await row.save();
                 loginResult = true;
-                console.log("LDAP", ldapResult);
             } catch(e) {
                 if(e.code === 49) {
                     // invalid creds
                     throw({fn: 'Unauthorized', message: 'Invalid credentials'});
                 }
-                console.error(e);
                 throw({fn: 'Unauthorized', message: 'Internal error'});
             }        
         } else {
             loginResult = await bcrypt.compare(user.password, row.password)
         }
     } else {
-        console.log("Starting login as nobody", user.username, row);
         if(ldap.enabled === true) {
             // create a new user
             try {
@@ -415,13 +423,11 @@ UserSchema.methods.getToken = async function (userAgent) {
                 await newUser.save();
                 row = newUser;
                 loginResult = true;
-                console.log("LDAP", ldapResult);
             } catch(e) {
                 if(e.code === 49) {
                     // invalid creds
                     throw({fn: 'Unauthorized', message: 'Invalid credentials'});
                 }
-                console.error(e);
                 throw({fn: 'Unauthorized', message: 'Internal error'});
             }
         }
