@@ -7,6 +7,10 @@ var auth = require('../lib/auth.js');
 const { generateUUID } = require('../lib/utils.js');
 var _ = require('lodash')
 
+var env = process.env.NODE_ENV || 'dev'
+var config = require('../config/config.json')
+var ldap = require('../lib/ldap');
+
 var QRCode = require('qrcode');
 var OTPAuth = require('otpauth');
 
@@ -20,6 +24,7 @@ var UserSchema = new Schema({
     role:           {type: String, default: 'user'},
     totpEnabled:    {type: Boolean, default: false},
     totpSecret:     {type: String, default: ''},
+    ldapEnabled:    {type: Boolean, default: false},
     refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
 
@@ -83,7 +88,7 @@ UserSchema.statics.create = function (user) {
 UserSchema.statics.getAll = function () {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname email phone role totpEnabled');
+        query.select('username firstname lastname email phone role totpEnabled ldapEnabled');
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -98,7 +103,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname email phone role totpEnabled');
+        query.select('username firstname lastname email phone role totpEnabled ldapEnabled');
         query.exec()
         .then(function(row) {
             if (row)
@@ -363,30 +368,78 @@ UserSchema.statics.cancelTotp = function (token, username){
 */
 
 // Authenticate user with username and password, return JWT token
-UserSchema.methods.getToken = function (userAgent) {
-    return new Promise((resolve, reject) => {
-        var user = this;
-        var query = User.findOne({username: user.username});
-        query.exec()
-        .then(function(row) {
-            if (row && bcrypt.compareSync(user.password, row.password)) {
-                if (row.totpEnabled && user.totpToken)
-                    checkTotpToken(user.totpToken, row.totpSecret)
-                else if (row.totpEnabled)
-                    throw({fn: 'BadParameters', message: 'Missing TOTP token'})
-                var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
-                return User.updateRefreshToken(refreshToken, userAgent)
+UserSchema.methods.getToken = async function (userAgent) {
+    var user = this;
+    var query = User.findOne({username: user.username});
+    var row = await query.exec();
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+    
+    let loginResult = false;
+    if(row) {
+        console.log("Starting login as", user.username, row);
+        if(!config[env].ldap.ldapEnabled && row.ldapEnabled) {
+            // ldap enabled user, but ldap is disabled in config
+            throw({fn: 'Unauthorized', message: 'No LDAP-connection specified'});
+        } else if(config[env].ldap.ldapEnabled === true && row.ldapEnabled) {
+            try {
+                let ldapResult = await ldap(user.username, user.password);
+                let nameParts = ldapResult.displayName.split(" ");
+                row.lastname = nameParts.splice(nameParts.length -1, 1)[0];
+                row.firstname = nameParts.join(" ");
+                row.email = ldapResult.mail;
+                await row.save();
+                loginResult = true;
+                console.log("LDAP", ldapResult);
+            } catch(e) {
+                if(e.code === 49) {
+                    // invalid creds
+                    throw({fn: 'Unauthorized', message: 'Invalid credentials'});
+                }
+                console.error(e);
+                throw({fn: 'Unauthorized', message: 'Internal error'});
+            }        
+        } else {
+            loginResult = await bcrypt.compare(user.password, row.password)
+        }
+    } else {
+        console.log("Starting login as nobody", user.username, row);
+        if(config[env].ldap.ldapEnabled === true) {
+            // create a new user
+            try {
+                let ldapResult = await ldap(user.username, user.password);
+                let nameParts = ldapResult.displayName.split(" ");
+                let newUser = new User();
+                newUser.username = user.username;
+                newUser.lastname = nameParts.splice(nameParts.length -1, 1)[0];
+                newUser.firstname = nameParts.join(" ");
+                newUser.email = ldapResult.mail;
+                newUser.password = "-";
+                newUser.ldapEnabled = true;
+                await newUser.save();
+                row = newUser;
+                loginResult = true;
+                console.log("LDAP", ldapResult);
+            } catch(e) {
+                if(e.code === 49) {
+                    // invalid creds
+                    throw({fn: 'Unauthorized', message: 'Invalid credentials'});
+                }
+                console.error(e);
+                throw({fn: 'Unauthorized', message: 'Internal error'});
             }
-            else
-                throw({fn: 'Unauthorized', message: 'Invalid credentials'});
-        })
-        .then(row => {
-            resolve({token: row.token, refreshToken: row.refreshToken})
-        })
-        .catch(function(err) {
-            reject(err);
-        })
-    })
+        }
+    }
+    // auth done
+    if(!loginResult) {
+        throw({fn: 'Unauthorized', message: 'Invalid credentials'});
+    }
+    if (row.totpEnabled && user.totpToken)
+        checkTotpToken(user.totpToken, row.totpSecret)
+    else if (row.totpEnabled)
+        throw({fn: 'BadParameters', message: 'Missing TOTP token'})
+    var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
+    rowUpdated = await User.updateRefreshToken(refreshToken, userAgent)
+    return {token: rowUpdated.token, refreshToken: rowUpdated.refreshToken};
 }
 
 var User = mongoose.model('User', UserSchema);
