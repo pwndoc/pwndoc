@@ -6,6 +6,11 @@
             "name": "pwndoc",
             "server": "mongo-pwndoc-dev",
             "port": "27017"
+        },
+        "ldap": {
+            "ldapEnabled": false,
+            "address": "ldaps://someserver:636",
+            "userDN": "uid=%u,ou=Users,dc=example,dc=org"
         }
     },
     "prod": {
@@ -15,6 +20,11 @@
             "name": "pwndoc",
             "server": "mongo-pwndoc",
             "port": "27017"
+        },
+        "ldap": {
+            "ldapEnabled": false,
+            "address": "ldaps://someserver:636",
+            "userDN": "uid=%u,ou=Users,dc=example,dc=org"
         }
     },
     "test": {
@@ -24,6 +34,11 @@
             "name": "pwndoc",
             "server": "mongo-pwndoc-test",
             "port": "27017"
+        },
+        "ldap": {
+            "ldapEnabled": false,
+            "address": "ldaps://someserver:636",
+            "userDN": "uid=%u,ou=Users,dc=example,dc=org"
         }
     }
 }
