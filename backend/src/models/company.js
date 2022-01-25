@@ -3,6 +3,7 @@ var Schema = mongoose.Schema;
 
 var CompanySchema = new Schema({
     name: {type: String, required: true, unique: true},
+    shortName: {type: String},
     logo: String
 
 }, {timestamps: true});
@@ -15,7 +16,7 @@ var CompanySchema = new Schema({
 CompanySchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = Company.find();
-        query.select('name logo');
+        query.select('name shortName logo');
         query.exec()
         .then((rows) => {
             resolve(rows);

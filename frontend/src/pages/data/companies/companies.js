@@ -39,6 +39,7 @@ export default {
             // Company to create or update
             currentCompany: {
                 name: '', 
+                shortName: '',
                 logo: ''
             },
             // Name for update
@@ -55,6 +56,7 @@ export default {
             this.loading = true
             CompanyService.getCompanies()
             .then((data) => {
+                console.log(data);
                 this.companies = data.data.datas
                 this.loading = false
             })
@@ -155,8 +157,7 @@ export default {
 
         clone: function(row) {
             this.cleanCurrentCompany();
-            this.currentCompany.name = row.name;
-            this.currentCompany.logo = row.logo;
+            Object.assign(this.currentCompany, row);
             this.idUpdate = row._id;
         },
 

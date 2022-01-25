@@ -300,6 +300,7 @@ export default {
     resultsPerPage: 'Results per page:',
     createAudit: 'Create Audit',
     name: 'Name',
+    shortName: 'Short name',
     selectAssessment: 'Select Assessment',
     selectLanguage: 'Select Language',
     participants: 'Participants',
