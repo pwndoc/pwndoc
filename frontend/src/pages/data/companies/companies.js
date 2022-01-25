@@ -56,7 +56,6 @@ export default {
             this.loading = true
             CompanyService.getCompanies()
             .then((data) => {
-                console.log(data);
                 this.companies = data.data.datas
                 this.loading = false
             })
