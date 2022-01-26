@@ -109,7 +109,6 @@
                 <div class="col-12">
                     <cvss-calculator 
                     v-model="finding.cvssv3"
-                    @cvssScoreChange="finding.cvssScore = $event"
                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                     />
                 </div>

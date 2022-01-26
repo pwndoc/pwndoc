@@ -352,8 +352,19 @@ export default {
 			getFindingSeverity: function(finding) {
 				let severity = "None"
 				let cvss = CVSS31.calculateCVSSFromVector(finding.cvssv3)
-				if (cvss.success)
+				if (cvss.success) {
 					severity = cvss.baseSeverity
+
+					let category = finding.category || "No Category"
+					let sortOption = this.audit.sortFindings.find(e => e.category === category)
+
+					if (sortOption) {
+						if (sortOption.sortValue === "cvssEnvironmentalScore")
+							severity = cvss.environmentalSeverity
+						else if (sortOption.sortValue === "cvssTemporalScore")
+							severity = cvss.temporalSeverity
+					}
+				}
 				return severity
 			},
 
@@ -554,6 +565,8 @@ export default {
 			getSortOptions: function(category) {
 				var options = [
 					{label: $t('cvssScore'), value: 'cvssScore'},
+					{label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
+					{label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
 					{label: $t('priority'), value: 'priority'},
 					{label: $t('remediationDifficulty'), value: 'remediationComplexity'}
 				]
