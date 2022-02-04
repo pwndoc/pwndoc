@@ -167,7 +167,7 @@
 													size="sm"
 													square
 													:style="`background: ${getFindingColor(finding)}`"
-												>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
+												>{{getFindingSeverity(finding).substring(0,1)}}</q-chip>
 											</q-item-section>
 											<q-item-section>
 												<span>{{finding.title}}</span>
@@ -230,7 +230,7 @@
 </template>
 
 <script>
-import { Notify } from 'quasar';
+import { Notify, QSpinnerGears } from 'quasar';
 import draggable from 'vuedraggable'
 
 import AuditService from '@/services/audit';
@@ -326,12 +326,7 @@ export default {
 
 		methods: {
 			getFindingColor: function(finding) {
-				const SEVERITIES = ["Low", "Medium", "High", "Critical"];
-
-				let severity = "None";
-				if (finding.cvssSeverity && SEVERITIES.indexOf(finding.cvssSeverity) >= 0) {
-					severity = finding.cvssSeverity;
-				}
+				let severity = this.getFindingSeverity(finding)
 
 				if(this.$settings.report) {
 					const severityColorName = `${severity.toLowerCase()}Color`;
@@ -352,6 +347,25 @@ export default {
 							return "blue";
 					}
 				}
+			},
+
+			getFindingSeverity: function(finding) {
+				let severity = "None"
+				let cvss = CVSS31.calculateCVSSFromVector(finding.cvssv3)
+				if (cvss.success) {
+					severity = cvss.baseSeverity
+
+					let category = finding.category || "No Category"
+					let sortOption = this.audit.sortFindings.find(e => e.category === category)
+
+					if (sortOption) {
+						if (sortOption.sortValue === "cvssEnvironmentalScore")
+							severity = cvss.environmentalSeverity
+						else if (sortOption.sortValue === "cvssTemporalScore")
+							severity = cvss.temporalSeverity
+					}
+				}
+				return severity
 			},
 
 			// Sockets handle
@@ -499,6 +513,13 @@ export default {
 			},
 
 			generateReport: function() {
+				const downloadNotif = Notify.create({
+					spinner: QSpinnerGears,
+					message: 'Generating the Report',
+					color: "blue",
+					timeout: 0,
+					group: false
+				})
 				AuditService.generateAuditReport(this.auditId)
 				.then(response => {
 					var blob = new Blob([response.data], {type: "application/octet-stream"});
@@ -508,6 +529,14 @@ export default {
 					document.body.appendChild(link);
 					link.click();
 					link.remove();
+					
+					downloadNotif({
+						icon: 'done',
+						spinner: false,
+						message: 'Report successfully generated',
+						color: 'green',
+						timeout: 2500
+					})
 				})
 				.catch( async err => {
 					var message = "Error generating template"
@@ -516,6 +545,7 @@ export default {
 						var blobData = await this.BlobReader(blob)
 						message = JSON.parse(blobData).datas
 					}
+					downloadNotif()
 					Notify.create({
 						message: message,
 						type: 'negative',
@@ -535,6 +565,8 @@ export default {
 			getSortOptions: function(category) {
 				var options = [
 					{label: $t('cvssScore'), value: 'cvssScore'},
+					{label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
+					{label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
 					{label: $t('priority'), value: 'priority'},
 					{label: $t('remediationDifficulty'), value: 'remediationComplexity'}
 				]

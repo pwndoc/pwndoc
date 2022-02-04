@@ -243,8 +243,6 @@ module.exports = function(app, io) {
         if (req.body.priority) finding.priority = req.body.priority;
         if (req.body.references) finding.references = req.body.references;
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
-        if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
-        if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
         if (req.body.poc) finding.poc = req.body.poc;
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
@@ -260,13 +258,6 @@ module.exports = function(app, io) {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
-    });
-
-    // Get findings list title
-    app.get("/api/audits/:auditId/findings", acl.hasPermission('audits:read'), function(req, res) {
-        Audit.getFindings(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
-        .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
@@ -297,8 +288,6 @@ module.exports = function(app, io) {
         if (req.body.priority) finding.priority = req.body.priority;
         if (req.body.references) finding.references = req.body.references;
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
-        if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
-        if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
         if (!_.isNil(req.body.poc)) finding.poc = req.body.poc;
         if (!_.isNil(req.body.scope)) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;

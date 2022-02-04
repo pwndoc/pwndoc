@@ -1,5 +1,108 @@
 # Changelog
 
+## 0.5.2 (2022-01-12)
+
+### Fixed
+
+- Update Default Template [`5764df8`](https://github.com/pwndoc/pwndoc/commit/5764df8b853db851914ee5f47359973ba02ba50a)
+
+- Fix template count function [`31b6577`](https://github.com/pwndoc/pwndoc/commit/31b6577eb9a4382eb2b6ecf8807421b044d897fa)
+  - Close #237
+
+- Fix numbering issue in ooxml conversion [`cb9883c`](https://github.com/pwndoc/pwndoc/commit/cb9883c99073ce29c2c04a8a8ca49fd256370b94)
+  - Close #236
+
+## 0.5.1 (2022-01-06)
+
+### Fixed
+
+- Fix break call from docxjs [`02c8b0b`](https://github.com/pwndoc/pwndoc/commit/02c8b0bd2f38c4f026eabdcd3827e6c219f9a6ef)
+- Fix HTML encoding issue in HTML editor [`d0d12dc`](https://github.com/pwndoc/pwndoc/commit/d0d12dc98a4be7ea866395e8379b75994cdcf47d)
+
+## 0.5.0 (2022-01-06)
+
+### Enhancements
+
+- Update convertDateLocale filter [`876b96d`](https://github.com/pwndoc/pwndoc/commit/876b96d36e8d92633cdfc5064ab2d10dbbc37cd5)
+    - Changed numeric to 2-digit to have 2021/08/01 instead of 2021/8/1
+- Update default template [`51e48ed`](https://github.com/pwndoc/pwndoc/commit/51e48edd4c2d7b313eacb58f901c382871696b10)
+    - Removed some {-w:p} tags that could cause errors with images
+- Handle Categories order in findings [`08748f2`](https://github.com/pwndoc/pwndoc/commit/08748f226fd67771b5cca44d1a08701f2f923d82)
+    - Fix Categories order using their position in Custom Data
+    - Add "categories" data available in report template to generate findings dynamically by Category: `categories: {categoryName:<name>, categoryFindings:<[Array of Findings]>}`
+- Add Caption feature in HTML Editor [`f93fbdd`](https://github.com/pwndoc/pwndoc/commit/f93fbddb613b9a6bc2e8213e099b2c7e3d476b4f)
+    - Caption labels are dynamic and can be added in the `Settings` page (Default will be `Figure`)
+    - Caption can be added anywhere in the Editor
+    - It will render `<label> 1 - xxx` in Word generated document (select all + F9 to update numbering in Word)
+    - The style in the generated report can be customised by creating/editing the `Caption` style in the Word template  
+- Update CVSS calculator [`9baf6ef`](https://github.com/pwndoc/pwndoc/commit/9baf6efa2d7f662d7469d4de08bb93a44600ddec)
+    - Update to version 3.1
+    - Add Temporal and environmental scores
+    - Add impact and exploitability scores
+    - Add tooltips description
+- Add translation for report data [`88d89f0`](https://github.com/pwndoc/pwndoc/commit/88d89f07a407820f4f8e035bedaf2f574e08876b)
+    - Dictionary files can be used to translate some data automatically depending on audit language
+    - A dictionary draft for French can be found in [`backend/src/translate`](https://github.com/pwndoc/pwndoc/tree/master/backend/src/translate)
+    - The name of the folder should correspond to the name of the locale defined in `Data > Custom Data > Languages`
+    - Angular expression can be directly used in report template: `{input | translate:'locale'}`
+    - The following data will be automatically translated based on the audit language:
+        - cvssObj
+        - auditType
+        - findings[i].vulnType
+        - findings[i].category
+        - sections[i].name
+- Add Category creation on vulnerabilities import [`0e97ffc`](https://github.com/pwndoc/pwndoc/commit/0e97ffc612cbeee154bfd53a22205af852db5f57)
+    - When importing vulnerabilities, if a Category does not exist it will be created
+
+### Merged
+
+- Add Internationalization for Frontend [`a239bb6`](https://github.com/pwndoc/pwndoc/commit/a239bb60c2e3ab1feaed4298d250894d22db0487)
+    - Language can be changed in `Settings` page
+    - Currently supported languages: `en-US` and `zh-CN`
+- Add TOTP feature [`c1aaf12`](https://github.com/pwndoc/pwndoc/commit/c1aaf12e0f47b6b0d3e7c8d05d6ff5dc473d18ce)
+    - TOTP can be enabled in the user profile page
+- Add Sub-Templating [`21e583b`](https://github.com/pwndoc/pwndoc/commit/21e583b2798001dbd75529d5e9d250c2d450ca74)
+    - Add sub templating with delimiter `{_{xxx}_}` for exemple if you put `{_{client.firstname}_}` in description during the generation it will be replace with the client firstname. If var not found/undefined the system will replace `{_{client.firstname}_}` by nothing
+- Update python to python3 in apk repo[`efcbc51`](https://github.com/pwndoc/pwndoc/commit/efcbc51629d6fb8ea0c7f04e50a6731324e2d11f)
+- Add Email and Phone fields for Collaborators [`9a0ab63`](https://github.com/pwndoc/pwndoc/commit/9a0ab63a60a81dc50ff2bef0a814e2c83b0c6678)
+
+### Fixed
+- Update : python no longer existe in apk repo now it's python3 [`91d10f4`](https://github.com/pwndoc/pwndoc/commit/91d10f49f287e6a9cc429602ee4953ae83c54ded)
+- Fix issues related to sub-templating [`631bc0a`](https://github.com/pwndoc/pwndoc/commit/631bc0a8571879b3683b2d160d09075763c3d345)
+
+### UPDATE ATTENTION
+
+- Changes to CVSS data require to update Word templates to avoid report generation errors
+    - Replace `{cvssv3}` by `{cvss.vectorString}`
+    - Replace `{cvssScore}` by `{cvss.baseMetricScore}`
+    - Replace `{cvssSeverity}` by `{cvss.baseSeverity}`
+    - Replace `{@cvssColor}` by `{@cvss.cellColor}`
+    ```
+    findings[i]: //before
+    {
+        cvssv3
+        cvssScore
+        cvssSeverity
+        cvssColor
+    }
+
+    findings[i]: // now
+    {
+        cvss: {
+            vectorString
+            baseMetricScore
+            baseSeverity
+            temporalMetricScore
+            temporalSeverity
+            environmentalMetricScore
+            environmentalSeverity
+            baseImpact
+            baseExploitability
+            cellColor
+        }
+    }
+    ```
+
 ## 0.4.0 (2021-08-23)
 
 ### Enhancements

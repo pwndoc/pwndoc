@@ -10,7 +10,6 @@ export default {
     data: () => {
         return {
             loading: true,
-            initialLoading: true,
             UserService: UserService,
             settings: {},
             settingsOrig : {},
@@ -19,11 +18,6 @@ export default {
     },
     components: {
         LanguageSelector
-    },
-    beforeRouteEnter(to, from, next) {
-        if (!UserService.isAllowed('settings:read'))
-            next('/audits')
-        next()
     },
 
     beforeRouteLeave (to, from , next) {
@@ -41,9 +35,14 @@ export default {
     },
 
     mounted: function() {
-        this.getSettings()
-        this.canEdit = this.UserService.isAllowed('settings:update');
-        document.addEventListener('keydown', this._listener, false)
+        if (UserService.isAllowed('settings:read')) {
+            this.getSettings()
+            this.canEdit = this.UserService.isAllowed('settings:update');
+            document.addEventListener('keydown', this._listener, false)
+        }
+        else {
+            this.loading = false
+        }
     },
 
     destroyed: function() {
@@ -63,8 +62,7 @@ export default {
             .then((data) => {
                 this.settings = data.data.datas;
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
-                this.loading = false;
-                this.initialLoading = false;
+                this.loading = false
             })
             .catch((err) => {
                 Notify.create({
@@ -111,7 +109,6 @@ export default {
                 cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(async () => {
-                this.loading = true;
                 await SettingsService.revertDefaults();
                 this.$settings.refresh();
                 this.getSettings();
@@ -125,7 +122,6 @@ export default {
         },
 
         importSettings: function(file) {
-            this.loading = true;
             var fileReader = new FileReader();
             fileReader.onloadend = async (e) => {
                 try {
@@ -138,7 +134,6 @@ export default {
                             cancel: {label: $t('btn.cancel'), color: 'white'}
                         })
                         .onOk(async () => {
-                            this.loading = true;
                             await SettingsService.updateSettings(settings);
                             this.getSettings();
                             Notify.create({
@@ -169,7 +164,6 @@ export default {
         },
 
         exportSettings: async function() {
-            this.loading = true;
             var response = await SettingsService.exportSettings();
             var blob = new Blob([JSON.stringify(response.data)], {type: "application/json"});
             var link = document.createElement('a');
@@ -178,7 +172,6 @@ export default {
             document.body.appendChild(link);
             link.click();
             link.remove();
-            this.loading = false;
         },
 
         unsavedChanges() {
