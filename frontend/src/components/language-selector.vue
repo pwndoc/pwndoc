@@ -21,8 +21,9 @@ export default {
             lang: "",
             langOptions: [
                 { value: "en-US", label: "English" },
+                { value: "fr-FR", label: "Français" },
                 { value: "zh-CN", label: "中文" },
-                { value: "fr-FR", label: "Français" }
+                { value: "de-DE", label: "Deutsch" }
             ],
         };
     },
