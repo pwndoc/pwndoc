@@ -6,6 +6,6 @@ import frFR from './fr-FR'
 export default {
   'en-US': enUS,
   'zh-CN': zhCN,
-  'de-DE': deDE
+  'de-DE': deDE,
   'fr-FR': frFR
 } 
