@@ -56,7 +56,7 @@
                     option-label="name"
                     input-debounce="0"
                     @new-value="createSelectCompany"
-                    @input="audit.client = null; filterClients"
+                    @input="filterClients()"
                     @filter="filterSelectCompany"
                     clearable
                     options-sanitize

@@ -79,7 +79,6 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getAuditGeneral();
-        this.getClients();
         this.getTemplates();
         this.getLanguages();
         this.getAuditTypes();
@@ -131,6 +130,7 @@ export default {
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 this.getCollaborators();
                 this.getReviewers();
+                this.getClients();
             })
             .catch((err) => {              
                 console.log(err.response)
@@ -258,14 +258,15 @@ export default {
 
         // Filter client options when selecting company
         filterClients: function() {
-            if (this.audit.company) {
+            delete(this.audit.client)
+            if (this.audit.company && this.audit.company.name) {
                 this.selectClients = [];
                 this.clients.map(client => {
                     if (client.company && client.company.name === this.audit.company.name) this.selectClients.push(client)
                 })
             }
             else
-                this.selectClients = this.clients;
+                this.selectClients = this.$_.clone(this.clients);
         },
 
         // Set Company when selecting client 
