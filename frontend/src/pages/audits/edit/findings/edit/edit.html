@@ -21,7 +21,7 @@
 </breadcrumb>
 
 <div class="row">
-    <q-tabs v-model="selectedTab" align="left" indicator-color="primary" class="bg-white full-width">
+    <q-tabs v-model="selectedTab" align="left" indicator-color="primary" :class="'full-width' + (this.$q.dark.isActive ? '' : ' bg-white')">
         <q-tab name="definition" default :label="$t('definition')" />
         <q-tab name="proofs" :label="$t('proofs')"/>
         <q-tab name="details" :label="$t('details')" />
@@ -34,9 +34,9 @@
 
     <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 col-12 offset-md-2 q-mt-md" @before-transition="syncEditors" @transition="updateOrig" >
         <q-tab-panel name="definition">
-            <q-card class="bg-grey-1">
+            <q-card>
                 <q-card-section class="row q-col-gutter-md">
-                    <q-input class="col-md-8 col-12" :label="$t('title')+' *'" stack-label v-model="finding.title" outlined bg-color="white" :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
+                    <q-input class="col-md-8 col-12" :label="$t('title')+' *'" stack-label v-model="finding.title" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
                     <q-select 
                     class="col-md-4 col-12"
                     :label="$t('type')"
@@ -48,7 +48,6 @@
                     map-options
                     options-sanitize
                     outlined
-                    bg-color="white"
                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                     />
                     <q-field class="col-md-12" borderless :label="$t('description')" stack-label>
@@ -85,7 +84,7 @@
         <q-tab-panel name="proofs">
             <div class="q-col-gutter-md row">
                 <div class="col-12">
-                    <q-card class="bg-grey-1">
+                    <q-card>
                         <q-card-section>
                             <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
                         </q-card-section>
@@ -94,7 +93,7 @@
             </div>
         </q-tab-panel>
         <q-tab-panel name="details">
-            <q-card class="bg-grey-1">
+            <q-card>
                 <q-card-section>{{$t('affectedAssets')}}</q-card-section>
                 <q-separator />
                 <q-card-section>
@@ -113,7 +112,7 @@
                     />
                 </div>
             </q-card>
-            <q-card class="q-mt-md bg-grey-1">
+            <q-card class="q-mt-md">
                 <q-card-section>{{$t('courseOfActions')}}</q-card-section>
                 <q-separator />
                 <q-card-section>
@@ -128,7 +127,6 @@
                         emit-value
                         options-sanitize
                         outlined
-                        bg-color="white"
                         :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                         />
                         <q-select
@@ -141,7 +139,6 @@
                         emit-value
                         options-sanitize
                         outlined
-                        bg-color="white"
                         :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                         />
                     </div>

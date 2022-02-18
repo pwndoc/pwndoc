@@ -3,8 +3,6 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-table
             class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :data="companies"
             :filter="search"
@@ -35,7 +33,6 @@
                         v-model="search.name"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>
@@ -80,7 +77,7 @@
 </div>
 
 <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-    <q-card style="width:800px" class="bg-grey-1">
+    <q-card style="width:800px">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 {{$t('addCompany')}}
@@ -100,7 +97,6 @@
                     @keyup.enter="createCompany()"
                     v-model="currentCompany.name" 
                     outlined
-                    bg-color="white"
                     />
                 <q-uploader
                     ref="addUploader"
@@ -122,7 +118,7 @@
 </q-dialog>
 
 <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-    <q-card style="width:800px" class="bg-grey-1">
+    <q-card style="width:800px">
         <q-bar class="bg-primary text-white">
             <div class="q-toolbar-title">
                 {{$t('editCompany')}}
@@ -143,7 +139,6 @@
                     @keyup.enter="updateCompany()"
                     v-model="currentCompany.name"
                     outlined
-                    bg-color="white"
                     />
                 <q-uploader
                     ref="addUploader"
