@@ -1,6 +1,6 @@
 <div>
 
-    <q-tabs v-model="selectedTab" no-caps align="left" indicator-color="primary" :active-bg-color="this.$q.dark.isActive ? '' : 'grey-3'" :class="'full-width' + (this.$q.dark.isActive ? '' : ' bg-white')">
+    <q-tabs v-model="selectedTab" no-caps align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width">
         <q-tab name="languages" default :label="$t('languages')" />
         <q-tab name="audit-types" :label="$t('auditTypes')" />
         <q-tab name="vulnerability-types" :label="$t('vulnerabilityTypes')" />
@@ -228,7 +228,7 @@
                                 <q-separator />
                                 <q-item v-for="auditType of auditTypes" :key="auditType.name">
                                     <q-item-section>
-                                        <q-expansion-item :label="auditType.name" popup >
+                                        <q-expansion-item :label="auditType.name" popup header-class="expansion-header">
                                             <q-item>
                                                 <q-item-section>
                                                     <div v-for="(language,idx) of languages" class="q-mb-sm">

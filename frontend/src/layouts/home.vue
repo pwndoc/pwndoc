@@ -1,7 +1,7 @@
 <template>
   <q-layout ref="layout" view="hHr LpR lFf" :class="$q.dark.isActive ? '' : 'home-background'">
     <q-header>
-        <q-toolbar color="primary">
+        <q-toolbar class="bg-fixed-primary">
             <img src="pwndoc-logo-white.png" style="max-height:50px;" />
             
             <q-item to='/audits' active-class="text-green">

@@ -1,7 +1,7 @@
 <template>
-<div class="login-background" style="height:100vh;display:flex">
+<div :class="$q.dark.isActive ? '' : 'login-background'" style="height:100vh;display:flex">
     <div v-if="loaded === true" style="margin:auto">
-        <q-card align="center" style="width:350px" class="bg-grey-1">
+        <q-card align="center" style="width:350px">
             <q-card-section>
                 <q-img src="pwndoc-logo.png" />
             </q-card-section>

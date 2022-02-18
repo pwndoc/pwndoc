@@ -29,7 +29,6 @@
                     <q-td style="width: 25%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.firstname"
                         clearable
@@ -39,7 +38,6 @@
                     <q-td style="width: 25%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.lastname"
                         clearable
@@ -49,7 +47,6 @@
                     <q-td style="width: 25%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.email"
                         clearable
@@ -59,7 +56,6 @@
                     <q-td style="width: 25%">
                         <q-select 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search['company.name']"
                         clearable
@@ -110,7 +106,7 @@
 
 <q-dialog ref="createModal" persistent @hide="cleanErrors()">
     <q-card persistent style="width:800px">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <span>{{$t('addClient')}}</span>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
@@ -199,7 +195,7 @@
 
 <q-dialog ref="editModal" persistent @hide="cleanErrors()">
     <q-card persistent style="width:800px">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <span>{{$t('editClient')}}</span>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />

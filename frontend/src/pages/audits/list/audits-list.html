@@ -23,7 +23,6 @@
             <template v-slot:top>
                 <q-input
                 class="col-md-3"
-                color="secondary"
                 :label="$t('searchFinds')"
                 v-model="search.finding"
                 @keyup.enter="getAudits"
@@ -57,7 +56,6 @@
                         <div v-if="['name', 'users', 'date'].indexOf(col.name) > -1">
                             <q-input 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             v-model="search[col.name]"
                             clearable
@@ -68,7 +66,6 @@
                         <div v-else-if="col.name === 'company'">
                             <q-select
                                 dense 
-                                color="secondary"
                                 :label="$t('search')"
                                 :options="companies"
                                 v-model="search.company"
@@ -84,7 +81,6 @@
                         <div v-else-if="col.name === 'language'">
                             <q-select 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             :options="languages"
                             v-model="search.language"
@@ -158,7 +154,7 @@
 
 <q-dialog ref="createModal" persistent @hide="cleanCurrentAudit()">
     <q-card style="width:800px">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
                 {{$t('createAudit')}}
             </div>
@@ -173,6 +169,7 @@
             autofocus
             @keyup.enter="createAudit()"
             v-model="currentAudit.name"
+            outlined
             />
             <q-select
             :label="$t('selectAssessment')+' *'"
@@ -185,6 +182,7 @@
             emit-value
             map-options
             options-sanitize
+            outlined
             /> 
             <q-select 
             :label="$t('selectLanguage')+' *'"
@@ -197,6 +195,7 @@
             emit-value 
             map-options
             options-sanitize
+            outlined
             />
         </q-card-section>
 

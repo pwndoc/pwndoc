@@ -71,7 +71,6 @@
                     <q-td style="width: 60%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.title"
                         clearable
@@ -82,7 +81,6 @@
                     <q-td style="width: 20%">
                         <q-select 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.category"
                         clearable
@@ -94,7 +92,6 @@
                     <q-td style="width: 20%">
                         <q-select 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.type"
                         clearable
@@ -160,7 +157,7 @@
 
 <q-dialog v-if="languages.length > 0" ref="createModal" maximized position="right" persistent @hide="cleanCurrentVulnerability()">
     <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
                 <span v-if="currentCategory">{{$t('addVulnerability')}} ({{currentCategory.name}})</span>
                 <span v-else>{{$t('addVulnerability')}} ({{$t('noCategory')}})</span>
@@ -296,7 +293,7 @@
 
 <q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="UserService.isAllowed('vulnerabilities:update')" @hide="cleanCurrentVulnerability()">
     <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
                 <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
                 <span v-else>{{$t('editVulnerability')}} ({{$t('noCategory')}})</span>
@@ -373,14 +370,14 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('description')" stack-label>
+            <q-field borderless :label="$t('description')" stack-label class="basic-editor">
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('observation')" stack-label>
+            <q-field borderless :label="$t('observation')" stack-label class="basic-editor">
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
@@ -395,7 +392,7 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('remediation')" stack-label>
+            <q-field borderless :label="$t('remediation')" stack-label class="basic-editor">
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
@@ -457,7 +454,7 @@
 <q-dialog v-if="languages.length > 0" ref="updatesModal" full-width full-height persistent @hide="cleanCurrentVulnerability()">
     <q-layout view="lHh lpr lFf" container>
         <q-header elevated>    
-                <q-bar class="bg-primary text-white">
+                <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('updateVulnerability')}}
                 </div>
@@ -517,14 +514,14 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <q-field borderless :label="$t('description')" stack-label>
+                        <q-field borderless :label="$t('description')" stack-label class="basic-editor">
                             <template v-slot="control">
                                 <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                             </template>
                         </q-field>
                     </q-card-section>
                     <q-card-section>
-                        <q-field borderless :label="$t('observation')" stack-label>
+                        <q-field borderless :label="$t('observation')" stack-label class="basic-editor">
                             <template v-slot="control">
                                 <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                             </template>
@@ -537,7 +534,7 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <q-field borderless :label="$t('remediation')" stack-label>
+                        <q-field borderless :label="$t('remediation')" stack-label class="basic-editor">
                             <template v-slot="control">
                                 <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                             </template>
@@ -619,7 +616,7 @@
                                 />
                                 <q-select 
                                 class="col-md-2"
-                                :bg-color="(currentVulnerability.details[currentDetailsIndex].vulnType != update.vulnType)?'red-1':'white'"
+                                :bg-color="(currentVulnerability.details[currentDetailsIndex].vulnType != update.vulnType)?'diffbackground':''"
                                 :label="$t('type')"
                                 v-model="update.vulnType" 
                                 :options="vulnTypesLang" 
@@ -654,8 +651,9 @@
                                 :class="
                                     (currentVulnerability.details[currentDetailsIndex].description || update.description) &&
                                     (currentVulnerability.details[currentDetailsIndex].description != update.description)
-                                    ?'bg-red-1':''
+                                    ?'bg-diffbackground':''
                                 "
+                                class="basic-editor"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor noAffix 
@@ -673,8 +671,9 @@
                                 :class="
                                 (currentVulnerability.details[currentDetailsIndex].observation || update.observation) &&
                                 (currentVulnerability.details[currentDetailsIndex].observation != update.observation)
-                                ?'bg-red-1':''
+                                ?'bg-diffbackground':''
                                 "
+                                class="basic-editor"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor noAffix 
@@ -686,7 +685,7 @@
                             </q-card-section>
                             <q-card-section>
                                 <cvss-calculator
-                                :class="(currentVulnerability.cvssv3 !== update.cvssv3)?'bg-red-1':''"
+                                :class="(currentVulnerability.cvssv3 !== update.cvssv3)?'bg-diffbackground':''"
                                 v-model="update.cvssv3"
                                 @cvssScoreChange="update.cvssScore = $event"
                                 readonly
@@ -700,8 +699,9 @@
                                 :class="
                                 (currentVulnerability.details[currentDetailsIndex].remediation || update.remediation) &&
                                 (currentVulnerability.details[currentDetailsIndex].remediation != update.remediation)
-                                ?'bg-red-1':''
+                                ?'bg-diffbackground':''
                                 "
+                                class="basic-editor"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor noAffix 
@@ -713,7 +713,7 @@
                             </q-card-section>
                             <q-card-section class="q-col-gutter-md row">
                                 <q-select
-                                :bg-color="(currentVulnerability.remediationComplexity != update.remediationComplexity)?'red-1':'white'"
+                                :bg-color="(currentVulnerability.remediationComplexity != update.remediationComplexity)?'diffbackground':''"
                                 :label="$t('remediationComplexity')"
                                 stack-label
                                 class="col-md-6"
@@ -726,7 +726,7 @@
                                 outlined
                                 />
                                 <q-select
-                                :bg-color="(currentVulnerability.priority != update.priority)?'red-1':'white'"
+                                :bg-color="(currentVulnerability.priority != update.priority)?'diffbackground':''"
                                 :label="$t('remediationPriority')"
                                 stack-label
                                 class="col-md-6"
@@ -741,7 +741,7 @@
                             </q-card-section>
                             <q-card-section>
                                 <q-input
-                                :bg-color="!($_.isEqual(currentVulnerability.details[currentDetailsIndex].references, update.references))?'red-1':''"
+                                :bg-color="!($_.isEqual(currentVulnerability.details[currentDetailsIndex].references, update.references))?'diffbackground':''"
                                 :label="$t('references')"
                                 stack-label
                                 :value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"
@@ -776,7 +776,7 @@
 
 <q-dialog persistent ref="mergeModal">
     <q-card style="width: 1000px; max-width: 1000px; height: 60vh">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <span>{{$t('mergeVulnerabilities')}}</span>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.mergeModal.hide()" />

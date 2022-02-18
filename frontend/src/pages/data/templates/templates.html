@@ -29,7 +29,6 @@
                     <q-td style="width: 50%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.name"
                         clearable
@@ -39,7 +38,6 @@
                     <q-td style="width: 50%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.ext"
                         clearable
@@ -87,7 +85,7 @@
 
 <q-dialog ref="createModal" persistent @hide="cleanCurrentTemplate()">
     <q-card style="width:800px">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
                 {{$t('createTemplate')}}
             </div>
@@ -117,6 +115,7 @@
                         accept='.doc,.docx,.docm,.ppt,.pptx'
                         hide-upload-btn
                         @added="handleFile"
+                        color="fixed-primary"
                         />
                     </template>
                 </q-field>
@@ -134,7 +133,7 @@
 
 <q-dialog ref="editModal" persistent @hide="cleanCurrentTemplate()">
     <q-card style="width:800px">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
                 {{$t('editTemplate')}}
             </div>
@@ -164,6 +163,7 @@
                         accept='.doc,.docx,.docm,.ppt,.pptx'
                         hide-upload-btn
                         @added="handleFile"
+                        color="fixed-primary"
                         />
                     </template>
                 </q-field>

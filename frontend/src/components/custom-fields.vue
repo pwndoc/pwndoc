@@ -9,7 +9,8 @@
                 label-slot 
                 stack-label 
                 borderless
-                :class="(isTextInCustomFields(field))?'bg-red-1':null"
+                :class="(isTextInCustomFields(field))?'bg-diffbackground':null"
+                class="basic-editor"
                 :hint="field.customField.description"
                 hide-bottom-space
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
@@ -44,7 +45,7 @@
                 stack-label
                 v-model="field.text"
                 :readonly="readonly"
-                :bg-color="(isTextInCustomFields(field))?'red-1':null"
+                :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
@@ -63,7 +64,7 @@
                 stack-label
                 v-model="field.text"
                 :readonly="readonly"
-                :bg-color="(isTextInCustomFields(field))?'red-1':null"
+                :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
@@ -96,7 +97,7 @@
                 options-sanitize
                 outlined 
                 :readonly="readonly"
-                :bg-color="(isTextInCustomFields(field))?'red-1':null"
+                :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
@@ -123,7 +124,7 @@
                 options-sanitize
                 outlined 
                 :readonly="readonly"
-                :bg-color="(isTextInCustomFields(field))?'red-1':null"
+                :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
@@ -157,7 +158,7 @@
                 hide-bottom-space
                 outlined
                 :readonly="readonly"
-                :bg-color="(isTextInCustomFields(field))?'red-1':null"
+                :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
@@ -185,7 +186,7 @@
                 hide-bottom-space
                 outlined
                 :readonly="readonly"
-                :bg-color="(isTextInCustomFields(field))?'red-1':null"
+                :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
