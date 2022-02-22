@@ -126,7 +126,7 @@
 													no-caps
 													align="left"
 													:disable="!categoryFindings.sortOption.sortAuto"
-													:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':'black'" 
+													:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':''" 
 													@click="categoryFindings.sortOption.sortOrder = 'asc'; updateSortFindings()" 
 													/>
 												</q-item-section>
@@ -141,7 +141,7 @@
 													no-caps
 													align="left"
 													:disable="!categoryFindings.sortOption.sortAuto"
-													:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':'black'" 
+													:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':''" 
 													@click="categoryFindings.sortOption.sortOrder = 'desc'; updateSortFindings()" 
 													/>
 												</q-item-section>
