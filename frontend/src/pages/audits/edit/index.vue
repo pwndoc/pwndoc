@@ -88,7 +88,7 @@
 								<q-item-section avatar>
 									<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 										<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
-										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left" content-class="bg-grey-1">
+										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left">
 											<q-item>
 												<q-item-section>
 													<q-toggle 
@@ -126,7 +126,7 @@
 													no-caps
 													align="left"
 													:disable="!categoryFindings.sortOption.sortAuto"
-													:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':'black'" 
+													:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':''" 
 													@click="categoryFindings.sortOption.sortOrder = 'asc'; updateSortFindings()" 
 													/>
 												</q-item-section>
@@ -141,7 +141,7 @@
 													no-caps
 													align="left"
 													:disable="!categoryFindings.sortOption.sortAuto"
-													:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':'black'" 
+													:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':''" 
 													@click="categoryFindings.sortOption.sortOrder = 'desc'; updateSortFindings()" 
 													/>
 												</q-item-section>
