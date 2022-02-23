@@ -368,6 +368,21 @@ export default {
 				return severity
 			},
 
+			getMenuSection: function() {
+				if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'general')
+					return {menu: 'general', room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'network')
+					return {menu: 'network', room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addFindings')
+					return {menu: 'addFindings', room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editFinding' && this.$router.currentRoute.params.findingId)
+					return {menu: 'editFinding', finding: this.$router.currentRoute.params.findingId, room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editSection' && this.$router.currentRoute.params.sectionId)
+					return {menu: 'editSection', section: this.$router.currentRoute.params.sectionId, room: this.auditId}
+				
+				return {menu: 'undefined', room: this.auditId}
+			},
+
 			// Sockets handle
 			handleSocket: function() {
 				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
@@ -388,6 +403,10 @@ export default {
 				})
 				this.$socket.on('updateAudit', () => {
 					this.getAudit();
+				})
+				this.$socket.on('disconnect', () => {
+					this.$socket.emit('join', {username: UserService.user.username, room: this.auditId})
+					this.$socket.emit('menu', this.getMenuSection())
 				})
 			},
 			// Tells the UI if the user is supposed to be reviewing the audit

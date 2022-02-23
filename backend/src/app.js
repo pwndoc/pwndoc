@@ -4,9 +4,14 @@ var https = require('https').Server({
   key: fs.readFileSync(__dirname+'/../ssl/server.key'),
   cert: fs.readFileSync(__dirname+'/../ssl/server.cert')
 }, app);
-var io = require('socket.io')(https);
+var io = require('socket.io')(https, {
+  cors: {
+    origin: "*"
+  }
+})
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
+var utils = require('./lib/utils');
 
 // Get configuration
 var env = process.env.NODE_ENV || 'dev';
@@ -40,12 +45,6 @@ require('./models/image');
 require('./models/settings');
 
 // Socket IO configuration
-var getSockets = function(room) {
-  return Object.entries(io.sockets.adapter.rooms[room] === undefined ? {} : io.sockets.adapter.rooms[room].sockets)
-  .filter(([id, status]) => status) // get status === true
-  .map(([id]) => io.sockets.connected[id])
-}
-
 io.on('connection', (socket) => {
   socket.on('join', (data) => {
     console.log(`user ${data.username} joined room ${data.room}`)
@@ -56,18 +55,17 @@ io.on('connection', (socket) => {
   });
   socket.on('leave', (data) => {
     console.log(`user ${data.username} left room ${data.room}`)
-    socket.leave(data.room, () => {
-      io.to(data.room).emit('updateUsers');
-    })
+    socket.leave(data.room)
+    io.to(data.room).emit('updateUsers');
   })
   socket.on('updateUsers', (data) => {
-    var userList = [...new Set(getSockets(data.room).map(s => {
+    var userList = [...new Set(utils.getSockets(io, data.room).map(s => {
       var user = {};
       user.username = s.username;
       user.color = s.color;
       user.menu = s.menu;
-      if (s.finding) user.finding = s.finding; 
-      if (s.section) user.section = s.section; 
+      if (s.finding) user.finding = s.finding;
+      if (s.section) user.section = s.section;
       return user;
     }))];
     io.to(data.room).emit('roomUsers', userList);

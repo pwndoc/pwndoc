@@ -12,16 +12,9 @@ module.exports = function(app, io) {
 
     // Get audits list of user (all for admin) with regex filter on findings
     app.get("/api/audits", acl.hasPermission('audits:read'), function(req, res) {
-        var getSockets = function(room) {
-            return Object.entries(io.sockets.adapter.rooms[room] === undefined ? {} : io.sockets.adapter.rooms[room].sockets)
-            .filter(([id, status]) => status) // get status === true
-            .map(([id]) => io.sockets.connected[id])
-          }
-
         var getUsersRoom = function(room) {
-            return getSockets(room).map(s => s.username)
+            return utils.getSockets(io, room).map(s => s.username)
         }
-
         var filters = {};
         if (req.query.findingTitle) 
             filters['findings.title'] = new RegExp(utils.escapeRegex(req.query.findingTitle), 'i')
@@ -41,8 +34,9 @@ module.exports = function(app, io) {
                     a.reviewers = audit.reviewers
                     a.approvals = audit.approvals
                     a.state = audit.state
-                    if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected'))
-                        a.connected = getUsersRoom(audit._id)
+                    if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected')){
+                        a.connected = getUsersRoom(audit._id.toString())
+                    }
                     result.push(a)
                 })
             Response.Ok(res, result)
