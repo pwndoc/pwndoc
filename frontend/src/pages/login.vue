@@ -3,7 +3,7 @@
     <div v-if="loaded === true" style="margin:auto">
         <q-card align="center" style="width:350px">
             <q-card-section>
-                <q-img src="pwndoc-logo.png" />
+                <q-img :src="$q.dark.isActive ? 'pwndoc-logo-white.png' : 'pwndoc-logo.png'" />
             </q-card-section>
 
             <q-card-section v-if="errors.alert">
@@ -269,17 +269,5 @@ export default {
 
 .loading p {
     font-size: 20px;
-}
-
-.loading-error .material-icons {
-    font-size: 100px;
-}
-
-.loading-error p {
-    font-size: 20px;
-}
-
-.loading-error:before {
-    opacity: 0.7;
 }
 </style>
