@@ -303,6 +303,18 @@ Convert HTML values to OOXML format. See [HTML values](docxtemplate.md?id=html-v
 {@value | convertHTML}
 >```
 
+### sortArrayByField
+
+Sort array by supplied field. S
+Order can be 1 for ascending, or -1 for descending
+
+> Use in template document
+>```
+{#findings | sortArrayByField: 'identifier':1}
+{identifier}
+{/}
+>```
+
 ### count 
 
 Count the number of vulnerabilities by CVSS severity.

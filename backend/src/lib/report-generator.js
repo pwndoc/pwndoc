@@ -166,6 +166,18 @@ expressions.filters.NewLines = function(input) {
     return result;
 }
 
+// Sort array by supplied field: {#findings | sortArrayByField: 'identifier':1}{/}
+// order: 1 = ascending, -1 = descending
+expressions.filters.sortArrayByField = function (input, field, order) {
+    //invalid order sort ascending
+    if(order != 1 && order != -1) order = 1;
+    
+    const sorted = input.sort((a,b) => {
+        //multiply by order so that if is descending (-1) will reverse the values
+        return _.get(a, field).localeCompare(_.get(b, field), undefined, {numeric: true}) * order
+    })    
+    return sorted;
+}
 
 // Convert HTML data to Open Office XML format: {@input | convertHTML: 'customStyle'}
 expressions.filters.convertHTML = function(input, style) {
