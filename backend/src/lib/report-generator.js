@@ -173,9 +173,8 @@ expressions.filters.sortArrayByField = function (input, field, order) {
     if(order != 1 && order != -1) order = 1;
     
     const sorted = input.sort((a,b) => {
-        o = a[field] < b[field] ? -1 : (a[field] > b[field] ? 1 : 0)
         //multiply by order so that if is descending (-1) will reverse the values
-        return o * order;
+        return _.get(a, field).localeCompare(_.get(b, field), undefined, {numeric: true}) * order
     })    
     return sorted;
 }
