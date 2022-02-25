@@ -5,4 +5,5 @@ function strongPassword(password) {
         var validPassword = regExp.test(password);
         return validPassword;
 }
+
 exports.strongPassword = strongPassword
