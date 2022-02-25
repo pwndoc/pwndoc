@@ -6,7 +6,7 @@ module.exports = function(app) {
     var jwtRefreshSecret = require('../lib/auth').jwtRefreshSecret
     var jwt = require('jsonwebtoken')
     var _ = require('lodash')
-
+    var passwordpolicy = require('../lib/passwordpolicy')
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
         Response.Ok(res, req.cookies['token']);
@@ -159,6 +159,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
         }
+        if (passwordpolicy.strongPassword(req.body.password)!==true){
+            Response.BadParameters(res, 'Password does not match the password policy');
+            return;
+        }
 
         var user = {};
         //Required params
@@ -183,7 +187,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
         }
-
+        if (passwordpolicy.strongPassword(req.body.password)!==true){
+            Response.BadParameters(res, 'Password does not match the password policy');
+            return;
+        }
         var user = {};
         //Required params
         user.username = req.body.username;
@@ -225,7 +232,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
         }
-
+        if (passwordpolicy.strongPassword(req.body.newPassword)!==true){
+            Response.BadParameters(res, 'New Password does not match the password policy');
+            return;
+        }
         if (req.body.newPassword !== req.body.confirmPassword) {
             Response.BadParameters(res, 'New password validation failed');
             return;
