@@ -315,6 +315,18 @@ Order can be 1 for ascending, or -1 for descending
 {/}
 >```
 
+### sortArrayByCVSS
+
+Sort CVSS array by supplied CVSS field. 
+Order can be 1 for ascending, or -1 for descending
+
+> Use in template document
+>```
+{#findings | sortArrayByCVSS: 'identifier':1}
+{identifier}
+{/}
+>```
+
 ### count 
 
 Count the number of vulnerabilities by CVSS severity.
@@ -346,4 +358,12 @@ Convert cvss Criteria to French.
 >```
 // Example with cvssObj.AV === 'Network'
 {cvssObj.AV | criteriaFR} -> Réseau
+>```
+
+### $pageBreakExceptLast
+Creates Page Break
+
+> Use in template document
+>```
+{@$pageBreakExceptLast}
 >```

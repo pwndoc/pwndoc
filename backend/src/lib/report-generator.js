@@ -179,6 +179,20 @@ expressions.filters.sortArrayByField = function (input, field, order) {
     return sorted;
 }
 
+// Sort CVSS array by supplied field: {#findings | sortArrayByCVSS: 'identifier':1}{/}
+// order: 1 = ascending, -1 = descending
+expressions.filters.sortArrayByCVSS= function (input, field, order) {
+    //invalid order sort ascending
+    if(order != 1 && order != -1) order = 1;
+    
+    const sorted = input.sort((a,b) => {
+        o = a['cvss'][field] < b['cvss'][field] ? -1 : (a['cvss'][field] > b['cvss'][field] ? 1 : 0)
+        //multiply by order so that if is descending (-1) will reverse the values
+        return o * order;
+    })    
+    return sorted;
+}
+
 // Convert HTML data to Open Office XML format: {@input | convertHTML: 'customStyle'}
 expressions.filters.convertHTML = function(input, style) {
     if (typeof input === 'undefined')
