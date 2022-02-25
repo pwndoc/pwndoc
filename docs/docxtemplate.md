@@ -360,10 +360,3 @@ Convert cvss Criteria to French.
 {cvssObj.AV | criteriaFR} -> Réseau
 >```
 
-### $pageBreakExceptLast
-Creates Page Break
-
-> Use in template document
->```
-{@$pageBreakExceptLast}
->```
