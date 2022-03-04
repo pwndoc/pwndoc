@@ -368,7 +368,7 @@ module.exports = function(app, io) {
                 throw ({fn: 'BadParameters', message: 'Template not defined'})
 
             var reportDoc = await reportGenerator.generateDoc(audit);
-            Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
+            Response.SendFile(res, `${audit.name.replace(/[\\\/:*?"<>|]/g, "")}.${audit.template.ext || 'docx'}`, reportDoc);
         })
         .catch(err => {
             if (err.code === "ENOENT")
