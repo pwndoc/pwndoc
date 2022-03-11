@@ -31,7 +31,10 @@ services:
       - backend
 
   pwndoc-frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+       - API_PORT: 8443 # https://pwndoc.github.io/pwndoc/#/installation?id=custom-port
     image: yeln4ts/pwndoc:frontend
     container_name: pwndoc-frontend
     restart: always

@@ -96,3 +96,27 @@ To restore :
 - Stop containers
 - Replace the current `backend/mongo-data` folder with the backed up one
 - Start containers
+
+
+## Advanced
+### Custom port
+
+It's possible to run PwnDoc on a custom port (for example `443`), not just the default port port `8433`. The following changes are needed to the `docker-compose.yml`:
+
+```yaml
+  pwndoc-frontend:
+    build:
+      context: ./frontend
+      args:
+       - API_PORT: 443 # <--
+    image: yeln4ts/pwndoc:frontend
+    container_name: pwndoc-frontend
+    restart: always
+    ports:
+      - 443:8443 # <--
+    networks:
+      - backend
+```
+
+Argument `API_PORT` is evaluated during frontend build time, therefore if you change it in `docker-compose.yml` than rebuild is necessary. If you want to build and start the containers, it's possible to use: `docker-compose up -d --build`
+

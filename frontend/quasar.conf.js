@@ -37,13 +37,9 @@ module.exports = function (ctx) {
           '@': path.resolve(__dirname, '.', 'src')
         }
       },
-      env: ctx.dev
-        ? { // dev environnment
-          API_PORT: 5252
-        }
-        : { // prod environnment (build)
-          API_PORT: 8443,
-        }
+      env: {
+        API_PORT: process.env.API_PORT || (ctx.dev ? 5252 : 8443), // env, dev, prod
+      }
     },
     devServer: {
       https: {
