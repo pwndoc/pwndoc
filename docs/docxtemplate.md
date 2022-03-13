@@ -264,6 +264,38 @@ There should now be abstractNum definition for each one.
 
 Filters allow to apply functions on Audit data values.
 
+### bookmarkCreate
+
+Creates text block bookmark.
+
+Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters, dashes are automatically replaced by underscores.
+
+A clickable reference to this bookmark can be created using the `bookmarkRef` filter.
+
+> Use in template document
+>```
+{name | bookmarkCreate: identifier}
+>```
+
+### bookmarkRef
+
+Creates a clickable reference to an previously created bookmark.
+
+> Use in template document
+>```
+{identifier | bookmarkLink}
+>```
+
+### capfirst
+
+Capitalizes input first letter.
+
+> Use in template document
+>```
+// Example with "hello world"
+{input | capfirst} -> "Hello world"
+>```
+
 ### changeID
 
 Replaces the default identifier prefix (IDX-) by the supplied prefix
@@ -303,6 +335,167 @@ Convert HTML values to OOXML format. See [HTML values](docxtemplate.md?id=html-v
 {@value | convertHTML}
 >```
 
+### count
+
+Count the number of vulnerabilities by CVSS severity.
+
+> Use in template document
+>```
+// Example counting 'Critical' vulnerabilities
+{findings | count: 'Critical'}
+>```
+
+### d
+
+Default value: returns input if it is truthy, otherwise its parameter.
+
+> Use in template document
+>```
+// This generates a comma-separated list of affected systems, falling-back on the whole audit scope if left empty.
+{affected | lines | d: (scope | select: 'name') | join: ', '}
+>```
+
+### fromTo
+
+Display "From ... to ..." dates nicely, removing redundant information when the start and end date occur during the same month or year.
+
+To internationalize or customize the resulting string, associate the desired output to the strings `"from {0} to {1}"` and `"on {0}"` in your Pwndoc translate file.
+Date formating relies on the locale name provided as second parameter.
+
+
+> Use in template document
+>```
+{date_start | fromTo: date_end:'en' | capfirst}
+>```
+
+### groupBy
+
+Group input elements by an attribute.
+
+> Use in template document
+>```
+{#findings | groupBy: 'severity'}{title}{/findings | groupBy: 'severity'}
+>```
+
+### initials
+
+Returns the initials from an input string (typically a firstname).
+
+> Use in template document
+>```
+// Example with "Foo-Bar"
+{creator.firstname | initials} -> "F.-B."
+>```
+
+### join
+
+Returns a string which is a concatenation of input elements using an optional separator string.
+
+Can also be used to build raw OOXML strings.
+
+> Use in template document
+>```
+{scope | join: ', '}
+>```
+
+### length
+
+Returns the length (ie. number of items for an array) of input.
+
+Can also be used as a conditional to check the emptiness of a list.
+
+> Use in template document
+>```
+// Display the number of elements:
+{findings | length}
+// Continue only if non-empty:
+{#input | length}Not empty{/input | length}
+>```
+
+### lines
+
+Takes a multilines input strings (either raw or simple HTML paragraphs) and returns each line as an ordered list.
+
+> Use in template document
+>```
+{input | lines}
+>```
+
+### loopObject
+
+Loop over the input object, providing acccess to its keys and values.
+
+> Use in template document
+>```
+{#findings | loopObject}{key}{value.name}{/findings | loopObject}
+>```
+
+### lower
+
+Lowercases input.
+
+> Use in template document
+>```
+// Example with "Hello WORLD"
+{input | lower} -> "hello world"
+>```
+
+### mailto
+
+Creates a clickable "mailto:" link, assumes that input is an email address if no other address has been provided as parameter.
+
+The character style "Hyperlink" is applied to the generated hyperlink.
+
+> Use in template document
+>```
+{lastname | mailto: email}
+>```
+
+### map
+
+Applies a filter on a sequence of objects.
+
+> Use in template document
+>```
+{scope | select: 'name' | map: lower | join: ', '}
+>```
+
+### p
+
+Embeds input within OOXML paragraph tags, applying an optional style name to it.
+
+> Use in template document
+>```
+{@input | p: 'Some style'}
+>```
+
+### reverse
+
+Reverses the input array order.
+
+> Use in template document
+>```
+{input | reverse}
+>```
+
+### select
+
+Looks up an attribute from a sequence of objects, doted notation is supported.
+
+> Use in template document
+>```
+{findings | select: 'cvss.environmentalSeverity'}
+>```
+
+### sort
+
+Sorts the input array according an optional given attribute, dotted notation is supported.
+
+> Use in template document
+>```
+{#findings | sort 'cvss.environmentalSeverity'}{name}{/findings | sort 'cvss.environmentalSeverity'}
+>```
+
 ### sortArrayByField
 
 Sort array by supplied field. S
@@ -315,14 +508,51 @@ Order can be 1 for ascending, or -1 for descending
 {/}
 >```
 
-### count 
+### split
 
-Count the number of vulnerabilities by CVSS severity.
+Takes a string as input and split it into an ordered list using a separator.
 
 > Use in template document
 >```
-// Example counting 'Critical' vulnerabilities
-{findings | count: 'Critical'}
+{input | split: ', '}
+>```
+
+### title
+
+Capitalizes input first letter of each word, can be associated to 'lower' to normalize case.
+
+> Use in template document
+>```
+// Example with "john DOE"
+{creator.lastname | lower | title} -> "John Doe"
+>```
+
+### toJSON
+
+Returns the JSON representation of the input value, useful to dump variables content while debugging a template.
+
+> Use in template document
+>```
+{input | toJSON}
+>```
+
+### upper
+
+Upercases input.
+
+> Use in template document
+>```
+// Example with "Hello World"
+{input | upper} -> "HELLO WORLD"
+>```
+
+### where
+
+Filters input elements matching a free-form Angular statements.
+
+> Use in template document
+>```
+{#findings | where: 'cvss.severity == "Critical"'}{title}{/findings | where: 'cvss.severity == "Critical"'}
 >```
 
 Custom filters can also be created in `backend/src/lib/custom-generator.js`. As an example there are 2 filters defined for french reports.
