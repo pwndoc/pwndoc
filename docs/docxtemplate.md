@@ -266,7 +266,7 @@ Filters allow to apply functions on Audit data values.
 
 ### bookmarkCreate
 
-Creates text block bookmark.
+Creates text block bookmark which can be linked to using the `bookmarkRef` filter.
 
 Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters, dashes are automatically replaced by underscores.
 
@@ -279,7 +279,7 @@ A clickable reference to this bookmark can be created using the `bookmarkRef` fi
 
 ### bookmarkRef
 
-Creates a clickable reference to an previously created bookmark.
+Creates a clickable reference to a bookmark previously created using the `bookmarkCreate` filter.
 
 > Use in template document
 >```
@@ -357,7 +357,7 @@ Default value: returns input if it is truthy, otherwise its parameter.
 
 ### fromTo
 
-Display "From ... to ..." dates nicely, removing redundant information when the start and end date occur during the same month or year.
+Display *"From ... to ..."* dates nicely, removing redundant information when the start and end dates occur during the same month or year.
 
 To internationalize or customize the resulting string, associate the desired output to the strings `"from {0} to {1}"` and `"on {0}"` in your Pwndoc translate file.
 Date formating relies on the locale name provided as second parameter.
@@ -372,9 +372,21 @@ Date formating relies on the locale name provided as second parameter.
 
 Group input elements by an attribute.
 
+The returned values is a dictionary where:
+
+- The key is the common attribute value,
+- The value is the set of items from the input structure sharing this same value for this attribute.
+
+Pipe this into `loopObject` to iterate through a key/value sets.
+
 > Use in template document
 >```
-{#findings | groupBy: 'severity'}{title}{/findings | groupBy: 'severity'}
+{#findings | groupBy: 'severity' | loopObject}
+Severity: {key}
+{#value}
+Title: {title}
+{/value}
+{/findings | groupBy: 'severity' | loopObject}
 >```
 
 ### initials
@@ -423,11 +435,16 @@ Takes a multilines input strings (either raw or simple HTML paragraphs) and retu
 
 ### loopObject
 
-Loop over the input object, providing acccess to its keys and values.
+Loop over the input object, providing access to its keys and values.
 
 > Use in template document
 >```
-{#findings | loopObject}{key}{value.name}{/findings | loopObject}
+{#findings | groupBy: 'severity' | loopObject}
+Severity: {key}
+{#value}
+Title: {title}
+{/value}
+{/findings | groupBy: 'severity' | loopObject}
 >```
 
 ### lower
@@ -548,7 +565,7 @@ Upercases input.
 
 ### where
 
-Filters input elements matching a free-form Angular statements.
+Filters input elements using a free-form Angular statement.
 
 > Use in template document
 >```
