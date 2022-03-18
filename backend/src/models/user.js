@@ -200,7 +200,7 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
         var query = this.findById(userId)
         query.exec()
         .then(row => {
-            if (row) {
+            if (row && row.enabled !== false) {
                 // Check session exist and sessionId not null (if null then it is a login)
                 if (sessionId !== null) {
                     var sessionExist = row.refreshTokens.findIndex(e => e.sessionId === sessionId && e.token === refreshToken)
@@ -243,6 +243,9 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                     row.refreshTokens[foundIndex].token = newRefreshToken
                 }
                 return row.save()
+            }
+            else if (row) {
+                reject({fn: 'Unauthorized', message: 'Account disabled'})
             }
             else
                 reject({fn: 'NotFound', message: 'Session not found'})
