@@ -23,6 +23,7 @@ export default {
                 {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
                 {name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true},
                 {name: 'role', label: $t('role'), field: 'role', align: 'left', sortable: true},
+                {name: 'enabled', label: 'Account Enabled', field: 'enabled', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination

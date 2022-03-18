@@ -299,6 +299,13 @@
                 <p v-if="currentCollab.totpEnabled">2FA <b>enabled</b> for this user</p>
                 <p v-else>2FA <b>disabled</b> for this user</p>
             </q-card-section>
+            <q-card-section>
+                <q-toggle 
+                v-model="currentCollab.enabled" 
+                :label="currentCollab.enabled ? 'Account enabled' : 'Account disabled'"
+                />
+            </q-card-section>
+            
             <q-separator />
 
             <q-card-actions align="right">
