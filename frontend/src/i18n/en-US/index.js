@@ -26,6 +26,10 @@ export default {
         valid: 'Valid',
         new: 'New',
         updates: 'Updates',
+        accountsEnabled: 'Enabled accounts',
+        accountsDisabled: 'Disabled accounts',
+        accountEnabled: 'Account enabled',
+        accountDisabled: 'Account disabled'
     },
     tooltip: {
         usersConnected: 'Users on the Audit:',

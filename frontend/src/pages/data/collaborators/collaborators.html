@@ -13,6 +13,10 @@
                 @row-dblclick="dblClick"
             >
                 <template v-slot:top>
+                    <q-toggle 
+                    :label="(search.enabled)? $t('btn.accountsEnabled'): $t('btn.accountsDisabled')" 
+                    v-model="search.enabled" 
+                    />
                     <q-space />
                     <q-btn 
                     v-if="UserService.isAllowed('users:create')"
@@ -296,13 +300,14 @@
                 />
             </q-card-section>
             <q-card-section>
-                <p v-if="currentCollab.totpEnabled">2FA <b>enabled</b> for this user</p>
-                <p v-else>2FA <b>disabled</b> for this user</p>
-            </q-card-section>
-            <q-card-section>
-                <q-toggle 
+                <div class="q-pl-sm">
+                    <p v-if="currentCollab.totpEnabled">2FA <b>enabled</b> for this user</p>
+                    <p v-else>2FA <b>disabled</b> for this user</p>
+                </div>
+
+                <q-toggle
                 v-model="currentCollab.enabled" 
-                :label="currentCollab.enabled ? 'Account enabled' : 'Account disabled'"
+                :label="currentCollab.enabled ? $t('btn.accountEnabled') : $t('btn.accountDisabled')"
                 />
             </q-card-section>
             
