@@ -264,7 +264,7 @@ expressions.filters.lower = function(input) {
         return input.toLowerCase();
 }
 
-// Creates a clickable "mailto:" link, assumes that input is an email address if no other address has been provided as parameter: {lastname | mailto: email}
+// Creates a clickable "mailto:" link, assumes that input is an email address if no other address has been provided as parameter: {@lastname | mailto: email}
 expressions.filters.mailto = function(input, address = null) {
     return '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
         + '<w:r><w:instrText xml:space="preserve"> HYPERLINK "mailto:' + (address ? adddress : input) + '" </w:instrText></w:r>'
