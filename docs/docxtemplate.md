@@ -465,7 +465,7 @@ The character style "Hyperlink" is applied to the generated hyperlink.
 
 > Use in template document
 >```
-{lastname | mailto: email}
+{@lastname | mailto: email}
 >```
 
 ### map
