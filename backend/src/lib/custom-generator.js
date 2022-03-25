@@ -76,7 +76,7 @@ expressions.filters.criteriaNL = function(input) {
 }
 
 // Convert input date with parameter s (full,short): {input | convertDate: 's'}
-expressions.filters.convertDateFR = function(input, s) {
+expressions.filters.convertDateNL = function(input, s) {
     var date = new Date(input);
     if (date !== "Invalid Date") {
         var monthsFull = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
