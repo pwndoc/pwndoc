@@ -18,9 +18,9 @@ var $t
 async function generateDoc(audit) {
     var templatePath = `${__basedir}/../report-templates/${audit.template.name}.${audit.template.ext || 'docx'}`
     var content = fs.readFileSync(templatePath, "binary");
-    
+
     var zip = new JSZip(content);
-    
+
     translate.setLocale(audit.language)
     $t = translate.translate
 
@@ -109,7 +109,7 @@ exports.generateDoc = generateDoc;
 
 // *** Angular parser filters ***
 
-// Creates text block bookmark: {name | bookmarkCreate: identifier}
+// Creates text block bookmark: {@name | bookmarkCreate: identifier | p}
 // Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters, dashes are automatically replaced by underscores.
 expressions.filters.bookmarkCreate = function(input, refid) {
     let rand_id = Math.floor(Math.random() * 1000000 + 1000);
@@ -120,7 +120,7 @@ expressions.filters.bookmarkCreate = function(input, refid) {
         + '<w:bookmarkEnd w:id="' + rand_id + '"/>';
 }
 
-// Creates a clickable reference to an previously created bookmark: {identifier | bookmarkLink}
+// Creates a clickable reference to an previously created bookmark: {@identifier | bookmarkRef | p}
 expressions.filters.bookmarkRef = function(input) {
     return '<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">'
         + ' REF ' + input.replaceAll('-', '_') + ' \\h </w:instrText></w:r>'
@@ -163,7 +163,7 @@ expressions.filters.convertDateLocale = function(input, locale, style) {
             options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}
 
         return date.toLocaleDateString(locale, options)
-       
+
     }
 }
 
@@ -264,10 +264,10 @@ expressions.filters.lower = function(input) {
         return input.toLowerCase();
 }
 
-// Creates a clickable "mailto:" link, assumes that input is an email address if no other address has been provided as parameter: {@lastname | mailto: email}
+// Creates a clickable "mailto:" link, assumes that input is an email address if no other address has been provided as parameter: {@lastname | mailto: email | p}
 expressions.filters.mailto = function(input, address = null) {
     return '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
-        + '<w:r><w:instrText xml:space="preserve"> HYPERLINK "mailto:' + (address ? adddress : input) + '" </w:instrText></w:r>'
+        + '<w:r><w:instrText xml:space="preserve"> HYPERLINK "mailto:' + (address ? address : input) + '" </w:instrText></w:r>'
         + '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
         + '<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>'
         + '<w:t>' + input + '</w:t>'
@@ -339,11 +339,11 @@ expressions.filters.sort = function(input, key = null) {
 expressions.filters.sortArrayByField = function (input, field, order) {
     //invalid order sort ascending
     if(order != 1 && order != -1) order = 1;
-    
+
     const sorted = input.sort((a,b) => {
         //multiply by order so that if is descending (-1) will reverse the values
         return _.get(a, field).localeCompare(_.get(b, field), undefined, {numeric: true}) * order
-    })    
+    })
     return sorted;
 }
 
@@ -691,7 +691,7 @@ async function prepAuditData(data, settings) {
             environmentalMetricScore: tmpCVSS.environmentalMetricScore || "",
             environmentalSeverity: tmpCVSS.environmentalSeverity || ""
         }
-        if (tmpCVSS.baseImpact) 
+        if (tmpCVSS.baseImpact)
             tmpFinding.cvss.baseImpact = CVSS31.roundUp1(tmpCVSS.baseImpact)
         else
             tmpFinding.cvss.baseImpact = ""
@@ -700,7 +700,7 @@ async function prepAuditData(data, settings) {
         else
             tmpFinding.cvss.baseExploitability = ""
 
-        if (tmpCVSS.environmentalModifiedImpact) 
+        if (tmpCVSS.environmentalModifiedImpact)
             tmpFinding.cvss.environmentalModifiedImpact = CVSS31.roundUp1(tmpCVSS.environmentalModifiedImpact)
         else
             tmpFinding.cvss.environmentalModifiedImpact = ""
@@ -731,7 +731,7 @@ async function prepAuditData(data, settings) {
 
         if (finding.customFields) {
             for (field of finding.customFields) {
-                // For retrocompatibility of findings with old customFields 
+                // For retrocompatibility of findings with old customFields
                 // or if custom field has been deleted, last saved custom fields will be available
                 if (field.customField) {
                     var fieldType = field.customField.fieldType
@@ -755,7 +755,7 @@ async function prepAuditData(data, settings) {
         .groupBy("category")
         .map((value,key) => {return {categoryName:key, categoryFindings:value}})
         .value()
-    
+
     result.creator = {}
     if (data.creator) {
         result.creator.username = data.creator.username || "undefined"
@@ -767,7 +767,7 @@ async function prepAuditData(data, settings) {
     }
 
     for (section of data.sections) {
-        var formatSection = { 
+        var formatSection = {
             name: $t(section.name)
         }
         if (section.text) // keep text for retrocompatibility

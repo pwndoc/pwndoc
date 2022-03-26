@@ -1,6 +1,6 @@
 # Docx Template
 
-Pwndoc uses the nodejs library docxtemplater to generate a docx report. Specific documentation can be found on the official site documentation: https://docxtemplater.readthedocs.io/en/v3.1.0/tag_types.html 
+Pwndoc uses the nodejs library docxtemplater to generate a docx report. Specific documentation can be found on the official site documentation: https://docxtemplater.readthedocs.io/en/v3.1.0/tag_types.html
 
 Check the [Default Template](https://github.com/pwndoc/pwndoc/tree/master/backend/report-templates) for better understanding.
 
@@ -41,7 +41,7 @@ data = {findings: [{title: 'vuln1', cvssSeverity: 'Critical'}, {title: 'vuln2', 
 
 ### HTML values (from text editors)
 
-There is a tag filter *convertHTML* that convert HTML to open office XML for direct use in the docx template.  
+There is a tag filter *convertHTML* that convert HTML to open office XML for direct use in the docx template.
 To handle images, HTML values with images are converted into an array of text and images
 
 ```
@@ -49,7 +49,7 @@ To handle images, HTML values with images are converted into an array of text an
 -> {@affected | convertHTML} // this must be the only thing in the paragraph
 
 // HTML with images (eg: poc in a finding)
--> 
+->
 {-w:p poc}{@text | convertHTML}
                                             {-w:p images}{%image}
                                     Image 1 - {caption}{/images}{/poc}
@@ -157,7 +157,7 @@ Array of Objects:
 >```
 Audit Scope:
 {-w:p scope}{name}{/scope}
->  
+>
 Network Scan:
 {#scope}{#hosts}
 {hostname} {ip} {os} :
@@ -190,23 +190,23 @@ List of findings. Array of Objects:
 Identifier consists on a sequential id for the reported vulnerability pre-pended with 'IDX-'. Ex: IDX-001.
 You can replace the prefix by using the filter ```changeID```
 
-Additional fields will also be added to the findings Array. The key will be lowercase + strip sapces of the label.  
+Additional fields will also be added to the findings Array. The key will be lowercase + strip sapces of the label.
 Eg. if Custom Field label is `Aggravating Factors` it will be added to the array as `findings[i].aggravatingfactors`.
 
 > Use in template document
 >```
 List of Findings{#findings}
 {identifier | changeID: 'PROJ1-'}    {title}    {vulnType}
->  
+>
 Severity: {cvssSeverity}    Score: {cvssScore}
 Attack Vector: cvssObj.AV               Scope: cvssObj.S
 Attack Complexity: cvssObj.AC           Confidentiality: cvssObj.C
 Required Privileges: cvssObj.PR         Integrity: cvssObj.I
 User Interaction: cvssObj.UI            Availability: cvssObj.A
->  
-Affected Scope 
+>
+Affected Scope
 {@affected | convertHTML}
->  
+>
 Description
 {-w:p description}{@text | convertHTML}
                                             {-w:p images}{%image}
@@ -251,13 +251,13 @@ Open the file with an archive manager
 
 ![Docx Archive](/_images/docx_archive.png)
 
-The *numbering.xml* file contains definitions of numbering lists.  
-`<w:abstractNum w:abstractNumId=0>...</w:abstractNum>` tags represent the definition of a numbering with its different levels.  
+The *numbering.xml* file contains definitions of numbering lists.
+`<w:abstractNum w:abstractNumId=0>...</w:abstractNum>` tags represent the definition of a numbering with its different levels.
 `<w:num w:numId="1"><w:abstractNumId w:val="0" /></w:num>` tags associate the effective `Id` used in the document with the `abstract Id` of the definition.
 
 Pwndoc uses `numId="1"` for `bullet list` and `numId="2"` for `ordered list`. So the only thing to change in the file is the value of the abstractNumId associated with those numId.
 
-If there is no abstractNum definitions, this means that no numbering has been used in the document: open the document with Word, add bullet and ordered list, save, delete bullet and ordered list, save.  
+If there is no abstractNum definitions, this means that no numbering has been used in the document: open the document with Word, add bullet and ordered list, save, delete bullet and ordered list, save.
 There should now be abstractNum definition for each one.
 
 ## Filters
@@ -274,7 +274,9 @@ A clickable reference to this bookmark can be created using the `bookmarkRef` fi
 
 > Use in template document
 >```
-{name | bookmarkCreate: identifier}
+{@name | bookmarkCreate: identifier | p}
+// Example adding some other text in the same pargraph:
+{@'Some text: ' + (name | bookmarkCreate: identifier) | p}
 >```
 
 ### bookmarkRef
@@ -283,7 +285,9 @@ Creates a clickable reference to a bookmark previously created using the `bookma
 
 > Use in template document
 >```
-{identifier | bookmarkLink}
+{@identifier | bookmarkRef | p}
+// Example adding some other text in the same pargraph:
+{@'Some text: ' + (identifier | bookmarkRef) | p}
 >```
 
 ### capfirst
@@ -465,7 +469,9 @@ The character style "Hyperlink" is applied to the generated hyperlink.
 
 > Use in template document
 >```
-{@lastname | mailto: email}
+{@lastname | mailto: email | p}
+// Example adding some other text in the same pargraph and displaying the email address instead of the last name:
+{@'Some text: ' + (email | mailto) | p}
 >```
 
 ### map
