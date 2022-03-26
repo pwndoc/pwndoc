@@ -266,22 +266,45 @@ Filters allow to apply functions on Audit data values.
 
 ### bookmarkCreate
 
-Creates text block bookmark which can be linked to using the `bookmarkRef` filter.
+// Creates a text block or simple location bookmark:
+// - Text block: {@name | bookmarkCreate: identifier | p}
+// - Location: {@identifier | bookmarkCreate | p}
+// Bookmark identifiers need to begin with a letter and contain only letters,
+// numbers, and underscore characters: non-conforming characters are
+// automatically replaced by underscores.
 
-Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters, dashes are automatically replaced by underscores.
+Creates a text block or a location bookmark:
 
-A clickable reference to this bookmark can be created using the `bookmarkRef` filter.
+- *Text block bookmarks* contain some text which can then be referenced in a clickable reference field using the `bookmarkRef` filter.
+  These bookmarks can also be used as a hyperlink target using the `bookmarkLink` filter.
+- *Location bookmark* simply allow to point to a location within the document which cas be used as a hyperlink target using the `bookmarkLink` filter.
+
+Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters: non-conforming characters are automatically replaced by underscores.
 
 > Use in template document
 >```
+// Example of text block bookmark, the bookmark identifier contains the name value:
 {@name | bookmarkCreate: identifier | p}
+// Example adding some other text in the same paragraph and using a custom paragraph style:
+{@'Some text: ' + (name | bookmarkCreate: identifier) | p: 'Heading 1'}
+// Example of location bookmark:
+{@identifier | bookmarkCreate | p}
+>```
+
+### bookmarkLink
+
+Creates a hyperlink to a text block or location bookmark usually created using the `bookmarkCreate` filter.
+
+> Use in template document
+>```
+{@input | bookmarkLink: identifier | p}
 // Example adding some other text in the same pargraph:
-{@'Some text: ' + (name | bookmarkCreate: identifier) | p}
+{@'Some text: ' + (input | bookmarkLink: identifier) | p}
 >```
 
 ### bookmarkRef
 
-Creates a clickable reference to a bookmark previously created using the `bookmarkCreate` filter.
+Creates a clickable reference to a text block bookmark usually created using the `bookmarkCreate` filter.
 
 > Use in template document
 >```

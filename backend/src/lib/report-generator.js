@@ -109,18 +109,36 @@ exports.generateDoc = generateDoc;
 
 // *** Angular parser filters ***
 
-// Creates text block bookmark: {@name | bookmarkCreate: identifier | p}
-// Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters, dashes are automatically replaced by underscores.
-expressions.filters.bookmarkCreate = function(input, refid) {
+// Creates a text block or simple location bookmark:
+// - Text block: {@name | bookmarkCreate: identifier | p}
+// - Location: {@identifier | bookmarkCreate | p}
+// Invalid identifier characters are replaced by underscores.
+expressions.filters.bookmarkCreate = function(input, refid = null) {
     let rand_id = Math.floor(Math.random() * 1000000 + 1000);
+    let parsed_id = (refid ? refid : input).replace(/[^a-zA-Z0-9_]/g, '_');
+
+    // Accept both text and OO-XML as input.
+    if (input.indexOf('<w:r') !== 0) {
+        input = '<w:r><w:t>' + input + '</w:t></w:r>';
+    }
 
     return '<w:bookmarkStart w:id="' + rand_id + '" '
-        + 'w:name="' + refid.replace('-', '_') + '"/>'
+        + 'w:name="' + parsed_id + '"/>'
         + input
         + '<w:bookmarkEnd w:id="' + rand_id + '"/>';
 }
 
-// Creates a clickable reference to an previously created bookmark: {@identifier | bookmarkRef | p}
+// Creates a hyperlink to a text block or location bookmark:
+// {@input | bookmarkLink: identifier | p}
+expressions.filters.bookmarkLink = function(input, identifier) {
+    return '<w:hyperlink w:anchor="' + identifier + '">'
+        + '<w:r><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr>'
+        + '<w:t>' + input + '</w:t>'
+        + '</w:r></w:hyperlink>';
+}
+
+// Creates a clickable dynamic field referencing a text block bookmark:
+// {@identifier | bookmarkRef | p}
 expressions.filters.bookmarkRef = function(input) {
     return '<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">'
         + ' REF ' + input.replaceAll('-', '_') + ' \\h </w:instrText></w:r>'
