@@ -460,6 +460,15 @@ Takes a multilines input strings (either raw or simple HTML paragraphs) and retu
 {input | lines}
 >```
 
+### linkTo
+
+Takes a text to display and a URL to generate a hyperlink.
+
+> Use in template document
+>```
+{@cvss.vectorString | linkTo: 'https://www.first.org/cvss/calculator/3.1#' + cvss.vectorString | p}
+>```
+
 ### loopObject
 
 Loop over the input object, providing access to its keys and values.
