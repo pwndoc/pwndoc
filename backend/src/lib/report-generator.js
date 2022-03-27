@@ -132,7 +132,7 @@ expressions.filters.bookmarkCreate = function(input, refid = null) {
 // {@input | bookmarkLink: identifier | p}
 expressions.filters.bookmarkLink = function(input, identifier) {
     return '<w:hyperlink w:anchor="' + identifier + '">'
-        + '<w:r><w:rPr><w:rStyle w:val="Lienhypertexte"/></w:rPr>'
+        + '<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>'
         + '<w:t>' + input + '</w:t>'
         + '</w:r></w:hyperlink>';
 }
@@ -268,6 +268,16 @@ expressions.filters.lines = function(input) {
     }
 }
 
+// Creates a hyperlink: {@input | linkTo: 'https://example.com' | p}
+expressions.filters.linkTo = function(input, url) {
+    return '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+        + '<w:r><w:instrText xml:space="preserve"> HYPERLINK "' + url + '" </w:instrText></w:r>'
+        + '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+        + '<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>'
+        + '<w:t>' + input + '</w:t>'
+        + '</w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
+}
+
 // Loop over the input object, providing acccess to its keys and values: {#findings | loopObject}{key}{value.name}{/findings | loopObject}
 // Source: https://stackoverflow.com/a/60887987
 expressions.filters.loopObject = function(input) {
@@ -282,14 +292,11 @@ expressions.filters.lower = function(input) {
         return input.toLowerCase();
 }
 
-// Creates a clickable "mailto:" link, assumes that input is an email address if no other address has been provided as parameter: {@lastname | mailto: email | p}
+// Creates a clickable "mailto:" link, assumes that input is an email address if
+// no other address has been provided as parameter:
+// {@lastname | mailto: email | p}
 expressions.filters.mailto = function(input, address = null) {
-    return '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
-        + '<w:r><w:instrText xml:space="preserve"> HYPERLINK "mailto:' + (address ? address : input) + '" </w:instrText></w:r>'
-        + '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
-        + '<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>'
-        + '<w:t>' + input + '</w:t>'
-        + '</w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
+    return expressions.filters.linkTo(input, 'mailto:' + (address ? address : input));
 }
 
 // Applies a filter on a sequence of objects: {scope | select: 'name' | map: lower | join: ', '}
