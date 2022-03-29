@@ -123,7 +123,7 @@ class ACL {
         var Response = require('./httpResponse')
         var jwt = require('jsonwebtoken')
 
-        if(directToken == null) {
+        if(directToken != null) {
             // direct verification - not as middleware
             jwt.verify(directToken, jwtSecret, (err, decoded) => {
                 if (err) {
