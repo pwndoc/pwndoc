@@ -53,46 +53,4 @@ expressions.filters.convertDateFR = function(input, s) {
     }
 }
 
-// Convert input CVSS criteria into Dutch: {input | criteriaNL}
-expressions.filters.criteriaNL = function(input) {
-    var pre = '<w:p><w:r><w:t>';
-    var post = '</w:t></w:r></w:p>';
-    var result = "Niet gedefinieerd"
-
-    if (input === "Network") result = "Netwerk"
-    else if (input === "Local") result = "Lokaal"
-    else if (input === "Physical") result = "Fysiek"
-    else if (input === "None") result = "Geen"
-    else if (input === "Low") result = "Laag"
-    else if (input === "Medium") result = "Midden"
-    else if (input === "High") result = "Hoog"
-    else if (input === "Critical") result = "Kritiek"
-    else if (input === "Required") result = "Verplicht"
-    else if (input === "Unchanged") result = "Onverandert"
-    else if (input === "Changed") result = "Verandert"
-
-    // return pre + result + post;
-    return result;
-}
-
-// Convert input date with parameter s (full,short): {input | convertDate: 's'}
-expressions.filters.convertDateNL = function(input, s) {
-    var date = new Date(input);
-    if (date !== "Invalid Date") {
-        var monthsFull = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
-        var monthsShort = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
-        var days = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"];
-        var day = date.getUTCDate();
-        var month = date.getUTCMonth();
-        var year = date.getUTCFullYear();
-        if (s === "full") {
-            return days[date.getUTCDay()] + " " + (day<10 ? '0'+day: day) + " " + monthsFull[month] + " " + year;
-        }
-        if (s === "short") {
-            return (day<10 ? '0'+day: day) + "/" + monthsShort[month] + "/" + year;
-        }
-    }
-}
-
 exports.expressions = expressions
-
