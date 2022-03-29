@@ -1,7 +1,7 @@
 <div>
     <div class="row">
         <div class="col-md-8 col-12 offset-md-2 q-mt-md">
-            <q-card class="bg-grey-1">
+            <q-card>
                 <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
                     <div class="text-h6">{{$t('updateUserInformation')}}</div>
                 </q-card-section>
@@ -26,7 +26,6 @@
                                 :error="!!errors.username"
                                 :error-message="errors.username" 
                                 outlined
-                                bg-color="white"
                                 :disable="user.ldapEnabled"
                                 />
                             </q-item-section>
@@ -40,7 +39,6 @@
                                 :error="!!errors.firstname"
                                 :error-message="errors.firstname"
                                 outlined
-                                bg-color="white"
                                 :disable="user.ldapEnabled"
                                 />
                             </q-item-section>
@@ -54,7 +52,6 @@
                                 :error="!!errors.lastname"
                                 :error-message="errors.lastname"
                                 outlined
-                                bg-color="white"
                                 :disable="user.ldapEnabled"
                                 />
                             </q-item-section>
@@ -66,7 +63,6 @@
                                 label="Email" 
                                 stack-label 
                                 outlined
-                                bg-color="white"
                                 :disable="user.ldapEnabled"
                                 />
                             </q-item-section>
@@ -78,7 +74,6 @@
                                 label="Phone" 
                                 stack-label 
                                 outlined
-                                bg-color="white"
                                 />
                             </q-item-section>
                         </q-item>
@@ -92,8 +87,7 @@
                                     stack-label 
                                     type="password"
                                     clearable
-                                    outlined
-                                    bg-color="white"
+                                    outlined                                    
                                     />
                                     <q-input 
                                     class="col-md-6 col-6 q-pl-sm" 
@@ -101,8 +95,7 @@
                                     :label="$t('confirmPassword')" 
                                     stack-label 
                                     type="password"
-                                    outlined
-                                    bg-color="white"
+                                    outlined                                    
                                     clearable
                                     />
                                 </q-field>
@@ -118,8 +111,7 @@
                                 :error="!!errors.currentPassword" 
                                 :error-message="errors.currentPassword"
                                 @keyup.enter="updateProfile"
-                                outlined
-                                bg-color="white"
+                                outlined                                
                                 >
                                     <template v-slot:append>
                                         <q-btn :label="$t('btn.update')" unelevated color="secondary" @click="updateProfile" />
@@ -178,7 +170,6 @@
                                     placeholder="Enter 6-digit code"
                                     @keyup.enter="setupTotp"
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:append>
                                             <q-btn label="Enable" unelevated color="secondary" @click="setupTotp" />
@@ -212,7 +203,6 @@
                                     placeholder="Enter 6-digit code"
                                     @keyup.enter="cancelTotp"
                                     outlined
-                                    bg-color="white"
                                     >
                                         <template v-slot:append>
                                             <q-btn label="Disable" unelevated color="negative" @click="cancelTotp" />

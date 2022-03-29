@@ -40,6 +40,11 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // 401 after wrong password on profile
+    if (error.response.status === 401 && originalRequest.url.endsWith('/users/me')) {
+      return Promise.reject(error)
+    }
+
     // **** End of exceptions
 
     // All other 401 calls

@@ -3,8 +3,6 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-table
             class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :data="clients"
             :filter="search"
@@ -31,40 +29,33 @@
                     <q-td style="width: 25%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.firstname"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 25%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.lastname"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 25%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.email"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 25%">
                         <q-select 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search['company.name']"
                         clearable
@@ -75,7 +66,6 @@
                         emit-value
                         options-sanitize
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>
@@ -115,8 +105,8 @@
 </div>
 
 <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-    <q-card persistent style="width:800px" class="bg-grey-1">
-        <q-bar class="bg-primary text-white">
+    <q-card persistent style="width:800px">
+        <q-bar class="bg-fixed-primary text-white">
             <span>{{$t('addClient')}}</span>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
@@ -133,7 +123,6 @@
             option-label="name"
             options-sanitize
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -146,7 +135,6 @@
             @keyup.enter="createClient()"
             v-model="currentClient.firstname" 
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -158,7 +146,6 @@
             @keyup.enter="createClient()"
             v-model="currentClient.lastname"
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -170,7 +157,6 @@
             @keyup.enter="createClient()"
             v-model="currentClient.email" 
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -179,7 +165,6 @@
             @keyup.enter="createClient()"
             v-model="currentClient.title" 
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -188,7 +173,6 @@
             @keyup.enter="createClient()"
             v-model="currentClient.phone" 
             outlined
-            bg-color="white"
             />
         </q-card-section>
         <q-card-section>
@@ -197,7 +181,6 @@
             @keyup.enter="createClient()"
             v-model="currentClient.cell" 
             outlined
-            bg-color="white"
             />
         </q-card-section>  
                 
@@ -211,8 +194,8 @@
 </q-dialog>
 
 <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-    <q-card persistent style="width:800px" class="bg-grey-1">
-        <q-bar class="bg-primary text-white">
+    <q-card persistent style="width:800px">
+        <q-bar class="bg-fixed-primary text-white">
             <span>{{$t('editClient')}}</span>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
@@ -229,7 +212,6 @@
                 option-label="name"
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -241,7 +223,6 @@
                 @keyup.enter="updateClient()"
                 v-model="currentClient.firstname" 
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -254,7 +235,6 @@
                 @keyup.enter="updateClient()"
                 v-model="currentClient.lastname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -266,7 +246,6 @@
                 @keyup.enter="updateClient()"
                 v-model="currentClient.email" 
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -275,7 +254,6 @@
                 @keyup.enter="updateClient()"
                 v-model="currentClient.title" 
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -284,7 +262,6 @@
                 @keyup.enter="updateClient()"
                 v-model="currentClient.phone" 
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -293,7 +270,6 @@
                 @keyup.enter="updateClient()"
                 v-model="currentClient.cell" 
                 outlined
-                bg-color="white"
                 />
             </q-card-section>  
         

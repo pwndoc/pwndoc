@@ -75,7 +75,7 @@ async function generateDoc(audit) {
     catch(err) {
         console.log(err)
     }
-    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
+    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: parser, paragraphLoop: true});
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
     try {
@@ -166,6 +166,18 @@ expressions.filters.NewLines = function(input) {
     return result;
 }
 
+// Sort array by supplied field: {#findings | sortArrayByField: 'identifier':1}{/}
+// order: 1 = ascending, -1 = descending
+expressions.filters.sortArrayByField = function (input, field, order) {
+    //invalid order sort ascending
+    if(order != 1 && order != -1) order = 1;
+    
+    const sorted = input.sort((a,b) => {
+        //multiply by order so that if is descending (-1) will reverse the values
+        return _.get(a, field).localeCompare(_.get(b, field), undefined, {numeric: true}) * order
+    })    
+    return sorted;
+}
 
 // Convert HTML data to Open Office XML format: {@input | convertHTML: 'customStyle'}
 expressions.filters.convertHTML = function(input, style) {
@@ -223,8 +235,32 @@ var angularParser = function(tag) {
     };
 }
 
+function parser(tag) {
+    // We write an exception to handle the tag "$pageBreakExceptLast"
+    if (tag === "$pageBreakExceptLast") {
+        return {
+            get(scope, context) {
+                const totalLength = context.scopePathLength[context.scopePathLength.length - 1];
+                const index = context.scopePathItem[context.scopePathItem.length - 1];
+                const isLast = index === totalLength - 1;
+                if (!isLast) {
+                    return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+                }
+                else {
+                    return '';
+                }
+            }
+        }
+    }
+    // We use the angularParser as the default fallback
+    // If you don't wish to use the angularParser,
+    // you can use the default parser as documented here:
+    // https://docxtemplater.readthedocs.io/en/latest/configuration.html#default-parser
+    return angularParser(tag);
+}
 function cvssStrToObject(cvss) {
-    var res = {AV:'', AC:'', PR:'', UI:'', S:'', C:'', I:'', A:'', E:'', RL:'', RC:'', CR:'', IR:'', AR:'', MAV:'', MAC:'', MPR:'', MUI:'', MS:'', MC:'', MI:'', MA:''};
+    var initialState = 'Not Defined'
+    var res = {AV:initialState, AC:initialState, PR:initialState, UI:initialState, S:initialState, C:initialState, I:initialState, A:initialState, E:initialState, RL:initialState, RC:initialState, CR:initialState, IR:initialState, AR:initialState, MAV:initialState, MAC:initialState, MPR:initialState, MUI:initialState, MS:initialState, MC:initialState, MI:initialState, MA:initialState};
     if (cvss) {
         var temp = cvss.split('/');
         for (var i=0; i<temp.length; i++) {
@@ -235,165 +271,129 @@ function cvssStrToObject(cvss) {
                     else if (elt[1] === "A") res.AV = "Adjacent Network"
                     else if (elt[1] === "L") res.AV = "Local"
                     else if (elt[1] === "P") res.AV = "Physical"
-                    else res.AV = elt[1];
                     res.AV = $t(res.AV)
                     break;
                 case "AC":
                     if (elt[1] === "L") res.AC = "Low"
                     else if (elt[1] === "H") res.AC = "High"
-                    else res.AC = elt[1];
                     res.AC = $t(res.AC)
                     break;
                 case "PR":
                     if (elt[1] === "N") res.PR = "None"
                     else if (elt[1] === "L") res.PR = "Low"
                     else if (elt[1] === "H") res.PR = "High"
-                    else res.PR = elt[1];
                     res.PR = $t(res.PR)
                     break;
                 case "UI":
                     if (elt[1] === "N") res.UI = "None"
                     else if (elt[1] === "R") res.UI = "Required"
-                    else res.UI = elt[1];
                     res.UI = $t(res.UI)
                     break;
                 case "S":
                     if (elt[1] === "U") res.S = "Unchanged"
                     else if (elt[1] === "C") res.S = "Changed"
-                    else res.S = elt[1];
                     res.S = $t(res.S)
                     break;
                 case "C":
                     if (elt[1] === "N") res.C = "None"
                     else if (elt[1] === "L") res.C = "Low"
                     else if (elt[1] === "H") res.C = "High"
-                    else res.C = elt[1];
                     res.C = $t(res.C)
                     break;
                 case "I":
                     if (elt[1] === "N") res.I = "None"
                     else if (elt[1] === "L") res.I = "Low"
                     else if (elt[1] === "H") res.I = "High"
-                    else res.I = elt[1];
                     res.I = $t(res.I)
                     break;
                 case "A":
                     if (elt[1] === "N") res.A = "None"
                     else if (elt[1] === "L") res.A = "Low"
                     else if (elt[1] === "H") res.A = "High"
-                    else res.A = elt[1];
                     res.A = $t(res.A)
                     break;
                 case "E":
-                    if (elt[1] === "X") res.E = "Not Defined"
-                    else if (elt[1] === "U") res.E = "Unproven"
+                    if (elt[1] === "U") res.E = "Unproven"
                     else if (elt[1] === "P") res.E = "Proof-of-Concept"
                     else if (elt[1] === "F") res.E = "Functional"
                     else if (elt[1] === "H") res.E = "High"
-                    else res.E = elt[1];
                     res.E = $t(res.E)
                     break;
                 case "RL":
-                    if (elt[1] === "X") res.RL = "Not Defined"
-                    else if (elt[1] === "O") res.RL = "Official Fix"
+                    if (elt[1] === "O") res.RL = "Official Fix"
                     else if (elt[1] === "T") res.RL = "Temporary Fix"
                     else if (elt[1] === "W") res.RL = "Workaround"
                     else if (elt[1] === "U") res.RL = "Unavailable"
-                    else res.RL = elt[1];
                     res.RL = $t(res.RL)
                     break;
                 case "RC":
-                    if (elt[1] === "X") res.RC = "Not Defined"
-                    else if (elt[1] === "U") res.RC = "Unknown"
+                    if (elt[1] === "U") res.RC = "Unknown"
                     else if (elt[1] === "R") res.RC = "Reasonable"
                     else if (elt[1] === "C") res.RC = "Confirmed"
-                    else res.RC = elt[1];
                     res.RC = $t(res.RC)
                     break;
                 case "CR":
-                    if (elt[1] === "X") res.CR = "Not Defined"
-                    else if (elt[1] === "L") res.CR = "Low"
+                    if (elt[1] === "L") res.CR = "Low"
                     else if (elt[1] === "M") res.CR = "Medium"
                     else if (elt[1] === "H") res.CR = "High"
-                    else res.CR = elt[1];
                     res.CR = $t(res.CR)
                     break;
                 case "IR":
-                    if (elt[1] === "X") res.IR = "Not Defined"
-                    else if (elt[1] === "L") res.IR = "Low"
+                    if (elt[1] === "L") res.IR = "Low"
                     else if (elt[1] === "M") res.IR = "Medium"
                     else if (elt[1] === "H") res.IR = "High"
-                    else res.IR = elt[1];
                     res.IR = $t(res.IR)
                     break;
                 case "AR":
-                    if (elt[1] === "X") res.AR = "Not Defined"
-                    else if (elt[1] === "L") res.AR = "Low"
+                    if (elt[1] === "L") res.AR = "Low"
                     else if (elt[1] === "M") res.AR = "Medium"
                     else if (elt[1] === "H") res.AR = "High"
-                    else res.AR = elt[1];
                     res.AR = $t(res.AR)
                     break;
                 case "MAV":
-                    if (elt[1] === "X") res.MAV = "Not Defined"
-                    else if (elt[1] === "N") res.MAV = "Network"
+                    if (elt[1] === "N") res.MAV = "Network"
                     else if (elt[1] === "A") res.MAV = "Adjacent Network"
                     else if (elt[1] === "L") res.MAV = "Local"
                     else if (elt[1] === "P") res.MAV = "Physical"
-                    else res.MAV = elt[1];
                     res.MAV = $t(res.MAV)
                     break;
                 case "MAC":
-                    if (elt[1] === "X") res.MAC = "Not Defined"
-                    else if (elt[1] === "L") res.MAC = "Low"
+                    if (elt[1] === "L") res.MAC = "Low"
                     else if (elt[1] === "H") res.MAC = "High"
-                    else res.MAC = elt[1];
                     res.MAC = $t(res.MAC)
                     break;
                 case "MPR":
-                    if (elt[1] === "X") res.MPR = "Not Defined"
-                    else if (elt[1] === "N") res.MPR = "None"
+                    if (elt[1] === "N") res.MPR = "None"
                     else if (elt[1] === "L") res.MPR = "Low"
                     else if (elt[1] === "H") res.MPR = "High"
-                    else res.MPR = elt[1];
                     res.MPR = $t(res.MPR)
                     break;
                 case "MUI":
-                    if (elt[1] === "X") res.MUI = "Not Defined"
-                    else if (elt[1] === "N") res.MUI = "None"
+                    if (elt[1] === "N") res.MUI = "None"
                     else if (elt[1] === "R") res.MUI = "Required"
-                    else res.MUI = elt[1];
                     res.MUI = $t(res.MUI)
                     break;
                 case "MS":
-                    if (elt[1] === "X") res.MS = "Not Defined"
-                    else if (elt[1] === "U") res.MS = "Unchanged"
+                    if (elt[1] === "U") res.MS = "Unchanged"
                     else if (elt[1] === "C") res.MS = "Changed"
-                    else res.MS = elt[1];
                     res.MS = $t(res.MS)
                     break;
                 case "MC":
-                    if (elt[1] === "X") res.MC = "Not Defined"
                     if (elt[1] === "N") res.MC = "None"
                     else if (elt[1] === "L") res.MC = "Low"
                     else if (elt[1] === "H") res.MC = "High"
-                    else res.MC = elt[1];
                     res.MC = $t(res.MC)
                     break;
                 case "MI":
-                    if (elt[1] === "X") res.MI = "Not Defined"
-                    else if (elt[1] === "N") res.MI = "None"
+                    if (elt[1] === "N") res.MI = "None"
                     else if (elt[1] === "L") res.MI = "Low"
                     else if (elt[1] === "H") res.MI = "High"
-                    else res.MI = elt[1];
                     res.MI = $t(res.MI)
                     break;
                 case "MA":
-                    if (elt[1] === "X") res.MA = "Not Defined"
-                    else if (elt[1] === "N") res.MA = "None"
+                    if (elt[1] === "N") res.MA = "None"
                     else if (elt[1] === "L") res.MA = "Low"
                     else if (elt[1] === "H") res.MA = "High"
-                    else res.MA = elt[1];
                     res.MA = $t(res.MA)
                     break;
                 default:
@@ -440,6 +440,7 @@ async function prepAuditData(data, settings) {
     result.company = {}
     if (data.company) {
         result.company.name = data.company.name || "undefined"
+        result.company.shortName = data.company.shortName || result.company.name
         result.company.logo = data.company.logo || "undefined"
         result.company.logo_small = data.company.logo || "undefined"
     }
@@ -488,7 +489,7 @@ async function prepAuditData(data, settings) {
         }
         // Handle CVSS
         tmpFinding.cvss = {
-            vectorString: finding.cvssv3 || "",
+            vectorString: tmpCVSS.vectorString || "",
             baseMetricScore: tmpCVSS.baseMetricScore || "",
             baseSeverity: tmpCVSS.baseSeverity || "",
             temporalMetricScore: tmpCVSS.temporalMetricScore || "",
@@ -497,18 +498,41 @@ async function prepAuditData(data, settings) {
             environmentalSeverity: tmpCVSS.environmentalSeverity || ""
         }
         if (tmpCVSS.baseImpact) 
-            tmpFinding.cvss.baseImpact = _.round(tmpCVSS.baseImpact, 1)
+            tmpFinding.cvss.baseImpact = CVSS31.roundUp1(tmpCVSS.baseImpact)
         else
             tmpFinding.cvss.baseImpact = ""
         if (tmpCVSS.baseExploitability)
-            tmpFinding.cvss.baseExploitability = _.round(tmpCVSS.baseExploitability, 1)
+            tmpFinding.cvss.baseExploitability = CVSS31.roundUp1(tmpCVSS.baseExploitability)
         else
             tmpFinding.cvss.baseExploitability = ""
+
+        if (tmpCVSS.environmentalModifiedImpact) 
+            tmpFinding.cvss.environmentalModifiedImpact = CVSS31.roundUp1(tmpCVSS.environmentalModifiedImpact)
+        else
+            tmpFinding.cvss.environmentalModifiedImpact = ""
+        if (tmpCVSS.environmentalModifiedExploitability)
+            tmpFinding.cvss.environmentalModifiedExploitability = CVSS31.roundUp1(tmpCVSS.environmentalModifiedExploitability)
+        else
+            tmpFinding.cvss.environmentalModifiedExploitability = ""
+
         if (tmpCVSS.baseSeverity === "Low") tmpFinding.cvss.cellColor = cellLowColor
         else if (tmpCVSS.baseSeverity === "Medium") tmpFinding.cvss.cellColor = cellMediumColor
         else if (tmpCVSS.baseSeverity === "High") tmpFinding.cvss.cellColor = cellHighColor
         else if (tmpCVSS.baseSeverity === "Critical") tmpFinding.cvss.cellColor = cellCriticalColor
         else tmpFinding.cvss.cellColor = cellNoneColor
+
+        if (tmpCVSS.temporalSeverity === "Low") tmpFinding.cvss.temporalCellColor = cellLowColor
+        else if (tmpCVSS.temporalSeverity === "Medium") tmpFinding.cvss.temporalCellColor = cellMediumColor
+        else if (tmpCVSS.temporalSeverity === "High") tmpFinding.cvss.temporalCellColor = cellHighColor
+        else if (tmpCVSS.temporalSeverity === "Critical") tmpFinding.cvss.temporalCellColor = cellCriticalColor
+        else tmpFinding.cvss.temporalCellColor = cellNoneColor
+
+        if (tmpCVSS.environmentalSeverity === "Low") tmpFinding.cvss.environmentalCellColor = cellLowColor
+        else if (tmpCVSS.environmentalSeverity === "Medium") tmpFinding.cvss.environmentalCellColor = cellMediumColor
+        else if (tmpCVSS.environmentalSeverity === "High") tmpFinding.cvss.environmentalCellColor = cellHighColor
+        else if (tmpCVSS.environmentalSeverity === "Critical") tmpFinding.cvss.environmentalCellColor = cellCriticalColor
+        else tmpFinding.cvss.environmentalCellColor = cellNoneColor
+
         tmpFinding.cvssObj = cvssStrToObject(tmpCVSS.vectorString)
 
         if (finding.customFields) {

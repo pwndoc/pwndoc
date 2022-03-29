@@ -1,6 +1,6 @@
 <template>
 <q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix">
+    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix" class="bg-white">
         <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
             <q-toolbar class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">
@@ -427,7 +427,6 @@ export default {
         width: auto;
         border-bottom: 1px solid rgba(0,0,0,0.12);
         border-right: 1px solid rgba(0,0,0,0.12);
-        background-color: white;
         top: 50px!important;
         z-index: 1000
     }

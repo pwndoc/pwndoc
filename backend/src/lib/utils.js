@@ -41,3 +41,14 @@ var getObjectPaths = (obj, prefix = '') =>
     return [...res, prefix + el];
   }, [])
 exports.getObjectPaths = getObjectPaths
+
+function getSockets(io, room) {
+  var result = []
+  io.sockets.sockets.forEach((data) => {
+    if (data.rooms.has(room)) {
+      result.push(data)
+    }
+  })
+  return result
+}
+exports.getSockets = getSockets

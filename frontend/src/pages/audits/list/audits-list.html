@@ -9,8 +9,6 @@
     <div v-if="languages.length > 0 && auditTypes.length > 0" class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
             class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :visible-columns="visibleColumns"
             :data="audits"
@@ -25,12 +23,10 @@
             <template v-slot:top>
                 <q-input
                 class="col-md-3"
-                color="secondary"
                 :label="$t('searchFinds')"
                 v-model="search.finding"
                 @keyup.enter="getAudits"
                 outlined
-                bg-color="white"
                 >
                     <template v-slot:append>
                         <q-btn flat icon="search" @click="getAudits" />
@@ -60,19 +56,16 @@
                         <div v-if="['name', 'users', 'date'].indexOf(col.name) > -1">
                             <q-input 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             v-model="search[col.name]"
                             clearable
                             :autofocus="col.name === 'name'"
                             outlined
-                            bg-color="white"
                             />
                         </div>
                         <div v-else-if="col.name === 'company'">
                             <q-select
                                 dense 
-                                color="secondary"
                                 :label="$t('search')"
                                 :options="companies"
                                 v-model="search.company"
@@ -83,13 +76,11 @@
                                 clearable
                                 options-sanitize
                                 outlined
-                                bg-color="white"
                                 />
                         </div>
                         <div v-else-if="col.name === 'language'">
                             <q-select 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             :options="languages"
                             v-model="search.language"
@@ -100,7 +91,6 @@
                             clearable
                             options-sanitize
                             outlined
-                            bg-color="white"
                             />
                         </div>
                     </q-td>
@@ -164,7 +154,7 @@
 
 <q-dialog ref="createModal" persistent @hide="cleanCurrentAudit()">
     <q-card style="width:800px">
-        <q-bar class="bg-primary text-white">
+        <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
                 {{$t('createAudit')}}
             </div>
@@ -179,6 +169,7 @@
             autofocus
             @keyup.enter="createAudit()"
             v-model="currentAudit.name"
+            outlined
             />
             <q-select
             :label="$t('selectAssessment')+' *'"
@@ -191,6 +182,7 @@
             emit-value
             map-options
             options-sanitize
+            outlined
             /> 
             <q-select 
             :label="$t('selectLanguage')+' *'"
@@ -203,6 +195,7 @@
             emit-value 
             map-options
             options-sanitize
+            outlined
             />
         </q-card-section>
 
