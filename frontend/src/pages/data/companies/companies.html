@@ -97,6 +97,17 @@
                     v-model="currentCompany.name" 
                     outlined
                     />
+                <q-input
+                    :label="$t('shortName')"
+                    autofocus
+                    class="col-md-12"
+                    :error="!!errors.shortName"
+                    :error-message="errors.shortName"
+                    @keyup.enter="createCompany()"
+                    v-model="currentCompany.shortName" 
+                    outlined
+                    bg-color="white"
+                    />
                 <q-uploader
                     ref="addUploader"
                     class="col-md-12"
@@ -139,6 +150,18 @@
                     @keyup.enter="updateCompany()"
                     v-model="currentCompany.name"
                     outlined
+                    />
+                <q-input
+                    :label="$t('shortName')"
+                    autofocus
+                    class="col-md-12"
+                    :error="!!errors.shortName"
+                    :error-message="errors.shortName"
+                    ref="shortNameInput"
+                    @keyup.enter="updateCompany()"
+                    v-model="currentCompany.shortName"
+                    outlined
+                    bg-color="white"
                     />
                 <q-uploader
                     ref="addUploader"
