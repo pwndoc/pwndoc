@@ -417,6 +417,7 @@ async function prepAuditData(data, settings) {
     result.company = {}
     if (data.company) {
         result.company.name = data.company.name || "undefined"
+        result.company.shortName = data.company.shortName || result.company.name
         result.company.logo = data.company.logo || "undefined"
         result.company.logo_small = data.company.logo || "undefined"
     }
