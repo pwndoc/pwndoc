@@ -20,6 +20,7 @@ var UserSchema = new Schema({
     role:           {type: String, default: 'user'},
     totpEnabled:    {type: Boolean, default: false},
     totpSecret:     {type: String, default: ''},
+    enabled:        {type: Boolean, default: true},
     refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
 
@@ -83,7 +84,7 @@ UserSchema.statics.create = function (user) {
 UserSchema.statics.getAll = function () {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname email phone role totpEnabled');
+        query.select('username firstname lastname email phone role totpEnabled enabled');
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -98,7 +99,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname email phone role totpEnabled');
+        query.select('username firstname lastname email phone role totpEnabled enabled');
         query.exec()
         .then(function(row) {
             if (row)
@@ -199,7 +200,7 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
         var query = this.findById(userId)
         query.exec()
         .then(row => {
-            if (row) {
+            if (row && row.enabled !== false) {
                 // Check session exist and sessionId not null (if null then it is a login)
                 if (sessionId !== null) {
                     var sessionExist = row.refreshTokens.findIndex(e => e.sessionId === sessionId && e.token === refreshToken)
@@ -242,6 +243,9 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                     row.refreshTokens[foundIndex].token = newRefreshToken
                 }
                 return row.save()
+            }
+            else if (row) {
+                reject({fn: 'Unauthorized', message: 'Account disabled'})
             }
             else
                 reject({fn: 'NotFound', message: 'Session not found'})
@@ -369,6 +373,9 @@ UserSchema.methods.getToken = function (userAgent) {
         var query = User.findOne({username: user.username});
         query.exec()
         .then(function(row) {
+            if (row && row.enabled === false) 
+                throw({fn: 'Unauthorized', message: 'Account disabled'});
+
             if (row && bcrypt.compareSync(user.password, row.password)) {
                 if (row.totpEnabled && user.totpToken)
                     checkTotpToken(user.totpToken, row.totpSecret)

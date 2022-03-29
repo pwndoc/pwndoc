@@ -3,8 +3,6 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-table
             class="sticky-header-table"
-            card-class="bg-grey-1"
-            table-header-class="bg-grey-1"
             :columns="dtHeaders"
             :data="templates"
             :filter="search"
@@ -31,23 +29,19 @@
                     <q-td style="width: 50%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.name"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td style="width: 50%">
                         <q-input 
                         dense
-                        color="secondary"
                         :label="$t('search')"
                         v-model="search.ext"
                         clearable
                         outlined
-                        bg-color="white"
                         />
                     </q-td>
                     <q-td></q-td>
@@ -90,8 +84,8 @@
 </div>
 
 <q-dialog ref="createModal" persistent @hide="cleanCurrentTemplate()">
-    <q-card style="width:800px" class="bg-grey-1">
-        <q-bar class="bg-primary text-white">
+    <q-card style="width:800px">
+        <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
                 {{$t('createTemplate')}}
             </div>
@@ -111,7 +105,6 @@
                 @keyup.enter="createTemplate()"
                 v-model="currentTemplate.name" 
                 outlined
-                bg-color="white"
                 />
                 
                 <q-field class="col-md-12 col-12" no-error-icon borderless :error="!!errors.file" :error-message="errors.file">
@@ -122,6 +115,7 @@
                         accept='.doc,.docx,.docm,.ppt,.pptx'
                         hide-upload-btn
                         @added="handleFile"
+                        color="fixed-primary"
                         />
                     </template>
                 </q-field>
@@ -138,8 +132,8 @@
 </q-dialog>
 
 <q-dialog ref="editModal" persistent @hide="cleanCurrentTemplate()">
-    <q-card style="width:800px" class="bg-grey-1">
-        <q-bar class="bg-primary text-white">
+    <q-card style="width:800px">
+        <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
                 {{$t('editTemplate')}}
             </div>
@@ -159,7 +153,6 @@
                 @keyup.enter="updateTemplate()"
                 v-model="currentTemplate.name" 
                 outlined
-                bg-color="white"
                 />
                 
                 <q-field class="col-md-12 col-12" no-error-icon borderless :error="!!errors.file" :error-message="errors.file">
@@ -170,6 +163,7 @@
                         accept='.doc,.docx,.docm,.ppt,.pptx'
                         hide-upload-btn
                         @added="handleFile"
+                        color="fixed-primary"
                         />
                     </template>
                 </q-field>

@@ -1,9 +1,9 @@
 <template>
-    <q-card>
+    <q-card class="cvsscalculator">
         <q-card-section class="row">
             <div class="col-md-3" style="align-self:center">
             <span>
-            {{$t('cvss.title')}}
+                {{$t('cvss.title')}}
                 <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                     <span :style="tooltip.style">{{$t('cvss.tooltip.baseMetricGroup_Legend')}}</span>
                 </q-tooltip>
@@ -11,8 +11,8 @@
             </div>
             <q-space />
             <div v-if="cvss.baseImpact && cvss.baseExploitability" style="margin-right:120px">
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss.impactSubscore')}}:&nbsp;<span class="text-bold">{{$_.round(cvss.baseImpact, 1)}}</span></q-chip>
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss.exploitabilitySubscore')}}:&nbsp;<span class="text-bold">{{$_.round(cvss.baseExploitability, 1)}}</span></q-chip>
+                <q-chip square color="blue-12" text-color="white">{{$t('cvss.impactSubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseImpact)}}</span></q-chip>
+                <q-chip square color="blue-12" text-color="white">{{$t('cvss.exploitabilitySubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseExploitability)}}</span></q-chip>
             </div>
             <div class="scoreRating" :class="cvss.baseSeverity">
                 <span class="baseSeverity" v-if="!cvss.baseMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
@@ -437,15 +437,19 @@
             </q-card-section>
             <q-separator />
             <q-card-section class="row">
-                <div class="col-md-6">
+                <div class="col-md-3" style="align-self:center">
                     <span>
-                    {{$t('cvss.environmentalTitle')}}
-                    <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                        <span :style="tooltip.style">{{$t('cvss.tooltip.environmentalMetricGroup_Legend')}}</span>
-                    </q-tooltip>
+                        {{$t('cvss.environmentalTitle')}}
+                        <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
+                            <span :style="tooltip.style">{{$t('cvss.tooltip.environmentalMetricGroup_Legend')}}</span>
+                        </q-tooltip>
                     </span>
                 </div>
                 <q-space />
+                <div v-if="cvss.baseImpact && cvss.baseExploitability" style="margin-right:120px">
+                    <q-chip square color="blue-12" text-color="white">{{$t('cvss.environmentalModifiedImpact')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedImpact)}}</span></q-chip>
+                    <q-chip square color="blue-12" text-color="white">{{$t('cvss.environmentalModifiedExploitability')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedExploitability)}}</span></q-chip>
+                </div>
                 <div class="scoreRating" :class="cvss.environmentalSeverity">
                     <span class="baseSeverity" v-if="!cvss.environmentalMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
                     <div v-else>
@@ -892,22 +896,22 @@ export default {
                 C: [{label: $t("cvss.none"), value: "N", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
                 I: [{label: $t("cvss.none"), value: "N", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
                 A: [{label: $t("cvss.none"), value: "N", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
-                E: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.unproven"), value: "U", slot: 'two'}, {label: $t("cvss.poc"), value: "P", slot: 'three'}, {label: $t("cvss.functional"), value: "F", slot: 'four'}, {label: $t("cvss.high"), value: "H", slot: 'five'}],
-                RL: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.officialFix"), value: "O", slot: 'two'}, {label: $t("cvss.temporaryFix"), value: "T", slot: 'three'}, {label: $t("cvss.workaround"), value: "W", slot: 'four'}, {label: $t("cvss.unavailable"), value: "U", slot: 'five'}],
-                RC: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.unknown"), value: "U", slot: 'two'}, {label: $t("cvss.reasonable"), value: "R", slot: 'three'}, {label: $t("cvss.confirmed"), value: "C", slot: 'four'}],
-                CR: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                IR: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                AR: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                MAV: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.network"), value: "N", slot: 'two'}, {label: $t("cvss.adjacentNetwork"), value: "A", slot: 'three'}, {label: $t("cvss.local"), value: "L", slot: 'four'}, {label: $t("cvss.physical"), value: "P", slot: 'five'}],
-                MAC: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
-                MPR: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                MUI: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.required"), value: "R", slot: 'three'}],
-                MS: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.unchanged"), value: "U", slot: 'two'}, {label: $t("cvss.changed"), value: "C", slot: 'three'}],
-                MC: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                MI: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                MA: [{label: $t("cvss.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
+                E: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.unproven"), value: "U", slot: 'two'}, {label: $t("cvss.poc"), value: "P", slot: 'three'}, {label: $t("cvss.functional"), value: "F", slot: 'four'}, {label: $t("cvss.high"), value: "H", slot: 'five'}],
+                RL: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.officialFix"), value: "O", slot: 'two'}, {label: $t("cvss.temporaryFix"), value: "T", slot: 'three'}, {label: $t("cvss.workaround"), value: "W", slot: 'four'}, {label: $t("cvss.unavailable"), value: "U", slot: 'five'}],
+                RC: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.unknown"), value: "U", slot: 'two'}, {label: $t("cvss.reasonable"), value: "R", slot: 'three'}, {label: $t("cvss.confirmed"), value: "C", slot: 'four'}],
+                CR: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
+                IR: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
+                AR: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
+                MAV: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.network"), value: "N", slot: 'two'}, {label: $t("cvss.adjacentNetwork"), value: "A", slot: 'three'}, {label: $t("cvss.local"), value: "L", slot: 'four'}, {label: $t("cvss.physical"), value: "P", slot: 'five'}],
+                MAC: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
+                MPR: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
+                MUI: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.required"), value: "R", slot: 'three'}],
+                MS: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.unchanged"), value: "U", slot: 'two'}, {label: $t("cvss.changed"), value: "C", slot: 'three'}],
+                MC: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
+                MI: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
+                MA: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
             },
-            cvssObj: {AV:'', AC:'', PR:'', UI:'', S:'', C:'', I:'', A:'', E:'', RL:'', RC:'', CR:'', IR:'', AR:'', MAV:'', MAC:'', MPR:'', MUI:'', MS:'', MC:'', MI:'', MA:''},
+            cvssObj: {version:'3.1', AV:'', AC:'', PR:'', UI:'', S:'', C:'', I:'', A:'', E:'', RL:'', RC:'', CR:'', IR:'', AR:'', MAV:'', MAC:'', MPR:'', MUI:'', MS:'', MC:'', MI:'', MA:''},
             cvss: {
                 baseMetricScore: '',
                 baseSeverity: '',
@@ -945,12 +949,18 @@ export default {
     },
 
     methods: {
+        roundUp1(n) {
+            return CVSS31.roundUp1(n)
+        },
+
         cvssStrToObject(str) {
             if (str) {
                 var temp = str.split('/');
                 for (var i=0; i<temp.length; i++) {
                     var elt = temp[i].split(':');
                     switch(elt[0]) {
+                        case "CVSS":
+                            this.cvssObj.version = elt[1];
                         case "AV":
                             this.cvssObj.AV = elt[1];
                             break;
@@ -1025,7 +1035,7 @@ export default {
         },
 
         cvssObjectToStr() {
-            var vectorString = "CVSS:3.1";
+            var vectorString = "CVSS:"+this.cvssObj.version;
             if (this.cvssObj.AV) vectorString += "/AV:"+this.cvssObj.AV
             if (this.cvssObj.AC) vectorString += "/AC:"+this.cvssObj.AC
             if (this.cvssObj.PR) vectorString += "/PR:"+this.cvssObj.PR
@@ -1051,7 +1061,6 @@ export default {
 
             this.cvss = CVSS31.calculateCVSSFromVector(vectorString);                 
             this.$emit('input', vectorString);
-            this.$emit('cvssScoreChange', this.cvss.baseMetricScore);
         }
     }
 }

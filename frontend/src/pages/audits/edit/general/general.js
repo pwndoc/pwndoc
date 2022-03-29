@@ -79,7 +79,6 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getAuditGeneral();
-        this.getClients();
         this.getTemplates();
         this.getLanguages();
         this.getAuditTypes();
@@ -131,6 +130,7 @@ export default {
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 this.getCollaborators();
                 this.getReviewers();
+                this.getClients();
             })
             .catch((err) => {              
                 console.log(err.response)
@@ -188,7 +188,7 @@ export default {
             CompanyService.getCompanies()
             .then((data) => {
                 this.companies = data.data.datas;
-                this.filterClients()
+                this.filterClients('init')
             })
             .catch((err) => {
                 console.log(err)
@@ -257,15 +257,16 @@ export default {
         },
 
         // Filter client options when selecting company
-        filterClients: function() {
-            if (this.audit.company) {
+        filterClients: function(step) {
+            if (step !== 'init') this.audit.client = null // only reset client when company is updated
+            if (this.audit.company && this.audit.company.name) {
                 this.selectClients = [];
                 this.clients.map(client => {
                     if (client.company && client.company.name === this.audit.company.name) this.selectClients.push(client)
                 })
             }
             else
-                this.selectClients = this.clients;
+                this.selectClients = this.$_.clone(this.clients);
         },
 
         // Set Company when selecting client 
@@ -291,7 +292,7 @@ export default {
                 done(val, 'add-unique')
         },
 
-        filterSelectCompany (val, update) {   
+        filterSelectCompany (val, update) {
             if (val === '') {
                 update(() => this.selectCompanies = this.companies)
                 return

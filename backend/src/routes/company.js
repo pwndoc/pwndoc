@@ -23,6 +23,7 @@ module.exports = function(app) {
         company.name = req.body.name;
 
         // Optional parameters
+        if (req.body.shortName) company.shortName = req.body.shortName;
         if (req.body.logo) company.logo = req.body.logo;
 
         Company.create(company)
@@ -35,6 +36,7 @@ module.exports = function(app) {
         var company = {};
         // Optional parameters
         if (req.body.name) company.name = req.body.name;
+        if (req.body.shortName) company.shortName = req.body.shortName;
         if (req.body.logo) company.logo = req.body.logo;
 
         Company.update(req.params.id, company)

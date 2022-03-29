@@ -40,10 +40,6 @@ export default {
   createFinding: function(auditId, finding) {
     return Vue.prototype.$axios.post(`audits/${auditId}/findings`, finding)
   },
-
-  getFindings: function(auditId) {
-    return Vue.prototype.$axios.get(`audits/${auditId}/findings`)
-  },
   
   getFinding: function(auditId, findingId) {
     return Vue.prototype.$axios.get(`audits/${auditId}/findings/${findingId}`)

@@ -1,9 +1,9 @@
 <template>
-<div class="login-background" style="height:100vh;display:flex">
+<div :class="$q.dark.isActive ? '' : 'login-background'" style="height:100vh;display:flex">
     <div v-if="loaded === true" style="margin:auto">
-        <q-card align="center" style="width:350px" class="bg-grey-1">
+        <q-card align="center" style="width:350px">
             <q-card-section>
-                <q-img src="pwndoc-logo.png" />
+                <q-img :src="$q.dark.isActive ? 'pwndoc-logo-white.png' : 'pwndoc-logo.png'" />
             </q-card-section>
 
             <q-card-section v-if="errors.alert">
@@ -85,6 +85,7 @@
                     bg-color="white"
                     for="username"
                     @keyup.enter="getToken()"
+                    :disable="loginLoading"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-user" /></template>
                     </q-input>
@@ -101,6 +102,7 @@
                     for="password"
                     type="password"
                     @keyup.enter="getToken()"
+                    :disable="loginLoading"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-key" /></template>
                     </q-input>
@@ -133,13 +135,14 @@
                     for="totpToken"
                     maxlength=6
                     @keyup.enter="getToken()"
+                    :disable="loginLoading"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-unlock-alt" /></template>
                     </q-input>
                 </q-card-section>
 
                 <q-card-section align="center">
-                    <q-btn color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
+                    <q-btn :loading="loginLoading" color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
                 </q-card-section>
             </div>
         </q-card>
@@ -164,7 +167,8 @@ export default {
             password: "",
             totpToken: "",
             step: 0,
-            errors: {alert: "", username: "", password: "", firstname: "", lastname: ""}
+            errors: {alert: "", username: "", password: "", firstname: "", lastname: ""},
+            loginLoading: false
         }
     },
 
@@ -238,6 +242,7 @@ export default {
             if (this.errors.username || this.errors.password)
                 return;
 
+            this.loginLoading = true;
             UserService.getToken(this.username, this.password, this.totpToken)
             .then(async () => {
                 await this.$settings.refresh();
@@ -257,6 +262,9 @@ export default {
                     this.errors.alert = errmsg;
                 }
             })
+            .finally(() => {
+                this.loginLoading = false;
+            });
         }
     }
 }
@@ -269,17 +277,5 @@ export default {
 
 .loading p {
     font-size: 20px;
-}
-
-.loading-error .material-icons {
-    font-size: 100px;
-}
-
-.loading-error p {
-    font-size: 20px;
-}
-
-.loading-error:before {
-    opacity: 0.7;
 }
 </style>
