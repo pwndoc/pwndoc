@@ -389,7 +389,7 @@ UserSchema.methods.getToken = async function (userAgent) {
     
     let loginResult = false;
     if(row) {
-        if (row && row.enabled === false) 
+        if (row.enabled === false) 
             throw({fn: 'Unauthorized', message: 'Account disabled'});
 
         if(!ldap.enabled && row.ldapEnabled) {
