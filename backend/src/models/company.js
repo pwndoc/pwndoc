@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 
 var CompanySchema = new Schema({
     name: {type: String, required: true, unique: true},
-    shortName: {type: String},
+    shortName: String,
     logo: String
 
 }, {timestamps: true});
