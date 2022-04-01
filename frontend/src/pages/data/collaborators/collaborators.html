@@ -84,9 +84,6 @@
                     <q-btn v-if="UserService.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
                     </q-btn>
-                    <q-btn v-if="UserService.isAllowed('users:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCollab(props.row)">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
-                    </q-btn>
                 </q-td>  
 
                 <template v-slot:bottom="scope">
