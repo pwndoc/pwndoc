@@ -75,7 +75,7 @@ async function generateDoc(audit) {
     catch(err) {
         console.log(err)
     }
-    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
+    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: parser, paragraphLoop: true});
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
     try {
@@ -235,6 +235,29 @@ var angularParser = function(tag) {
     };
 }
 
+function parser(tag) {
+    // We write an exception to handle the tag "$pageBreakExceptLast"
+    if (tag === "$pageBreakExceptLast") {
+        return {
+            get(scope, context) {
+                const totalLength = context.scopePathLength[context.scopePathLength.length - 1];
+                const index = context.scopePathItem[context.scopePathItem.length - 1];
+                const isLast = index === totalLength - 1;
+                if (!isLast) {
+                    return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+                }
+                else {
+                    return '';
+                }
+            }
+        }
+    }
+    // We use the angularParser as the default fallback
+    // If you don't wish to use the angularParser,
+    // you can use the default parser as documented here:
+    // https://docxtemplater.readthedocs.io/en/latest/configuration.html#default-parser
+    return angularParser(tag);
+}
 function cvssStrToObject(cvss) {
     var initialState = 'Not Defined'
     var res = {AV:initialState, AC:initialState, PR:initialState, UI:initialState, S:initialState, C:initialState, I:initialState, A:initialState, E:initialState, RL:initialState, RC:initialState, CR:initialState, IR:initialState, AR:initialState, MAV:initialState, MAC:initialState, MPR:initialState, MUI:initialState, MS:initialState, MC:initialState, MI:initialState, MA:initialState};
