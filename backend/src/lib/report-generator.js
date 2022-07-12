@@ -484,9 +484,14 @@ async function prepAuditData(data, settings) {
             poc: await splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
             status: finding.status || "",
-            category: $t(finding.category) || $t("No Category"),
             identifier: "IDX-" + utils.lPad(finding.identifier)
         }
+        // Handle Category
+        tmpFinding.category = {
+            name: finding.category ? $t(finding.category.name) : $t("No Category"),
+            description: finding.category ? $t(finding.category.description) : $t("No Category Description"),
+        }
+
         // Handle CVSS
         tmpFinding.cvss = {
             vectorString: tmpCVSS.vectorString || "",

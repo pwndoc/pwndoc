@@ -29,7 +29,7 @@ var Finding = {
     poc:                    String,
     scope:                  String,
     status:                 {type: Number, enum: [0,1], default: 1}, // 0: done, 1: redacting
-    category:               String,
+    category:               {type: Schema.Types.ObjectId, ref: 'VulnerabilityCategory'},
     customFields:           [customField]
 }
 
@@ -125,6 +125,13 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
             populate: {
                 path: 'customFields.customField',
                 select: 'label fieldType text'
+            }
+        })
+        query.populate({
+            path: 'findings',
+            populate: {
+                path: 'category',
+                select: 'name description'
             }
         })
         query.exec()
