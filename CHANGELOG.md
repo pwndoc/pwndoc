@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.5.3 (2022-07-19)
+
+### Enhancements
+
+- Add Dark mode theme [`9564911`](https://github.com/pwndoc/pwndoc/commit/956491149f63cabd430039a72135c760b1614f4b)
+- Update CVSS calculation [`5cb9661`](https://github.com/pwndoc/pwndoc/commit/5cb9661e9973667834a9fcc03c5fe62ec999665d)
+  - Use First roundup function for impact and exploitability subscores
+  - Add temporal colors for template
+  - Add environmental colors for template
+  - Add environmental impact and exploitability subscores
+  - Update sorting with Environmental and Temporal scores
+  - Removed cvssScore and cvssSeverity from models since now they are always calculated based on the vector string
+- Update websockets to reconnect after a disconnect [`0813945`](https://github.com/pwndoc/pwndoc/commit/0813945961ec2bd15c7af18b18e3af0109b82387)
+  - Updated socket.io to last version
+  - If server connection is lost websockets for Audit menu will reconnect automatically
+- Add dynamic check for backend connection [`2673749`](https://github.com/pwndoc/pwndoc/commit/2673749cd02b8bc0827af35d97d14b7e93c33783)
+  - If websocket disconnect then a loading message appear until it reconnects
+- Remove user deletion to prevent missing references [`6e3de55`](https://github.com/pwndoc/pwndoc/commit/6e3de550da77b9ecf4444b31b3a0595fcb1a0b4d)
+  - Deleting users breaked their links to different objects like audits.
+  - It's better to use the recent disable feature to avoid orphan objects
+
+### Merged
+
+- Added a short name to companies and included it on reports [`cd72648`](https://github.com/pwndoc/pwndoc/commit/cd72648c504c4190f364d9fcea6b471e13290092)
+- Create filter to sort findings in document [`a551379`](https://github.com/pwndoc/pwndoc/commit/a551379830d2652a9daef09a7a95e5c0bf915fcd)
+- Add i18n fr-FR translation [`260f5dc`](https://github.com/pwndoc/pwndoc/commit/260f5dcc5c3c30be65fd03375c277ba170ee5ddf)
+- i18n de-DE: Adding German Interface Translation [`48dad91`](https://github.com/pwndoc/pwndoc/commit/48dad91d9ed36728db03bf24eb5f3112385a96e7)
+- Add 'Disable user' feature [`a8d6d49`](https://github.com/pwndoc/pwndoc/commit/a8d6d49809de0e1a9cfa1d7baefff849afdd6a8f)
+
+### Fixed
+
+- Correctly reject promise when wrong password on profile [`711dbf1`](https://github.com/pwndoc/pwndoc/commit/711dbf18d05dcb6e3b6b892eb649a957c1f18be7)
+- Fix client selection issue (#242) [`f8e6c27`](https://github.com/pwndoc/pwndoc/commit/f8e6c278c2e67d353a656c04d034af8080eb6ff3)
+
+### Special Thanks for their support
+
+[<img src="https://github.com/nobox910.png" height="20" />](https://github.com/nobox910) @nobox910
+
+
 ## 0.5.2 (2022-01-12)
 
 ### Fixed
