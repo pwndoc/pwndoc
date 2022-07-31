@@ -2,11 +2,9 @@
     <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
     <div slot="buttons" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
         <q-btn-dropdown 
-        class="q-mr-sm" 
-        :label="$t('import')" 
-        no-caps 
-        color="grey-4" 
-        text-color="black"
+        class="q-mr-sm"
+        :label="$t('import')"
+        no-caps
         auto-close
         >
             <q-list>
@@ -93,7 +91,6 @@
         :columns="dtHostHeaders"
         :pagination.sync="hostPagination"
         row-key="port"
-        style="background-color: white"
         />
     </div>
 </div>

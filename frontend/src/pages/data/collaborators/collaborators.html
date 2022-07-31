@@ -3,8 +3,6 @@
         <div class="col-md-10 col-12 offset-md-1 q-mt-md">
             <q-table
                 class="sticky-header-table"
-                card-class="bg-grey-1"
-                table-header-class="bg-grey-1"
                 :columns="dtHeaders"
                 :data="collabs"
                 :filter="search"
@@ -15,6 +13,10 @@
                 @row-dblclick="dblClick"
             >
                 <template v-slot:top>
+                    <q-toggle 
+                    :label="(search.enabled)? $t('btn.accountsEnabled'): $t('btn.accountsDisabled')" 
+                    v-model="search.enabled" 
+                    />
                     <q-space />
                     <q-btn 
                     v-if="UserService.isAllowed('users:create')"
@@ -31,58 +33,48 @@
                         <q-td style="width: 20%">
                             <q-input 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             v-model="search.username"
                             clearable
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                         <q-td style="width: 20%">
                             <q-input 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             v-model="search.firstname"
                             clearable
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                         <q-td style="width: 20%">
                             <q-input 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             v-model="search.lastname"
                             clearable
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                         <q-td style="width: 20%">
                             <q-input 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             v-model="search.email"
                             clearable
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                         <q-td style="width: 20%">
                             <q-select 
                             dense
-                            color="secondary"
                             :label="$t('search')"
                             v-model="search.role"
                             clearable
                             :options="roles"
                             options-sanitize
                             outlined
-                            bg-color="white"
                             />
                         </q-td>
                     </q-tr>
@@ -91,9 +83,6 @@
                 <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                     <q-btn v-if="UserService.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
-                    </q-btn>
-                    <q-btn v-if="UserService.isAllowed('users:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCollab(props.row)">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
                     </q-btn>
                 </q-td>  
 
@@ -121,8 +110,8 @@
     </div>
     
     <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px" class="bg-grey-1">
-            <q-bar class="bg-primary text-white">
+        <q-card style="width:800px">
+            <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('addCollaborator')}}
                 </div>
@@ -141,7 +130,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.username"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -154,7 +142,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.firstname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>  
             <q-card-section>
@@ -167,7 +154,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.lastname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -178,7 +164,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.email"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -189,7 +174,6 @@
                 @keyup.enter="createCollab()"
                 v-model="currentCollab.phone"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -201,7 +185,6 @@
                 @keyup.enter="createCollab()"
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -214,7 +197,6 @@
                 hide-bottom-space
                 @keyup.enter="createCollab()"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
     
@@ -228,8 +210,8 @@
     </q-dialog>
     
     <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px" class="bg-grey-1">
-            <q-bar class="bg-primary text-white">
+        <q-card style="width:800px">
+            <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('editCollaborator')}}
                 </div>
@@ -248,7 +230,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.username"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -261,7 +242,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.firstname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>  
             <q-card-section>
@@ -274,7 +254,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.lastname"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -285,7 +264,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.email"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -296,7 +274,6 @@
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.phone"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
             <q-card-section>
@@ -308,7 +285,6 @@
                 @keyup.enter="updateCollab()"
                 options-sanitize
                 outlined
-                bg-color="white"
                 />
             </q-card-section>   
             <q-card-section>
@@ -318,10 +294,20 @@
                 type="password"
                 @keyup.enter="updateCollab()"
                 outlined
-                bg-color="white"
                 />
             </q-card-section>
+            <q-card-section>
+                <div class="q-pl-sm">
+                    <p v-if="currentCollab.totpEnabled">2FA <b>enabled</b> for this user</p>
+                    <p v-else>2FA <b>disabled</b> for this user</p>
+                </div>
 
+                <q-toggle
+                v-model="currentCollab.enabled" 
+                :label="currentCollab.enabled ? $t('btn.accountEnabled') : $t('btn.accountDisabled')"
+                />
+            </q-card-section>
+            
             <q-separator />
 
             <q-card-actions align="right">

@@ -67,6 +67,9 @@ module.exports = function(app) {
         user.username = req.body.username;
         user.password = req.body.password;
 
+        //Optional params
+        if (req.body.totpToken) user.totpToken = req.body.totpToken;
+
         user.getToken(req.headers['user-agent'])
         .then(msg => {
             res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
@@ -108,6 +111,37 @@ module.exports = function(app) {
     // Get user self
     app.get("/api/users/me", acl.hasPermission('validtoken'), function(req, res) {
         User.getByUsername(req.decodedToken.username)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    //get TOTP Qrcode URL
+    app.get("/api/users/totp", acl.hasPermission('validtoken'), function(req, res) {
+        User.getTotpQrcode(req.decodedToken.username)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    //setup TOTP
+    app.post("/api/users/totp", acl.hasPermission('validtoken'), function(req, res) {
+        if (!req.body.totpToken || !req.body.totpSecret) {
+            Response.BadParameters(res, 'Missing some required parameters');
+            return;
+        }
+
+        User.setupTotp(req.body.totpToken, req.body.totpSecret, req.decodedToken.username)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    //cancel TOTP
+    app.delete("/api/users/totp", acl.hasPermission('validtoken'), function(req, res) {
+        if (!req.body.totpToken) {
+            Response.BadParameters(res, 'Missing some required parameters');
+            return;
+        }
+
+        User.cancelTotp(req.body.totpToken, req.decodedToken.username)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
@@ -229,6 +263,8 @@ module.exports = function(app) {
         if (!_.isNil(req.body.email)) user.email = req.body.email;
         if (!_.isNil(req.body.phone)) user.phone = req.body.phone;
         if (req.body.role) user.role = req.body.role;
+        if (typeof(req.body.totpEnabled) === 'boolean') user.totpEnabled = req.body.totpEnabled;
+        if (typeof(req.body.enabled) === 'boolean') user.enabled = req.body.enabled;
 
         User.updateUser(req.params.id, user)
         .then(msg => Response.Ok(res, msg))
@@ -236,6 +272,7 @@ module.exports = function(app) {
     });
 
     // Delete any user (admin only)
+    /** Removed to keep linked references to user, disable user only for now
     app.delete("/api/users/:id", acl.hasPermission('users:delete'), function(req, res) {
         User.deleteOne({_id: req.params.id})
         .then(msg => {
@@ -246,4 +283,5 @@ module.exports = function(app) {
         })
         .catch(err => Response.Internal(res, err))
     });
+     */
 }

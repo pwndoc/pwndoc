@@ -20,11 +20,11 @@
     "npm": "^6.12.0"
   },
   "dependencies": {
-    "angular-expressions": "^1.0.1",
-    "bcrypt": "^3.0.6",
+    "angular-expressions": "^1.1.2",
+    "bcrypt": "^5.0.1",
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.5",
-    "docx": "^5.2.0",
+    "docx": "^7.0.0",
     "docx-templates": "^4.3.0",
     "docxtemplater": "^3.19.6",
     "docxtemplater-image-module-pwndoc": "github:pwndoc/docxtemplater-image-module-pwndoc#3c18ebc13d544238df676dd6be05bd4a1a8a21a9",
@@ -38,7 +38,9 @@
     "jszip": "^2.6.1",
     "lodash": "^4.17.15",
     "mongoose": "^5.7.7",
-    "socket.io": "^2.3.0",
+    "otpauth": "^7.0.6",
+    "qrcode": "^1.4.4",
+    "socket.io": "^4.4.1",
     "winston": "^2.3.1",
     "xml": "^1.0.1"
   }

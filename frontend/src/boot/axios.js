@@ -17,6 +17,8 @@ axiosInstance.interceptors.response.use(
   error => {
     const originalRequest = error.config
 
+    // **** 401 exceptions to avoid infinite loop
+
     // 401 after User.refreshToken function call
     if (error.response.status === 401 && originalRequest.url.endsWith('/users/refreshtoken')) {
       User.clear()
@@ -32,6 +34,18 @@ axiosInstance.interceptors.response.use(
     if (error.response.status === 401 && originalRequest.url.endsWith('/settings/public')) {
       return Promise.reject(error)
     }
+
+    // 401 after totp
+    if (error.response.status === 401 && originalRequest.url.endsWith('/users/totp')) {
+      return Promise.reject(error)
+    }
+
+    // 401 after wrong password on profile
+    if (error.response.status === 401 && originalRequest.url.endsWith('/users/me')) {
+      return Promise.reject(error)
+    }
+
+    // **** End of exceptions
 
     // All other 401 calls
     if (error.response.status === 401) {

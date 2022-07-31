@@ -38,6 +38,8 @@ export default {
             editCategory: false,
             sortValueOptions: [
                 {label: $t('cvssScore'), value: 'cvssScore'},
+                {label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
+                {label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
                 {label: $t('priority'), value: 'priority'},
                 {label: $t('remediationDifficulty'), value: 'remediationComplexity'}
             ],
@@ -436,6 +438,8 @@ export default {
         getSortOptions: function(category) {
             var options = [
                 {label: $t('cvssScore'), value: 'cvssScore'},
+                {label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
+                {label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
                 {label: $t('priority'), value: 'priority'},
                 {label: $t('remediationComplexity'), value: 'remediationComplexity'}
             ]

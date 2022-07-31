@@ -161,8 +161,6 @@ export default {
             vulnerabilities.forEach(vuln => {
                 var tmpVuln = {};
                 tmpVuln.cvssv3 = vuln.c3_vs || null;
-                tmpVuln.cvssScore = vuln.cvss_base_score || null;
-                tmpVuln.cvssSeverity = vuln.severity || null;
                 tmpVuln.priority = null;
                 tmpVuln.remediationComplexity = null;
                 var details = {};

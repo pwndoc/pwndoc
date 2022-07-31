@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');//.set('debug', true);
+const CVSS31 = require('../lib/cvsscalc31');
 var Schema = mongoose.Schema;
 
 var Paragraph = {
@@ -24,8 +25,6 @@ var Finding = {
     priority:               {type: Number, enum: [1,2,3,4]},
     references:             [String],
     cvssv3:                 String,
-    cvssScore:              String,
-    cvssSeverity:           String,
     paragraphs:             [Paragraph],
     poc:                    String,
     scope:                  String,
@@ -375,9 +374,9 @@ AuditSchema.statics.createFinding = (isAdmin, auditId, userId, finding) => {
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             else {
                 var sortOption = row.sortFindings.find(e => e.category === (finding.category || 'No Category'))
-                if (sortOption && sortOption.sortAuto)
+                if ((sortOption && sortOption.sortAuto) || !sortOption) // if sort is set to automatic or undefined then we sort (default sort will be applied to undefined sortOption)
                     return Audit.updateSortFindings(isAdmin, auditId, userId, null)
-                else
+                else // if manual sorting then we do not sort
                     resolve("Audit Finding created succesfully")
             }
         })
@@ -410,28 +409,6 @@ AuditSchema.statics.getLastFindingIdentifier = (auditId) => {
         })
     })
 };
-
-
-// Get findings list titles
-AuditSchema.statics.getFindings = (isAdmin, auditId, userId) => {
-    return new Promise((resolve, reject) => { 
-        var query = Audit.findById(auditId)
-        if (!isAdmin)
-            query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
-        query.select('-_id findings._id findings.title findings.cvssSeverity findings.cvssScore');
-        query.sort({'findings.cvssScore': -1})
-        query.exec()
-        .then((row) => {
-            if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
-
-            resolve(row)
-        })
-        .catch((err) => {
-            reject(err)
-        })
-    })
-}
 
 // Get finding of audit
 AuditSchema.statics.getFinding = (isAdmin, auditId, userId, findingId) => {
@@ -653,11 +630,16 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
         .then(row => {
             var _ = require('lodash')
             var findings = []
+            var categoriesOrder = row.map(e => e.name)
+            categoriesOrder.push("undefined") // Put uncategorized findings at the end
 
             // Group findings by category
             var findingList = _
             .chain(audit.findings)
             .groupBy("category")
+            .toPairs()
+            .sort((a,b) => categoriesOrder.indexOf(a[0]) - categoriesOrder.indexOf(b[0]))
+            .fromPairs()
             .map((value, key) => {
                 if (key === 'undefined') key = 'No Category'
                 var sortOption = audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
@@ -676,8 +658,20 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
 
                 var tmpFindings = group.findings
                 .sort((a,b) => {
+                    var cvssA = CVSS31.calculateCVSSFromVector(a.cvssv3)
+                    var cvssB = CVSS31.calculateCVSSFromVector(b.cvssv3)
+
                     // Get built-in value (findings[sortValue])
                     var left = a[group.sortOption.sortValue]
+
+                    // If sort value is a CVSS Score calculate it 
+                    if (cvssA.success && group.sortOption.sortValue === 'cvssScore')
+                        left = cvssA.baseMetricScore
+                    else if (cvssA.success && group.sortOption.sortValue === 'cvssTemporalScore')
+                        left = cvssA.temporalMetricScore
+                    else if (cvssA.success && group.sortOption.sortValue === 'cvssEnvironmentalScore')
+                        left = cvssA.environmentalMetricScore
+
                     // Not found then get customField sortValue
                     if (!left) {
                         left = a.customFields.find(e => e.customField.label === group.sortOption.sortValue)
@@ -692,6 +686,14 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
                     
                     // Same for right value to compare
                     var right = b[group.sortOption.sortValue]
+
+                    if (cvssB.success && group.sortOption.sortValue === 'cvssScore')
+                        right = cvssB.baseMetricScore
+                    else if (cvssB.success && group.sortOption.sortValue === 'cvssTemporalScore')
+                        right = cvssB.temporalMetricScore
+                    else if (cvssB.success && group.sortOption.sortValue === 'cvssEnvironmentalScore')
+                        right = cvssB.environmentalMetricScore
+
                     if (!right) {
                         right = b.customFields.find(e => e.customField.label === group.sortOption.sortValue)
                         if (right)
@@ -700,7 +702,6 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
                     if (!right)
                         right = 0
                     right = right.toString()
-
                     return left.localeCompare(right, undefined, {numeric: true}) * order
                 })
 

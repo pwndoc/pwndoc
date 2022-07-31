@@ -12,16 +12,9 @@ module.exports = function(app, io) {
 
     // Get audits list of user (all for admin) with regex filter on findings
     app.get("/api/audits", acl.hasPermission('audits:read'), function(req, res) {
-        var getSockets = function(room) {
-            return Object.entries(io.sockets.adapter.rooms[room] === undefined ? {} : io.sockets.adapter.rooms[room].sockets)
-            .filter(([id, status]) => status) // get status === true
-            .map(([id]) => io.sockets.connected[id])
-          }
-
         var getUsersRoom = function(room) {
-            return getSockets(room).map(s => s.username)
+            return utils.getSockets(io, room).map(s => s.username)
         }
-
         var filters = {};
         if (req.query.findingTitle) 
             filters['findings.title'] = new RegExp(utils.escapeRegex(req.query.findingTitle), 'i')
@@ -41,8 +34,9 @@ module.exports = function(app, io) {
                     a.reviewers = audit.reviewers
                     a.approvals = audit.approvals
                     a.state = audit.state
-                    if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected'))
-                        a.connected = getUsersRoom(audit._id)
+                    if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected')){
+                        a.connected = getUsersRoom(audit._id.toString())
+                    }
                     result.push(a)
                 })
             Response.Ok(res, result)
@@ -243,8 +237,6 @@ module.exports = function(app, io) {
         if (req.body.priority) finding.priority = req.body.priority;
         if (req.body.references) finding.references = req.body.references;
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
-        if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
-        if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
         if (req.body.poc) finding.poc = req.body.poc;
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
@@ -260,13 +252,6 @@ module.exports = function(app, io) {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
-    });
-
-    // Get findings list title
-    app.get("/api/audits/:auditId/findings", acl.hasPermission('audits:read'), function(req, res) {
-        Audit.getFindings(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
-        .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
 
@@ -297,8 +282,6 @@ module.exports = function(app, io) {
         if (req.body.priority) finding.priority = req.body.priority;
         if (req.body.references) finding.references = req.body.references;
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
-        if (req.body.cvssScore) finding.cvssScore = req.body.cvssScore;
-        if (req.body.cvssSeverity) finding.cvssSeverity = req.body.cvssSeverity;
         if (!_.isNil(req.body.poc)) finding.poc = req.body.poc;
         if (!_.isNil(req.body.scope)) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
@@ -385,7 +368,7 @@ module.exports = function(app, io) {
                 throw ({fn: 'BadParameters', message: 'Template not defined'})
 
             var reportDoc = await reportGenerator.generateDoc(audit);
-            Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
+            Response.SendFile(res, `${audit.name.replace(/[\\\/:*?"<>|]/g, "")}.${audit.template.ext || 'docx'}`, reportDoc);
         })
         .catch(err => {
             if (err.code === "ENOENT")

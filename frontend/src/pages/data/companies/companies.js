@@ -16,6 +16,7 @@ export default {
             // Datatable headers
             dtHeaders: [
                 {name: 'name', label: $t('name'), field: 'name', align: 'left', sortable: true},
+                {name: 'shortName', label: $t('shortName'), field: 'shortName', align: 'left', sortable: true},
                 {name: 'logo', label: $t('logo'), field: 'logo', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
@@ -39,6 +40,7 @@ export default {
             // Company to create or update
             currentCompany: {
                 name: '', 
+                shortName: '',
                 logo: ''
             },
             // Name for update
@@ -66,7 +68,7 @@ export default {
         createCompany: function() {
             this.cleanErrors();
             if (!this.currentCompany.name)
-                this.errors.lastname = $t('msg.nameRequired');
+                this.errors.name = $t('msg.nameRequired');
 
             if (this.errors.name)
                 return;
@@ -96,7 +98,7 @@ export default {
         updateCompany: function() {
             this.cleanErrors();
             if (!this.currentCompany.name)
-                this.errors.lastname = $t('msg.nameRequired');
+                this.errors.name = $t('msg.nameRequired');
 
             if (this.errors.name)
                 return;
@@ -155,8 +157,7 @@ export default {
 
         clone: function(row) {
             this.cleanCurrentCompany();
-            this.currentCompany.name = row.name;
-            this.currentCompany.logo = row.logo;
+            Object.assign(this.currentCompany, row);
             this.idUpdate = row._id;
         },
 
@@ -166,6 +167,7 @@ export default {
 
         cleanCurrentCompany: function() {
             this.currentCompany.name = '';
+            this.currentCompany.shortName = '';
             this.currentCompany.logo = '';
         },
 

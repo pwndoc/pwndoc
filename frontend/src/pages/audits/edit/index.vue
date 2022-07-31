@@ -88,7 +88,7 @@
 								<q-item-section avatar>
 									<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 										<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
-										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left" content-class="bg-grey-1">
+										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left">
 											<q-item>
 												<q-item-section>
 													<q-toggle 
@@ -126,7 +126,7 @@
 													no-caps
 													align="left"
 													:disable="!categoryFindings.sortOption.sortAuto"
-													:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':'black'" 
+													:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':''" 
 													@click="categoryFindings.sortOption.sortOrder = 'asc'; updateSortFindings()" 
 													/>
 												</q-item-section>
@@ -141,7 +141,7 @@
 													no-caps
 													align="left"
 													:disable="!categoryFindings.sortOption.sortAuto"
-													:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':'black'" 
+													:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':''" 
 													@click="categoryFindings.sortOption.sortOrder = 'desc'; updateSortFindings()" 
 													/>
 												</q-item-section>
@@ -167,7 +167,7 @@
 													size="sm"
 													square
 													:style="`background: ${getFindingColor(finding)}`"
-												>{{(finding.cvssSeverity)?finding.cvssSeverity.substring(0,1):"N"}}</q-chip>
+												>{{getFindingSeverity(finding).substring(0,1)}}</q-chip>
 											</q-item-section>
 											<q-item-section>
 												<span>{{finding.title}}</span>
@@ -230,7 +230,7 @@
 </template>
 
 <script>
-import { Notify } from 'quasar';
+import { Notify, QSpinnerGears } from 'quasar';
 import draggable from 'vuedraggable'
 
 import AuditService from '@/services/audit';
@@ -326,12 +326,7 @@ export default {
 
 		methods: {
 			getFindingColor: function(finding) {
-				const SEVERITIES = ["Low", "Medium", "High", "Critical"];
-
-				let severity = "None";
-				if (finding.cvssSeverity && SEVERITIES.indexOf(finding.cvssSeverity) >= 0) {
-					severity = finding.cvssSeverity;
-				}
+				let severity = this.getFindingSeverity(finding)
 
 				if(this.$settings.report) {
 					const severityColorName = `${severity.toLowerCase()}Color`;
@@ -354,6 +349,40 @@ export default {
 				}
 			},
 
+			getFindingSeverity: function(finding) {
+				let severity = "None"
+				let cvss = CVSS31.calculateCVSSFromVector(finding.cvssv3)
+				if (cvss.success) {
+					severity = cvss.baseSeverity
+
+					let category = finding.category || "No Category"
+					let sortOption = this.audit.sortFindings.find(e => e.category === category)
+
+					if (sortOption) {
+						if (sortOption.sortValue === "cvssEnvironmentalScore")
+							severity = cvss.environmentalSeverity
+						else if (sortOption.sortValue === "cvssTemporalScore")
+							severity = cvss.temporalSeverity
+					}
+				}
+				return severity
+			},
+
+			getMenuSection: function() {
+				if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'general')
+					return {menu: 'general', room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'network')
+					return {menu: 'network', room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addFindings')
+					return {menu: 'addFindings', room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editFinding' && this.$router.currentRoute.params.findingId)
+					return {menu: 'editFinding', finding: this.$router.currentRoute.params.findingId, room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editSection' && this.$router.currentRoute.params.sectionId)
+					return {menu: 'editSection', section: this.$router.currentRoute.params.sectionId, room: this.auditId}
+				
+				return {menu: 'undefined', room: this.auditId}
+			},
+
 			// Sockets handle
 			handleSocket: function() {
 				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
@@ -374,6 +403,10 @@ export default {
 				})
 				this.$socket.on('updateAudit', () => {
 					this.getAudit();
+				})
+				this.$socket.on('disconnect', () => {
+					this.$socket.emit('join', {username: UserService.user.username, room: this.auditId})
+					this.$socket.emit('menu', this.getMenuSection())
 				})
 			},
 			// Tells the UI if the user is supposed to be reviewing the audit
@@ -499,6 +532,13 @@ export default {
 			},
 
 			generateReport: function() {
+				const downloadNotif = Notify.create({
+					spinner: QSpinnerGears,
+					message: 'Generating the Report',
+					color: "blue",
+					timeout: 0,
+					group: false
+				})
 				AuditService.generateAuditReport(this.auditId)
 				.then(response => {
 					var blob = new Blob([response.data], {type: "application/octet-stream"});
@@ -508,6 +548,14 @@ export default {
 					document.body.appendChild(link);
 					link.click();
 					link.remove();
+					
+					downloadNotif({
+						icon: 'done',
+						spinner: false,
+						message: 'Report successfully generated',
+						color: 'green',
+						timeout: 2500
+					})
 				})
 				.catch( async err => {
 					var message = "Error generating template"
@@ -516,6 +564,7 @@ export default {
 						var blobData = await this.BlobReader(blob)
 						message = JSON.parse(blobData).datas
 					}
+					downloadNotif()
 					Notify.create({
 						message: message,
 						type: 'negative',
@@ -535,6 +584,8 @@ export default {
 			getSortOptions: function(category) {
 				var options = [
 					{label: $t('cvssScore'), value: 'cvssScore'},
+					{label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
+					{label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
 					{label: $t('priority'), value: 'priority'},
 					{label: $t('remediationDifficulty'), value: 'remediationComplexity'}
 				]

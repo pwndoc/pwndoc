@@ -1,9 +1,9 @@
 <template>
-<div class="login-background" style="height:100vh;display:flex">
+<div :class="$q.dark.isActive ? '' : 'login-background'" style="height:100vh;display:flex">
     <div v-if="loaded === true" style="margin:auto">
-        <q-card align="center" style="width:350px" class="bg-grey-1">
+        <q-card align="center" style="width:350px">
             <q-card-section>
-                <q-img src="pwndoc-logo.png" />
+                <q-img :src="$q.dark.isActive ? 'pwndoc-logo-white.png' : 'pwndoc-logo.png'" />
             </q-card-section>
 
             <q-card-section v-if="errors.alert">
@@ -73,8 +73,7 @@
             </div>
             
             <div v-else>
-
-                <q-card-section>
+                <q-card-section v-show="step === 0">
                     <q-input
                     :label="$t('username')"
                     :error="!!errors.username"
@@ -86,11 +85,12 @@
                     bg-color="white"
                     for="username"
                     @keyup.enter="getToken()"
+                    :disable="loginLoading"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-user" /></template>
                     </q-input>
                 </q-card-section>
-                <q-card-section>
+                <q-card-section v-show="step === 0">
                     <q-input
                     :label="$t('password')"
                     :error="!!errors.password"
@@ -102,13 +102,47 @@
                     for="password"
                     type="password"
                     @keyup.enter="getToken()"
+                    :disable="loginLoading"
                     >
                         <template v-slot:prepend><q-icon name="fa fa-key" /></template>
                     </q-input>
                 </q-card-section>
+                <q-card-section v-show="step === 1">
+                    <q-item class="q-pl-none">
+                        <q-item-section avatar style="min-width:0" class="q-pr-sm">
+                            <q-btn dense flat size="sm" icon="mdi-arrow-left" style="top:-8px" @click="step=0;totpToken=''">
+                            <q-tooltip>{{$t('goBack')}}</q-tooltip>
+                            </q-btn>
+                        </q-item-section>
+                        <q-item-section>
+                            <p class="text-left text-h6 text-center text-vertical">{{$t('twoStepVerification')}}</p>
+                        </q-item-section>
+                    </q-item>
+                    <q-item class="q-pl-none">
+                    <q-item-section avatar class="no-padding">
+                        <q-icon name="mdi-cellphone-key" size="70px" />
+                    </q-item-section>
+                    <q-item-section>
+                        <p>{{$t('twoStepVerificationMessage')}}</p>
+                    </q-item-section>
+                    </q-item>
+                    <q-input
+                    ref="totptoken"
+                    v-model="totpToken"
+                    placeholder="Enter 6-digit code"
+                    outlined
+                    bg-color="white"
+                    for="totpToken"
+                    maxlength=6
+                    @keyup.enter="getToken()"
+                    :disable="loginLoading"
+                    >
+                        <template v-slot:prepend><q-icon name="fa fa-unlock-alt" /></template>
+                    </q-input>
+                </q-card-section>
 
                 <q-card-section align="center">
-                    <q-btn color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
+                    <q-btn :loading="loginLoading" color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
                 </q-card-section>
             </div>
         </q-card>
@@ -131,7 +165,10 @@ export default {
             firstname: "",
             lastname: "",
             password: "",
-            errors: {alert: "", username: "", password: "", firstname: "", lastname: ""}
+            totpToken: "",
+            step: 0,
+            errors: {alert: "", username: "", password: "", firstname: "", lastname: ""},
+            loginLoading: false
         }
     },
 
@@ -205,14 +242,29 @@ export default {
             if (this.errors.username || this.errors.password)
                 return;
 
-            UserService.getToken(this.username, this.password)
+            this.loginLoading = true;
+            UserService.getToken(this.username, this.password, this.totpToken)
             .then(async () => {
                 await this.$settings.refresh();
                 this.$router.push('/');
             })
             .catch(err => {
-                this.errors.alert = $t('err.invalidCredentials');
+                if (err.response.status === 422) {
+                    this.step = 1
+                    this.$nextTick(() => {
+                        this.$refs.totptoken.focus()
+                    })
+                }
+                else {
+                    let errmsg = $t('err.invalidCredentials');
+                    if (err.response.data.datas)
+                        errmsg = err.response.data.datas;
+                    this.errors.alert = errmsg;
+                }
             })
+            .finally(() => {
+                this.loginLoading = false;
+            });
         }
     }
 }
@@ -225,17 +277,5 @@ export default {
 
 .loading p {
     font-size: 20px;
-}
-
-.loading-error .material-icons {
-    font-size: 100px;
-}
-
-.loading-error p {
-    font-size: 20px;
-}
-
-.loading-error:before {
-    opacity: 0.7;
 }
 </style>

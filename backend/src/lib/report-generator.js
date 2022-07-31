@@ -10,16 +10,22 @@ var html2ooxml = require('./html2ooxml');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
 var Settings = require('mongoose').model('Settings');
+var CVSS31 = require('./cvsscalc31.js');
+var translate = require('../translate')
+var $t
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
     var templatePath = `${__basedir}/../report-templates/${audit.template.name}.${audit.template.ext || 'docx'}`
-    var preppedAudit = await prepAuditData(audit)
     var content = fs.readFileSync(templatePath, "binary");
-
+    
     var zip = new JSZip(content);
+    
+    translate.setLocale(audit.language)
+    $t = translate.translate
 
     var settings = await Settings.getAll();
+    var preppedAudit = await prepAuditData(audit, settings)
 
     var opts = {};
     // opts.centered = true;
@@ -69,8 +75,7 @@ async function generateDoc(audit) {
     catch(err) {
         console.log(err)
     }
-    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: angularParser, paragraphLoop: true});
-    cvssHandle(preppedAudit, settings);
+    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: parser, paragraphLoop: true});
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
     try {
@@ -161,6 +166,18 @@ expressions.filters.NewLines = function(input) {
     return result;
 }
 
+// Sort array by supplied field: {#findings | sortArrayByField: 'identifier':1}{/}
+// order: 1 = ascending, -1 = descending
+expressions.filters.sortArrayByField = function (input, field, order) {
+    //invalid order sort ascending
+    if(order != 1 && order != -1) order = 1;
+    
+    const sorted = input.sort((a,b) => {
+        //multiply by order so that if is descending (-1) will reverse the values
+        return _.get(a, field).localeCompare(_.get(b, field), undefined, {numeric: true}) * order
+    })    
+    return sorted;
+}
 
 // Convert HTML data to Open Office XML format: {@input | convertHTML: 'customStyle'}
 expressions.filters.convertHTML = function(input, style) {
@@ -179,12 +196,19 @@ expressions.filters.count = function(input, severity) {
 
     for(var i = 0; i < input.length; i++){
 
-        if(input[i].cvssSeverity === severity){
+        if(input[i].cvss.baseSeverity === severity){
             count += 1;
         }
     }
 
     return count;
+}
+
+// Translate using locale from 'translate' folder
+// Example: {input | translate: 'fr'}
+expressions.filters.translate = function(input, locale) {
+    if (!input) return input
+    return $t(input, locale)
 }
 
 // Compile all angular expressions
@@ -211,9 +235,177 @@ var angularParser = function(tag) {
     };
 }
 
-// For each finding, add cvssColor, cvssObj and criteria colors parameters
-function cvssHandle(data, settings) {
-    // Header title colors
+function parser(tag) {
+    // We write an exception to handle the tag "$pageBreakExceptLast"
+    if (tag === "$pageBreakExceptLast") {
+        return {
+            get(scope, context) {
+                const totalLength = context.scopePathLength[context.scopePathLength.length - 1];
+                const index = context.scopePathItem[context.scopePathItem.length - 1];
+                const isLast = index === totalLength - 1;
+                if (!isLast) {
+                    return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+                }
+                else {
+                    return '';
+                }
+            }
+        }
+    }
+    // We use the angularParser as the default fallback
+    // If you don't wish to use the angularParser,
+    // you can use the default parser as documented here:
+    // https://docxtemplater.readthedocs.io/en/latest/configuration.html#default-parser
+    return angularParser(tag);
+}
+function cvssStrToObject(cvss) {
+    var initialState = 'Not Defined'
+    var res = {AV:initialState, AC:initialState, PR:initialState, UI:initialState, S:initialState, C:initialState, I:initialState, A:initialState, E:initialState, RL:initialState, RC:initialState, CR:initialState, IR:initialState, AR:initialState, MAV:initialState, MAC:initialState, MPR:initialState, MUI:initialState, MS:initialState, MC:initialState, MI:initialState, MA:initialState};
+    if (cvss) {
+        var temp = cvss.split('/');
+        for (var i=0; i<temp.length; i++) {
+            var elt = temp[i].split(':');
+            switch(elt[0]) {
+                case "AV":
+                    if (elt[1] === "N") res.AV = "Network"
+                    else if (elt[1] === "A") res.AV = "Adjacent Network"
+                    else if (elt[1] === "L") res.AV = "Local"
+                    else if (elt[1] === "P") res.AV = "Physical"
+                    res.AV = $t(res.AV)
+                    break;
+                case "AC":
+                    if (elt[1] === "L") res.AC = "Low"
+                    else if (elt[1] === "H") res.AC = "High"
+                    res.AC = $t(res.AC)
+                    break;
+                case "PR":
+                    if (elt[1] === "N") res.PR = "None"
+                    else if (elt[1] === "L") res.PR = "Low"
+                    else if (elt[1] === "H") res.PR = "High"
+                    res.PR = $t(res.PR)
+                    break;
+                case "UI":
+                    if (elt[1] === "N") res.UI = "None"
+                    else if (elt[1] === "R") res.UI = "Required"
+                    res.UI = $t(res.UI)
+                    break;
+                case "S":
+                    if (elt[1] === "U") res.S = "Unchanged"
+                    else if (elt[1] === "C") res.S = "Changed"
+                    res.S = $t(res.S)
+                    break;
+                case "C":
+                    if (elt[1] === "N") res.C = "None"
+                    else if (elt[1] === "L") res.C = "Low"
+                    else if (elt[1] === "H") res.C = "High"
+                    res.C = $t(res.C)
+                    break;
+                case "I":
+                    if (elt[1] === "N") res.I = "None"
+                    else if (elt[1] === "L") res.I = "Low"
+                    else if (elt[1] === "H") res.I = "High"
+                    res.I = $t(res.I)
+                    break;
+                case "A":
+                    if (elt[1] === "N") res.A = "None"
+                    else if (elt[1] === "L") res.A = "Low"
+                    else if (elt[1] === "H") res.A = "High"
+                    res.A = $t(res.A)
+                    break;
+                case "E":
+                    if (elt[1] === "U") res.E = "Unproven"
+                    else if (elt[1] === "P") res.E = "Proof-of-Concept"
+                    else if (elt[1] === "F") res.E = "Functional"
+                    else if (elt[1] === "H") res.E = "High"
+                    res.E = $t(res.E)
+                    break;
+                case "RL":
+                    if (elt[1] === "O") res.RL = "Official Fix"
+                    else if (elt[1] === "T") res.RL = "Temporary Fix"
+                    else if (elt[1] === "W") res.RL = "Workaround"
+                    else if (elt[1] === "U") res.RL = "Unavailable"
+                    res.RL = $t(res.RL)
+                    break;
+                case "RC":
+                    if (elt[1] === "U") res.RC = "Unknown"
+                    else if (elt[1] === "R") res.RC = "Reasonable"
+                    else if (elt[1] === "C") res.RC = "Confirmed"
+                    res.RC = $t(res.RC)
+                    break;
+                case "CR":
+                    if (elt[1] === "L") res.CR = "Low"
+                    else if (elt[1] === "M") res.CR = "Medium"
+                    else if (elt[1] === "H") res.CR = "High"
+                    res.CR = $t(res.CR)
+                    break;
+                case "IR":
+                    if (elt[1] === "L") res.IR = "Low"
+                    else if (elt[1] === "M") res.IR = "Medium"
+                    else if (elt[1] === "H") res.IR = "High"
+                    res.IR = $t(res.IR)
+                    break;
+                case "AR":
+                    if (elt[1] === "L") res.AR = "Low"
+                    else if (elt[1] === "M") res.AR = "Medium"
+                    else if (elt[1] === "H") res.AR = "High"
+                    res.AR = $t(res.AR)
+                    break;
+                case "MAV":
+                    if (elt[1] === "N") res.MAV = "Network"
+                    else if (elt[1] === "A") res.MAV = "Adjacent Network"
+                    else if (elt[1] === "L") res.MAV = "Local"
+                    else if (elt[1] === "P") res.MAV = "Physical"
+                    res.MAV = $t(res.MAV)
+                    break;
+                case "MAC":
+                    if (elt[1] === "L") res.MAC = "Low"
+                    else if (elt[1] === "H") res.MAC = "High"
+                    res.MAC = $t(res.MAC)
+                    break;
+                case "MPR":
+                    if (elt[1] === "N") res.MPR = "None"
+                    else if (elt[1] === "L") res.MPR = "Low"
+                    else if (elt[1] === "H") res.MPR = "High"
+                    res.MPR = $t(res.MPR)
+                    break;
+                case "MUI":
+                    if (elt[1] === "N") res.MUI = "None"
+                    else if (elt[1] === "R") res.MUI = "Required"
+                    res.MUI = $t(res.MUI)
+                    break;
+                case "MS":
+                    if (elt[1] === "U") res.MS = "Unchanged"
+                    else if (elt[1] === "C") res.MS = "Changed"
+                    res.MS = $t(res.MS)
+                    break;
+                case "MC":
+                    if (elt[1] === "N") res.MC = "None"
+                    else if (elt[1] === "L") res.MC = "Low"
+                    else if (elt[1] === "H") res.MC = "High"
+                    res.MC = $t(res.MC)
+                    break;
+                case "MI":
+                    if (elt[1] === "N") res.MI = "None"
+                    else if (elt[1] === "L") res.MI = "Low"
+                    else if (elt[1] === "H") res.MI = "High"
+                    res.MI = $t(res.MI)
+                    break;
+                case "MA":
+                    if (elt[1] === "N") res.MA = "None"
+                    else if (elt[1] === "L") res.MA = "Low"
+                    else if (elt[1] === "H") res.MA = "High"
+                    res.MA = $t(res.MA)
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    return res
+}
+
+async function prepAuditData(data, settings) {
+    /** CVSS Colors for table cells */
     var noneColor = settings.report.public.cvssColors.noneColor.replace('#', ''); //default of blue ("#4A86E8")
     var lowColor = settings.report.public.cvssColors.lowColor.replace('#', ''); //default of green ("#008000")
     var mediumColor = settings.report.public.cvssColors.mediumColor.replace('#', ''); //default of yellow ("#f9a009")
@@ -226,87 +418,9 @@ function cvssHandle(data, settings) {
     var cellHighColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+highColor+'"/></w:tcPr>';
     var cellCriticalColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+criticalColor+'"/></w:tcPr>';
 
-    if (data.findings) {
-        for (var i=0; i<data.findings.length; i++) {
-            // Global CVSS color depending on Severity
-            if (data.findings[i].cvssSeverity === "Low") { data.findings[i].cvssColor = cellLowColor}
-            else if (data.findings[i].cvssSeverity === "Medium") { data.findings[i].cvssColor = cellMediumColor}
-            else if (data.findings[i].cvssSeverity === "High") { data.findings[i].cvssColor = cellHighColor}
-            else if (data.findings[i].cvssSeverity === "Critical") { data.findings[i].cvssColor = cellCriticalColor}
-            else { data.findings[i].cvssColor = cellNoneColor} ;
-
-            // Convert CVSS string to object in cvssObj parameter
-            var cvssObj = cvssStrToObject(data.findings[i].cvssv3);
-            data.findings[i].cvssObj = cvssObj;
-         }
-    }
-}
-
-function cvssStrToObject(cvss) {
-    var res = {AV: "", AC: "", PR: "", UI: "", S: "", C: "", I: "", A: ""};
-    if (cvss) {
-        var temp = cvss.split('/');
-        for (var i=0; i<temp.length; i++) {
-            var elt = temp[i].split(':');
-            switch(elt[0]) {
-                case "AV":
-                    if (elt[1] === "N") res.AV = "Network"
-                    else if (elt[1] === "A") res.AV = "Adjacent Network"
-                    else if (elt[1] === "L") res.AV = "Local"
-                    else if (elt[1] === "P") res.AV = "Physical"
-                    else res.AV = elt[1];
-                    break;
-                case "AC":
-                    if (elt[1] === "L") res.AC = "Low"
-                    else if (elt[1] === "H") res.AC = "High"
-                    else res.AC = elt[1];
-                    break;
-                case "PR":
-                    if (elt[1] === "N") res.PR = "None"
-                    else if (elt[1] === "L") res.PR = "Low"
-                    else if (elt[1] === "H") res.PR = "High"
-                    else res.PR = elt[1];
-                    break;
-                case "UI":
-                    if (elt[1] === "N") res.UI = "None"
-                    else if (elt[1] === "R") res.UI = "Required"
-                    else res.UI = elt[1];
-                    break;
-                case "S":
-                    if (elt[1] === "U") res.S = "Unchanged"
-                    else if (elt[1] === "C") res.S = "Changed"
-                    else res.S = elt[1];
-                    break;
-                case "C":
-                    if (elt[1] === "N") res.C = "None"
-                    else if (elt[1] === "L") res.C = "Low"
-                    else if (elt[1] === "H") res.C = "High"
-                    else res.C = elt[1];
-                    break;
-                case "I":
-                    if (elt[1] === "N") res.I = "None"
-                    else if (elt[1] === "L") res.I = "Low"
-                    else if (elt[1] === "H") res.I = "High"
-                    else res.I = elt[1];
-                    break;
-                case "A":
-                    if (elt[1] === "N") res.A = "None"
-                    else if (elt[1] === "L") res.A = "Low"
-                    else if (elt[1] === "H") res.A = "High"
-                    else res.A = elt[1];
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-    return res
-}
-
-async function prepAuditData(data) {
     var result = {}
     result.name = data.name || "undefined"
-    result.auditType = data.auditType || "undefined"
+    result.auditType = $t(data.auditType) || "undefined"
     result.location = data.location || "undefined"
     result.date = data.date || "undefined"
     result.date_start = data.date_start || "undefined"
@@ -326,6 +440,7 @@ async function prepAuditData(data) {
     result.company = {}
     if (data.company) {
         result.company.name = data.company.name || "undefined"
+        result.company.shortName = data.company.shortName || result.company.name
         result.company.logo = data.company.logo || "undefined"
         result.company.logo_small = data.company.logo || "undefined"
     }
@@ -352,28 +467,74 @@ async function prepAuditData(data) {
         })
     })
     result.language = data.language || "undefined"
-    result.scope = data.scope || []
+    result.scope = data.scope.toObject() || []
 
     result.findings = []
     for (finding of data.findings) {
+        var tmpCVSS = CVSS31.calculateCVSSFromVector(finding.cvssv3);
         var tmpFinding = {
             title: finding.title || "",
-            vulnType: finding.vulnType || "",
+            vulnType: $t(finding.vulnType) || "",
             description: await splitHTMLParagraphs(finding.description),
             observation: await splitHTMLParagraphs(finding.observation),
             remediation: await splitHTMLParagraphs(finding.remediation),
             remediationComplexity: finding.remediationComplexity || "",
             priority: finding.priority || "",
             references: finding.references || [],
-            cvssv3: finding.cvssv3 || "",
-            cvssScore: finding.cvssScore || "",
-            cvssSeverity: finding.cvssSeverity || "",
             poc: await splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
             status: finding.status || "",
-            category: finding.category || "",
+            category: $t(finding.category) || $t("No Category"),
             identifier: "IDX-" + utils.lPad(finding.identifier)
         }
+        // Handle CVSS
+        tmpFinding.cvss = {
+            vectorString: tmpCVSS.vectorString || "",
+            baseMetricScore: tmpCVSS.baseMetricScore || "",
+            baseSeverity: tmpCVSS.baseSeverity || "",
+            temporalMetricScore: tmpCVSS.temporalMetricScore || "",
+            temporalSeverity: tmpCVSS.temporalSeverity || "",
+            environmentalMetricScore: tmpCVSS.environmentalMetricScore || "",
+            environmentalSeverity: tmpCVSS.environmentalSeverity || ""
+        }
+        if (tmpCVSS.baseImpact) 
+            tmpFinding.cvss.baseImpact = CVSS31.roundUp1(tmpCVSS.baseImpact)
+        else
+            tmpFinding.cvss.baseImpact = ""
+        if (tmpCVSS.baseExploitability)
+            tmpFinding.cvss.baseExploitability = CVSS31.roundUp1(tmpCVSS.baseExploitability)
+        else
+            tmpFinding.cvss.baseExploitability = ""
+
+        if (tmpCVSS.environmentalModifiedImpact) 
+            tmpFinding.cvss.environmentalModifiedImpact = CVSS31.roundUp1(tmpCVSS.environmentalModifiedImpact)
+        else
+            tmpFinding.cvss.environmentalModifiedImpact = ""
+        if (tmpCVSS.environmentalModifiedExploitability)
+            tmpFinding.cvss.environmentalModifiedExploitability = CVSS31.roundUp1(tmpCVSS.environmentalModifiedExploitability)
+        else
+            tmpFinding.cvss.environmentalModifiedExploitability = ""
+
+        if (tmpCVSS.baseSeverity === "Low") tmpFinding.cvss.cellColor = cellLowColor
+        else if (tmpCVSS.baseSeverity === "Medium") tmpFinding.cvss.cellColor = cellMediumColor
+        else if (tmpCVSS.baseSeverity === "High") tmpFinding.cvss.cellColor = cellHighColor
+        else if (tmpCVSS.baseSeverity === "Critical") tmpFinding.cvss.cellColor = cellCriticalColor
+        else tmpFinding.cvss.cellColor = cellNoneColor
+
+        if (tmpCVSS.temporalSeverity === "Low") tmpFinding.cvss.temporalCellColor = cellLowColor
+        else if (tmpCVSS.temporalSeverity === "Medium") tmpFinding.cvss.temporalCellColor = cellMediumColor
+        else if (tmpCVSS.temporalSeverity === "High") tmpFinding.cvss.temporalCellColor = cellHighColor
+        else if (tmpCVSS.temporalSeverity === "Critical") tmpFinding.cvss.temporalCellColor = cellCriticalColor
+        else tmpFinding.cvss.temporalCellColor = cellNoneColor
+
+        if (tmpCVSS.environmentalSeverity === "Low") tmpFinding.cvss.environmentalCellColor = cellLowColor
+        else if (tmpCVSS.environmentalSeverity === "Medium") tmpFinding.cvss.environmentalCellColor = cellMediumColor
+        else if (tmpCVSS.environmentalSeverity === "High") tmpFinding.cvss.environmentalCellColor = cellHighColor
+        else if (tmpCVSS.environmentalSeverity === "Critical") tmpFinding.cvss.environmentalCellColor = cellCriticalColor
+        else tmpFinding.cvss.environmentalCellColor = cellNoneColor
+
+        tmpFinding.cvssObj = cvssStrToObject(tmpCVSS.vectorString)
+
         if (finding.customFields) {
             for (field of finding.customFields) {
                 // For retrocompatibility of findings with old customFields 
@@ -395,6 +556,12 @@ async function prepAuditData(data) {
         result.findings.push(tmpFinding)
     }
 
+    result.categories = _
+        .chain(result.findings)
+        .groupBy("category")
+        .map((value,key) => {return {categoryName:key, categoryFindings:value}})
+        .value()
+    
     result.creator = {}
     if (data.creator) {
         result.creator.username = data.creator.username || "undefined"
@@ -407,7 +574,7 @@ async function prepAuditData(data) {
 
     for (section of data.sections) {
         var formatSection = { 
-            name: section.name
+            name: $t(section.name)
         }
         if (section.text) // keep text for retrocompatibility
             formatSection.text = await splitHTMLParagraphs(section.text)
@@ -423,7 +590,7 @@ async function prepAuditData(data) {
         }
         result[section.field] = formatSection
     }
-    
+    replaceSubTemplating(result)
     return result
 }
 
@@ -462,4 +629,14 @@ async function splitHTMLParagraphs(data) {
     return result
 }
 
-
+function replaceSubTemplating(o, originalData = o){
+    var regexp = /\{_\{([a-zA-Z0-9\[\]\_\.]{1,})\}_\}/gm;
+    if (Array.isArray(o))
+        o.forEach(key => replaceSubTemplating(key, originalData))
+    else if (typeof o === 'object' && !!o) {
+        Object.keys(o).forEach(key => {
+            if (typeof o[key] === 'string') o[key] = o[key].replace(regexp, (match, word) =>  _.get(originalData,word.trim(),''))
+            else replaceSubTemplating(o[key], originalData)
+        })
+    }
+}

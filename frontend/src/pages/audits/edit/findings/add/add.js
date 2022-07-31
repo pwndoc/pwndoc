@@ -161,8 +161,6 @@ export default {
                     priority: vuln.priority,
                     references: vuln.detail.references,
                     cvssv3: vuln.cvssv3,
-                    cvssScore: (vuln.cvssScore)?vuln.cvssScore:"0",
-                    cvssSeverity: (vuln.cvssSeverity)?vuln.cvssSeverity:"None",
                     category: vuln.category,
                     customFields: Utils.filterCustomFields('finding', vuln.category, this.$parent.customFields, vuln.detail.customFields, this.$parent.audit.language)
                 };
@@ -203,8 +201,6 @@ export default {
                     priority: "",
                     references: [],
                     cvssv3: "",
-                    cvssScore: 0,
-                    cvssSeverity: "None",
                     category: category.name,
                     customFields: Utils.filterCustomFields('finding', category.name, this.$parent.customFields, [], this.$parent.audit.language)
                 };
@@ -220,8 +216,6 @@ export default {
                     priority: "",
                     references: [],
                     cvssv3: "",
-                    cvssScore: 0,
-                    cvssSeverity: "None",
                     customFields: Utils.filterCustomFields('finding', '', this.$parent.customFields, [], this.$parent.audit.language)
                 };
             }

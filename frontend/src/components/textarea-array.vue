@@ -6,7 +6,6 @@
     type="textarea"
     @input="updateParent"
     outlined 
-    bg-color="white"
     :readonly="readonly"
     />
 </template>

@@ -1,4 +1,4 @@
-import { Dialog, Notify } from 'quasar';
+import { Dialog, Notify, QSpinnerGears } from 'quasar';
 
 import AuditStateIcon from 'components/audit-state-icon'
 import Breadcrumb from 'components/breadcrumb'
@@ -202,6 +202,13 @@ export default {
         },
 
         generateReport: function(auditId) {
+            var downloadNotif = Notify.create({
+                spinner: QSpinnerGears,
+                message: 'Generating the Report',
+                color: "blue",
+                timeout: 0,
+                group: false
+            })
             AuditService.generateAuditReport(auditId)
             .then(response => {
                 var blob = new Blob([response.data], {type: "application/octet-stream"});
@@ -211,6 +218,14 @@ export default {
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
+
+                downloadNotif({
+                    icon: 'done',
+                    spinner: false,
+                    message: 'Report successfully generated',
+                    color: 'green',
+                    timeout: 2500
+                })
               })
             .catch( async err => {
                 var message = "Error generating template"
@@ -219,6 +234,7 @@ export default {
                     var blobData = await this.BlobReader(blob)
                     message = JSON.parse(blobData).datas
                 }
+                downloadNotif()
                 Notify.create({
                     message: message,
                     type: 'negative',

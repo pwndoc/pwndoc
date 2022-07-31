@@ -1,7 +1,7 @@
 <template>
-  <q-layout ref="layout" view="hHr LpR lFf" class="home-background">
+  <q-layout ref="layout" view="hHr LpR lFf" :class="$q.dark.isActive ? '' : 'home-background'">
     <q-header>
-        <q-toolbar color="primary">
+        <q-toolbar class="bg-fixed-primary">
             <img src="pwndoc-logo-white.png" style="max-height:50px;" />
             
             <q-item to='/audits' active-class="text-green">
@@ -27,16 +27,18 @@
 
             <q-space />
 
-            <div v-if="userService.isAllowed('settings:read')">
               <q-item to='/settings' active-class="text-green">
               <q-item-section avatar style="min-width:0" class="q-pr-sm">
                   <q-icon name="fa fa-cog" />
               </q-item-section>
               <q-item-section>{{$t('settings')}}</q-item-section>
               </q-item>
-            </div>
             <q-btn-dropdown auto-close flat icon="fa fa-user-circle" no-caps :label="userService.user.username">
                 <q-list>
+                  <q-item clickable @click="toggleDarkMode()">
+                    <q-item-section side><q-icon size="xs" :name="$q.dark.isActive ? 'fa fa-sun' : 'fa fa-moon'" /></q-item-section>
+                    <q-item-section>{{ $q.dark.isActive ? 'Light' : 'Dark'}}-Mode</q-item-section>
+                  </q-item>
                   <q-item clickable @click="$router.push('/profile')">
                     <q-item-section side><q-icon size="xs" name="fa fa-id-card" /></q-item-section>
                     <q-item-section>{{$t('profile')}}</q-item-section>
