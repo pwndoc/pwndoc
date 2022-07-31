@@ -204,6 +204,24 @@ expressions.filters.count = function(input, severity) {
     return count;
 }
 
+expressions.filters.length = function(input) {
+    return input.length;
+}
+
+expressions.filters.countNot = function(input, severity) {
+    if(!input) return input;
+    var count = 0;
+
+    for(var i = 0; i < input.length; i++){
+
+        if(input[i].cvss.baseSeverity !== severity){
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
 // Translate using locale from 'translate' folder
 // Example: {input | translate: 'fr'}
 expressions.filters.translate = function(input, locale) {
