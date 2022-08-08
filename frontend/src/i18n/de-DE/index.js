@@ -491,5 +491,10 @@ export default {
     twoStepVerification: '2-Stufige-Verifizierung',
     twoStepVerificationMessage: 'Öffnen Sie Ihre Authentifizierungs-App und geben Sie den angezeigten Sicherheitscode ein.',
     captions: 'Beschriftungen',
-    captionsDescription: 'Fügt Beschriftungslabel hinzu, welche im Bericht genutzt werden (Standard ist \'Abbildung\')'
+    captionsDescription: 'Fügt Beschriftungslabel hinzu, welche im Bericht genutzt werden (Standard ist \'Abbildung\')',
+    // Remediation
+    remediationColorsComplexity: 'Sanierungskomplexitätsfarben',
+    remediationColorsPriority: 'Farben für die Priorität der Behebung',
+    changeRemediationColorsDescriptionComplexity: 'Ändern Sie die im Bericht verwendeten Farben, um die unterschiedlichen Komplexitäten der Sanierung darzustellen',
+    changeRemediationColorsDescriptionPriority: 'Ändern Sie die im Bericht verwendeten Farben, um unterschiedliche Behebungsprioritäten darzustellen'
   }

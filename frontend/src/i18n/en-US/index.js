@@ -496,5 +496,10 @@ export default {
     twoStepVerification: '2-Step Verification',
     twoStepVerificationMessage: 'Open your authentication app and enter the security code it provides.',
     captions: 'Captions',
-    captionsDescription: 'Add Caption labels that will be used in the report (Default is \'Figure\')'
+    captionsDescription: 'Add Caption labels that will be used in the report (Default is \'Figure\')',
+    // Remediation
+    remediationColorsComplexity: 'Remediation Complexity Colors',
+    changeRemediationColorsDescriptionComplexity: 'Change the colors used in the report to represent the different complexities of remediation',
+    changeRemediationColorsDescriptionPriority: 'Change the colors used in the report to represent different remediation priorities',
+    remediationColorsPriority: 'Remediation priority colors',
   }
