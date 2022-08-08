@@ -348,4 +348,9 @@ export default {
     languageMoveToLeft: '语言（移动到左侧）',
     merge: '合并',
     goBack: '返回',
+    // Remediation 
+    changeRemediationColorsDescriptionComplexity: '更改报告中使用的颜色以表示修复的不同复杂性',
+    changeRemediationColorsDescriptionPriority: '更改报告中使用的颜色以表示不同的补救优先级',
+    remediationColorsPriority: '修复优先级颜色',
+    remediationColorsComplexity: '修复复杂性颜色',
   }
