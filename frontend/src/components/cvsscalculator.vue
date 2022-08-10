@@ -14,7 +14,7 @@
                 <q-chip square color="blue-12" text-color="white">{{$t('cvss.impactSubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseImpact)}}</span></q-chip>
                 <q-chip square color="blue-12" text-color="white">{{$t('cvss.exploitabilitySubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseExploitability)}}</span></q-chip>
             </div>
-            <div class="scoreRating" :class="cvss.baseSeverity">
+            <div class="scoreRating" :class="cvss.baseSeverity" :style="`background: ${getFindingColor(cvss.baseSeverity)}`" >
                 <span class="baseSeverity" v-if="!cvss.baseMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
                 <div v-else>
                     <span class="baseMetricScore">{{cvss.baseMetricScore}}</span>
@@ -298,7 +298,7 @@
                 </span>
             </div>
             <q-space />
-            <div class="scoreRating" :class="cvss.temporalSeverity">
+            <div class="scoreRating" :class="cvss.temporalSeverity" :style="`background: ${getFindingColor(cvss.temporalSeverity)}`">
                 <span class="baseSeverity" v-if="!cvss.temporalMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
                 <div v-else>
                     <span class="baseMetricScore">{{cvss.temporalMetricScore}}</span>
@@ -450,7 +450,7 @@
                     <q-chip square color="blue-12" text-color="white">{{$t('cvss.environmentalModifiedImpact')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedImpact)}}</span></q-chip>
                     <q-chip square color="blue-12" text-color="white">{{$t('cvss.environmentalModifiedExploitability')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedExploitability)}}</span></q-chip>
                 </div>
-                <div class="scoreRating" :class="cvss.environmentalSeverity">
+                <div class="scoreRating" :class="cvss.environmentalSeverity" :style="`background: ${getFindingColor(cvss.environmentalSeverity)}`">
                     <span class="baseSeverity" v-if="!cvss.environmentalMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
                     <div v-else>
                         <span class="baseMetricScore">{{cvss.environmentalMetricScore}}</span>
@@ -953,6 +953,15 @@ export default {
             return CVSS31.roundUp1(n)
         },
 
+        getFindingColor(baseSeverity) {
+            if(baseSeverity) // check infoWhenNoScore
+            {
+                const severityColorName = `${baseSeverity.toLowerCase()}Color`;
+                const cvssColors = this.$settings.report.public.cvssColors;
+                return cvssColors[severityColorName] || cvssColors.noneColor;
+            }
+        },
+
         cvssStrToObject(str) {
             if (str) {
                 var temp = str.split('/');
@@ -1103,35 +1112,5 @@ export default {
         text-align: center;
         height: fit-content!important;
         position: absolute;
-    }
-
-    .scoreRating.None {
-        background: #53aa33;
-        border: 2px solid #53aa33;
-        color: white;
-    }
-
-    .scoreRating.Low {
-        background: #ffcb0d;
-        border: 2px solid #ffcb0d;
-        color: white;
-    }
-
-    .scoreRating.Medium {
-        background: #f9a009;
-        border: 2px solid #f9a009;
-        color: white;
-    }
-
-    .scoreRating.High {
-        background: #df3d03;
-        border: 2px solid #df3d03;
-        color: white;
-    }
-
-    .scoreRating.Critical {
-        background: #212121;
-        border: 2px solid #212121;
-        color: white;
     }
 </style>
