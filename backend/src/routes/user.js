@@ -62,6 +62,15 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Required parameters: username, password');
             return;
         }
+
+        // Validate types
+        if (typeof req.body.password !== "string" || 
+            typeof req.body.username !== "string" ||
+            (req.body.totpToken && typeof req.body.totpToken !== "string")) {
+            Response.BadParameters(res, 'Parameters must be of type String');
+            return;
+        }
+
         var user = new User();
         //Required params
         user.username = req.body.username;
