@@ -953,10 +953,10 @@ export default {
             return CVSS31.roundUp1(n)
         },
 
-        getFindingColor(baseSeverity) {
-            if(baseSeverity) // check infoWhenNoScore
+        getFindingColor(severity) {
+            if(severity) // check infoWhenNoScore
             {
-                const severityColorName = `${baseSeverity.toLowerCase()}Color`;
+                const severityColorName = `${severity.toLowerCase()}Color`;
                 const cvssColors = this.$settings.report.public.cvssColors;
                 return cvssColors[severityColorName] || cvssColors.noneColor;
             }
