@@ -17,6 +17,12 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing required parameters: value')
             return
         }
+        
+        // Type validation
+        if (typeof req.body.value !== "string") {
+            Response.BadParameters(res, 'value parameter must be a String')
+            return
+        }
 
         var image = {}
         // Required parameters
