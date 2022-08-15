@@ -152,7 +152,7 @@ export default class CustomImage extends TipTapImage {
       },
       template: `
       <figure style="margin: auto; display: table; width:600px">
-      <q-img :src="src" :class="{'selected': selected}" style="max-width:600px" @click="selectImage" />
+      <q-img :src="src" :class="{'selected': selected}" style="max-width:600px;margin-bottom:4px" @click="selectImage" />
       <div>
       <q-input input-class="text-center cursor-pointer" readonly borderless dense v-model="alt" placeholder="Caption" />
       <q-popup-edit v-model="alt" auto-save>
