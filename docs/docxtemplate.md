@@ -1,6 +1,6 @@
 # Docx Template
 
-Pwndoc uses the nodejs library docxtemplater to generate a docx report. Specific documentation can be found on the official site documentation: https://docxtemplater.readthedocs.io/en/v3.1.0/tag_types.html 
+Pwndoc uses the nodejs library docxtemplater to generate a docx report. Specific documentation can be found on the official site documentation: https://docxtemplater.com/docs/tag-types/
 
 Check the [Default Template](https://github.com/pwndoc/pwndoc/tree/master/backend/report-templates) for better understanding.
 
