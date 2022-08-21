@@ -211,6 +211,41 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
+    // Add findings to audit
+    app.post("/api/audits/:auditId/Allfindings", acl.hasPermission('audits:update'), async function(req, res) {
+        // Get findings array (sent from /frontend/src/pages/audit/edit/findings/add/add.js:307)
+        let findings = [];
+
+        // Import audit + settings
+        var settings = await Settings.getAll();
+        var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id);
+        if (settings.reviews.enabled && audit.state !== "EDIT") {
+            Response.Forbidden(res, "The audit is not in the EDIT state and therefore cannot be edited.");
+            return;
+        }   
+        if (settings.reviews.enabled && settings.reviews.private.removeApprovalsUponUpdate) {
+            Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });
+        }
+
+        // Send to database
+        var finding = {};
+        var messages = [];
+ 
+
+        req.body.forEach(vuln => {      
+            Audit.createFinding(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, vuln)
+            .then(msg => {
+                messages[0] = msg; 
+            })
+            .catch(err => Response.Internal(res, err))
+        })
+        // Note that if the Response.ok is put in the forEach it creates a fatal error
+        // Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+        io.to(req.params.auditId).emit('updateAudit');
+        Response.Ok(res, messages[0]);
+
+    });
+    
     // Add finding to audit
     app.post("/api/audits/:auditId/findings", acl.hasPermission('audits:update'), async function(req, res) {
         var settings = await Settings.getAll();

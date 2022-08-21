@@ -60,6 +60,7 @@
                         v-model="search.title"
                         clearable
                         outlined
+                        @input="unselectAll()"
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -71,6 +72,7 @@
                         :options="vulnCategoriesOptions"
                         options-sanitize
                         outlined
+                        @input="unselectAll()"
                         />
                     </q-td>
                     <q-td style="width: 20%">
@@ -82,9 +84,17 @@
                         :options="vulnTypeOptions"
                         options-sanitize
                         outlined
+                        @input="unselectAll()"
                         />
+                    </q-td>           
+                     <!-- Adding the checkbox to select all vuln and a label to see the number of selected row -->
+                    <q-td>
+                        <q-btn :label="nbOfSelectedVulns" color="primary" @click="addSelectedFinding()"/>
                     </q-td>
-                    <q-td></q-td>
+                    <q-td>
+                        <input type="checkbox" v-model="bigcheckbox" :props="props" @click="SelectAll()"/>
+                    </q-td>
+                    <!-- -->
                 </q-tr>
             </template>
 
@@ -104,6 +114,10 @@
                         <q-btn flat color="primary" icon="fa fa-plus-circle" @click="addFindingFromVuln(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.addToFindings')}}</q-tooltip>                            
                         </q-btn>
+                    </q-td>
+                    <!-- Adding a checkbox for each row -->
+                    <q-td>
+                        <input type="checkbox" :ref="'CheckBox-' + props.key" @click="Selected(props)"/>
                     </q-td>
                 </q-tr>
                 <q-tr v-show="props.expand" :props="props">
