@@ -90,9 +90,31 @@ Options:
 
 ## Backup
 
-It's possible, even recommended, to regularly backup the `backend/mongo-data` folder. It contains all the database.
+It's possible, even recommended, to regularly backup the `mongo-data` volume. It contains all the database.
+
+Find the location of the volume on the disk:
+
+```
+sudo docker inspect pwndoc_mongo-data     
+[
+    {
+        "CreatedAt": "2022-09-18T19:11:42+02:00",
+        "Driver": "local",
+        "Labels": {
+            "com.docker.compose.project": "pwndoc",
+            "com.docker.compose.version": "2.11.0",
+            "com.docker.compose.volume": "mongo-data"
+        },
+        "Mountpoint": "/var/lib/docker/volumes/pwndoc_mongo-data/_data",
+        "Name": "pwndoc_mongo-data",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+```
 
 To restore :
+
 - Stop containers
-- Replace the current `backend/mongo-data` folder with the backed up one
+- Replace the current `mongo-data` volume with the backed up one
 - Start containers
