@@ -6,25 +6,29 @@
 
 All 3 containers can be run at once using the docker-compose file in the root directory.
 
-!> For production usage make sure to change the JWT secret in «src/lib/auth.js» and certificates in «ssl» folder
+!> For production usage make sure to change the certificates in `backend/ssl` folder and optionnaly to set the JWT secret in `backend/src/lib/auth.js` (`jwtSecret` and `jwtRefreshSecret` in `backend/src/config/config.json`) if you don't want to use random ones.
 
 Build and run Docker containers
+
 ```
 docker-compose up -d --build
 ```
 
 Display backend container logs
+
 ```
 docker-compose logs -f pwndoc-backend
 ```
 
 Stop/Start containers
+
 ```
 docker-compose stop
 docker-compose start
 ```
 
 Remove containers
+
 ```
 docker-compose down
 ```
@@ -46,22 +50,26 @@ For development purposes, specific docker-compose file can be used in each folde
 > *Source code can be modified live and application will automatically reload on changes.*
 
 Build and run backend and database containers
+
 ```
 docker-compose -f backend/docker-compose.dev.yml up -d --build
 ```
 
 Display backend container logs
+
 ```
 docker-compose -f backend/docker-compose.dev.yml logs -f pwndoc-backend
 ```
 
 Stop/Start container
+
 ```
 docker-compose -f backend/docker-compose.dev.yml stop
 docker-compose -f backend/docker-compose.dev.yml start
 ```
 
 Remove containers
+
 ```
 docker-compose -f backend/docker-compose.dev.yml down
 ```
