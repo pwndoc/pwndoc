@@ -190,7 +190,7 @@ List of findings. Array of Objects:
 Identifier consists on a sequential id for the reported vulnerability pre-pended with 'IDX-'. Ex: IDX-001.
 You can replace the prefix by using the filter ```changeID```
 
-Additional fields will also be added to the findings Array. The key will be lowercase + strip sapces of the label.  
+Additional fields will also be added to the findings Array. The key will be lowercase + strip spaces of the label.  
 Eg. if Custom Field label is `Aggravating Factors` it will be added to the array as `findings[i].aggravatingfactors`.
 
 > Use in template document
