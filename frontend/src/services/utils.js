@@ -1,4 +1,5 @@
 var _ = require('lodash')
+import { $t } from 'boot/i18n'
 
 export default {
   htmlEncode(html) {
@@ -186,5 +187,12 @@ export default {
     "APPROVED": 8,
     "APPROVED_APPROVED": 9,
     "APPROVED_READONLY": 10
+  },
+
+  strongPassword: function(value) {
+    var regExp = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
+    if (regExp.test(value))
+      return true
+    return $t('msg.passwordComplexity')
   }
 }
