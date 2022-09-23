@@ -55,7 +55,8 @@ export default {
             // Username to identify collab to update
             idUpdate: '',
             // List of roles
-            roles: []
+            roles: [],
+            strongPassword: [Utils.strongPassword]
         }
     },
 
@@ -88,7 +89,7 @@ export default {
             if (!this.currentCollab.password)
                 this.errors.password = $t('msg.passwordRequired');
 
-            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password)
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password || !this.$refs.pwdCreateRef.validate())
                 return;
 
             CollabService.createCollab(this.currentCollab)
@@ -121,9 +122,9 @@ export default {
             if (!this.currentCollab.username)
                 this.errors.username = $t('msg.usernameRequired');
 
-            if (this.errors.lastname || this.errors.firstname || this.errors.username)
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || !this.$refs.pwdUpdateRef.validate())
                 return;
-
+            
             CollabService.updateCollab(this.idUpdate, this.currentCollab)
             .then(() => {
                 this.getCollabs();

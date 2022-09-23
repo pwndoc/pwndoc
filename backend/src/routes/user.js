@@ -273,6 +273,10 @@ module.exports = function(app) {
 
     // Update any user (admin only)
     app.put("/api/users/:id", acl.hasPermission('users:update'), function(req, res) {
+        if (req.body.password && !passwordpolicy.strongPassword(req.body.password)){
+            Response.BadParameters(res, 'New Password does not match the password policy');
+            return;
+        }
         var user = {};
     
         // Optionals params
