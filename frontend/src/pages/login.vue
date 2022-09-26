@@ -215,7 +215,7 @@ export default {
             this.cleanErrors();
             if (!this.username)
                 this.errors.username = $t('msg.usernameRequired');
-            if (utils.strongPassword(this.password) !== true)
+            if (Utils.strongPassword(this.password) !== true)
                 this.errors.newPassword = $t('msg.passwordComplexity')
             if (!this.password)
                 this.errors.password = $t('msg.passwordRequired');
