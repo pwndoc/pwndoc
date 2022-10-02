@@ -7,6 +7,8 @@ function html2ooxml(html, style = '') {
         return html
     if (!html.match(/^<.+>/))
         html = `<p>${html}</p>`
+        html = html.replace(/\[{4}/g,'<cbhl>') // Convert [[[[ to HTML open tag, for Code Block Highlight
+        html = html.replace(/\]{4}/g,'</cbhl>') // Convert ]]]] to HTML close tag, for Code Block Highlight
     var doc = new docx.Document({sections:[]});
     var paragraphs = []
     var cParagraph = null
@@ -43,6 +45,9 @@ function html2ooxml(html, style = '') {
             else if (tag === "pre") {
                 inCodeBlock = true
                 cParagraph = new docx.Paragraph({style: "Code"})
+            }
+            else if (tag === "cbhl" && inCodeBlock === true) {
+                cRunProperties.style = "CodeBlockHighlightChar"
             }
             else if (tag === "b" || tag === "strong") {
                 cRunProperties.bold = true
@@ -81,6 +86,9 @@ function html2ooxml(html, style = '') {
             }
             else if (tag === "code") {
                 cRunProperties.style = "CodeChar"
+            }
+            else if (tag === "cbhl") {
+                delete cRunProperties.style
             }
             else if (tag === "legend" && attribs && attribs.alt !== "undefined") {
                 var label = attribs.label || "Figure"
