@@ -87,9 +87,6 @@ function html2ooxml(html, style = '') {
             else if (tag === "code") {
                 cRunProperties.style = "CodeChar"
             }
-            else if (tag === "cbhl") {
-                delete cRunProperties.style
-            }
             else if (tag === "legend" && attribs && attribs.alt !== "undefined") {
                 var label = attribs.label || "Figure"
                 cParagraph = new docx.Paragraph({style: "Caption", alignment: docx.AlignmentType.CENTER})
@@ -132,6 +129,9 @@ function html2ooxml(html, style = '') {
                     cParagraphProperties = {}
             }
             else if (tag === "code") {
+                delete cRunProperties.style
+            }
+            else if (tag === "cbhl") {
                 delete cRunProperties.style
             }
         },
