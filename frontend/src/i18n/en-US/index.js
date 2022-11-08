@@ -499,8 +499,8 @@ export default {
     captions: 'Captions',
     captionsDescription: 'Add Caption labels that will be used in the report (Default is \'Figure\')',
     // Remediation
-    remediationColorsComplexity: 'Remediation Complexity Colors',
+    remediationColorsComplexity: 'Remediation Complexity colors',
     changeRemediationColorsDescriptionComplexity: 'Change the colors used in the report to represent the different complexities of remediation',
     changeRemediationColorsDescriptionPriority: 'Change the colors used in the report to represent different remediation priorities',
-    remediationColorsPriority: 'Remediation priority colors',
+    remediationColorsPriority: 'Remediation Priority colors',
   }
