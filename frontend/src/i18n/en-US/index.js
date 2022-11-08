@@ -78,6 +78,7 @@ export default {
         passwordRequired: 'Password required',
         currentPasswordRequired: 'Current Password required',
         confirmPasswordDifferents: 'New Password and Confirm Password are differents',
+        passwordComplexity: 'Password must be at least 8 characters with minimum 1 Uppercase, Lowercase and Number',
         collaboratorCreatedOk: 'Collaborator created successfully',
         collaboratorUpdatedOk: 'Collaborator updated successfully',
         collaboratorDeletedOk: 'Collaborator deleted successfully',

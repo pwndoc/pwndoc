@@ -54,6 +54,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
+                    ref="pwdInitRef"
                     :label="$t('password')"
                     :error="!!errors.password"
                     :error-message="errors.password"
@@ -64,6 +65,7 @@
                     type="password"
                     for="password"
                     @keyup.enter="initUser()"
+                    :rules="strongPassword"
                     />
                 </q-card-section>
 
@@ -153,6 +155,7 @@
 <script>
 import {Loading} from 'quasar';
 import UserService from '@/services/user';
+import Utils from '@/services/utils'
 
 import { $t } from '@/boot/i18n'
 
@@ -168,7 +171,8 @@ export default {
             totpToken: "",
             step: 0,
             errors: {alert: "", username: "", password: "", firstname: "", lastname: ""},
-            loginLoading: false
+            loginLoading: false,
+            strongPassword: [Utils.strongPassword]
         }
     },
 
@@ -211,6 +215,8 @@ export default {
             this.cleanErrors();
             if (!this.username)
                 this.errors.username = $t('msg.usernameRequired');
+            if (Utils.strongPassword(this.password) !== true)
+                this.errors.newPassword = $t('msg.passwordComplexity')
             if (!this.password)
                 this.errors.password = $t('msg.passwordRequired');
             if (!this.firstname)
@@ -218,7 +224,7 @@ export default {
             if (!this.lastname)
                 this.errors.lastname = $t('msg.lastnameRequired');
 
-            if (this.errors.username || this.errors.password || this.errors.firstname || this.errors.lastname)
+            if (this.errors.username || this.errors.password || this.errors.firstname || this.errors.lastname || !this.$refs.pwdInitRef.validate())
                 return;
 
             UserService.initUser(this.username, this.firstname, this.lastname, this.password)
