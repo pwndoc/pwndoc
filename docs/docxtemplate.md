@@ -1,6 +1,6 @@
 # Docx Template
 
-Pwndoc uses the nodejs library docxtemplater to generate a docx report. Specific documentation can be found on the official site documentation: https://docxtemplater.readthedocs.io/en/v3.1.0/tag_types.html 
+Pwndoc uses the nodejs library docxtemplater to generate a docx report. Specific documentation can be found on the official site documentation: https://docxtemplater.readthedocs.io/en/v3.1.0/tag_types.html
 
 Check the [Default Template](https://github.com/pwndoc/pwndoc/tree/master/backend/report-templates) for better understanding.
 
@@ -41,7 +41,7 @@ data = {findings: [{title: 'vuln1', cvssSeverity: 'Critical'}, {title: 'vuln2', 
 
 ### HTML values (from text editors)
 
-There is a tag filter *convertHTML* that convert HTML to open office XML for direct use in the docx template.  
+There is a tag filter *convertHTML* that convert HTML to open office XML for direct use in the docx template.
 To handle images, HTML values with images are converted into an array of text and images
 
 ```
@@ -49,7 +49,7 @@ To handle images, HTML values with images are converted into an array of text an
 -> {@affected | convertHTML} // this must be the only thing in the paragraph
 
 // HTML with images (eg: poc in a finding)
--> 
+->
 {-w:p poc}{@text | convertHTML}
                                             {-w:p images}{%image}
                                     Image 1 - {caption}{/images}{/poc}
@@ -157,7 +157,7 @@ Array of Objects:
 >```
 Audit Scope:
 {-w:p scope}{name}{/scope}
->  
+>
 Network Scan:
 {#scope}{#hosts}
 {hostname} {ip} {os} :
@@ -197,16 +197,16 @@ Eg. if Custom Field label is `Aggravating Factors` it will be added to the array
 >```
 List of Findings{#findings}
 {identifier | changeID: 'PROJ1-'}    {title}    {vulnType}
->  
+>
 Severity: {cvssSeverity}    Score: {cvssScore}
 Attack Vector: cvssObj.AV               Scope: cvssObj.S
 Attack Complexity: cvssObj.AC           Confidentiality: cvssObj.C
 Required Privileges: cvssObj.PR         Integrity: cvssObj.I
 User Interaction: cvssObj.UI            Availability: cvssObj.A
->  
-Affected Scope 
+>
+Affected Scope
 {@affected | convertHTML}
->  
+>
 Description
 {-w:p description}{@text | convertHTML}
                                             {-w:p images}{%image}
@@ -251,18 +251,77 @@ Open the file with an archive manager
 
 ![Docx Archive](/_images/docx_archive.png)
 
-The *numbering.xml* file contains definitions of numbering lists.  
-`<w:abstractNum w:abstractNumId=0>...</w:abstractNum>` tags represent the definition of a numbering with its different levels.  
+The *numbering.xml* file contains definitions of numbering lists.
+`<w:abstractNum w:abstractNumId=0>...</w:abstractNum>` tags represent the definition of a numbering with its different levels.
 `<w:num w:numId="1"><w:abstractNumId w:val="0" /></w:num>` tags associate the effective `Id` used in the document with the `abstract Id` of the definition.
 
 Pwndoc uses `numId="1"` for `bullet list` and `numId="2"` for `ordered list`. So the only thing to change in the file is the value of the abstractNumId associated with those numId.
 
-If there is no abstractNum definitions, this means that no numbering has been used in the document: open the document with Word, add bullet and ordered list, save, delete bullet and ordered list, save.  
+If there is no abstractNum definitions, this means that no numbering has been used in the document: open the document with Word, add bullet and ordered list, save, delete bullet and ordered list, save.
 There should now be abstractNum definition for each one.
 
 ## Filters
 
 Filters allow to apply functions on Audit data values.
+
+### bookmarkCreate
+
+// Creates a text block or simple location bookmark:
+// - Text block: {@name | bookmarkCreate: identifier | p}
+// - Location: {@identifier | bookmarkCreate | p}
+// Bookmark identifiers need to begin with a letter and contain only letters,
+// numbers, and underscore characters: non-conforming characters are
+// automatically replaced by underscores.
+
+Creates a text block or a location bookmark:
+
+- *Text block bookmarks* contain some text which can then be referenced in a clickable reference field using the `bookmarkRef` filter.
+  These bookmarks can also be used as a hyperlink target using the `bookmarkLink` filter.
+- *Location bookmark* simply allow to point to a location within the document which cas be used as a hyperlink target using the `bookmarkLink` filter.
+
+Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters: non-conforming characters are automatically replaced by underscores.
+
+> Use in template document
+>```
+// Example of text block bookmark, the bookmark identifier contains the name value:
+{@name | bookmarkCreate: identifier | p}
+// Example adding some other text in the same paragraph and using a custom paragraph style:
+{@'Some text: ' + (name | bookmarkCreate: identifier) | p: 'Heading 1'}
+// Example of location bookmark:
+{@identifier | bookmarkCreate | p}
+>```
+
+### bookmarkLink
+
+Creates a hyperlink to a text block or location bookmark usually created using the `bookmarkCreate` filter.
+
+> Use in template document
+>```
+{@input | bookmarkLink: identifier | p}
+// Example adding some other text in the same pargraph:
+{@'Some text: ' + (input | bookmarkLink: identifier) | p}
+>```
+
+### bookmarkRef
+
+Creates a clickable reference to a text block bookmark usually created using the `bookmarkCreate` filter.
+
+> Use in template document
+>```
+{@identifier | bookmarkRef | p}
+// Example adding some other text in the same pargraph:
+{@'Some text: ' + (identifier | bookmarkRef) | p}
+>```
+
+### capfirst
+
+Capitalizes input first letter.
+
+> Use in template document
+>```
+// Example with "hello world"
+{input | capfirst} -> "Hello world"
+>```
 
 ### changeID
 
@@ -303,6 +362,195 @@ Convert HTML values to OOXML format. See [HTML values](docxtemplate.md?id=html-v
 {@value | convertHTML}
 >```
 
+### count
+
+Count the number of vulnerabilities by CVSS severity.
+
+> Use in template document
+>```
+// Example counting 'Critical' vulnerabilities
+{findings | count: 'Critical'}
+>```
+
+### d
+
+Default value: returns input if it is truthy, otherwise its parameter.
+
+> Use in template document
+>```
+// This generates a comma-separated list of affected systems, falling-back on the whole audit scope if left empty.
+{affected | lines | d: (scope | select: 'name') | join: ', '}
+>```
+
+### fromTo
+
+Display *"From ... to ..."* dates nicely, removing redundant information when the start and end dates occur during the same month or year.
+
+To internationalize or customize the resulting string, associate the desired output to the strings `"from {0} to {1}"` and `"on {0}"` in your Pwndoc translate file.
+Date formating relies on the locale name provided as second parameter.
+
+
+> Use in template document
+>```
+{date_start | fromTo: date_end:'en' | capfirst}
+>```
+
+### groupBy
+
+Group input elements by an attribute.
+
+The returned values is a dictionary where:
+
+- The key is the common attribute value,
+- The value is the set of items from the input structure sharing this same value for this attribute.
+
+Pipe this into `loopObject` to iterate through a key/value sets.
+
+> Use in template document
+>```
+{#findings | groupBy: 'severity' | loopObject}
+Severity: {key}
+{#value}
+Title: {title}
+{/value}
+{/findings | groupBy: 'severity' | loopObject}
+>```
+
+### initials
+
+Returns the initials from an input string (typically a firstname).
+
+> Use in template document
+>```
+// Example with "Foo-Bar"
+{creator.firstname | initials} -> "F.-B."
+>```
+
+### join
+
+Returns a string which is a concatenation of input elements using an optional separator string.
+
+Can also be used to build raw OOXML strings.
+
+> Use in template document
+>```
+{scope | join: ', '}
+>```
+
+### length
+
+Returns the length (ie. number of items for an array) of input.
+
+Can also be used as a conditional to check the emptiness of a list.
+
+> Use in template document
+>```
+// Display the number of elements:
+{findings | length}
+// Continue only if non-empty:
+{#input | length}Not empty{/input | length}
+>```
+
+### lines
+
+Takes a multilines input strings (either raw or simple HTML paragraphs) and returns each line as an ordered list.
+
+> Use in template document
+>```
+{input | lines}
+>```
+
+### linkTo
+
+Takes a text to display and a URL to generate a hyperlink.
+
+> Use in template document
+>```
+{@cvss.vectorString | linkTo: 'https://www.first.org/cvss/calculator/3.1#' + cvss.vectorString | p}
+>```
+
+### loopObject
+
+Loop over the input object, providing access to its keys and values.
+
+> Use in template document
+>```
+{#findings | groupBy: 'severity' | loopObject}
+Severity: {key}
+{#value}
+Title: {title}
+{/value}
+{/findings | groupBy: 'severity' | loopObject}
+>```
+
+### lower
+
+Lowercases input.
+
+> Use in template document
+>```
+// Example with "Hello WORLD"
+{input | lower} -> "hello world"
+>```
+
+### mailto
+
+Creates a clickable "mailto:" link, assumes that input is an email address if no other address has been provided as parameter.
+
+The character style "Hyperlink" is applied to the generated hyperlink.
+
+> Use in template document
+>```
+{@lastname | mailto: email | p}
+// Example adding some other text in the same pargraph and displaying the email address instead of the last name:
+{@'Some text: ' + (email | mailto) | p}
+>```
+
+### map
+
+Applies a filter on a sequence of objects.
+
+> Use in template document
+>```
+{scope | select: 'name' | map: lower | join: ', '}
+>```
+
+### p
+
+Embeds input within OOXML paragraph tags, applying an optional style name to it.
+
+> Use in template document
+>```
+{@input | p: 'Some style'}
+>```
+
+### reverse
+
+Reverses the input array order.
+
+> Use in template document
+>```
+{input | reverse}
+>```
+
+### select
+
+Looks up an attribute from a sequence of objects, doted notation is supported.
+
+> Use in template document
+>```
+{findings | select: 'cvss.environmentalSeverity'}
+>```
+
+### sort
+
+Sorts the input array according an optional given attribute, dotted notation is supported.
+
+> Use in template document
+>```
+{#findings | sort 'cvss.environmentalSeverity'}{name}{/findings | sort 'cvss.environmentalSeverity'}
+>```
+
 ### sortArrayByField
 
 Sort array by supplied field. S
@@ -315,14 +563,51 @@ Order can be 1 for ascending, or -1 for descending
 {/}
 >```
 
-### count 
+### split
 
-Count the number of vulnerabilities by CVSS severity.
+Takes a string as input and split it into an ordered list using a separator.
 
 > Use in template document
 >```
-// Example counting 'Critical' vulnerabilities
-{findings | count: 'Critical'}
+{input | split: ', '}
+>```
+
+### title
+
+Capitalizes input first letter of each word, can be associated to 'lower' to normalize case.
+
+> Use in template document
+>```
+// Example with "john DOE"
+{creator.lastname | lower | title} -> "John Doe"
+>```
+
+### toJSON
+
+Returns the JSON representation of the input value, useful to dump variables content while debugging a template.
+
+> Use in template document
+>```
+{input | toJSON}
+>```
+
+### upper
+
+Upercases input.
+
+> Use in template document
+>```
+// Example with "Hello World"
+{input | upper} -> "HELLO WORLD"
+>```
+
+### where
+
+Filters input elements using a free-form Angular statement.
+
+> Use in template document
+>```
+{#findings | where: 'cvss.severity == "Critical"'}{title}{/findings | where: 'cvss.severity == "Critical"'}
 >```
 
 Custom filters can also be created in `backend/src/lib/custom-generator.js`. As an example there are 2 filters defined for french reports.
