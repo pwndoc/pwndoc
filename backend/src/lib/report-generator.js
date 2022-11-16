@@ -661,6 +661,30 @@ async function prepAuditData(data, settings) {
     var cellHighColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+highColor+'"/></w:tcPr>';
     var cellCriticalColor = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+criticalColor+'"/></w:tcPr>';
 
+    /** Remediation complexity  Colors for table cells */
+    
+    var lowColorRemediationComplexity = settings.report.public.remediationColorsComplexity.lowColor.replace('#', ''); 
+    var mediumColorRemediationComplexity = settings.report.public.remediationColorsComplexity.mediumColor.replace('#', '');
+    var highColorRemediationComplexity = settings.report.public.remediationColorsComplexity.highColor.replace('#', ''); 
+
+    var cellLowColorRemediationComplexity = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColorRemediationComplexity+'"/></w:tcPr>';
+    var cellMediumColorRemediationComplexity = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+mediumColorRemediationComplexity+'"/></w:tcPr>';
+    var cellHighColorRemediationComplexity = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+highColorRemediationComplexity+'"/></w:tcPr>';
+
+
+    /** Remediation priority Colors for table cells */
+
+    var lowColorRemediationPriority = settings.report.public.remediationColorsPriority.lowColor.replace('#', ''); 
+    var mediumColorRemediationPriority = settings.report.public.remediationColorsPriority.mediumColor.replace('#', ''); 
+    var highColorRemediationPriority = settings.report.public.remediationColorsPriority.highColor.replace('#', ''); 
+    var urgentColorRemediationPriority = settings.report.public.remediationColorsPriority.urgentColor.replace('#', ''); 
+
+    var cellLowColorRemediationPriority = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+lowColorRemediationPriority+'"/></w:tcPr>';
+    var cellMediumColorRemediationPriority = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+mediumColorRemediationPriority+'"/></w:tcPr>';
+    var cellHighColorRemediationPriority = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+highColorRemediationPriority+'"/></w:tcPr>';
+    var cellUrgentColorRemediationPriority = '<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="'+urgentColorRemediationPriority+'"/></w:tcPr>';
+
+
     var result = {}
     result.name = data.name || "undefined"
     result.auditType = $t(data.auditType) || "undefined"
@@ -730,6 +754,19 @@ async function prepAuditData(data, settings) {
             category: $t(finding.category) || $t("No Category"),
             identifier: "IDX-" + utils.lPad(finding.identifier)
         }
+        // Remediation Complexity color 
+        if (tmpFinding.remediationComplexity === 1) tmpFinding.remediation.cellColorComplexity = cellLowColorRemediationComplexity
+        else if (tmpFinding.remediationComplexity === 2) tmpFinding.remediation.cellColorComplexity = cellMediumColorRemediationComplexity
+        else if (tmpFinding.remediationComplexity === 3) tmpFinding.remediation.cellColorComplexity = cellHighColorRemediationComplexity
+        else tmpFinding.remediation.cellColorComplexity = cellNoneColor
+
+        // Remediation Priority color 
+        if (tmpFinding.priority === 1) tmpFinding.remediation.cellColorPriority = cellLowColorRemediationPriority
+        else if (tmpFinding.priority === 2) tmpFinding.remediation.cellColorPriority = cellMediumColorRemediationPriority
+        else if (tmpFinding.priority === 3) tmpFinding.remediation.cellColorPriority = cellHighColorRemediationPriority
+        else if (tmpFinding.priority === 4) tmpFinding.remediation.cellColorPriority = cellUrgentColorRemediationPriority
+        else tmpFinding.remediation.cellColorPriority = cellNoneColor
+
         // Handle CVSS
         tmpFinding.cvss = {
             vectorString: tmpCVSS.vectorString || "",
