@@ -63,6 +63,7 @@ module.exports = function(app, io) {
         
         if (!locales_avalable.includes(audit.language)){
             Response.BadParameters(res, 'Wrong language');
+            return;
         }
         
         Audit.create(audit, req.decodedToken.id)
