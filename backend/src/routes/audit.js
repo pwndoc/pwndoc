@@ -2,6 +2,7 @@ module.exports = function(app, io) {
 
     var Response = require('../lib/httpResponse');
     var Audit = require('mongoose').model('Audit');
+    var Language = require('mongoose').model('Language');
     var acl = require('../lib/auth').acl;
     var reportGenerator = require('../lib/report-generator');
     var _ = require('lodash');
@@ -45,7 +46,7 @@ module.exports = function(app, io) {
     });
 
     // Create audit with name, auditType, language provided
-    app.post("/api/audits", acl.hasPermission('audits:create'), function(req, res) {
+    app.post("/api/audits", acl.hasPermission('audits:create'), async function(req, res) {
         if (!req.body.name || !req.body.language || !req.body.auditType) {
             Response.BadParameters(res, 'Missing some required parameters: name, language, auditType');
             return;
@@ -57,6 +58,13 @@ module.exports = function(app, io) {
         audit.language = req.body.language;
         audit.auditType = req.body.auditType;
 
+        var languages_available = JSON.stringify(await Language.find().exec());
+        var locales_avalable = JSON.parse(languages_available).map(({locale})=>locale);
+        
+        if (!locales_avalable.includes(audit.language)){
+            Response.BadParameters(res, 'Wrong language');
+        }
+        
         Audit.create(audit, req.decodedToken.id)
         .then(inserted => Response.Created(res, {message: 'Audit created successfully', audit: inserted}))
         .catch(err => Response.Internal(res, err))
