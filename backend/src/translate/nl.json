@@ -1,5 +1,4 @@
-
-var CVSS = {
+{
     "Attack Vector": "Aanvalsvector",
     "Attack Complexity": "Aanvalscomplexiteit",
     "Privileges Required": "Rechten nodig",
@@ -18,14 +17,6 @@ var CVSS = {
     "None": "Geen",
     "Required": "Verplicht",
     "Unchanged": "Ongewijzigd",
-    "Changed": "Verandert"
-}
-
-var Categories = {
+    "Changed": "Verandert",
     "No Category": "Geen category"
-}
-
-module.exports = {
-    ...CVSS,
-    ...Categories
 }
