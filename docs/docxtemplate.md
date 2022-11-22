@@ -126,6 +126,8 @@ Array of Objects:
 * **collaborators[i].username**
 * **collaborators[i].firstname**
 * **collaborators[i].lastname**
+* **collaborators[i].email**
+* **collaborators[i].phone**
 * **collaborators[i].role**
 
 > Use in template document
@@ -136,11 +138,30 @@ Name: {firstname} {lastname}
 {/collaborators}
 >```
 
+### reviewers
+Array of Objects:
+* **reviewers[i].username**
+* **reviewers[i].firstname**
+* **reviewers[i].lastname**
+* **reviewers[i].email**
+* **reviewers[i].phone**
+* **reviewers[i].role**
+
+> Use in template document
+>```
+List of reviewers:
+{#reviewers}
+Name: {firstname} {lastname}
+{/reviewers}
+>```
+
 ### creator
 Object:
 * **creator.username**
 * **creator.firstname**
 * **creator.lastname**
+* **creator[i].email**
+* **creator[i].phone**
 * **creator.role**
 
 > Use in template document

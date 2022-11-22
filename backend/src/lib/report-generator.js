@@ -466,6 +466,20 @@ async function prepAuditData(data, settings) {
             role: collab.role || "undefined"
         })
     })
+
+    result.reviewers = []
+    data.reviewers.forEach(reviewer => {
+        result.reviewers.push({
+            username: reviewer.username || "undefined",
+            firstname: reviewer.firstname || "undefined",
+            lastname: reviewer.lastname || "undefined",
+            email: reviewer.email || "undefined",
+            phone: reviewer.phone || "undefined",
+            role: reviewer.role || "undefined"
+        })
+    })
+
+
     result.language = data.language || "undefined"
     result.scope = data.scope.toObject() || []
 
