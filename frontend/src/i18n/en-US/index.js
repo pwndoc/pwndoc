@@ -78,6 +78,7 @@ export default {
         passwordRequired: 'Password required',
         currentPasswordRequired: 'Current Password required',
         confirmPasswordDifferents: 'New Password and Confirm Password are differents',
+        passwordComplexity: 'Password must be at least 8 characters with minimum 1 Uppercase, Lowercase and Number',
         collaboratorCreatedOk: 'Collaborator created successfully',
         collaboratorUpdatedOk: 'Collaborator updated successfully',
         collaboratorDeletedOk: 'Collaborator deleted successfully',
@@ -496,5 +497,10 @@ export default {
     twoStepVerification: '2-Step Verification',
     twoStepVerificationMessage: 'Open your authentication app and enter the security code it provides.',
     captions: 'Captions',
-    captionsDescription: 'Add Caption labels that will be used in the report (Default is \'Figure\')'
+    captionsDescription: 'Add Caption labels that will be used in the report (Default is \'Figure\')',
+    // Remediation
+    remediationColorsComplexity: 'Remediation Complexity Colors',
+    changeRemediationColorsDescriptionComplexity: 'Change the colors used in the report to represent the different complexities of remediation',
+    changeRemediationColorsDescriptionPriority: 'Change the colors used in the report to represent different remediation priorities',
+    remediationColorsPriority: 'Remediation priority colors',
   }

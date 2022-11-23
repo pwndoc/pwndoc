@@ -23,7 +23,7 @@ function NoContent(res, data){
 exports.NoContent = NoContent;
 
 function SendFile(res, filename, file){
-    res.set({"Content-Disposition": `attachment; filename="${filename}"`});
+    res.set({"Content-Disposition": `attachment; filename="${encodeURIComponent(filename)}"`});
     res.status(200).send(file);
 }
 exports.SendFile = SendFile;
@@ -73,7 +73,9 @@ function Internal(res, error){
         fn(res, error.message);
     else if (error.errmsg) {
         res.status(500).json({"status": "error", "datas": error.errmsg});
-    }   
+    }
+    else if (error.message)
+        res.status(500).json({"status": "error", "datas": error.message});
     else {
         console.log(error)
         res.status(500).json({"status": "error", "datas": "Internal Error"});

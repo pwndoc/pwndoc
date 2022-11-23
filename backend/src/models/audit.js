@@ -301,7 +301,12 @@ AuditSchema.statics.updateGeneral = (isAdmin, auditId, userId, update) => {
     return new Promise(async(resolve, reject) => { 
         if (update.company && update.company.name) {
             var Company = mongoose.model("Company");
-            update.company = await Company.create(update.company)
+            try {
+                update.company = await Company.create({name: update.company.name})
+            } catch (error) {
+                console.log(error)
+                delete update.company
+            }
         }
         var query = Audit.findByIdAndUpdate(auditId, update)
         if (!isAdmin)
