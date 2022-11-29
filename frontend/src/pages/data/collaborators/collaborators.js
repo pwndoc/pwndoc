@@ -2,6 +2,8 @@ import { Dialog, Notify } from 'quasar';
 import Vue from 'vue'
 
 import CollabService from '@/services/collaborator'
+import SettingsService from '@/services/settings'
+
 import UserService from '@/services/user'
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
@@ -18,6 +20,7 @@ export default {
             loading: true,
             // Datatable headers
             dtHeaders: [
+                {name: 'type', label: $t('type'), field: 'type', align: 'left', sortable: true},
                 {name: 'username', label: $t('username'), field: 'username', align: 'left', sortable: true},
                 {name: 'firstname', label: $t('firstname'), field: 'firstname', align: 'left', sortable: true},
                 {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
@@ -38,7 +41,7 @@ export default {
                 {label:'All', value:0}
             ],
             // Search filter
-            search: {username: '', firstname: '', lastname: '', role: '', email: '', enabled: true},
+            search: {username: '', firstname: '', lastname: '', role: '', email: '',type:'', enabled: true},
             customFilter: Utils.customFilter,
             // Errors messages
             errors: {lastname: '', firstname: '', username: ''},
@@ -50,6 +53,7 @@ export default {
                 role: '',
                 email: '',
                 phone: '',
+                type:'',
                 totpEnabled: false
             },
             // Username to identify collab to update
@@ -77,7 +81,22 @@ export default {
                 console.log(err)
             })
         },
-
+         getSettings: function() {
+            SettingsService.getSettings()
+            .then((data) => {
+                this.settings = data.data.datas;
+                this.settingsOrig = this.$_.cloneDeep(this.settings);
+                this.loading = false
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+        },
         createCollab: function() {
             this.cleanErrors();
             if (!this.currentCollab.lastname)
@@ -86,10 +105,11 @@ export default {
                 this.errors.firstname = $t('msg.firstnameRequired');
             if (!this.currentCollab.username)
                 this.errors.username = $t('msg.usernameRequired');
-            if (!this.currentCollab.password)
+
+            if (!this.currentCollab.password )
                 this.errors.password = $t('msg.passwordRequired');
 
-            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password || !this.$refs.pwdCreateRef.validate())
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password  || !this.$refs.pwdCreateRef.validate())
                 return;
 
             CollabService.createCollab(this.currentCollab)
@@ -122,7 +142,7 @@ export default {
             if (!this.currentCollab.username)
                 this.errors.username = $t('msg.usernameRequired');
 
-            if (this.errors.lastname || this.errors.firstname || this.errors.username || !this.$refs.pwdUpdateRef.validate())
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || (!this.$refs.pwdUpdateRef.validate() && this.currentCollab.type =='local') )
                 return;
             
             CollabService.updateCollab(this.idUpdate, this.currentCollab)

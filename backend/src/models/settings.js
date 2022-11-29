@@ -7,6 +7,7 @@ var Utils = require('../lib/utils.js');
 // https://stackoverflow.com/questions/25822289/what-is-the-best-way-to-store-color-hex-values-in-mongodb-mongoose
 const colorValidator = (v) => (/^#([0-9a-f]{3}){1,2}$/i).test(v);
 
+
 const SettingSchema = new Schema({
     report: { 
         enabled: {type: Boolean, default: true},
@@ -36,6 +37,16 @@ const SettingSchema = new Schema({
         },
         private: {
             removeApprovalsUponUpdate: { type: Boolean, default: false }
+        }
+    },
+    authentication:{
+        ldap:{
+            enableLDAP: { type: Boolean, default: false },
+            blockNonAdminAuthWithoutLDAP: { type: Boolean, default: false },
+            address: { type: String, default: 'ldaps://someserver:636' },
+            userDN: { type: String, default: 'uid=%u,ou=Users,dc=example,dc=org' },
+            mailAttr: { type: String, default: 'mail' },
+            displayNameAttr: { type: String, default: 'displayName' }
         }
     }
 }, {strict: true});

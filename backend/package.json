@@ -25,6 +25,7 @@
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.5",
     "docx": "^7.0.0",
+    "ldapjs": "^2.3.1",
     "docx-templates": "^4.3.0",
     "docxtemplater": "^3.19.6",
     "docxtemplater-image-module-pwndoc": "github:pwndoc/docxtemplater-image-module-pwndoc",

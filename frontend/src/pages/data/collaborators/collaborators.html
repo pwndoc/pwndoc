@@ -223,6 +223,7 @@
             
             <q-card-section>
                 <q-input
+                :disable="(currentCollab.type!='local')" 
                 :label="$t('username')+' *'"
                 autofocus
                 class="col-md-12"
@@ -291,6 +292,7 @@
             </q-card-section>   
             <q-card-section>
                 <q-input 
+                :disable="(currentCollab.type!='local')" 
                 ref="pwdUpdateRef"
                 v-model="currentCollab.password" 
                 :label="$t('password')" 

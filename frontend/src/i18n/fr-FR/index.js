@@ -1,5 +1,6 @@
 export default {
     generalSettings: 'Réglages Généraux',
+    authenticationSettings: 'Paramètres d\'authentification',
     changeDisplayLanguage: 'Langue d\'affichage',
     changeDisplayLanguageInfo: 'Choisissez votre langue par défaut préférée',
     nav: {
@@ -17,6 +18,8 @@ export default {
             approve: 'Accepter',
             removeApproval: 'Retirer l\'approbation',
         },
+        enableLDAP:'Activer la connection LDAP',
+        blockNonAdminAuthWithoutLDAP:'Bloquer les utilisateurs non administrateurs de ce connecter sans le LDAP',
         backupFinding: "Proposer la création  / Mettre à jour dans la base de données",
         delete: 'Supprimer',
         save: 'Sauvegarder',
@@ -140,6 +143,8 @@ export default {
         unchanged: 'Inchangé',
         changed: 'Changé',
     },
+    LDAPSearchString:'Chaine de recherche LDAP',
+    LDAPConnectionString: 'Chaine de connection LDAP',
     registerFirstUser: 'Enregistrer le premier utilisateur',
     customData: 'Données Personnalisées',
     custom: 'Personnalisé',

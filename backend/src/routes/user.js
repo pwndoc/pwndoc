@@ -7,7 +7,8 @@ module.exports = function(app) {
     var jwt = require('jsonwebtoken')
     var _ = require('lodash')
     var passwordpolicy = require('../lib/passwordpolicy')
-	
+    var Settings = require('mongoose').model('Settings');
+	 
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
         Response.Ok(res, req.cookies['token']);
@@ -79,12 +80,14 @@ module.exports = function(app) {
 
         //Optional params
         if (req.body.totpToken) user.totpToken = req.body.totpToken;
-
-        user.getToken(req.headers['user-agent'])
-        .then(msg => {
-            res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
-            res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
-            Response.Ok(res, msg)
+        Settings.getAll().then( settings => {
+            user.getToken(req.headers['user-agent'],settings)
+            .then(msg => {
+                res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
+                res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+                Response.Ok(res, msg)
+            })
+            .catch(err => Response.Internal(res, err))
         })
         .catch(err => Response.Internal(res, err))
     });
@@ -180,6 +183,7 @@ module.exports = function(app) {
         user.password = req.body.password;
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
+        user.type = 'local';
 
         //Optionals params
         user.role = req.body.role || 'user';
@@ -207,6 +211,7 @@ module.exports = function(app) {
         user.password = req.body.password;
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
+        user.type = 'local';
         user.role = 'admin';
 
         User.getAll()
@@ -218,14 +223,16 @@ module.exports = function(app) {
                     //Required params
                     newUser.username = req.body.username;
                     newUser.password = req.body.password;
-
-                    newUser.getToken(req.headers['user-agent'])
-                    .then(msg => {
-                        res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
-                        res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
-                        Response.Created(res, msg)
+                    Settings.getAll().then( settings => {
+                        newUser.getToken(req.headers['user-agent'],settings)
+                        .then(msg => {
+                            res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
+                            res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+                            Response.Created(res, msg)
+                        })
+                        .catch(err => Response.Internal(res, err))
                     })
-                    .catch(err => Response.Internal(res, err))
+                    .catch((err) => Response.Internal(res, err))
                 })
                 .catch((err) => Response.Internal(res, err))
             else
