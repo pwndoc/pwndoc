@@ -5,8 +5,8 @@ var jwt = require('jsonwebtoken');
 
 var auth = require('../lib/auth.js');
 const { generateUUID } = require('../lib/utils.js');
+var ldap = require('../lib/ldap');
 var _ = require('lodash')
-
 var QRCode = require('qrcode');
 var OTPAuth = require('otpauth');
 
@@ -20,6 +20,7 @@ var UserSchema = new Schema({
     role:           {type: String, default: 'user'},
     totpEnabled:    {type: Boolean, default: false},
     totpSecret:     {type: String, default: ''},
+    type:           {type: String, default: 'local'},
     enabled:        {type: Boolean, default: true},
     refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
@@ -84,7 +85,7 @@ UserSchema.statics.create = function (user) {
 UserSchema.statics.getAll = function () {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname email phone role totpEnabled enabled');
+        query.select('username firstname lastname email phone role totpEnabled enabled type');
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -99,7 +100,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname email phone role totpEnabled enabled');
+        query.select('username firstname lastname email phone role totpEnabled enabled type');
         query.exec()
         .then(function(row) {
             if (row)
@@ -128,7 +129,7 @@ UserSchema.statics.updateProfile = function (username, user) {
                 if (user.lastname) row.lastname = user.lastname;
                 if (!_.isNil(user.email)) row.email = user.email;
                 if (!_.isNil(user.phone)) row.phone = user.phone;
-                if (user.newPassword) row.password = bcrypt.hashSync(user.newPassword, 10);
+                if (user.newPassword && row.type=='local') row.password = bcrypt.hashSync(user.newPassword, 10);
                 if (typeof(user.totpEnabled)=='boolean') row.totpEnabled = user.totpEnabled;
 
                 payload.id = row._id;
@@ -367,31 +368,82 @@ UserSchema.statics.cancelTotp = function (token, username){
 */
 
 // Authenticate user with username and password, return JWT token
-UserSchema.methods.getToken = function (userAgent) {
+UserSchema.methods.getToken = async function (userAgent,settings) {
     return new Promise((resolve, reject) => {
         var user = this;
+        var userfind = false
         var query = User.findOne({username: user.username});
         query.exec()
-        .then(function(row) {
-            if (row && row.enabled === false) 
+        .then(async function(row) {
+            
+            if ((row && row.enabled === false) || row===null) {
                 throw({fn: 'Unauthorized', message: 'Account disabled'});
-
-            if (row && bcrypt.compareSync(user.password, row.password)) {
-                if (row.totpEnabled && user.totpToken)
-                    checkTotpToken(user.totpToken, row.totpSecret)
-                else if (row.totpEnabled)
-                    throw({fn: 'BadParameters', message: 'Missing TOTP token'})
-                var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
-                return User.updateRefreshToken(refreshToken, userAgent)
             }
-            else
+            userfind = true
+            //accept only local admin if ldap option is enable
+            if (row.type == 'local' && ((row.role=='admin' && settings.authentication.ldap.blockNonAdminAuthWithoutLDAP==true) || (settings.authentication.ldap.blockNonAdminAuthWithoutLDAP==false))) {
+                if (row && bcrypt.compareSync(user.password, row.password)) {
+                    if (row.totpEnabled && user.totpToken)
+                        checkTotpToken(user.totpToken, row.totpSecret)
+                    else if (row.totpEnabled)
+                        throw({fn: 'BadParameters', message: 'Missing TOTP token'})
+                    var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
+                    return User.updateRefreshToken(refreshToken, userAgent)
+                }
+                else
+                    throw({fn: 'Unauthorized', message: 'Invalid credentials'});
+            }
+            else if (row.type == 'ldap' && settings.authentication.ldap.enableLDAP === true) {
+                 try {
+
+                    let ldapResult = await ldap.auth(user.username, user.password,settings)
+                    let nameParts = ldapResult.displayName.split(" ");
+                    var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
+                    return User.updateRefreshToken(refreshToken, userAgent)
+
+                } catch(e) {
+                    if(e.code === 49) {
+                        // invalid creds
+                        throw({fn: 'Unauthorized', message: 'Invalid credentials'});
+                    }
+                    throw({fn: 'Unauthorized', message: 'Internal error'});
+                }
+            }
+            else 
                 throw({fn: 'Unauthorized', message: 'Invalid credentials'});
         })
         .then(row => {
             resolve({token: row.token, refreshToken: row.refreshToken})
         })
-        .catch(function(err) {
-            reject(err);
+        .catch(async function(err) {
+
+            if( userfind == false && settings.authentication.ldap.enableLDAP === true) { //Create user ldap if not exist
+                await ldap.auth(user.username, user.password,settings).then( async(ldapResult)=> {
+                    let nameParts = ldapResult.displayName.split(" ");
+                    let newUser = new User();
+                    user.username = user.username;
+                    user.password = '-';
+                    user.firstname = nameParts.join(" ");
+                    user.lastname = nameParts.splice(nameParts.length -1, 1)[0];
+                    user.type = 'ldap';
+                    //Optionals params
+                    user.role = 'user';
+                    user.enabled = false;
+                    if (ldapResult.email) user.email = ldapResult.email;
+                    try {
+                        await User.create(user)
+                         reject({fn: 'Unauthorized', message: 'Account is created, wait for validation'});
+                    } catch(e){
+                        reject({fn: 'Unauthorized', message: 'Error durring account creation'});
+                    }
+                })
+                .catch(e=>{ 
+
+                    reject({fn: 'Unauthorized', message: 'Invalid credentials'})
+                })
+            }
+            else
+                reject({fn: 'Unauthorized', message: 'Invalid credentials'});
         })
     })
 }

@@ -1,6 +1,7 @@
 export default {
     generalSettings: 'General Settings',
     changeDisplayLanguage: 'Display Language',
+    authenticationSettings: 'Authentication settings',
     changeDisplayLanguageInfo: 'Choose your preferred default language',
     nav: {
         audits: 'Audits',
@@ -17,6 +18,8 @@ export default {
             approve: 'Approve',
             removeApproval: 'Remove Approval',
         },
+        enableLDAP:'Enable LDAP authentication',
+        blockNonAdminAuthWithoutLDAP:'Block authentification of no admin user without LDAP',
         backupFinding: "Propose Creation / Update in Vulnerability Database",
         delete: 'Delete',
         save: 'Save',
@@ -283,6 +286,8 @@ export default {
             MA_H_Label: "There is total loss of availability, resulting in the attacker being able to fully deny access to resources in the impacted component; this loss is either sustained (while the attacker continues to deliver the attack) or persistent (the condition persists even after the attack has completed). Alternatively, the attacker has the ability to deny some availability, but the loss of availability presents a direct, serious consequence to the impacted component (e.g., the attacker cannot disrupt existing connections, but can prevent new connections; the attacker can repeatedly exploit a vulnerability that, in each instance of a successful attack, leaks a only small amount of memory, but after repeated exploitation causes a service to become completely unavailable)."
         }
     },
+    LDAPSearchString:'LDAP search string',
+    LDAPConnectionString: 'LDAP connection string',
     registerFirstUser: 'Register First User',
     customData: 'Custom Data',
     custom: 'Custom',

@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "build": "quasar build",
-    "dev": "quasar dev",
+    "dev": "export NODE_OPTIONS=--openssl-legacy-provider && quasar dev",
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
