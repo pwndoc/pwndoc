@@ -7,7 +7,7 @@ import ImageService from "@/services/image";
 import Utils from "@/services/utils";
 
 export default Image.extend({
-  name: "custom-image",
+  name: "custom_image",
 
   addOptions() {
     return {
@@ -77,7 +77,6 @@ export default Image.extend({
     return [
       new Plugin({
         key: new PluginKey("eventHandler"),
-        key: new PluginKey("eventHandler"),
         props: {
           handleDOMEvents: {
             drop(view, event) {
@@ -92,14 +91,6 @@ export default Image.extend({
               if (file && file.type.startsWith("image")) {
                 isImage = true;
                 const { schema } = view.state;
-                var objs = Object.getOwnPropertyNames(view.state);
-                for (var i in objs) {
-                  console.log(objs[i]);
-                }
-                const coordinates = view.posAtCoords({
-                  left: event.clientX,
-                  top: event.clientY,
-                });
 
                 var fileReader = new FileReader();
 
@@ -115,11 +106,11 @@ export default Image.extend({
                     .then((data) => {
                       console.log(`drop src: ${data.data.datas._id},
                       alt: ${file.name},`);
-                      const node = schema.nodes.image.create({
+                      const node = schema.nodes.custom_image.create({
                         src: data.data.datas._id,
                         alt: file.name,
                       });
-                      const { selection } = tr;
+                      const { selection } = view.state.tr;
                       const transaction = view.state.tr.replaceRangeWith(
                         selection.from,
                         selection.to,
@@ -164,11 +155,11 @@ export default Image.extend({
                     .then((data) => {
                       console.log(`paste src: ${data.data.datas._id},
                       alt: ${file.name},`);
-                      const node = schema.nodes.image.create({
+                      const node = schema.nodes.custom_image.create({
                         src: data.data.datas._id,
                         alt: file.name,
                       });
-                      const { selection } = tr;
+                      const { selection } = view.state.tr;
                       const transaction = view.state.tr.replaceRangeWith(
                         selection.from,
                         selection.to,

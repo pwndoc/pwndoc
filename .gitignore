@@ -26,3 +26,5 @@ app-settings.json
 
 # Version managers
 .tool-versions
+backend/Dockerfile.local
+frontend/Dockerfile.local
