@@ -28,3 +28,4 @@ app-settings.json
 .tool-versions
 backend/Dockerfile.local
 frontend/Dockerfile.local
+frontend/CA.crt
