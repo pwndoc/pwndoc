@@ -124,7 +124,7 @@ expressions.filters.bookmarkCreate = function(input, refid = null) {
 
     return '<w:bookmarkStart w:id="' + rand_id + '" '
         + 'w:name="' + parsed_id + '"/>'
-        + input
+        + (refid ? input : '')
         + '<w:bookmarkEnd w:id="' + rand_id + '"/>';
 }
 
