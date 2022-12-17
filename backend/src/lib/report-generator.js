@@ -139,9 +139,10 @@ expressions.filters.bookmarkLink = function(input, identifier) {
 
 // Creates a clickable dynamic field referencing a text block bookmark:
 // {@identifier | bookmarkRef | p}
+// Invalid identifier characters are replaced by underscores.
 expressions.filters.bookmarkRef = function(input) {
     return '<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">'
-        + ' REF ' + input.replaceAll('-', '_') + ' \\h </w:instrText></w:r>'
+        + ' REF ' + input.replace(/[^a-zA-Z0-9_]/g, '_') + ' \\h </w:instrText></w:r>'
         + '<w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>'
         + input + '</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
 }

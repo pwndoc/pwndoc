@@ -266,13 +266,6 @@ Filters allow to apply functions on Audit data values.
 
 ### bookmarkCreate
 
-// Creates a text block or simple location bookmark:
-// - Text block: {@name | bookmarkCreate: identifier | p}
-// - Location: {@identifier | bookmarkCreate | p}
-// Bookmark identifiers need to begin with a letter and contain only letters,
-// numbers, and underscore characters: non-conforming characters are
-// automatically replaced by underscores.
-
 Creates a text block or a location bookmark:
 
 - *Text block bookmarks* contain some text which can then be referenced in a clickable reference field using the `bookmarkRef` filter.
@@ -305,6 +298,8 @@ Creates a hyperlink to a text block or location bookmark usually created using t
 ### bookmarkRef
 
 Creates a clickable reference to a text block bookmark usually created using the `bookmarkCreate` filter.
+
+Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters: non-conforming characters are automatically replaced by underscores.
 
 > Use in template document
 >```
