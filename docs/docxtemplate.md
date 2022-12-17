@@ -289,6 +289,9 @@ Moreover, due to a limitation in MS-Word, identifiers longer than 40 characters 
 
 Creates a hyperlink to a text block or location bookmark usually created using the `bookmarkCreate` filter.
 
+Bookmark identifiers need to begin with a letter and contain only letters, numbers, and underscore characters: non-conforming characters are automatically replaced by underscores.
+Moreover, due to a limitation in MS-Word, identifiers longer than 40 characters are truncated.
+
 > Use in template document
 >```
 {@input | bookmarkLink: identifier | p}

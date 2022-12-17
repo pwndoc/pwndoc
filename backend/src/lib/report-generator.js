@@ -132,7 +132,11 @@ expressions.filters.bookmarkCreate = function(input, refid = null) {
 
 // Creates a hyperlink to a text block or location bookmark:
 // {@input | bookmarkLink: identifier | p}
+// Identifiers are sanitized as follow:
+// - Invalid characters replaced by underscores.
+// - Identifiers longer than 40 chars are truncated (MS-Word limitation).
 expressions.filters.bookmarkLink = function(input, identifier) {
+    identifier = identifier.replace(/[^a-zA-Z0-9_]/g, '_').substring(0,40);
     return '<w:hyperlink w:anchor="' + identifier + '">'
         + '<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>'
         + '<w:t>' + input + '</w:t>'
