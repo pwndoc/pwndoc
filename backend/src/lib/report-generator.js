@@ -245,7 +245,7 @@ expressions.filters.initials = function(input) {
     return input.replace(/(\w)\w+/gi,"$1.");
 }
 
-// Returns a string which is a concatenation of input elements using an optional separator string: {scope | join: ', '}
+// Returns a string which is a concatenation of input elements using an optional separator string: {references | join: ', '}
 // Can also be used to build raw OOXML strings.
 expressions.filters.join = function(input, sep = '') {
     if (!input || input == "undefined") return input;

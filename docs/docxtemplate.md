@@ -429,7 +429,7 @@ Can also be used to build raw OOXML strings.
 
 > Use in template document
 >```
-{scope | join: ', '}
+{references | join: ', '}
 >```
 
 ### length
