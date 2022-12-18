@@ -353,6 +353,11 @@ expressions.filters.reverse = function(input) {
     return input.reverse();
 }
 
+// Add proper XML tags to embed raw string inside a docxtemplater raw expression: {@('Vulnerability: ' | s) + title | bookmarkCreate: identifier | p}
+expressions.filters.s = function(input) {
+    return '<w:r><w:t xml:space="preserve">' + input + '</w:t></w:r>';
+}
+
 // Looks up an attribute from a sequence of objects, doted notation is supported: {findings | select: 'cvss.environmentalSeverity'}
 expressions.filters.select = function(input, attr) {
     return input.map(function(item) { return _.get(item, attr) });

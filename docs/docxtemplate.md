@@ -534,6 +534,16 @@ Reverses the input array order.
 {input | reverse}
 >```
 
+### s
+
+Add proper XML tags to embed raw string inside a docxtemplater raw expression.
+
+> Use in template document
+>```
+// Example creating a text block bookmark containing the vulnerability title prefixed by the static string "Vulnerability: ":
+{@('Vulnerability: ' | s) + title | bookmarkCreate: identifier | p}
+>```
+
 ### select
 
 Looks up an attribute from a sequence of objects, doted notation is supported.
