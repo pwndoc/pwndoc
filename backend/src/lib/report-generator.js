@@ -353,7 +353,7 @@ expressions.filters.reverse = function(input) {
 
 // Looks up an attribute from a sequence of objects, doted notation is supported: {findings | select: 'cvss.environmentalSeverity'}
 expressions.filters.select = function(input, attr) {
-    return input.map(function(item) { return _getPropertyValue(item, attr) });
+    return input.map(function(item) { return _.get(item, attr) });
 }
 
 // Sorts the input array according an optional given attribute, dotted notation is supported: {#findings | sort 'cvss.environmentalSeverity'}{name}{/findings | sort 'cvss.environmentalSeverity'}
@@ -363,7 +363,7 @@ expressions.filters.sort = function(input, key = null) {
     }
     else {
         return input.sort(function(a, b) {
-            return _getPropertyValue(a, key) < _getPropertyValue(b, key);
+            return _.get(a, key) < _.get(b, key);
         });
     }
 }
@@ -442,16 +442,6 @@ expressions.filters.count = function(input, severity) {
 expressions.filters.translate = function(input, locale) {
     if (!input) return input
     return $t(input, locale)
-}
-
-// Filters helper: handles the use of dotted notation as property names.
-// Source: https://stackoverflow.com/a/37510735
-function _getPropertyValue(obj, dataToRetrieve) {
-  return dataToRetrieve
-    .split('.')
-    .reduce(function(o, k) {
-      return o && o[k];
-    }, obj);
 }
 
 // Filters helper: handles the use of preformated easilly translatable strings.
