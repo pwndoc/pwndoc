@@ -386,13 +386,19 @@ Default value: returns input if it is truthy, otherwise its parameter.
 
 Display *"From ... to ..."* dates nicely, removing redundant information when the start and end dates occur during the same month or year.
 
+The resulting text can be typically used in a table summarizing the audit, audit perimeters or audits campaign properties, or inside a text paragraph such as a management summary.
+
 To internationalize or customize the resulting string, associate the desired output to the strings `"from {0} to {1}"` and `"on {0}"` in your Pwndoc translate file.
 Date formating relies on the locale name provided as second parameter.
 
-
 > Use in template document
 >```
-{date_start | fromTo: date_end:'en' | capfirst}
+{date_start | fromTo: date_end:'en-UK' | capfirst}
+// Output varies automatically depending on the start and end dates:
+// - Same day        -> On 28/11/2022
+// - Same month      -> From 28 to 30/11/2022
+// - Same year       -> From 28/11 to 02/12/2022
+// - Different years -> From 28/11/2022 to 06/01/2023
 >```
 
 ### groupBy
