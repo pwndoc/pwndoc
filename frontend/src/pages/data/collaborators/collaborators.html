@@ -13,6 +13,10 @@
                 @row-dblclick="dblClick"
             >
                 <template v-slot:top>
+                    <q-toggle 
+                    :label="(search.enabled)? $t('btn.accountsEnabled'): $t('btn.accountsDisabled')" 
+                    v-model="search.enabled" 
+                    />
                     <q-space />
                     <q-btn 
                     v-if="UserService.isAllowed('users:create')"
@@ -79,9 +83,6 @@
                 <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                     <q-btn v-if="UserService.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
-                    </q-btn>
-                    <q-btn v-if="UserService.isAllowed('users:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCollab(props.row)">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Delete</q-tooltip>
                     </q-btn>
                 </q-td>  
 
@@ -187,7 +188,8 @@
                 />
             </q-card-section>
             <q-card-section>
-                <q-input 
+                <q-input
+                ref="pwdCreateRef"
                 v-model="currentCollab.password" 
                 :label="$t('password')+' *'"
                 type="password"
@@ -196,6 +198,7 @@
                 hide-bottom-space
                 @keyup.enter="createCollab()"
                 outlined
+                :rules="strongPassword"
                 />
             </q-card-section>
     
@@ -288,17 +291,27 @@
             </q-card-section>   
             <q-card-section>
                 <q-input 
+                ref="pwdUpdateRef"
                 v-model="currentCollab.password" 
                 :label="$t('password')" 
                 type="password"
                 @keyup.enter="updateCollab()"
                 outlined
+                :rules="strongPassword"
                 />
             </q-card-section>
             <q-card-section>
-                <p v-if="currentCollab.totpEnabled">2FA <b>enabled</b> for this user</p>
-                <p v-else>2FA <b>disabled</b> for this user</p>
+                <div class="q-pl-sm">
+                    <p v-if="currentCollab.totpEnabled">2FA <b>enabled</b> for this user</p>
+                    <p v-else>2FA <b>disabled</b> for this user</p>
+                </div>
+
+                <q-toggle
+                v-model="currentCollab.enabled" 
+                :label="currentCollab.enabled ? $t('btn.accountEnabled') : $t('btn.accountDisabled')"
+                />
             </q-card-section>
+            
             <q-separator />
 
             <q-card-actions align="right">

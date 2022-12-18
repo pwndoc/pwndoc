@@ -1,4 +1,5 @@
 var _ = require('lodash')
+import { $t } from 'boot/i18n'
 
 export default {
   htmlEncode(html) {
@@ -101,10 +102,16 @@ export default {
   customFilter: function(rows, terms) {
     var result = rows && rows.filter(row => {
         for (const [key, value] of Object.entries(terms)) { // for each search term
-          var searchString = (_.get(row, key) || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          var termString = (value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          var searchString = (_.get(row, key) || "")
+          if (typeof searchString === "string")
+            searchString = searchString.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          var termString = (value || "")
+          if (typeof termString === "string")
+            termString = termString.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          if (typeof searchString !== "string" || typeof termString !== "string")
+            return searchString === termString
           if (searchString.indexOf(termString) < 0) {
-              return false
+            return false
           }
         }
         return true
@@ -180,5 +187,12 @@ export default {
     "APPROVED": 8,
     "APPROVED_APPROVED": 9,
     "APPROVED_READONLY": 10
+  },
+
+  strongPassword: function(value) {
+    var regExp = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
+    if (regExp.test(value))
+      return true
+    return $t('msg.passwordComplexity')
   }
 }

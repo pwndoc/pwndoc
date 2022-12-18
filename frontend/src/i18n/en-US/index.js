@@ -26,6 +26,10 @@ export default {
         valid: 'Valid',
         new: 'New',
         updates: 'Updates',
+        accountsEnabled: 'Enabled accounts',
+        accountsDisabled: 'Disabled accounts',
+        accountEnabled: 'Account enabled',
+        accountDisabled: 'Account disabled'
     },
     tooltip: {
         usersConnected: 'Users on the Audit:',
@@ -74,6 +78,7 @@ export default {
         passwordRequired: 'Password required',
         currentPasswordRequired: 'Current Password required',
         confirmPasswordDifferents: 'New Password and Confirm Password are differents',
+        passwordComplexity: 'Password must be at least 8 characters with minimum 1 Uppercase, Lowercase and Number',
         collaboratorCreatedOk: 'Collaborator created successfully',
         collaboratorUpdatedOk: 'Collaborator updated successfully',
         collaboratorDeletedOk: 'Collaborator deleted successfully',
@@ -302,6 +307,7 @@ export default {
     resultsPerPage: 'Results per page:',
     createAudit: 'Create Audit',
     name: 'Name',
+    shortName: 'Short name',
     selectAssessment: 'Select Assessment',
     selectLanguage: 'Select Language',
     participants: 'Participants',

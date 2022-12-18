@@ -86,7 +86,7 @@
         </q-bar>
 
         <q-card-section>
-            <div class="row">
+            <div class="row q-col-gutter-md">
                 <q-input
                     :label="$t('name')+' *'"
                     autofocus
@@ -96,17 +96,27 @@
                     @keyup.enter="createCompany()"
                     v-model="currentCompany.name" 
                     outlined
+                    hide-bottom-space
                     />
-                <q-uploader
-                    ref="addUploader"
+                <q-input
+                    :label="$t('shortName')"
                     class="col-md-12"
-                    url=""
-                    :label="$t('logo')"
-                    accept='.gif,.jpg,.jpeg,.png'
-                    hide-upload-btn
-                    @added="handleImage"
-                    color="fixed-primary"
-                />
+                    @keyup.enter="createCompany()"
+                    v-model="currentCompany.shortName" 
+                    outlined
+                    />
+                <div class="col-md-12">
+                    <q-uploader
+                        ref="addUploader"
+                        class="full-width"
+                        url=""
+                        :label="$t('logo')"
+                        accept='.gif,.jpg,.jpeg,.png'
+                        hide-upload-btn
+                        @added="handleImage"
+                        color="fixed-primary"
+                    />
+                </div>
             </div>
         </q-card-section>
 
@@ -128,28 +138,37 @@
         </q-bar>
 
         <q-card-section>
-            <div class="row">
+            <div class="row q-col-gutter-md">
                 <q-input
                     :label="$t('name')+' *'"
                     autofocus
                     class="col-md-12"
                     :error="!!errors.name"
                     :error-message="errors.name"
-                    ref="nameInput"
                     @keyup.enter="updateCompany()"
                     v-model="currentCompany.name"
                     outlined
+                    hide-bottom-space
                     />
-                <q-uploader
-                    ref="addUploader"
+                <q-input
+                    :label="$t('shortName')"
                     class="col-md-12"
-                    url=""
-                    :label="$t('logo')"
-                    accept='.gif,.jpg,.jpeg,.png'
-                    hide-upload-btn
-                    @added="handleImage"
-                    color="fixed-primary"
-                />
+                    @keyup.enter="updateCompany()"
+                    v-model="currentCompany.shortName"
+                    outlined
+                    />
+                <div class="col-md-12">
+                    <q-uploader
+                        ref="addUploader"
+                        class="full-width"
+                        url=""
+                        :label="$t('logo')"
+                        accept='.gif,.jpg,.jpeg,.png'
+                        hide-upload-btn
+                        @added="handleImage"
+                        color="fixed-primary"
+                    />
+                </div>
             </div>
         </q-card-section>
 

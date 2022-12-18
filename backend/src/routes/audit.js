@@ -159,12 +159,12 @@ module.exports = function(app, io) {
         if (req.body.client !== undefined) update.client = req.body.client
         if (req.body.company !== undefined) {
             update.company = {};
-            if (!req.body.company)
-                update.company = null
-            else if (req.body.company._id)
+            if (req.body.company && req.body.company._id)
                 update.company._id = req.body.company._id;
+            else if (req.body.company && req.body.company.name)
+                update.company.name = req.body.company.name
             else
-                update.company.name = req.body.company
+                update.company = null
         }
         if (req.body.collaborators) update.collaborators = req.body.collaborators;
         if (req.body.reviewers) update.reviewers = req.body.reviewers;
@@ -368,7 +368,7 @@ module.exports = function(app, io) {
                 throw ({fn: 'BadParameters', message: 'Template not defined'})
 
             var reportDoc = await reportGenerator.generateDoc(audit);
-            Response.SendFile(res, `${audit.name}.${audit.template.ext || 'docx'}`, reportDoc);
+            Response.SendFile(res, `${audit.name.replace(/[\\\/:*?"<>|]/g, "")}.${audit.template.ext || 'docx'}`, reportDoc);
         })
         .catch(err => {
             if (err.code === "ENOENT")

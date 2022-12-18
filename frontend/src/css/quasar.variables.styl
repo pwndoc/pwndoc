@@ -60,6 +60,9 @@ light-mode-colors()
     .q-table__container
         background #fafafa // grey-1
     
+    .q-table__container thead tr
+        background: #fafafa // grey-1
+    
     // Hack for white text on white bg in q-btn elements 
     .q-btn.bg-white.text-white
         color: #000000!important
@@ -91,6 +94,9 @@ dark-mode-colors()
 
     --q-color-primary: $darkPrimary // for field border default
     
+    .q-table__container thead tr
+        background: $cDark
+
     .q-field:not(.basic-editor) .q-field__control,
     .expansion-header
     .editor

@@ -6,7 +6,8 @@ module.exports = function(app) {
     var jwtRefreshSecret = require('../lib/auth').jwtRefreshSecret
     var jwt = require('jsonwebtoken')
     var _ = require('lodash')
-
+    var passwordpolicy = require('../lib/passwordpolicy')
+	
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
         Response.Ok(res, req.cookies['token']);
@@ -62,6 +63,15 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Required parameters: username, password');
             return;
         }
+
+        // Validate types
+        if (typeof req.body.password !== "string" || 
+            typeof req.body.username !== "string" ||
+            (req.body.totpToken && typeof req.body.totpToken !== "string")) {
+            Response.BadParameters(res, 'Parameters must be of type String');
+            return;
+        }
+
         var user = new User();
         //Required params
         user.username = req.body.username;
@@ -159,6 +169,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
         }
+        if (passwordpolicy.strongPassword(req.body.password)!==true){
+            Response.BadParameters(res, 'Password does not match the password policy');
+            return;
+        }
 
         var user = {};
         //Required params
@@ -183,7 +197,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
         }
-
+        if (passwordpolicy.strongPassword(req.body.password)!==true){
+            Response.BadParameters(res, 'Password does not match the password policy');
+            return;
+        }
         var user = {};
         //Required params
         user.username = req.body.username;
@@ -225,7 +242,10 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
         }
-
+        if (passwordpolicy.strongPassword(req.body.newPassword)!==true){
+            Response.BadParameters(res, 'New Password does not match the password policy');
+            return;
+        }
         if (req.body.newPassword !== req.body.confirmPassword) {
             Response.BadParameters(res, 'New password validation failed');
             return;
@@ -253,6 +273,10 @@ module.exports = function(app) {
 
     // Update any user (admin only)
     app.put("/api/users/:id", acl.hasPermission('users:update'), function(req, res) {
+        if (req.body.password && !passwordpolicy.strongPassword(req.body.password)){
+            Response.BadParameters(res, 'New Password does not match the password policy');
+            return;
+        }
         var user = {};
     
         // Optionals params
@@ -263,7 +287,8 @@ module.exports = function(app) {
         if (!_.isNil(req.body.email)) user.email = req.body.email;
         if (!_.isNil(req.body.phone)) user.phone = req.body.phone;
         if (req.body.role) user.role = req.body.role;
-        if (typeof(req.body.totpEnabled)=='boolean') user.totpEnabled = req.body.totpEnabled;
+        if (typeof(req.body.totpEnabled) === 'boolean') user.totpEnabled = req.body.totpEnabled;
+        if (typeof(req.body.enabled) === 'boolean') user.enabled = req.body.enabled;
 
         User.updateUser(req.params.id, user)
         .then(msg => Response.Ok(res, msg))
@@ -271,6 +296,7 @@ module.exports = function(app) {
     });
 
     // Delete any user (admin only)
+    /** Removed to keep linked references to user, disable user only for now
     app.delete("/api/users/:id", acl.hasPermission('users:delete'), function(req, res) {
         User.deleteOne({_id: req.params.id})
         .then(msg => {
@@ -281,4 +307,5 @@ module.exports = function(app) {
         })
         .catch(err => Response.Internal(res, err))
     });
+     */
 }

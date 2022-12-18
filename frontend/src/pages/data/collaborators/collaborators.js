@@ -38,7 +38,7 @@ export default {
                 {label:'All', value:0}
             ],
             // Search filter
-            search: {username: '', firstname: '', lastname: '', role: '', email: ''},
+            search: {username: '', firstname: '', lastname: '', role: '', email: '', enabled: true},
             customFilter: Utils.customFilter,
             // Errors messages
             errors: {lastname: '', firstname: '', username: ''},
@@ -55,7 +55,8 @@ export default {
             // Username to identify collab to update
             idUpdate: '',
             // List of roles
-            roles: []
+            roles: [],
+            strongPassword: [Utils.strongPassword]
         }
     },
 
@@ -88,7 +89,7 @@ export default {
             if (!this.currentCollab.password)
                 this.errors.password = $t('msg.passwordRequired');
 
-            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password)
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password || !this.$refs.pwdCreateRef.validate())
                 return;
 
             CollabService.createCollab(this.currentCollab)
@@ -121,36 +122,15 @@ export default {
             if (!this.currentCollab.username)
                 this.errors.username = $t('msg.usernameRequired');
 
-            if (this.errors.lastname || this.errors.firstname || this.errors.username)
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || !this.$refs.pwdUpdateRef.validate())
                 return;
-
+            
             CollabService.updateCollab(this.idUpdate, this.currentCollab)
             .then(() => {
                 this.getCollabs();
                 this.$refs.editModal.hide();
                 Notify.create({
                     message: $t('msg.collaboratorUpdatedOk'),
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
-                })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor:'white',
-                    position: 'top-right'
-                })
-            })
-        },
-
-        deleteCollab: function(collabId) {
-            CollabService.deleteCollab(collabId)
-            .then(() => {
-                this.getCollabs();
-                Notify.create({
-                    message: $t('msg.collaboratorDeletedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -174,16 +154,6 @@ export default {
             .catch((err) => {
                 console.log(err)
             })
-        },
-
-        confirmDeleteCollab: function(collab) {
-            Dialog.create({
-                title: $t('msg.confirmSuppression'),
-                message: `${$t('collaborator')} «${collab.username}» ${$t('msg.deleteNotice')}`,
-                ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
-            })
-            .onOk(() => this.deleteCollab(collab._id))
         },
 
         clone: function(row) {

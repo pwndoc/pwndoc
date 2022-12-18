@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "angular-expressions": "^1.1.2",
-    "bcrypt": "^3.0.6",
+    "bcrypt": "^5.0.1",
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.5",
     "docx": "^7.0.0",

@@ -634,3 +634,11 @@ Convert cvss Criteria to French.
 // Example with cvssObj.AV === 'Network'
 {cvssObj.AV | criteriaFR} -> Réseau
 >```
+
+### $pageBreakExceptLast
+Creates Page Break
+
+> Use in template document
+>```
+{@$pageBreakExceptLast}
+>```
