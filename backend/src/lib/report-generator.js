@@ -310,7 +310,7 @@ expressions.filters.mailto = function(input, address = null) {
     return expressions.filters.linkTo(input, 'mailto:' + (address ? address : input));
 }
 
-// Applies a filter on a sequence of objects: {scope | select: 'name' | map: lower | join: ', '}
+// Applies a filter on a sequence of objects: {scope | select: 'name' | map: 'lower' | join: ', '}
 expressions.filters.map = function(input, filter) {
     let args = Array.prototype.slice.call(arguments, 2);
     return input.map(x => expressions.filters[filter](x, ...args));
