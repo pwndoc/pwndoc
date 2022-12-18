@@ -399,21 +399,19 @@ Date formating relies on the locale name provided as second parameter.
 
 Group input elements by an attribute.
 
-The returned values is a dictionary where:
+The elements are returned as an objects set where:
 
-- The key is the common attribute value,
-- The value is the set of items from the input structure sharing this same value for this attribute.
-
-Pipe this into `loopObject` to iterate through a key/value sets.
+- The 'key' property is the common attribute value,
+- The 'value' property is the set of items from the input structure sharing this same value for this attribute.
 
 > Use in template document
 >```
-{#findings | groupBy: 'severity' | loopObject}
+{#findings | groupBy: 'severity'}
 Severity: {key}
 {#value}
 Title: {title}
 {/value}
-{/findings | groupBy: 'severity' | loopObject}
+{/findings | groupBy: 'severity'}
 >```
 
 ### initials
@@ -475,12 +473,9 @@ Loop over the input object, providing access to its keys and values.
 
 > Use in template document
 >```
-{#findings | groupBy: 'severity' | loopObject}
-Severity: {key}
-{#value}
-Title: {title}
-{/value}
-{/findings | groupBy: 'severity' | loopObject}
+{#findings | loopObject}
+{key}: {value.title}
+{/findings | loopObject}
 >```
 
 ### lower

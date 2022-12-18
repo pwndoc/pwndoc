@@ -241,10 +241,12 @@ expressions.filters.fromTo = function(start, end, locale) {
 // Group input elements by an attribute: {#findings | groupBy: 'severity'}{title}{/findings | groupBy: 'severity'}
 // Source: https://stackoverflow.com/a/34890276
 expressions.filters.groupBy = function(input, key) {
-    return input.reduce(function(rv, x) {
-        (rv[x[key]] = rv[x[key]] || []).push(x);
-        return rv;
-    }, {});
+    return expressions.filters.loopObject(
+        input.reduce(function(rv, x) {
+            (rv[x[key]] = rv[x[key]] || []).push(x);
+            return rv;
+        }, {})
+    );
 }
 
 // Returns the initials from an input string (typically a firstname): {creator.firstname | initials}
@@ -287,7 +289,7 @@ expressions.filters.linkTo = function(input, url) {
         + '</w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
 }
 
-// Loop over the input object, providing acccess to its keys and values: {#findings | loopObject}{key}{value.name}{/findings | loopObject}
+// Loop over the input object, providing acccess to its keys and values: {#findings | loopObject}{key}{value.title}{/findings | loopObject}
 // Source: https://stackoverflow.com/a/60887987
 expressions.filters.loopObject = function(input) {
     return Object.keys(input).map(function(key) {
