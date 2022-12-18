@@ -388,12 +388,6 @@ expressions.filters.sortArrayByField = function (input, field, order) {
     return sorted;
 }
 
-// Takes a string as input and split it into an ordered list using a separator: {input | split: ', '}
-expressions.filters.split = function(input, sep) {
-    if (!input || input == "undefined") return input;
-    return input.split(sep);
-}
-
 // Capitalizes input first letter of each word, can be associated to 'lower' to normalize case: {creator.lastname | lower | title}
 expressions.filters.title= function(input) {
     if (!input || input == "undefined") return input;

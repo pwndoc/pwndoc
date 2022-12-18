@@ -574,15 +574,6 @@ Order can be 1 for ascending, or -1 for descending
 {/}
 >```
 
-### split
-
-Takes a string as input and split it into an ordered list using a separator.
-
-> Use in template document
->```
-{input | split: ', '}
->```
-
 ### title
 
 Capitalizes input first letter of each word, can be associated to 'lower' to normalize case.
