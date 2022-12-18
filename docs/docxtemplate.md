@@ -512,7 +512,7 @@ Applies a filter on a sequence of objects.
 
 > Use in template document
 >```
-{scope | select: 'name' | map: lower | join: ', '}
+{scope | select: 'name' | map: 'lower' | join: ', '}
 >```
 
 ### p
