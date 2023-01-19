@@ -204,6 +204,38 @@ expressions.filters.count = function(input, severity) {
     return count;
 }
 
+// Count vulnerability by temporal severity
+// Example: {findings | countTemporal: 'Critical'}
+expressions.filters.countTemporal = function(input, severity) {
+    if(!input) return input;
+    var count = 0;
+
+    for(var i = 0; i < input.length; i++){
+
+        if(input[i].cvss.temporalSeverity === severity){
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
+// Count vulnerability by environmental severity
+// Example: {findings | countEnvironmental: 'Critical'}
+expressions.filters.countEnvironmental = function(input, severity) {
+    if(!input) return input;
+    var count = 0;
+
+    for(var i = 0; i < input.length; i++){
+
+        if(input[i].cvss.environmentalSeverity === severity){
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
 // Translate using locale from 'translate' folder
 // Example: {input | translate: 'fr'}
 expressions.filters.translate = function(input, locale) {
