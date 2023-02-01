@@ -35,7 +35,7 @@
     "image-size": "^0.8.3",
     "js-yaml": "^3.13.1",
     "jsonwebtoken": "^8.1.0",
-    "jszip": "^2.6.1",
+    "jszip": "^3.8.0",
     "lodash": "^4.17.15",
     "mongoose": "^5.7.7",
     "otpauth": "^7.0.6",
