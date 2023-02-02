@@ -17,7 +17,7 @@
     "babel-jest": "^26.0.1",
     "jest": "^26.0.1",
     "nodemon": "^1.19.4",
-    "npm": "^6.12.0"
+    "npm": "^9.4.1"
   },
   "dependencies": {
     "angular-expressions": "^1.1.2",
