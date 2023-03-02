@@ -34,8 +34,8 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:b w:val="true"/>`+
-              `<w:bCs w:val="true"/>`+
+              `<w:b/>`+
+              `<w:bCs/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Bold</w:t>`+
           `</w:r>`+
@@ -53,8 +53,8 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:i w:val="true"/>`+
-              `<w:iCs w:val="true"/>`+
+              `<w:i/>`+
+              `<w:iCs/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Italic</w:t>`+
           `</w:r>`+
@@ -90,7 +90,7 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:strike w:val="true"/>`+
+              `<w:strike/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Strike</w:t>`+
           `</w:r>`+
@@ -108,10 +108,10 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:b w:val="true"/>`+
-              `<w:bCs w:val="true"/>`+
-              `<w:i w:val="true"/>`+
-              `<w:iCs w:val="true"/>`+
+              `<w:b/>`+
+              `<w:bCs/>`+
+              `<w:i/>`+
+              `<w:iCs/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Mark</w:t>`+
           `</w:r>`+
@@ -129,12 +129,12 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:b w:val="true"/>`+
-              `<w:bCs w:val="true"/>`+
-              `<w:i w:val="true"/>`+
-              `<w:iCs w:val="true"/>`+
+              `<w:b/>`+
+              `<w:bCs/>`+
+              `<w:i/>`+
+              `<w:iCs/>`+
               `<w:u w:val="single"/>`+
-              `<w:strike w:val="true"/>`+
+              `<w:strike/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Mark</w:t>`+
           `</w:r>`+
