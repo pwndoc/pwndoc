@@ -6,12 +6,12 @@
     reviewer:reviewer (reviewer)
 */
 
-module.exports = function(request) {
+module.exports = function(request, app) {
   describe('Users Suite Tests', () => {
 
     describe('User Initialization', () => {
       it('Get the users init state', async done => {
-        var response = await request.get('/api/users/init')
+        var response = await request(app).get('/api/users/init')
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toBe(true)
@@ -19,7 +19,7 @@ module.exports = function(request) {
       })
 
       it('Authenticate with nonexistent user', async done => {
-        var response = await request.post('/api/users/token', {username: 'admin', password: 'admin'})
+        var response = await request(app).post('/api/users/token', {username: 'admin', password: 'admin'})
       
         expect(response.status).toBe(401)
         done()
@@ -32,7 +32,7 @@ module.exports = function(request) {
           firstname: 'Admin',
           lastname: 'Istrator'
         }
-        var response = await request.post('/api/users/init', user)
+        var response = await request(app).post('/api/users/init', user)
       
         expect(response.status).toBe(201)
         done()
@@ -45,7 +45,7 @@ module.exports = function(request) {
           firstname: 'Admin2',
           lastname: 'Istrator2'
         }
-        var response = await request.post('/api/users/init', user)
+        var response = await request(app).post('/api/users/init', user)
       
         expect(response.status).toBe(403)
         done()
@@ -56,7 +56,7 @@ module.exports = function(request) {
           username: 'admin',
           password: 'admin'
         }
-        var response = await request.post('/api/users/token', user)
+        var response = await request(app).post('/api/users/token', user)
       
         expect(response.status).toBe(200)
         expect(response.data.datas.token).toBeDefined()
@@ -69,7 +69,7 @@ module.exports = function(request) {
     describe('User CRUD operations', () => {
       var options = {headers: {}}
       it('Get the users init state', async done => {
-        var response = await request.get('/api/users/init')
+        var response = await request(app).get('/api/users/init')
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toBe(false)
@@ -81,7 +81,7 @@ module.exports = function(request) {
           username: 'admin',
           password: 'admin'
         }
-        var response = await request.post('/api/users/token', user)
+        var response = await request(app).post('/api/users/token', user)
       
         expect(response.status).toBe(200)
         expect(response.data.datas.token).toBeDefined()
@@ -90,7 +90,7 @@ module.exports = function(request) {
       })
 
       it('Check token validity', async done => {
-        var response = await request.get('/api/users/checktoken', options)
+        var response = await request(app).get('/api/users/checktoken', options)
       
         expect(response.status).toBe(200)
         done()
@@ -103,7 +103,7 @@ module.exports = function(request) {
           lastname: 'Istrator',
           role: 'admin'
         }
-        var response = await request.get('/api/users/me', options)
+        var response = await request(app).get('/api/users/me', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toEqual(expect.objectContaining(expected))
@@ -118,10 +118,10 @@ module.exports = function(request) {
           lastname: 'Test',
           role: 'user'
         }
-        var response = await request.post('/api/users', user, options)
+        var response = await request(app).post('/api/users', user, options)
         expect(response.status).toBe(201)
 
-        response = await request.post('/api/users/token', user)
+        response = await request(app).post('/api/users/token', user)
         expect(response.status).toBe(200)
         done()
       })
@@ -133,10 +133,10 @@ module.exports = function(request) {
           firstname: 'Tmp',
           lastname: 'User'
         }
-        var response = await request.post('/api/users', user, options)
+        var response = await request(app).post('/api/users', user, options)
         expect(response.status).toBe(201)
 
-        response = await request.post('/api/users/token', user)
+        response = await request(app).post('/api/users/token', user)
         expect(response.status).toBe(200)
         done()
       })
@@ -149,10 +149,10 @@ module.exports = function(request) {
           lastname: 'Admin',
           role: 'report'
         }
-        var response = await request.post('/api/users', user, options)
+        var response = await request(app).post('/api/users', user, options)
         expect(response.status).toBe(201)
 
-        response = await request.post('/api/users/token', user)
+        response = await request(app).post('/api/users/token', user)
         expect(response.status).toBe(200)
         done()
       })
@@ -165,10 +165,10 @@ module.exports = function(request) {
           lastname: 'reviewer',
           role: 'reviewer'
         }
-        var response = await request.post('/api/users', user, options)
+        var response = await request(app).post('/api/users', user, options)
         expect(response.status).toBe(201)
 
-        response = await request.post('/api/users/token', user)
+        response = await request(app).post('/api/users/token', user)
         expect(response.status).toBe(200)
         done()
       })
@@ -180,7 +180,7 @@ module.exports = function(request) {
           lastname: 'Test',
           role: 'user'
         }
-        var response = await request.get('/api/users/user', options)
+        var response = await request(app).get('/api/users/user', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toEqual(expect.objectContaining(expected))
@@ -201,10 +201,10 @@ module.exports = function(request) {
           confirmPassword: 'admin2',
           firstname: 'Admin2'
         }
-        var response = await request.put('/api/users/me', user, options)
+        var response = await request(app).put('/api/users/me', user, options)
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/users/me', options)
+        var response = await request(app).get('/api/users/me', options)
         expect(response.data.datas).toEqual(expect.objectContaining(expected))
         done()
       })
@@ -223,31 +223,31 @@ module.exports = function(request) {
           password: 'user2',
         }
 
-        var userRequest = await request.get('/api/users/user', options)
-        var userId = userRequest.data.datas._id
+        var userRequest = await request(app).get('/api/users/user', options)
+        var userId = userrequest(app).data.datas._id
 
-        var response = await request.put(`/api/users/${userId}`, user, options)
+        var response = await request(app).put(`/api/users/${userId}`, user, options)
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/users/user2', options)
+        var response = await request(app).get('/api/users/user2', options)
         expect(response.data.datas).toEqual(expect.objectContaining(expected))
         done()
       })
 
       it('Delete user', async done => {
-        var userRequest = await request.get('/api/users/tmpuser', options)
-        var userId = userRequest.data.datas._id
+        var userRequest = await request(app).get('/api/users/tmpuser', options)
+        var userId = userrequest(app).data.datas._id
 
-        var response = await request.delete('/api/users/deadbeefdeadbeefdeadbeef', options)
+        var response = await request(app).delete('/api/users/deadbeefdeadbeefdeadbeef', options)
         expect(response.status).toBe(404)
 
-        var response = await request.delete(`/api/users/${userId}`, options)
+        var response = await request(app).delete(`/api/users/${userId}`, options)
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/users/tmpuser', options)
+        var response = await request(app).get('/api/users/tmpuser', options)
         expect(response.status).toBe(404)
 
-        var response = await request.get('/api/users', options)
+        var response = await request(app).get('/api/users', options)
         expect(response.data.datas).toHaveLength(4)
         done()
       })

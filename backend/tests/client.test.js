@@ -26,11 +26,11 @@
       'New Updated Company'
 */
 
-module.exports = function(request) {
+module.exports = function(request, app) {
   describe('Client Suite Tests', () => {
     var options = {headers: {}}
     beforeAll(async done => {
-      var response = await request.post('/api/users/token', {username: 'admin', password: 'admin2'})
+      var response = await request(app).post('/api/users/token', {username: 'admin', password: 'admin2'})
       options.headers.Cookie = `token=${response.data.datas.token}` // Set header Cookie for next requests
       done()
     })
@@ -40,7 +40,7 @@ module.exports = function(request) {
       var client2Id = ""
       var client3Id = ""
       it('Get clients (no existing clients in db)', async done => {
-        var response = await request.get('/api/clients', options)
+        var response = await request(app).get('/api/clients', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toHaveLength(0)
@@ -49,7 +49,7 @@ module.exports = function(request) {
 
       it('Create client with email only', async done => {
         var client = {email: "client1@example.com"}
-        var response = await request.post('/api/clients', client, options)
+        var response = await request(app).post('/api/clients', client, options)
         expect(response.status).toBe(201)
         client1Id = response.data.datas._id
         done()
@@ -65,7 +65,7 @@ module.exports = function(request) {
           title: "IT manager",
           company: {name: 'Company 1'}
         }
-        var response = await request.post('/api/clients', client, options)
+        var response = await request(app).post('/api/clients', client, options)
         expect(response.status).toBe(201)
         client2Id = response.data.datas._id
         done()
@@ -76,7 +76,7 @@ module.exports = function(request) {
           email: "client3@example.com",
           company: {name: 'New Company'}
         }
-        var response = await request.post('/api/clients', client, options)
+        var response = await request(app).post('/api/clients', client, options)
         expect(response.status).toBe(201)
         client3Id = response.data.datas._id
         done()
@@ -84,7 +84,7 @@ module.exports = function(request) {
 
       it('Should not create client with existing email', async done => {
         var client = {email: "client1@example.com"}
-        var response = await request.post('/api/clients', client, options)
+        var response = await request(app).post('/api/clients', client, options)
 
         expect(response.status).toBe(422)
         done()
@@ -92,7 +92,7 @@ module.exports = function(request) {
 
       it('Should not create client without email', async done => {
         var client = {firstname: "firstname", lastname: "lastname"}
-        var response = await request.post('/api/clients', client, options)
+        var response = await request(app).post('/api/clients', client, options)
 
         expect(response.status).toBe(422)
         done()
@@ -115,7 +115,7 @@ module.exports = function(request) {
             company: {name: 'New Company'}
           }
         ]
-        var response = await request.get('/api/clients', options)
+        var response = await request(app).get('/api/clients', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas.map(t => {return {
@@ -141,7 +141,7 @@ module.exports = function(request) {
           company: {name: 'New Updated Company'}
         }
 
-        var response = await request.put(`/api/clients/${client1Id}`, client, options)
+        var response = await request(app).put(`/api/clients/${client1Id}`, client, options)
         expect(response.status).toBe(200)
         done()
       })
@@ -149,22 +149,22 @@ module.exports = function(request) {
       it('Update client with nonexistent id', async done => {
         var client = {firstname: "Client"}
 
-        var response = await request.put(`/api/clients/deadbeefdeadbeefdeadbeef`, client, options)
+        var response = await request(app).put(`/api/clients/deadbeefdeadbeefdeadbeef`, client, options)
         expect(response.status).toBe(404)
         done()
       })
 
       it('Delete client', async done => {
-        var response = await request.delete(`/api/clients/${client3Id}`, options)
+        var response = await request(app).delete(`/api/clients/${client3Id}`, options)
         expect(response.status).toBe(200)
 
-        response = await request.get('/api/clients', options)
+        response = await request(app).get('/api/clients', options)
         expect(response.data.datas).toHaveLength(2)
         done()
       })
 
       it('Delete client with nonexistent email', async done => {
-        var response = await request.delete(`/api/clients/deadbeefdeadbeefdeadbeef`, options)
+        var response = await request(app).delete(`/api/clients/deadbeefdeadbeefdeadbeef`, options)
         expect(response.status).toBe(404)
         done()
       })

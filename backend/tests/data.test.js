@@ -13,18 +13,18 @@
       ]
 */
 
-module.exports = function(request) {
+module.exports = function(request, app) {
   describe('Data Suite Tests', () => {
     var options = {headers: {}}
     beforeAll(async done => {
-      var response = await request.post('/api/users/token', {username: 'admin', password: 'admin2'})
+      var response = await request(app).post('/api/users/token', {username: 'admin', password: 'admin2'})
       options.headers.Cookie = `token=${response.data.datas.token}` // Set header Cookie for next requests
       done()
     })
 
     describe('Language CRUD operations', () => {
       it('Get languages', async done => {
-        var response = await request.get('/api/data/languages', options)
+        var response = await request(app).get('/api/data/languages', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toHaveLength(0)
@@ -46,13 +46,13 @@ module.exports = function(request) {
           locale: 'es',
           language: 'Espagnol'
         }
-        var response = await request.post('/api/data/languages', english, options)
+        var response = await request(app).post('/api/data/languages', english, options)
         expect(response.status).toBe(201)
 
-        var response = await request.post('/api/data/languages', french, options)
+        var response = await request(app).post('/api/data/languages', french, options)
         expect(response.status).toBe(201)
 
-        var response = await request.post('/api/data/languages', espagnol, options)
+        var response = await request(app).post('/api/data/languages', espagnol, options)
         expect(response.status).toBe(201)
         done()
       })
@@ -62,7 +62,7 @@ module.exports = function(request) {
           locale: 'fr',
           language: 'French2'
         }
-        var response = await request.post('/api/data/languages', language, options)
+        var response = await request(app).post('/api/data/languages', language, options)
       
         expect(response.status).toBe(422)
         done()
@@ -73,7 +73,7 @@ module.exports = function(request) {
           locale: 'us',
           language: 'English'
         }
-        var response = await request.post('/api/data/languages', language, options)
+        var response = await request(app).post('/api/data/languages', language, options)
       
         expect(response.status).toBe(422)
         done()
@@ -86,7 +86,7 @@ module.exports = function(request) {
           {locale: 'es', language: 'Espagnol'}
         ]
 
-        var response = await request.get('/api/data/languages', options)
+        var response = await request(app).get('/api/data/languages', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toEqual(expect.arrayContaining(expected))
@@ -94,16 +94,16 @@ module.exports = function(request) {
       })
 
       it('Delete language', async done => {
-        var response = await request.delete('/api/data/languages/es', options)
+        var response = await request(app).delete('/api/data/languages/es', options)
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/data/languages', options)
+        var response = await request(app).get('/api/data/languages', options)
         expect(response.data.datas).toHaveLength(2)
         done()
       })
 
       it('Should not delete language with nonexistent locale', async done => {
-        var response = await request.delete('/api/data/languages/us', options)
+        var response = await request(app).delete('/api/data/languages/us', options)
         expect(response.status).toBe(404)
         done()
       })
@@ -111,7 +111,7 @@ module.exports = function(request) {
 
     describe('Audit types CRUD operations', () => {
       it('Get audit types', async done => {
-        var response = await request.get('/api/data/audit-types', options)
+        var response = await request(app).get('/api/data/audit-types', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toHaveLength(0)
@@ -123,7 +123,7 @@ module.exports = function(request) {
           locale: 'en',
           name: 'Internal Test'
         }
-        var response = await request.post('/api/data/audit-types', type, options)
+        var response = await request(app).post('/api/data/audit-types', type, options)
       
         expect(response.status).toBe(201)
         done()
@@ -134,7 +134,7 @@ module.exports = function(request) {
           locale: 'en',
           name: 'Web'
         }
-        var response = await request.post('/api/data/audit-types', type, options)
+        var response = await request(app).post('/api/data/audit-types', type, options)
       
         expect(response.status).toBe(201)
         done()
@@ -145,7 +145,7 @@ module.exports = function(request) {
           locale: 'en',
           name: 'Web'
         }
-        var response = await request.post('/api/data/audit-types', type, options)
+        var response = await request(app).post('/api/data/audit-types', type, options)
       
         expect(response.status).toBe(422)
         done()
@@ -156,7 +156,7 @@ module.exports = function(request) {
           {locale: 'en', name: 'Internal Test'},
           {locale: 'en', name: 'Web'}
         ]
-        var response = await request.get('/api/data/audit-types', options)
+        var response = await request(app).get('/api/data/audit-types', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toEqual(expect.arrayContaining(expected))
@@ -164,16 +164,16 @@ module.exports = function(request) {
       })
 
       it('Delete audit type', async done => {
-        var response = await request.delete('/api/data/audit-types/Internal%20Test', options)
+        var response = await request(app).delete('/api/data/audit-types/Internal%20Test', options)
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/data/audit-types', options)
+        var response = await request(app).get('/api/data/audit-types', options)
         expect(response.data.datas).toHaveLength(1)
         done()
       })
 
       it('Should not delete audit type with nonexistent name', async done => {
-        var response = await request.delete('/api/data/audit-types/nonexistent', options)
+        var response = await request(app).delete('/api/data/audit-types/nonexistent', options)
         expect(response.status).toBe(404)
         done()
       })
@@ -181,7 +181,7 @@ module.exports = function(request) {
 
     describe('Vulnerability types CRUD operations', () => {
       it('Get vulnerability types', async done => {
-        var response = await request.get('/api/data/vulnerability-types', options)
+        var response = await request(app).get('/api/data/vulnerability-types', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toHaveLength(0)
@@ -193,7 +193,7 @@ module.exports = function(request) {
           locale: 'en',
           name: 'Internal'
         }
-        var response = await request.post('/api/data/vulnerability-types', type, options)
+        var response = await request(app).post('/api/data/vulnerability-types', type, options)
       
         expect(response.status).toBe(201)
         done()
@@ -204,7 +204,7 @@ module.exports = function(request) {
           locale: 'en',
           name: 'Web'
         }
-        var response = await request.post('/api/data/vulnerability-types', type, options)
+        var response = await request(app).post('/api/data/vulnerability-types', type, options)
       
         expect(response.status).toBe(201)
         done()
@@ -215,7 +215,7 @@ module.exports = function(request) {
           locale: 'en',
           name: 'Web'
         }
-        var response = await request.post('/api/data/vulnerability-types', type, options)
+        var response = await request(app).post('/api/data/vulnerability-types', type, options)
       
         expect(response.status).toBe(422)
         done()
@@ -226,7 +226,7 @@ module.exports = function(request) {
           {locale: 'en', name: 'Internal'},
           {locale: 'en', name: 'Web'}
         ]
-        var response = await request.get('/api/data/vulnerability-types', options)
+        var response = await request(app).get('/api/data/vulnerability-types', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toEqual(expect.arrayContaining(expected))
@@ -234,16 +234,16 @@ module.exports = function(request) {
       })
 
       it('Delete vulnerability type', async done => {
-        var response = await request.delete('/api/data/vulnerability-types/Web', options)
+        var response = await request(app).delete('/api/data/vulnerability-types/Web', options)
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/data/vulnerability-types', options)
+        var response = await request(app).get('/api/data/vulnerability-types', options)
         expect(response.data.datas).toHaveLength(1)
         done()
       })
 
       it('Should not delete vulnerability type with nonexistent name', async done => {
-        var response = await request.delete('/api/data/vulnerability-types/nonexistent', options)
+        var response = await request(app).delete('/api/data/vulnerability-types/nonexistent', options)
         expect(response.status).toBe(404)
         done()
       })
@@ -251,7 +251,7 @@ module.exports = function(request) {
 
     describe('Sections CRUD operations', () => {
       it('Get sections', async done => {
-        var response = await request.get('/api/data/sections', options)
+        var response = await request(app).get('/api/data/sections', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toHaveLength(0)
@@ -264,7 +264,7 @@ module.exports = function(request) {
           name: 'Attack Scenario',
           field: 'attack_scenario'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections', section, options)
       
         expect(response.status).toBe(201)
         done()
@@ -276,7 +276,7 @@ module.exports = function(request) {
           name: 'But',
           field: 'goal'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections', section, options)
       
         expect(response.status).toBe(201)
         done()
@@ -288,7 +288,7 @@ module.exports = function(request) {
           name: 'Attack Scenario',
           field: 'goal'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections', section, options)
       
         expect(response.status).toBe(422)
         done()
@@ -300,7 +300,7 @@ module.exports = function(request) {
           name: 'But2',
           field: 'goal'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections', section, options)
       
         expect(response.status).toBe(422)
         done()
@@ -312,7 +312,7 @@ module.exports = function(request) {
           name: 'Attack Scenario',
           field: 'attack_scenario'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections', section, options)
       
         expect(response.status).toBe(201)
         done()
@@ -324,7 +324,7 @@ module.exports = function(request) {
           name: 'Goal',
           field: 'goal'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections', section, options)
       
         expect(response.status).toBe(201)
         done()
@@ -337,7 +337,7 @@ module.exports = function(request) {
           {locale: 'fr', name: 'But', field: 'goal'},
           {locale: 'fr', name: 'Attack Scenario', field: 'attack_scenario'},
         ]
-        var response = await request.get('/api/data/sections', options)
+        var response = await request(app).get('/api/data/sections', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toEqual(expect.arrayContaining(expected))
@@ -345,7 +345,7 @@ module.exports = function(request) {
       })
 
       it('Should not delete nonexistent section', async done => {
-        var response = await request.delete('/api/data/sections/attack_scenario/us', options)
+        var response = await request(app).delete('/api/data/sections/attack_scenario/us', options)
         expect(response.status).toBe(404)
         done()
       })
@@ -357,10 +357,10 @@ module.exports = function(request) {
           {locale: 'fr', name: 'But', field: 'goal'}
         ]
 
-        var response = await request.delete('/api/data/sections/attack_scenario/fr', options)
+        var response = await request(app).delete('/api/data/sections/attack_scenario/fr', options)
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/data/sections', options)
+        var response = await request(app).get('/api/data/sections', options)
         expect(response.data.datas).toHaveLength(3)
         expect(response.data.datas).toEqual(expect.arrayContaining(expected))
         done()

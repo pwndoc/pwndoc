@@ -3,11 +3,11 @@
   1 Company: {name: 'Company 1', logo: 'fsociety logo'}
 */
 
-module.exports = function(request) {
+module.exports = function(request, app) {
   describe('Company Suite Tests', () => {
     var options = {headers: {}}
     beforeAll(async done => {
-      var response = await request.post('/api/users/token', {username: 'admin', password: 'admin2'})
+      var response = await request(app).post('/api/users/token', {username: 'admin', password: 'admin2'})
       options.headers.Cookie = `token=${response.data.datas.token}` // Set header Cookie for next requests
       done()
     })
@@ -17,7 +17,7 @@ module.exports = function(request) {
       var company1Id = ""
       var company2Id = ""
       it('Get companies (no existing companies in db)', async done => {
-        var response = await request.get('/api/companies', options)
+        var response = await request(app).get('/api/companies', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas).toHaveLength(0)
@@ -26,7 +26,7 @@ module.exports = function(request) {
 
       it('Create company with name only', async done => {
         var company = {name: "Company 1"}
-        var response = await request.post('/api/companies', company, options)
+        var response = await request(app).post('/api/companies', company, options)
 
         expect(response.status).toBe(201)
         company1Id = response.data.datas._id
@@ -35,7 +35,7 @@ module.exports = function(request) {
 
       it('Create company with name and logo', async done => {
         var company = {name: "Company 2", logo: "VGVzdCBpbWFnZQ=="}
-        var response = await request.post('/api/companies', company, options)
+        var response = await request(app).post('/api/companies', company, options)
 
         expect(response.status).toBe(201)
         company2Id = response.data.datas._id
@@ -44,7 +44,7 @@ module.exports = function(request) {
 
       it('Should not create company with existing name', async done => {
         var company = {name: "Company 1"}
-        var response = await request.post('/api/companies', company, options)
+        var response = await request(app).post('/api/companies', company, options)
 
         expect(response.status).toBe(422)
         done()
@@ -55,7 +55,7 @@ module.exports = function(request) {
           {name: "Company 1"},
           {name: "Company 2", logo: "VGVzdCBpbWFnZQ=="}
         ]
-        var response = await request.get('/api/companies', options)
+        var response = await request(app).get('/api/companies', options)
       
         expect(response.status).toBe(200)
         expect(response.data.datas.map(t => {return {name: t.name, logo: t.logo}})).toEqual(expect.arrayContaining(expected))
@@ -64,7 +64,7 @@ module.exports = function(request) {
 
       it('Update company with logo only', async done => {
         var company = {logo: logo}
-        var response = await request.put(`/api/companies/${company1Id}`, company, options)
+        var response = await request(app).put(`/api/companies/${company1Id}`, company, options)
         expect(response.status).toBe(200)
         done()
       })
@@ -72,22 +72,22 @@ module.exports = function(request) {
       it('Update company with nonexistent id', async done => {
         var company = {name: "company Updated"}
 
-        var response = await request.put(`/api/companies/deadbeefdeadbeefdeadbeef`, company, options)
+        var response = await request(app).put(`/api/companies/deadbeefdeadbeefdeadbeef`, company, options)
         expect(response.status).toBe(404)
         done()
       })
 
       it('Delete company', async done => {
-        var response = await request.delete(`/api/companies/${company2Id}`, options)
+        var response = await request(app).delete(`/api/companies/${company2Id}`, options)
         expect(response.status).toBe(200)
 
-        response = await request.get('/api/companies', options)
+        response = await request(app).get('/api/companies', options)
         expect(response.data.datas).toHaveLength(1)
         done()
       })
 
       it('Delete company with nonexistent id', async done => {
-        var response = await request.delete(`/api/companies/deadbeefdeadbeefdeadbeef`, options)
+        var response = await request(app).delete(`/api/companies/deadbeefdeadbeefdeadbeef`, options)
         expect(response.status).toBe(404)
         done()
       })

@@ -25,7 +25,7 @@ mongoose.Promise = global.Promise;
 // Trim all Strings
 mongoose.Schema.Types.String.set('trim', true);
 
-mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false});
+mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, {});
 
 // Models import
 require('./models/user');
