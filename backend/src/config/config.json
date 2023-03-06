@@ -24,8 +24,6 @@
             "name": "pwndoc",
             "server": "127.0.0.1",
             "port": "27017"
-        },
-        "jwtSecret": "235fdd9d5412ffb2dd643ffc6601c689848b6a4c59e79589c29f680ec2245512",
-        "jwtRefreshSecret": "355a733ae8b30c799b8037dc2975066a9f9c71af3081183255e4d0b16d358339"
+        }
     }
 }
