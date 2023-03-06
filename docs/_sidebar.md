@@ -5,4 +5,4 @@
 - [Audits](audits.md)
 - [Docx Template](docxtemplate.md)
 - [Debug](debug.md)
-- [API Documentation](/api/ ":ignore API Swagger File")
+- [API Documentation](/pwndoc/api/ ":ignore API Swagger File")
