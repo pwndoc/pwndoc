@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
+    "generate-api-doc": "node swagger-autogen.js",
     "prod": "NODE_ENV=prod nodemon src/app.js",
     "test": "NODE_ENV=test jest tests/index.test.js --testTimeout=10000 --forceExit"
   },
@@ -40,6 +41,7 @@
     "qrcode": "^1.5.1",
     "socket.io": "^4.6.1",
     "winston": "^3.8.2",
-    "xml": "^1.0.1"
+    "xml": "^1.0.1",
+    "swagger-autogen": "^2.23.1"
   }
 }
