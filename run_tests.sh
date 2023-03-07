@@ -17,7 +17,7 @@ function full_test {
     docker-compose up -d
     docker-compose -f backend/docker-compose.test.yml build
     docker-compose -f backend/docker-compose.test.yml run --rm backend-test
-    docker-compose -f backend/docker-compose.test.yml run --rm mongo-pwndoc-test
+    docker-compose -f backend/docker-compose.test.yml run --rm mongodb-test
     rc=$?
     docker-compose down
     rm -rf backend/mongo-data-test
@@ -29,7 +29,7 @@ function quick_test {
     rm -rf backend/mongo-data-test
     docker-compose start
     docker-compose -f backend/docker-compose.test.yml run --rm backend-test
-    docker-compose -f backend/docker-compose.test.yml run --rm mongo-pwndoc-test
+    docker-compose -f backend/docker-compose.test.yml run --rm mongodb-test
     rc=$?
     exit $rc
 }
