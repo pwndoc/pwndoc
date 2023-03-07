@@ -17,6 +17,12 @@ module.exports = function () {
         expect(result).toEqual(true)
       })
 
+      it('Valid Latvian Filename', () => {
+        var filename = "Pažeidžiamumas 1"
+        var result = utils.validFilename(filename)
+        expect(result).toEqual(true)
+      })
+
       it('Valid Filename with special chars', () => {
         var filename = "Vulnerability_1-test"
         var result = utils.validFilename(filename)
