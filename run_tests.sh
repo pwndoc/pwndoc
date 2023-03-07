@@ -12,34 +12,21 @@ function usage {
 
 function full_test {
     docker-compose down
-    rm -rf backend/mongo-data
-    docker-compose build --no-cache
-    docker-compose up -d
+    rm -rf backend/mongo-data-test
     docker-compose -f backend/docker-compose.test.yml build
     docker-compose -f backend/docker-compose.test.yml run --rm backend-test
+    docker-compose -f backend/docker-compose.test.yml down
+    docker-compose -f backend/docker-compose.test.yml rm
     rc=$?
-    docker-compose down
-    rm -rf backend/mongo-data
+    rm -rf backend/mongo-data-test
     exit $rc
 }
 
-function quick_test {
-    docker-compose stop
-    rm -rf backend/mongo-data
-    docker-compose start
-    docker-compose -f backend/docker-compose.test.yml run --rm backend-test
-    rc=$?
-    exit $rc
-}
-
-while getopts "hqf" option
+while getopts "hf" option
 do
     case $option in
         h|--help)
             usage
-            ;;
-        q|--quick)
-            quick_test
             ;;
         f|--full)
             full_test

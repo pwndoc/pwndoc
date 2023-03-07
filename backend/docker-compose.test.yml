@@ -1,5 +1,15 @@
 version: '3'
 services:
+  mongodb-test:
+    image: mongo:4.2.15
+    container_name: mongo-pwndoc-test
+    volumes:
+      - ./mongo-data-test:/data/db
+    restart: always
+    environment:
+      - MONGO_DB:pwndoc
+    network_mode: host
+
   backend-test:
     image: yeln4ts/pwndoc:backend-test
     build: 
@@ -12,4 +22,9 @@ services:
       - ./jest.config.js:/app/jest.config.js
     environment:
       API_URL: https://localhost:4242
+    depends_on:
+      - mongodb-test
     network_mode: host
+
+volumes:
+  mongo-data-test:

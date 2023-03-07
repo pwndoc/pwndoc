@@ -37,7 +37,7 @@ ClientSchema.statics.create = (client, company) => {
         if (company) {
             var Company = mongoose.model("Company");
             var query = Company.findOneAndUpdate({name: company}, {}, {upsert: true, new: true});
-            companyRow = await query.exec()
+            var companyRow = await query.exec()
             if (companyRow) client.company = companyRow._id;
         }
         var query = new Client(client);
@@ -69,7 +69,7 @@ ClientSchema.statics.update = (clientId, client, company) => {
         if (company) {
             var Company = mongoose.model("Company");
             var query = Company.findOneAndUpdate({name: company}, {}, {upsert: true, new: true});
-            companyRow = await query.exec()
+            var companyRow = await query.exec()
             if (companyRow) client.company = companyRow.id;
         }
         var query = Client.findOneAndUpdate({_id: clientId}, client);

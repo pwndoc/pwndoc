@@ -294,18 +294,4 @@ module.exports = function(app) {
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
-
-    // Delete any user (admin only)
-    /** Removed to keep linked references to user, disable user only for now
-    app.delete("/api/users/:id", acl.hasPermission('users:delete'), function(req, res) {
-        User.deleteOne({_id: req.params.id})
-        .then(msg => {
-            if (msg.n === 0)
-                throw ({fn: 'NotFound', message: 'User not found'});
-            else
-                Response.Ok(res, 'User deleted successfully');
-        })
-        .catch(err => Response.Internal(res, err))
-    });
-     */
 }
