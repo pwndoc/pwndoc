@@ -1,64 +1,64 @@
-import { Node, NodeSelection } from "tiptap";
-
+import { Node, NodeSelection } from "@tiptap/core";
 
 export default class Caption extends Node {
   get name() {
-    return 'caption'
+    return "caption";
   }
 
   get schema() {
     return {
       attrs: {
         label: {
-          default: "Figure"
+          default: "Figure",
         },
         alt: {
-          default: ""
-        }
+          default: "",
+        },
       },
       group: "block",
       draggable: true,
       parseDOM: [
         {
           tag: "legend[alt]",
-          getAttrs: dom => ({
+          getAttrs: (dom) => ({
             label: dom.getAttribute("label"),
-            alt: dom.getAttribute("alt")
-          })
-        }
+            alt: dom.getAttribute("alt"),
+          }),
+        },
       ],
-      toDOM: node => ["legend", node.attrs]
-    }
+      toDOM: (node) => ["legend", node.attrs],
+    };
   }
-  
+
   commands({ type }) {
-    return (attrs) => (state, dispatch) => dispatch(state.tr.replaceSelectionWith(type.create(attrs)))
+    return (attrs) => (state, dispatch) =>
+      dispatch(state.tr.replaceSelectionWith(type.create(attrs)));
   }
-  
+
   get view() {
     return {
       props: ["node", "updateAttrs"],
       computed: {
         label: {
           get() {
-            return this.node.attrs.label
+            return this.node.attrs.label;
           },
           set(label) {
             this.updateAttrs({
-              label
+              label,
             });
-          }
+          },
         },
         alt: {
           get() {
-            return this.node.attrs.alt
+            return this.node.attrs.alt;
           },
           set(alt) {
             this.updateAttrs({
-              alt
+              alt,
             });
-          }
-        }
+          },
+        },
       },
       template: `
       <div style="margin: 0px auto 16px auto; display: table">
@@ -71,7 +71,7 @@ export default class Caption extends Node {
           <q-input style="width:600px" autofocus :prefix="label+' - '" v-model="alt" placeholder="Caption" />
         </q-popup-edit>
       </div>
-      `
+      `,
     };
   }
 }
