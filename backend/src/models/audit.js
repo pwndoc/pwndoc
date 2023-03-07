@@ -397,7 +397,7 @@ AuditSchema.statics.createFinding = (isAdmin, auditId, userId, finding) => {
 
 AuditSchema.statics.getLastFindingIdentifier = (auditId) => {
     return new Promise((resolve, reject) => {
-        var query = Audit.aggregate([{ $match: {_id: mongoose.Types.ObjectId(auditId)} }])
+        var query = Audit.aggregate([{ $match: {_id: new mongoose.Types.ObjectId(auditId)} }])
         query.unwind('findings')
         query.sort({'findings.identifier': -1})
         query.exec()
