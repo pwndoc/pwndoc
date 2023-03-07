@@ -23,7 +23,7 @@ services:
     environment:
       API_URL: https://localhost:4242
     depends_on:
-      - mongodb
+      - mongodb-test
     network_mode: host
 
 volumes:
