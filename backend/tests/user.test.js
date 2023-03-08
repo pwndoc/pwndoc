@@ -252,5 +252,48 @@ module.exports = function(request, app) {
         expect(response.body.datas).toEqual(expect.objectContaining(expected))
       })
     })
+
+    describe('User Enumeration testing', () => {
+      it('User Enumeration due to Response Discrepancy', async () => {
+        var validUserBadPassword = {
+          username: 'admin',
+          password: 'InvalidPassword'
+        }
+        var invalidUser = {
+          username: 'InvalidUser',
+          password: 'InvalidPassword'
+        }
+
+        var responseValidBadPassword = await request(app).post('/api/users/token').send(validUserBadPassword)
+        expect(responseValidBadPassword.status).toBe(401)
+
+        var responseInvalid = await request(app).post('/api/users/token').send(invalidUser)
+        expect(responseInvalid.status).toBe(401)
+
+        expect(responseValidBadPassword.text).toBe(responseInvalid.text)
+      })
+
+      it('User Enumeration based on response time', async () => {
+        var start = new Date()
+
+        for (var index = 0; index <= 200; index++) {
+          await request(app).post('/api/users/token').send({username: 'InvalidUser' + index, password: 'InvalidPassword'})
+        }
+
+        var endTimeInvalidUsers = new Date() - start
+
+        start = new Date()
+
+        for (var index = 0; index <= 200; index++) {
+          await request(app).post('/api/users/token').send({username: 'admin', password: 'InvalidPassword' + index})
+        }
+
+        var endTimeValidUsers = new Date() - start
+
+        var timeDelta = endTimeInvalidUsers / endTimeValidUsers
+
+        expect(timeDelta <= 1.15 && timeDelta >= 0.85).toBeTruthy()
+      }, 50000)
+    })
   })
 }
