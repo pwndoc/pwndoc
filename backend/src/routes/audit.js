@@ -152,7 +152,6 @@ module.exports = function(app, io) {
 
         // Optional parameters
         if (req.body.name) update.name = req.body.name;
-        if (req.body.location) update.location = req.body.location;
         if (req.body.date) update.date = req.body.date;
         if (req.body.date_start) update.date_start = req.body.date_start;
         if (req.body.date_end) update.date_end = req.body.date_end;

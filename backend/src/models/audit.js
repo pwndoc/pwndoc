@@ -59,7 +59,6 @@ var SortOption = {
 var AuditSchema = new Schema({
     name:               {type: String, required: true},
     auditType:          String,
-    location:           String,
     date:               String,
     date_start:         String,
     date_end:           String,
@@ -278,7 +277,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
         query.populate('collaborators', 'username firstname lastname')
         query.populate('reviewers', 'username firstname lastname')
         query.populate('company')
-        query.select('name auditType location date date_start date_end client collaborators language scope.name template customFields')
+        query.select('name auditType date date_start date_end client collaborators language scope.name template customFields')
         query.exec()
         .then((row) => {
             if (!row)
