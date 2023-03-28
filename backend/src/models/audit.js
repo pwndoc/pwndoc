@@ -278,7 +278,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
         query.populate('reviewers', 'username firstname lastname')
         query.populate('company')
         query.select('name auditType date date_start date_end client collaborators language scope.name template customFields')
-        query.exec()
+        query.lean().exec()
         .then((row) => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'});
