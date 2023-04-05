@@ -319,6 +319,7 @@
             </q-btn-dropdown>
             <q-separator v-if="currentVulnerability.creator" vertical color="white" class="q-ml-md q-mr-sm" />
             <div v-if="currentVulnerability.creator" class="q-toolbar-title" style="height:80%">
+                <span>
                     <q-badge color="grey" style="height:100%">
                         Creator: {{currentVulnerability.creator.username}}
                     </q-badge>

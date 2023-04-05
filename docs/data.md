@@ -72,7 +72,7 @@ A Template is defined by:
 
 Custom Data represent a way to fully customize Audits and Vulnerabilities. They are editable and their order can be changed to personalize how they will be displayed for users.
 
-!> Values must match this regex:  `/^[A-zÀ-ú0-9 \[\]\'()_-]+$/`
+!> Values must match this regex:  `/^[\p{Letter}\p{Mark}0-9 \[\]'()_-]+$/iu`
 
 ### Languages
 

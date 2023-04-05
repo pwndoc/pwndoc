@@ -1,0 +1,13 @@
+name: "PwnDoc CodeQL config"
+
+queries:
+  - uses: security-and-quality
+
+paths:
+  - backend
+  - frontend
+paths-ignore:
+  - backend/tests
+  - backend/node_modules
+  - frontend/node_modules
+  - '**/*.test.js'

@@ -1,6 +1,6 @@
 // Filename whitelist validation for template creation
 function validFilename(filename) {
-    const regex = /^[\u4e00-\u9fcfA-zÀ-ú0-9 \[\]\'()_-]+$/i;
+    const regex = /^[\p{Letter}\p{Mark}0-9 \[\]'()_-]+$/iu;
     
     return (regex.test(filename));
 }

@@ -4,3 +4,5 @@
 - [Vulnerabilities](vulnerabilities.md)
 - [Audits](audits.md)
 - [Docx Template](docxtemplate.md)
+- [Debug](debug.md)
+- [API Documentation](/pwndoc/api/ ":ignore API Swagger File")

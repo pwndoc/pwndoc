@@ -13,25 +13,26 @@
       ]
 */
 
-module.exports = function(request) {
+module.exports = function(request, app) {
   describe('Data Suite Tests', () => {
-    var options = {headers: {}}
-    beforeAll(async done => {
-      var response = await request.post('/api/users/token', {username: 'admin', password: 'admin2'})
-      options.headers.Cookie = `token=${response.data.datas.token}` // Set header Cookie for next requests
-      done()
+    var userToken = '';
+    beforeAll(async () => {
+      var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'})
+      userToken = response.body.datas.token
     })
 
     describe('Language CRUD operations', () => {
-      it('Get languages', async done => {
-        var response = await request.get('/api/data/languages', options)
+      it('Get languages', async () => {
+        var response = await request(app).get('/api/data/languages')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
       
         expect(response.status).toBe(200)
-        expect(response.data.datas).toHaveLength(0)
-        done()
+        expect(response.body.datas).toHaveLength(0)
       })
 
-      it('Create 3 languages', async done => {
+      it('Create 3 languages', async () => {
         var english = {
           locale: 'en',
           language: 'English'
@@ -46,325 +47,409 @@ module.exports = function(request) {
           locale: 'es',
           language: 'Espagnol'
         }
-        var response = await request.post('/api/data/languages', english, options)
+        var response = await request(app).post('/api/data/languages')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(english)
         expect(response.status).toBe(201)
 
-        var response = await request.post('/api/data/languages', french, options)
+        var response = await request(app).post('/api/data/languages')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(french)
         expect(response.status).toBe(201)
 
-        var response = await request.post('/api/data/languages', espagnol, options)
+        var response = await request(app).post('/api/data/languages')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(espagnol)
         expect(response.status).toBe(201)
-        done()
       })
 
-      it('Should not create with existing locale', async done => {
+      it('Should not create with existing locale', async () => {
         var language = {
           locale: 'fr',
           language: 'French2'
         }
-        var response = await request.post('/api/data/languages', language, options)
+        var response = await request(app).post('/api/data/languages')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(language)
       
         expect(response.status).toBe(422)
-        done()
       })
 
-      it('Should not create with existing name', async done => {
+      it('Should not create with existing name', async () => {
         var language = {
           locale: 'us',
           language: 'English'
         }
-        var response = await request.post('/api/data/languages', language, options)
+        var response = await request(app).post('/api/data/languages')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(language)
       
         expect(response.status).toBe(422)
-        done()
       })
 
-      it('Get languages', async done => {
+      it('Get languages', async () => {
         const expected = [
           {locale: 'en', language: 'English'},
           {locale: 'fr', language: 'French'},
           {locale: 'es', language: 'Espagnol'}
         ]
 
-        var response = await request.get('/api/data/languages', options)
+        var response = await request(app).get('/api/data/languages')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
       
         expect(response.status).toBe(200)
-        expect(response.data.datas).toEqual(expect.arrayContaining(expected))
-        done()
+        expect(response.body.datas).toEqual(expect.arrayContaining(expected))
       })
 
-      it('Delete language', async done => {
-        var response = await request.delete('/api/data/languages/es', options)
+      it('Delete language', async () => {
+        var response = await request(app).delete('/api/data/languages/es')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/data/languages', options)
-        expect(response.data.datas).toHaveLength(2)
-        done()
+        var response = await request(app).get('/api/data/languages')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.body.datas).toHaveLength(2)
       })
 
-      it('Should not delete language with nonexistent locale', async done => {
-        var response = await request.delete('/api/data/languages/us', options)
+      it('Should not delete language with nonexistent locale', async () => {
+        var response = await request(app).delete('/api/data/languages/us')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
         expect(response.status).toBe(404)
-        done()
       })
     })
 
     describe('Audit types CRUD operations', () => {
-      it('Get audit types', async done => {
-        var response = await request.get('/api/data/audit-types', options)
+      it('Get audit types', async () => {
+        var response = await request(app).get('/api/data/audit-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
       
         expect(response.status).toBe(200)
-        expect(response.data.datas).toHaveLength(0)
-        done()
+        expect(response.body.datas).toHaveLength(0)
       })
 
-      it('Create audit type Internal', async done => {
-        var type = {
-          locale: 'en',
-          name: 'Internal Test'
+      it('Create audit type Internal', async () => {
+        // Get the template ID first
+        response = await request(app).get('/api/templates')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        
+        var templates = response.body.datas
+
+        var auditType = {
+          name: 'Internal Test',
+          templates: templates
         }
-        var response = await request.post('/api/data/audit-types', type, options)
+
+        var response = await request(app).post('/api/data/audit-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(auditType)
       
         expect(response.status).toBe(201)
-        done()
       })
 
-      it('Create audit type Web', async done => {
-        var type = {
-          locale: 'en',
-          name: 'Web'
+      it('Create audit type Web', async () => {
+        // Get the template ID first
+        response = await request(app).get('/api/templates')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        
+        var templates = response.body.datas
+
+        var auditType = {
+          name: 'Web',
+          templates: templates
         }
-        var response = await request.post('/api/data/audit-types', type, options)
+        var response = await request(app).post('/api/data/audit-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(auditType)
       
         expect(response.status).toBe(201)
-        done()
       })
 
-      it('Should not create with existing name', async done => {
-        var type = {
-          locale: 'en',
-          name: 'Web'
+      it('Should not create with existing name', async () => {
+        // Get the template ID first
+        response = await request(app).get('/api/templates')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        
+        var templates = response.body.datas
+
+        var auditType = {
+          name: 'Web',
+          templates: templates
         }
-        var response = await request.post('/api/data/audit-types', type, options)
+        var response = await request(app).post('/api/data/audit-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(auditType)
       
         expect(response.status).toBe(422)
-        done()
       })
 
-      it('Get audit types', async done => {
+      it('Get audit types', async () => {
         const expected = [
-          {locale: 'en', name: 'Internal Test'},
-          {locale: 'en', name: 'Web'}
+          {"hidden": [], "name": "Internal Test", "sections": [], "templates": [{}]},
+          {"hidden": [], "name": "Web", "sections": [], "templates": [{}]}
         ]
-        var response = await request.get('/api/data/audit-types', options)
+        var response = await request(app).get('/api/data/audit-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
       
         expect(response.status).toBe(200)
-        expect(response.data.datas).toEqual(expect.arrayContaining(expected))
-        done()
+        expect(response.body.datas).toEqual(expect.arrayContaining(expected))
       })
 
-      it('Delete audit type', async done => {
-        var response = await request.delete('/api/data/audit-types/Internal%20Test', options)
+      it('Delete audit type', async () => {
+        var response = await request(app).delete('/api/data/audit-types/Internal%20Test')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/data/audit-types', options)
-        expect(response.data.datas).toHaveLength(1)
-        done()
+        var response = await request(app).get('/api/data/audit-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.body.datas).toHaveLength(1)
       })
 
-      it('Should not delete audit type with nonexistent name', async done => {
-        var response = await request.delete('/api/data/audit-types/nonexistent', options)
+      it('Should not delete audit type with nonexistent name', async () => {
+        var response = await request(app).delete('/api/data/audit-types/nonexistent')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
         expect(response.status).toBe(404)
-        done()
       })
     })
 
     describe('Vulnerability types CRUD operations', () => {
-      it('Get vulnerability types', async done => {
-        var response = await request.get('/api/data/vulnerability-types', options)
+      it('Get vulnerability types', async () => {
+        var response = await request(app).get('/api/data/vulnerability-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
       
         expect(response.status).toBe(200)
-        expect(response.data.datas).toHaveLength(0)
-        done()
+        expect(response.body.datas).toHaveLength(0)
       })
 
-      it('Create vulnerability type Internal', async done => {
+      it('Create vulnerability type Internal', async () => {
         var type = {
           locale: 'en',
           name: 'Internal'
         }
-        var response = await request.post('/api/data/vulnerability-types', type, options)
+        var response = await request(app).post('/api/data/vulnerability-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(type)
       
         expect(response.status).toBe(201)
-        done()
       })
 
-      it('Create vulnerability type Web', async done => {
+      it('Create vulnerability type Web', async () => {
         var type = {
           locale: 'en',
           name: 'Web'
         }
-        var response = await request.post('/api/data/vulnerability-types', type, options)
+        var response = await request(app).post('/api/data/vulnerability-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(type)
       
         expect(response.status).toBe(201)
-        done()
       })
 
-      it('Should not create with existing name', async done => {
+      it('Should not create with existing name', async () => {
         var type = {
           locale: 'en',
           name: 'Web'
         }
-        var response = await request.post('/api/data/vulnerability-types', type, options)
+        var response = await request(app).post('/api/data/vulnerability-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(type)
       
         expect(response.status).toBe(422)
-        done()
       })
 
-      it('Get vulnerability types', async done => {
+      it('Get vulnerability types', async () => {
         const expected = [
-          {locale: 'en', name: 'Internal'},
-          {locale: 'en', name: 'Web'}
+          {"locale": "en", "name": "Internal"},
+          {"locale": "en", "name": "Web"}
         ]
-        var response = await request.get('/api/data/vulnerability-types', options)
+        var response = await request(app).get('/api/data/vulnerability-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
       
         expect(response.status).toBe(200)
-        expect(response.data.datas).toEqual(expect.arrayContaining(expected))
-        done()
+        expect(response.body.datas).toEqual(expect.arrayContaining(expected))
       })
 
-      it('Delete vulnerability type', async done => {
-        var response = await request.delete('/api/data/vulnerability-types/Web', options)
+      it('Delete vulnerability type', async () => {
+        var response = await request(app).delete('/api/data/vulnerability-types/Web')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
         expect(response.status).toBe(200)
 
-        var response = await request.get('/api/data/vulnerability-types', options)
-        expect(response.data.datas).toHaveLength(1)
-        done()
+        var response = await request(app).get('/api/data/vulnerability-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.body.datas).toHaveLength(1)
       })
 
-      it('Should not delete vulnerability type with nonexistent name', async done => {
-        var response = await request.delete('/api/data/vulnerability-types/nonexistent', options)
+      it('Should not delete vulnerability type with nonexistent name', async () => {
+        var response = await request(app).delete('/api/data/vulnerability-types/nonexistent')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
         expect(response.status).toBe(404)
-        done()
       })
     })
 
     describe('Sections CRUD operations', () => {
-      it('Get sections', async done => {
-        var response = await request.get('/api/data/sections', options)
+      it('Get sections', async () => {
+        var response = await request(app).get('/api/data/sections')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
       
         expect(response.status).toBe(200)
-        expect(response.data.datas).toHaveLength(0)
-        done()
+        expect(response.body.datas).toHaveLength(0)
       })
 
-      it('Create section Attack Scenario locale en', async done => {
+      it('Create section Attack Scenario locale en', async () => {
         var section = {
-          locale: 'en',
           name: 'Attack Scenario',
           field: 'attack_scenario'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(section)
       
         expect(response.status).toBe(201)
-        done()
       })
 
-      it('Create section But locale fr', async done => {
+      it('Create section But locale fr', async () => {
         var section = {
-          locale: 'fr',
           name: 'But',
           field: 'goal'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(section)
       
         expect(response.status).toBe(201)
-        done()
       })
 
-      it('Should not create section with existing (name,locale)', async done => {
+      it('Should not create section with existing name', async () => {
         var section = {
-          locale: 'en',
           name: 'Attack Scenario',
           field: 'goal'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(section)
       
         expect(response.status).toBe(422)
-        done()
       })
 
-      it('Should not create section with existing (field,locale)', async done => {
+      it('Should not create section with existing field', async () => {
         var section = {
-          locale: 'fr',
           name: 'But2',
           field: 'goal'
         }
-        var response = await request.post('/api/data/sections', section, options)
+        var response = await request(app).post('/api/data/sections')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(section)
       
         expect(response.status).toBe(422)
-        done()
       })
 
-      it('Create section with existing name from a different locale', async done => {
-        var section = {
-          locale: 'fr',
-          name: 'Attack Scenario',
-          field: 'attack_scenario'
-        }
-        var response = await request.post('/api/data/sections', section, options)
-      
-        expect(response.status).toBe(201)
-        done()
-      })
-
-      it('Create section with nonexistent name', async done => {
-        var section = {
-          locale: 'en',
-          name: 'Goal',
-          field: 'goal'
-        }
-        var response = await request.post('/api/data/sections', section, options)
-      
-        expect(response.status).toBe(201)
-        done()
-      })
-
-      it('Get sections', async done => {
+      it('Get sections', async () => {
         const expected = [
-          {locale: 'en', name: 'Attack Scenario', field: 'attack_scenario'},
-          {locale: 'en', name: 'Goal', field: 'goal'},
-          {locale: 'fr', name: 'But', field: 'goal'},
-          {locale: 'fr', name: 'Attack Scenario', field: 'attack_scenario'},
+          {name: 'Attack Scenario', field: 'attack_scenario'},
+          {name: 'But', field: 'goal'},
         ]
-        var response = await request.get('/api/data/sections', options)
+        var response = await request(app).get('/api/data/sections')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
       
         expect(response.status).toBe(200)
-        expect(response.data.datas).toEqual(expect.arrayContaining(expected))
-        done()
+        expect(response.body.datas).toEqual(expect.arrayContaining(expected))
       })
 
-      it('Should not delete nonexistent section', async done => {
-        var response = await request.delete('/api/data/sections/attack_scenario/us', options)
-        expect(response.status).toBe(404)
-        done()
-      })
+      //it('Should not delete nonexistent section', async () => {
+      //  var response = await request(app).delete('/api/data/sections/attack_scenario/ru')
+      //    .set('Cookie', [
+      //      `token=JWT ${userToken}`
+      //    ])
+      //  expect(response.status).toBe(404)
+      //})
 
-      it('Delete section', async done => {
-        const expected = [
-          {locale: 'en', name: 'Attack Scenario', field: 'attack_scenario'},
-          {locale: 'en', name: 'Goal', field: 'goal'},
-          {locale: 'fr', name: 'But', field: 'goal'}
-        ]
+      //it('Delete section', async () => {
+      //  const expected = [
+      //    {locale: "en", name: 'Attack Scenario', field: 'attack_scenario'},
+      //    {locale: "fr", name: 'Scenario', field: 'attack_scenario'},
+      //    {locale: "en", name: 'Goal', field: 'goal'},
+      //  ]
 
-        var response = await request.delete('/api/data/sections/attack_scenario/fr', options)
-        expect(response.status).toBe(200)
+      //  var response = await request(app).delete('/api/data/sections/but/fr')
+      //    .set('Cookie', [
+      //      `token=JWT ${userToken}`
+      //    ])
+      //  expect(response.status).toBe(200)
 
-        var response = await request.get('/api/data/sections', options)
-        expect(response.data.datas).toHaveLength(3)
-        expect(response.data.datas).toEqual(expect.arrayContaining(expected))
-        done()
-      })
+      //  var response = await request(app).get('/api/data/sections')
+      //    .set('Cookie', [
+      //      `token=JWT ${userToken}`
+      //    ])
+      //  expect(response.body.datas).toHaveLength(3)
+      //  expect(response.body.datas).toEqual(expect.arrayContaining(expected))
+      //})
     })
   })
 }

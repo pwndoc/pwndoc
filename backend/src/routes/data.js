@@ -43,7 +43,7 @@ module.exports = function(app) {
             return;
         }
         if (!utils.validFilename(req.body.language) || !utils.validFilename(req.body.locale)) {
-            Response.BadParameters(res, 'language and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+            Response.BadParameters(res, 'language and locale value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
             return
         }
         
@@ -74,7 +74,7 @@ module.exports = function(app) {
                 return
             }
             if (!utils.validFilename(language.language) || !utils.validFilename(language.locale)) {
-                Response.BadParameters(res, 'language and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+                Response.BadParameters(res, 'language and locale value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
                 return
             }
         }
@@ -105,7 +105,7 @@ module.exports = function(app) {
             return;
         }
         if (!utils.validFilename(req.body.name)) {
-            Response.BadParameters(res, 'name and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+            Response.BadParameters(res, 'name and locale value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
             return
         }
 
@@ -141,7 +141,7 @@ module.exports = function(app) {
                 return
             }
             if (!utils.validFilename(auditType.name)) {
-                Response.BadParameters(res, 'name and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+                Response.BadParameters(res, 'name and locale value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
                 return
             }
         }
@@ -172,7 +172,7 @@ module.exports = function(app) {
             return;
         }
         if (!utils.validFilename(req.body.name) || !utils.validFilename(req.body.locale)) {
-            Response.BadParameters(res, 'name and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+            Response.BadParameters(res, 'name and locale value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
             return
         }
 
@@ -202,7 +202,7 @@ module.exports = function(app) {
                 return
             }
             if (!utils.validFilename(vulnType.name) || !utils.validFilename(vulnType.locale)) {
-                Response.BadParameters(res, 'name and locale value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+                Response.BadParameters(res, 'name and locale value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
                 return
             }
         }
@@ -233,7 +233,7 @@ module.exports = function(app) {
             return;
         }
         if (!utils.validFilename(req.body.name)) {
-            Response.BadParameters(res, 'name value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+            Response.BadParameters(res, 'name value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
             return
         }
 
@@ -261,7 +261,7 @@ module.exports = function(app) {
                 return
             }
             if (!utils.validFilename(vulnCat.name)) {
-                Response.BadParameters(res, 'name value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+                Response.BadParameters(res, 'name value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
                 return
             }
         }
@@ -310,7 +310,7 @@ module.exports = function(app) {
             return;
         }
         if (!utils.validFilename(req.body.field) || !utils.validFilename(req.body.name)) {
-            Response.BadParameters(res, 'name and field value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i ')
+            Response.BadParameters(res, 'name and field value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
             return
         }
         
@@ -345,7 +345,7 @@ module.exports = function(app) {
                 return
             }
             if (!utils.validFilename(section.name) || !utils.validFilename(section.field)) {
-                Response.BadParameters(res, 'name and field value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+                Response.BadParameters(res, 'name and field value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
                 return
             }
         }
@@ -376,7 +376,7 @@ module.exports = function(app) {
             return
         }
         if ((!utils.validFilename(req.body.fieldType) || !utils.validFilename(req.body.label)) && req.body.fieldType !== 'space') {
-            Response.BadParameters(res, 'name and field value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i ')
+            Response.BadParameters(res, 'name and field value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
             return
         }
         
@@ -407,7 +407,7 @@ module.exports = function(app) {
                 return
             }
             if ((!utils.validFilename(customField.label || !utils.validFilename(customField.fieldType))) && customField.fieldType !== 'space') {
-                Response.BadParameters(res, 'label and fieldType value must match /^[A-zÀ-ú0-9 \[\]\'()_-]+$/i')
+                Response.BadParameters(res, 'label and fieldType value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
                 return
             }
         }

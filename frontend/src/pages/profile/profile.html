@@ -74,13 +74,14 @@
                             <q-item-section>
                                 <q-field borderless :error="!!errors.newPassword" :error-message="errors.newPassword">
                                     <q-input 
+                                    ref="pwdUpdateRef"
                                     class="col-md-6 col-6 q-pr-sm" 
                                     v-model="user.newPassword" 
                                     :label="$t('newPassword')" 
                                     stack-label 
                                     type="password"
                                     clearable
-                                    outlined                                    
+                                    outlined
                                     />
                                     <q-input 
                                     class="col-md-6 col-6 q-pl-sm" 
