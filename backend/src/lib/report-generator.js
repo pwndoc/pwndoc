@@ -63,7 +63,7 @@ async function generateDoc(audit) {
             }
             return [width,height];
         }
-        return [0,0]
+        return [0,0];
     }
 
     if (settings.report.private.imageBorder && settings.report.private.imageBorderColor)
@@ -425,7 +425,7 @@ async function prepAuditData(data, settings) {
     result.date_start = data.date_start || "undefined"
     result.date_end = data.date_end || "undefined"
     if (data.customFields) {
-        for (field of data.customFields) {
+        for (var field of data.customFields) {
             var fieldType = field.customField.fieldType
             var label = field.customField.label
 
@@ -469,7 +469,7 @@ async function prepAuditData(data, settings) {
     result.scope = data.scope.toObject() || []
 
     result.findings = []
-    for (finding of data.findings) {
+    for (var finding of data.findings) {
         var tmpCVSS = CVSS31.calculateCVSSFromVector(finding.cvssv3);
         var tmpFinding = {
             title: finding.title || "",
@@ -571,7 +571,7 @@ async function prepAuditData(data, settings) {
         result.creator.role = data.creator.role || "undefined"
     }
 
-    for (section of data.sections) {
+    for (var section of data.sections) {
         var formatSection = { 
             name: $t(section.name)
         }
@@ -600,7 +600,7 @@ async function splitHTMLParagraphs(data) {
 
     var splitted = data.split(/(<img.+?src=".*?".+?alt=".*?".*?>)/)
 
-    for (value of splitted){
+    for (var value of splitted){
         if (value.startsWith("<img")) {
             var src = value.match(/<img.+src="(.*?)"/) || ""
             var alt = value.match(/<img.+alt="(.*?)"/) || ""
