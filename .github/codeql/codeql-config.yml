@@ -2,6 +2,11 @@ name: "PwnDoc CodeQL config"
 
 queries:
   - uses: security-and-quality
+  - uses: security-extended
+
+query-filters:
+  - exclude:
+      id: js/missing-rate-limiting
 
 paths:
   - backend
