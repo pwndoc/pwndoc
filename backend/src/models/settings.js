@@ -1,6 +1,5 @@
 var mongoose = require('mongoose');//.set('debug', true);
 var Schema = mongoose.Schema;
-var fs = require('fs');
 var _ = require('lodash');
 var Utils = require('../lib/utils.js');
 

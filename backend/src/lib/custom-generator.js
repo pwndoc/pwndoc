@@ -15,8 +15,6 @@ var filters = {};
 
 // Convert input CVSS criteria into French: {input | criteriaFR}
 expressions.filters.criteriaFR = function(input) {
-    var pre = '<w:p><w:r><w:t>';
-    var post = '</w:t></w:r></w:p>';
     var result = "Non défini"
 
     if (input === "Network") result = "Réseau"
@@ -30,7 +28,6 @@ expressions.filters.criteriaFR = function(input) {
     else if (input === "Unchanged") result = "Inchangé"
     else if (input === "Changed") result = "Changé"
 
-    // return pre + result + post;
     return result;
 }
 

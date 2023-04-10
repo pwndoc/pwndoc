@@ -253,7 +253,6 @@ export default {
 					vulnCategories: [],
 					customFields: [],
 					auditTypes: [],
-					vulnCategories: [],
 					findingList: [],
 					frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
 					AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE

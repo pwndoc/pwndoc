@@ -231,16 +231,16 @@ export default {
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
-                })
+                });
             }
             catch (err) {
-                console.log(err)
+                console.log(err);
                 Notify.create({
                     message: 'Error parsing Nmap',
                     color: 'negative',
                     textColor:'white',
                     position: 'top-right'
-                })
+                });
             }
         },
 
@@ -321,16 +321,16 @@ export default {
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
-                })
+                });
             }
             catch (err) {
-                console.log(err)
+                console.log(err);
                 Notify.create({
                     message: 'Error parsing Nessus',
                     color: 'negative',
                     textColor:'white',
                     position: 'top-right'
-                })
+                });
             }
         }
     }

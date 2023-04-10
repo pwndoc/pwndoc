@@ -73,7 +73,7 @@ export default {
         downloadTemplate: function(row) {
             TemplateService.downloadTemplate(row._id)
             .then((data) => {
-                status = exportFile(`${row.name}.${row.ext || 'docx'}`, data.data, {type: "application/octet-stream"})
+                var status = exportFile(`${row.name}.${row.ext || 'docx'}`, data.data, {type: "application/octet-stream"})
                 if (!status)
                     throw (status)
             })

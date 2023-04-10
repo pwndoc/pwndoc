@@ -33,7 +33,7 @@ module.exports = function(app) {
 
         Client.create(client, company)
         .then(msg => Response.Created(res, msg))
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Update client
@@ -51,7 +51,7 @@ module.exports = function(app) {
 
         Client.update(req.params.id, client, company)
         .then(msg => Response.Ok(res, 'Client updated successfully'))
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Delete client

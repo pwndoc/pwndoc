@@ -138,7 +138,7 @@ UserSchema.statics.updateProfile = function (username, user) {
                 payload.lastname = row.lastname;
                 payload.email = row.email;
                 payload.phone = row.phone;
-                payload.roles = auth.acl.getRoles(payload.role)
+                payload.roles = auth.acl.getRoles(payload.role);
 
                 return row.save();
             }

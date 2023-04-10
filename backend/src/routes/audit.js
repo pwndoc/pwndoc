@@ -72,7 +72,7 @@ module.exports = function(app, io) {
         Audit.delete(acl.isAllowed(req.decodedToken.role, 'audits:delete-all'), req.params.auditId, req.decodedToken.id)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
-    })
+    });
 
     /* ### AUDITS EDIT ### */
 
@@ -150,7 +150,7 @@ module.exports = function(app, io) {
 
             // If the new collaborator already gave a review, remove said review, accept collaborator
             if (audit.approvals) {
-                newApprovals = audit.approvals.filter((approval) => !req.body.collaborators.some((collaborator) => approval.toString() === collaborator._id));
+                var newApprovals = audit.approvals.filter((approval) => !req.body.collaborators.some((collaborator) => approval.toString() === collaborator._id));
                 update.approvals = newApprovals;
             }
         }
@@ -354,7 +354,7 @@ module.exports = function(app, io) {
         .then(msg => {
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Generate Report for specific audit
@@ -430,7 +430,7 @@ module.exports = function(app, io) {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Give or remove a reviewer's approval to an audit
@@ -522,6 +522,6 @@ module.exports = function(app, io) {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 }
