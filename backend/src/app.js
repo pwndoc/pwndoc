@@ -47,14 +47,14 @@ require('./models/settings');
 // Socket IO configuration
 io.on('connection', (socket) => {
   socket.on('join', (data) => {
-    console.log(`user ${data.username.replace(/\n/g, '\\n').replace(/\r/g, '\\r')} joined room ${data.room.replace(/\n/g, '\\n').replace(/\r/g, '\\r')}`)
+    console.log(`user ${data.username.replace(/\n|\r/g, "")} joined room ${data.room.replace(/\n|\r/g, "")}`)
     socket.username = data.username;
     do { socket.color = '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6); } while (socket.color === "#77c84e")
     socket.join(data.room);
     io.to(data.room).emit('updateUsers');
   });
   socket.on('leave', (data) => {
-    console.log(`user ${data.username.replace(/\n/g, '\\n').replace(/\r/g, '\\r')} left room ${data.room.replace(/\n/g, '\\n').replace(/\r/g, '\\r')}`)
+    console.log(`user ${data.username.replace(/\n|\r/g, "")} left room ${data.room.replace(/\n|\r/g, "")}`)
     socket.leave(data.room)
     io.to(data.room).emit('updateUsers');
   })
