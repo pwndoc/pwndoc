@@ -1,9 +1,21 @@
 var fs = require('fs');
 var app = require('express')();
+
 var https = require('https').Server({
   key: fs.readFileSync(__dirname+'/../ssl/server.key'),
-  cert: fs.readFileSync(__dirname+'/../ssl/server.cert')
+  cert: fs.readFileSync(__dirname+'/../ssl/server.cert'),
+
+  // TLS Versions
+	maxVersion: 'TLSv1.3',
+	minVersion: 'TLSv1.2',
+
+	// Hardened configuration
+	ciphers: 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384',
+
+	honorCipherOrder: false
 }, app);
+app.disable('x-powered-by');
+
 var io = require('socket.io')(https, {
   cors: {
     origin: "*"
@@ -88,6 +100,12 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header('Access-Control-Expose-Headers', 'Content-Disposition')
   // res.header('Access-Control-Allow-Credentials', 'true')
+  next();
+});
+
+// CSP
+app.use(function(req, res, next) {
+  res.header("Content-Security-Policy", "default-src 'none'; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; sandbox; require-trusted-types-for 'script';");
   next();
 });
 
