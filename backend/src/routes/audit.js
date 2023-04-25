@@ -51,6 +51,11 @@ module.exports = function(app, io) {
             return;
         }
 
+        if (!utils.validFilename(req.body.language)) {
+            Response.BadParameters(res, 'Invalid characters for language');
+            return;
+        }
+
         var audit = {};
         // Required params
         audit.name = req.body.name;
@@ -67,7 +72,7 @@ module.exports = function(app, io) {
         Audit.delete(acl.isAllowed(req.decodedToken.role, 'audits:delete-all'), req.params.auditId, req.decodedToken.id)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
-    })
+    });
 
     /* ### AUDITS EDIT ### */
 
@@ -145,14 +150,13 @@ module.exports = function(app, io) {
 
             // If the new collaborator already gave a review, remove said review, accept collaborator
             if (audit.approvals) {
-                newApprovals = audit.approvals.filter((approval) => !req.body.collaborators.some((collaborator) => approval.toString() === collaborator._id));
+                var newApprovals = audit.approvals.filter((approval) => !req.body.collaborators.some((collaborator) => approval.toString() === collaborator._id));
                 update.approvals = newApprovals;
             }
         }
 
         // Optional parameters
         if (req.body.name) update.name = req.body.name;
-        if (req.body.location) update.location = req.body.location;
         if (req.body.date) update.date = req.body.date;
         if (req.body.date_start) update.date_start = req.body.date_start;
         if (req.body.date_end) update.date_end = req.body.date_end;
@@ -168,7 +172,7 @@ module.exports = function(app, io) {
         }
         if (req.body.collaborators) update.collaborators = req.body.collaborators;
         if (req.body.reviewers) update.reviewers = req.body.reviewers;
-        if (req.body.language) update.language = req.body.language;
+        if (req.body.language && utils.validFilename(req.body.language)) update.language = req.body.language;
         if (req.body.scope && typeof(req.body.scope === "array")) {
             update.scope = req.body.scope.map(item => {return {name: item}});
         }
@@ -350,7 +354,7 @@ module.exports = function(app, io) {
         .then(msg => {
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Generate Report for specific audit
@@ -426,7 +430,7 @@ module.exports = function(app, io) {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Give or remove a reviewer's approval to an audit
@@ -518,6 +522,6 @@ module.exports = function(app, io) {
             io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 }

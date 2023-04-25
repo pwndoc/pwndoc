@@ -1,0 +1,20 @@
+name: Generate Swagger Documentation
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run the Swagger doc generation script
+      working-directory: backend
+      run: |
+        npm i
+        npm run generate-api-doc

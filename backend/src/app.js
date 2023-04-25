@@ -1,9 +1,21 @@
 var fs = require('fs');
 var app = require('express')();
+
 var https = require('https').Server({
   key: fs.readFileSync(__dirname+'/../ssl/server.key'),
-  cert: fs.readFileSync(__dirname+'/../ssl/server.cert')
+  cert: fs.readFileSync(__dirname+'/../ssl/server.cert'),
+
+  // TLS Versions
+	maxVersion: 'TLSv1.3',
+	minVersion: 'TLSv1.2',
+
+	// Hardened configuration
+	ciphers: 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384',
+
+	honorCipherOrder: false
 }, app);
+app.disable('x-powered-by');
+
 var io = require('socket.io')(https, {
   cors: {
     origin: "*"
@@ -25,7 +37,7 @@ mongoose.Promise = global.Promise;
 // Trim all Strings
 mongoose.Schema.Types.String.set('trim', true);
 
-mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false});
+mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, {});
 
 // Models import
 require('./models/user');
@@ -47,14 +59,14 @@ require('./models/settings');
 // Socket IO configuration
 io.on('connection', (socket) => {
   socket.on('join', (data) => {
-    console.log(`user ${data.username} joined room ${data.room}`)
+    console.log(`user ${data.username.replace(/\n|\r/g, "")} joined room ${data.room.replace(/\n|\r/g, "")}`)
     socket.username = data.username;
     do { socket.color = '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6); } while (socket.color === "#77c84e")
     socket.join(data.room);
     io.to(data.room).emit('updateUsers');
   });
   socket.on('leave', (data) => {
-    console.log(`user ${data.username} left room ${data.room}`)
+    console.log(`user ${data.username.replace(/\n|\r/g, "")} left room ${data.room.replace(/\n|\r/g, "")}`)
     socket.leave(data.room)
     io.to(data.room).emit('updateUsers');
   })
@@ -88,6 +100,12 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header('Access-Control-Expose-Headers', 'Content-Disposition')
   // res.header('Access-Control-Allow-Credentials', 'true')
+  next();
+});
+
+// CSP
+app.use(function(req, res, next) {
+  res.header("Content-Security-Policy", "default-src 'none'; form-action 'none'; base-uri 'self'; frame-ancestors 'none'; sandbox; require-trusted-types-for 'script';");
   next();
 });
 

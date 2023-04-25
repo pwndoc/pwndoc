@@ -1,6 +1,6 @@
 var fs = require('fs');
 var Docxtemplater = require('docxtemplater');
-var JSZip = require('jszip');
+var PizZip = require("pizzip");
 var expressions = require('angular-expressions');
 var ImageModule = require('docxtemplater-image-module-pwndoc');
 var sizeOf = require('image-size');
@@ -18,9 +18,9 @@ var $t
 async function generateDoc(audit) {
     var templatePath = `${__basedir}/../report-templates/${audit.template.name}.${audit.template.ext || 'docx'}`
     var content = fs.readFileSync(templatePath, "binary");
-
-    var zip = new JSZip(content);
-
+    
+    var zip = new PizZip(content);
+    
     translate.setLocale(audit.language)
     $t = translate.translate
 
@@ -63,7 +63,7 @@ async function generateDoc(audit) {
             }
             return [width,height];
         }
-        return [0,0]
+        return [0,0];
     }
 
     if (settings.report.private.imageBorder && settings.report.private.imageBorderColor)
@@ -664,12 +664,11 @@ async function prepAuditData(data, settings) {
     var result = {}
     result.name = data.name || "undefined"
     result.auditType = $t(data.auditType) || "undefined"
-    result.location = data.location || "undefined"
     result.date = data.date || "undefined"
     result.date_start = data.date_start || "undefined"
     result.date_end = data.date_end || "undefined"
     if (data.customFields) {
-        for (field of data.customFields) {
+        for (var field of data.customFields) {
             var fieldType = field.customField.fieldType
             var label = field.customField.label
 
@@ -713,7 +712,7 @@ async function prepAuditData(data, settings) {
     result.scope = data.scope.toObject() || []
 
     result.findings = []
-    for (finding of data.findings) {
+    for (var finding of data.findings) {
         var tmpCVSS = CVSS31.calculateCVSSFromVector(finding.cvssv3);
         var tmpFinding = {
             title: finding.title || "",
@@ -815,8 +814,8 @@ async function prepAuditData(data, settings) {
         result.creator.role = data.creator.role || "undefined"
     }
 
-    for (section of data.sections) {
-        var formatSection = {
+    for (var section of data.sections) {
+        var formatSection = { 
             name: $t(section.name)
         }
         if (section.text) // keep text for retrocompatibility
@@ -844,7 +843,7 @@ async function splitHTMLParagraphs(data) {
 
     var splitted = data.split(/(<img.+?src=".*?".+?alt=".*?".*?>)/)
 
-    for (value of splitted){
+    for (var value of splitted){
         if (value.startsWith("<img")) {
             var src = value.match(/<img.+src="(.*?)"/) || ""
             var alt = value.match(/<img.+alt="(.*?)"/) || ""

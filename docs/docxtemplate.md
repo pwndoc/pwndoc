@@ -67,10 +67,6 @@ Name of the audit
 Type of the audit. See [Custom Data](/data?id=audit-types)
 > Use in template document: `{auditType}`
 
-### location
-Location of the audit
-> Use in template document: `{location}`
-
 ### date
 Redacting date
 > Use in template document: `{date}`

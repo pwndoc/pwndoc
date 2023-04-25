@@ -30,7 +30,6 @@ export default {
             audit: {
                 creator: {},
                 name: "",
-                location: "",
                 auditType: "",
                 client: {},
                 company: {},

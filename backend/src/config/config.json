@@ -22,7 +22,7 @@
         "host": "",
         "database": {
             "name": "pwndoc",
-            "server": "mongo-pwndoc-test",
+            "server": "127.0.0.1",
             "port": "27017"
         }
     }

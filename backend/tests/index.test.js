@@ -1,24 +1,24 @@
-var axios = require('axios')
-var https = require('https');
-var apiUrl = process.env.API_URL || 'https://localhost:5252'
+const request = require("supertest");
 
-const request = axios.create({
-    baseURL: apiUrl,
-    httpsAgent: new https.Agent({  
-        rejectUnauthorized: false
-    }),
-    validateStatus: function (status) {
-        return status < 500; // Resolve only if the status code is less than 500
-    }
-})
+var env = process.env.NODE_ENV || 'dev';
+var config = require('../src/config/config.json')[env];
+
+var mongoose = require('mongoose');
+mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, {});
+
+/* Clean the DB */
+mongoose.connection.dropDatabase();
+
+const app = require(__dirname+"/../src/app");
 
 // Import tests
-require('./unauthenticated.test')(request)
-require('./user.test')(request)
-require('./data.test')(request)
-require('./template.test')(request)
-require('./company.test')(request)
-require('./client.test')(request)
-require('./vulnerability.test')(request)
-require('./configs.test')(request)
+require('./unauthenticated.test')(request, app)
+require('./user.test')(request, app)
+require('./template.test')(request, app)
+require('./data.test')(request, app)
+require('./company.test')(request, app)
+require('./client.test')(request, app)
+require('./vulnerability.test')(request, app)
+require('./audit.test')(request, app)
+require('./settings.test')(request, app)
 require('./lib.test')()
