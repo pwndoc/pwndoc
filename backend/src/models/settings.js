@@ -17,6 +17,17 @@ const SettingSchema = new Schema({
                 highColor: { type: String, default: "#fe0000", validate: [colorValidator, 'Invalid color'] },
                 criticalColor: { type: String, default: "#212121", validate: [colorValidator, 'Invalid color'] }
             },
+            remediationColorsComplexity: {
+                lowColor: { type: String, default: "#4472c4", validate: [colorValidator, 'Invalid color'] },
+                mediumColor: { type: String, default: "#ffc000", validate: [colorValidator, 'Invalid color'] },
+                highColor: { type: String, default: "#FF2F2F", validate: [colorValidator, 'Invalid color'] }
+            },
+            remediationColorsPriority: {
+                lowColor: { type: String, default: "#4472c4", validate: [colorValidator, 'Invalid color'] },
+                mediumColor: { type: String, default: "#ffc000", validate: [colorValidator, 'Invalid color'] },
+                highColor: { type: String, default: "#ff2f2f", validate: [colorValidator, 'Invalid color'] },
+                urgentColor: { type: String, default: "#C00000", validate: [colorValidator, 'Invalid color'] }
+            },
             captions: {
                 type: [{type: String, unique: true}],
                 default: ['Figure']

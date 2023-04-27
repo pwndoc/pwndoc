@@ -113,6 +113,105 @@
                     </q-list>
                 </q-card-section>
                 <q-separator />
+<!-- remediation complexity color -->
+                <q-card-section>
+                    <div class="text-bold">{{$t('remediationColorsComplexity')}}</div>
+                    <br/>
+                    <div class="text-grey-8">{{$t('changeRemediationColorsDescriptionComplexity')}}</div>
+                    <br/>
+                    <q-list>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">{{$t('complex')}} : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.report.public.remediationColorsComplexity.highColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">{{$t('currentColor')}}: {{settings.report.public.remediationColorsComplexity.highColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">{{$t('medium')}} : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.report.public.remediationColorsComplexity.mediumColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">{{$t('currentColor')}}: {{settings.report.public.remediationColorsComplexity.mediumColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">{{$t('easy')}} : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.report.public.remediationColorsComplexity.lowColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">{{$t('currentColor')}}: {{settings.report.public.remediationColorsComplexity.lowColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+                <q-separator />
+<!-- Remediation complexity color end -->
+<!-- remediation priority color start -->
+                <q-card-section>
+                    <div class="text-bold">{{$t('remediationColorsPriority')}}</div>
+                    <br/>
+                    <div class="text-grey-8">{{$t('changeRemediationColorsDescriptionPriority')}}</div>
+                    <br/>
+                    <q-list>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">{{$t('urgent')}} : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.report.public.remediationColorsPriority.urgentColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">{{$t('currentColor')}}: {{settings.report.public.remediationColorsPriority.urgentColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">{{$t('high')}} : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.report.public.remediationColorsPriority.highColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">{{$t('currentColor')}}: {{settings.report.public.remediationColorsPriority.highColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">{{$t('medium')}} : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.report.public.remediationColorsPriority.mediumColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">{{$t('currentColor')}}: {{settings.report.public.remediationColorsPriority.mediumColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <label class="vertical-center">{{$t('low')}} : </label>
+                            </q-item-section>
+                            <q-item-section class="col-md-1">
+                                <input type="color" id="colorpicker" v-model="settings.report.public.remediationColorsPriority.lowColor"/>
+                            </q-item-section>
+                            <q-item-section class="col-md-2">
+                                <label for="colorpicker" class="vertical-center">{{$t('currentColor')}}: {{settings.report.public.remediationColorsPriority.lowColor}}</label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+                <q-separator />
+<!-- Remediation priority color end -->
                 <q-card-section>
                     <div class="text-bold">{{$t('captions')}}</div>
                     <br/>
