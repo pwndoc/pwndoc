@@ -1,7 +1,6 @@
 <template>
 <q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
     <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix" class="bg-white">
-        <editor-menu-bar :editor="editor" v-slot="{ commands, isActive }">
             <q-toolbar class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">
                     <q-tooltip :delay="500" content-class="text-bold">Text Format</q-tooltip>
@@ -9,46 +8,46 @@
                         <q-list dense>
                             <q-item 
                             clickable 
-                            :class="{ 'is-active': isActive.paragraph() }" 
-                            @click="commands.paragraph()">
+                            :class="{ 'is-active': editor.isActive('paragraph') }" 
+                            @click="editor.chain().focus().setParagraph().run()">
                                 <q-item-section>
                                     <q-icon name="fa fa-paragraph" />
                                 </q-item-section>
                             </q-item>
                             <q-item 
                             clickable 
-                            :class="{ 'is-active': isActive.heading({level: 1}) }" 
-                            @click="commands.heading({level: 1})">
+                            :class="{ 'is-active': editor.isActive('heading', {level: 1}) }" 
+                            @click="editor.chain().focus().toggleHeading({level: 1}).run()">
                                 <q-item-section>H1</q-item-section>
                             </q-item>
                             <q-item 
                             clickable
-                            :class="{ 'is-active': isActive.heading({level: 2}) }"
-                            @click="commands.heading({level: 2})">
+                            :class="{ 'is-active': editor.isActive('heading', {level: 2}) }"
+                            @click="editor.chain().focus().toggleHeading({level: 2}).run()">
                                 <q-item-section>H2</q-item-section>
                             </q-item>
                             <q-item 
                             clickable
-                            :class="{ 'is-active': isActive.heading({level: 3}) }"
-                            @click="commands.heading({level: 3})">
+                            :class="{ 'is-active': editor.isActive('heading', {level: 3}) }"
+                            @click="editor.chain().focus().toggleHeading({level: 3}).run()">
                                 <q-item-section>H3</q-item-section>
                             </q-item>
                             <q-item 
                             clickable
-                            :class="{ 'is-active': isActive.heading({level: 4}) }"
-                            @click="commands.heading({level: 4})">
+                            :class="{ 'is-active': editor.isActive('heading', {level: 4}) }"
+                            @click="editor.chain().focus().toggleHeading({level: 4}).run()">
                                 <q-item-section>H4</q-item-section>
                             </q-item>
                             <q-item 
                             clickable
-                            :class="{ 'is-active': isActive.heading({level: 5}) }"
-                            @click="commands.heading({level: 5})">
+                            :class="{ 'is-active': editor.isActive('heading', {level: 5}) }"
+                            @click="editor.chain().focus().toggleHeading({level: 5}).run()">
                                 <q-item-section>H5</q-item-section>
                             </q-item>
                             <q-item 
                             clickable
-                            :class="{ 'is-active': isActive.heading({level: 6}) }"
-                            @click="commands.heading({level: 6})">
+                            :class="{ 'is-active': editor.isActive('heading', {level: 6}) }"
+                            @click="editor.chain().focus().toggleHeading({level: 6}).run()">
                                 <q-item-section>H6</q-item-section>
                             </q-item>
                         </q-list>
@@ -58,32 +57,32 @@
                 
                 <div v-if="toolbar.indexOf('marks') !== -1">
                     <q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.bold() }"
-                    @click="commands.bold"
+                    :class="{ 'is-active': editor.isActive('bold') }"
+                    @click="editor.chain().focus().toggleBold().run()"
                     >
                         <q-tooltip :delay="500" content-class="text-bold">Bold</q-tooltip>
                         <q-icon name="format_bold" />
                     </q-btn>
 
                     <q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.italic() }"
-                    @click="commands.italic"
+                    :class="{ 'is-active': editor.isActive('italic') }"
+                    @click="editor.chain().focus().toggleItalic().run()"
                     >
                         <q-tooltip :delay="500" content-class="text-bold">Italic</q-tooltip>
                         <q-icon name="format_italic" />
                     </q-btn>
 
                     <q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.underline() }"
-                    @click="commands.underline"
+                    :class="{ 'is-active': editor.isActive('underline') }"
+                    @click="editor.chain().focus().toggleUnderline().run()"
                     >
                         <q-tooltip :delay="500" content-class="text-bold">Underline</q-tooltip>
                         <q-icon name="format_underline" />
                     </q-btn>
 
                     <q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.strike() }"
-                    @click="commands.strike"
+                    :class="{ 'is-active': editor.isActive('strike') }"
+                    @click="editor.chain().focus().toggleStrike().run()"
                     >
                         <q-tooltip :delay="500" content-class="text-bold">Strikethrough</q-tooltip>
                         <q-icon name="format_strikethrough" />
@@ -93,16 +92,16 @@
 
                 <div v-if="toolbar.indexOf('list') !== -1">
                     <q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.bullet_list() }"
-                    @click="commands.bullet_list"
+                    :class="{ 'is-active': editor.isActive('bulletList') }"
+                    @click="editor.chain().focus().toggleBulletList().run()"
                     >
                         <q-tooltip :delay="500" content-class="text-bold">Bullets</q-tooltip>
                         <q-icon name="format_list_bulleted" />
                     </q-btn>
 
                     <q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.ordered_list() }"
-                    @click="commands.ordered_list"
+                    :class="{ 'is-active': editor.isActive('orderedList') }"
+                    @click="editor.chain().focus().toggleOrderedList().run()"
                     >
                         <q-tooltip :delay="500" content-class="text-bold">Numbering</q-tooltip>
                         <q-icon name="format_list_numbered" />
@@ -112,16 +111,16 @@
 
                 <div v-if="toolbar.indexOf('code') !== -1">
                     <q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.code() }"
-                    @click="commands.code"
+                    :class="{ 'is-active': editor.isActive('code') }"
+                    @click="editor.chain().focus().toggleCode().run()"
                     >
                         <q-tooltip :delay="500" content-class="text-bold">Code</q-tooltip>
                         <q-icon name="code" />
                     </q-btn>
 
                     <q-btn flat size="sm" dense
-                    :class="{ 'is-active': isActive.code_block() }"
-                    @click="commands.code_block"
+                    :class="{ 'is-active': editor.isActive('codeBlock') }"
+                    @click="editor.chain().focus().toggleCodeBlock().run()"
                     >
                         <q-tooltip :delay="500" content-class="text-bold">Code Block</q-tooltip>
                         <q-icon name="mdi-console" />
@@ -150,7 +149,7 @@
                     <q-tooltip :delay="500" content-class="text-bold">Insert Caption</q-tooltip>
                     <q-btn-dropdown flat size="sm" dense icon="subtitles">
                         <q-list dense>
-                            <q-item v-for="caption of $settings.report.public.captions" :key="caption" clickable v-close-popup @click="commands.caption({label: caption, alt: ''})">
+                            <q-item v-for="caption of $settings.report.public.captions" :key="caption" clickable v-close-popup @click="editor.chain().focus().setCaption({label: caption, alt: ''}).run()">
                                 <q-item-section>{{caption}}</q-item-section>
                             </q-item>
                         </q-list>
@@ -159,14 +158,14 @@
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
 
                 <q-btn flat size="sm" dense
-                @click="commands.undo"
+                @click="editor.commands.undo"
                 >
                     <q-tooltip :delay="500" content-class="text-bold">Undo</q-tooltip>
                     <q-icon name="undo" />
                 </q-btn>
 
                 <q-btn flat size="sm" dense
-                @click="commands.redo"
+                @click="editor.commands.redo"
                 >
                     <q-tooltip :delay="500" content-class="text-bold">Redo</q-tooltip>
                     <q-icon name="redo" />
@@ -182,8 +181,6 @@
                 </div>
 
             </q-toolbar>
-            <!-- <q-separator /> -->
-        </editor-menu-bar>
     </affix>
     <q-separator />
     <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor"/>
@@ -195,26 +192,14 @@
 
 <script>
 // Import the editor
-import { Editor, EditorContent, EditorMenuBar } from "tiptap"
-import {
-  Blockquote,
-  CodeBlock,
-  HardBreak,
-  Heading,
-  OrderedList,
-  BulletList,
-  ListItem,
-  Bold,
-  Code,
-  Italic,
-  Strike,
-  Underline,
-  History,
-  TrailingNode
-} from 'tiptap-extensions'
+import { Editor, EditorContent } from '@tiptap/vue-2'
 
+// Import Extensions
+import StarterKit from '@tiptap/starter-kit'
+import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
+import TrailingNode from './editor-trailing-node'
 
 const Diff = require('diff')
 
@@ -250,29 +235,24 @@ export default {
         }
     },
     components: {
-        EditorContent,
-        EditorMenuBar
+        EditorContent
     },
     data() {
         return {
             editor: new Editor({
                 extensions: [
-                    new Blockquote(),
-                    new BulletList(),
-                    new CodeBlock(),
-                    new HardBreak(),
-                    new Heading({ levels: [1, 2, 3, 4, 5, 6] }),
-                    new ListItem(),
-                    new OrderedList(),
-                    new Bold(),
-                    new Code(),
-                    new Italic(),
-                    new Strike(),
-                    new Underline(),
-                    new History(),
-                    new CustomImage(),
-                    new Caption(),
-                    new TrailingNode({node: 'paragraph', notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']})
+                    StarterKit.configure({
+                        heading: {
+                            levels: [1, 2, 3, 4, 5, 6]
+                        }
+                    }),
+                    Underline,
+                    CustomImage,
+                    Caption,
+                    TrailingNode.configure({
+                        node: 'paragraph', 
+                        notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']
+                    })
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -292,27 +272,28 @@ export default {
     },
 
     watch: {
-       value (value) {
+        value (value) {
             if (value === this.editor.getHTML()) {
                 return;
             }
             var content = this.htmlEncode(this.value)
-            this.editor.setContent(content);
+            this.editor.commands.setContent(content);
        },
 
        editable (value) {
-           this.editor.setOptions({editable: this.editable})
+           this.editor.setEditable(this.editable, false)
        }
     },
 
     mounted: function() {
         this.affixRelativeElement += '-'+Math.floor((Math.random()*1000000) + 1)
-        this.editor.setOptions({editable: this.editable})
+        this.editor.setEditable(this.editable, false)
+
         if (typeof this.value === "undefined" || this.value === this.editor.getHTML()) {
             return;
         }
         var content = this.htmlEncode(this.value)
-        this.editor.setContent(content)
+        this.editor.commands.setContent(content)
     },
 
     beforeDestroy() {
@@ -321,19 +302,19 @@ export default {
 
     computed: {
         formatIcon: function () {
-            if (this.editor.isActive.paragraph()) 
+            if (this.editor.isActive('paragraph')) 
                 return 'fa fa-paragraph'
             else
                 return null
         },
 
         formatLabel: function() {
-            if (this.editor.isActive.heading({level: 1})) return 'H1'
-            else if (this.editor.isActive.heading({level: 2})) return 'H2'
-            else if (this.editor.isActive.heading({level: 3})) return 'H3'
-            else if (this.editor.isActive.heading({level: 4})) return 'H4'
-            else if (this.editor.isActive.heading({level: 5})) return 'H5'
-            else if (this.editor.isActive.heading({level: 6})) return 'H6'
+            if (this.editor.isActive('heading', {level: 1})) return 'H1'
+            else if (this.editor.isActive('heading', {level: 2})) return 'H2'
+            else if (this.editor.isActive('heading', {level: 3})) return 'H3'
+            else if (this.editor.isActive('heading', {level: 4})) return 'H4'
+            else if (this.editor.isActive('heading', {level: 5})) return 'H5'
+            else if (this.editor.isActive('heading', {level: 6})) return 'H6'
         },
 
         diffContent: function() {
@@ -377,7 +358,7 @@ export default {
                     return ImageService.createImage({value: data, name: file.name, auditId: auditId})
                 })
                 .then((data) => {
-                    this.editor.commands.image({src: data.data.datas._id, alt: file.name })
+                    this.editor.chain().focus().setImage({src: data.data.datas._id, alt: file.name }).run()
                 })
                 .catch(err => console.log(err))
             }

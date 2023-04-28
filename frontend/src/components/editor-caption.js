@@ -1,77 +1,52 @@
-import { Node, NodeSelection } from "tiptap";
+import { Node } from "@tiptap/core";
+import { VueNodeViewRenderer } from '@tiptap/vue-2'
+import Component from './editor-caption-template.vue'
 
+export default Node.create({
+  name: "caption",
 
-export default class Caption extends Node {
-  get name() {
-    return 'caption'
-  }
+  group: 'block',
+  draggable: true,
 
-  get schema() {
+  addAttributes() {
     return {
-      attrs: {
-        label: {
-          default: "Figure"
-        },
-        alt: {
-          default: ""
-        }
+      label: {
+        default: "Figure"
       },
-      group: "block",
-      draggable: true,
-      parseDOM: [
-        {
-          tag: "legend[alt]",
-          getAttrs: dom => ({
-            label: dom.getAttribute("label"),
-            alt: dom.getAttribute("alt")
-          })
-        }
-      ],
-      toDOM: node => ["legend", node.attrs]
+      alt: {
+        default: ""
+      }
     }
-  }
-  
-  commands({ type }) {
-    return (attrs) => (state, dispatch) => dispatch(state.tr.replaceSelectionWith(type.create(attrs)))
-  }
-  
-  get view() {
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "legend[alt]",
+        getAttrs: dom => ({
+          label: dom.getAttribute("label"),
+          alt: dom.getAttribute("alt")
+        })
+      }
+    ]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['legend', HTMLAttributes]
+  },
+
+  addCommands() {
     return {
-      props: ["node", "updateAttrs"],
-      computed: {
-        label: {
-          get() {
-            return this.node.attrs.label
-          },
-          set(label) {
-            this.updateAttrs({
-              label
-            });
-          }
-        },
-        alt: {
-          get() {
-            return this.node.attrs.alt
-          },
-          set(alt) {
-            this.updateAttrs({
-              alt
-            });
-          }
-        }
+      setCaption: (attributes) => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: attributes
+        })
       },
-      template: `
-      <div style="margin: 0px auto 16px auto; display: table">
-        <div style="max-width:600px" class="cursor-pointer">
-          <span>{{label}} - </span>
-          <span v-if="alt" class="text-italic">{{alt}}</span>
-          <span v-else class="text-italic text-grey-7">Caption</span>
-        </div>
-        <q-popup-edit v-model="alt" auto-save>
-          <q-input style="width:600px" autofocus :prefix="label+' - '" v-model="alt" placeholder="Caption" />
-        </q-popup-edit>
-      </div>
-      `
-    };
-  }
-}
+    }
+  },
+  
+  addNodeView() {
+    return VueNodeViewRenderer(Component)
+  }   
+})
