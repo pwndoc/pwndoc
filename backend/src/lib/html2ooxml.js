@@ -56,6 +56,14 @@ function html2ooxml(html, style = '') {
             else if (tag === "strike" || tag === "s") {
                 cRunProperties.strike = true
             }
+            else if (tag === "mark") {
+                var bgColor = attribs["data-color"] || "#ffff25"
+                cRunProperties.highlight = getHighlightColor(bgColor)
+
+                // Use text color if set (to handle white or black text depending on background color)
+                var color = attribs.style.match(/.+color:.(.+)/)
+                if (color && color[1]) cRunProperties.color = getTextColor(color[1])
+            }
             else if (tag === "br") {
                 if (inCodeBlock) {
                     paragraphs.push(cParagraph)
@@ -118,6 +126,10 @@ function html2ooxml(html, style = '') {
             else if (tag === "strike" || tag === "s") {
                 delete cRunProperties.strike
             }
+            else if (tag === "mark") {
+                delete cRunProperties.highlight
+                delete cRunProperties.color
+            }
             else if (tag === "ul" || tag === "ol") {
                 list_state.pop()
                 if (list_state.length === 0)
@@ -149,3 +161,57 @@ function html2ooxml(html, style = '') {
         
 }
 module.exports = html2ooxml
+
+function getHighlightColor(hexColor) {
+// <xsd:simpleType name="ST_HighlightColor">
+//     <xsd:restriction base="xsd:string">
+//         <xsd:enumeration value="yellow"/>
+//         <xsd:enumeration value="green"/>
+//         <xsd:enumeration value="cyan"/>
+//         <xsd:enumeration value="magenta"/>
+//         <xsd:enumeration value="blue"/>
+
+//         <xsd:enumeration value="red"/>
+//         <xsd:enumeration value="darkBlue"/>
+//         <xsd:enumeration value="darkCyan"/>
+//         <xsd:enumeration value="darkGreen"/>
+//         <xsd:enumeration value="darkMagenta"/>
+
+//         <xsd:enumeration value="darkRed"/>
+//         <xsd:enumeration value="darkYellow"/>
+//         <xsd:enumeration value="darkGray"/>
+//         <xsd:enumeration value="lightGray"/>
+//         <xsd:enumeration value="black"/>
+
+//         <xsd:enumeration value="white"/>
+//         <xsd:enumeration value="none"/>
+//     </xsd:restriction>
+// </xsd:simpleType>
+
+    var colors = {
+        '#ffff25': 'yellow',
+        '#00ff41': 'green',
+        '#00ffff': 'cyan',
+        '#ff00f9': 'magenta',
+        '#0005fd': 'blue',
+        '#ff0000': 'red',
+        '#000177': 'darkBlue',
+        '#00807a': 'darkCyan',
+        '#008021': 'darkGreen',
+        '#8e0075': 'darkMagenta',
+        '#8f0000': 'darkRed',
+        '#817d0c': 'darkYellow',
+        '#807d78': 'darkGray',
+        '#c4c1bb': 'lightGray',
+        '#000000': 'black'
+    }
+    return colors[hexColor] || "yellow"
+}
+
+function getTextColor(color) {
+    var regex = /^#[0-9a-fA-F]{6}$/
+    if (regex.test(color))
+        return color.substring(1,7)
+    
+    return "000000" 
+}

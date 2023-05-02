@@ -20,8 +20,9 @@ module.exports = function (ctx) {
     ],
     extras: [
       'material-icons',
-      'fontawesome-v5',
-      'mdi-v4',
+      'material-symbols-outlined',
+      'fontawesome-v6',
+      'mdi-v7',
       'roboto-font'
     ],
     build: {

@@ -1,6 +1,6 @@
 <template>
 <q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix" class="bg-white">
+    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix" class="bg-grey-4">
             <q-toolbar class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">
                     <q-tooltip :delay="500" content-class="text-bold">Text Format</q-tooltip>
@@ -87,6 +87,28 @@
                         <q-tooltip :delay="500" content-class="text-bold">Strikethrough</q-tooltip>
                         <q-icon name="format_strikethrough" />
                     </q-btn>
+
+                    <q-btn-dropdown flat size="sm" dense split menu-self="top left" menu-anchor="bottom left"
+                    @click="editor.chain().focus().toggleHighlight({color: highlightColor}).run()"
+                    >
+                        <template v-slot:label>
+                            <q-tooltip :delay="500" content-class="text-bold">Highlight</q-tooltip>
+                            <i class="material-symbols-outlined q-icon" :style="{ 'color': highlightColor }">format_ink_highlighter</i>
+                        </template>
+
+                        <div class="row q-pa-xs" style="width: 144px; overflow: hidden">
+                            <div class="q-gutter-xs">
+                                <q-btn 
+                                v-close-popup
+                                v-for="color of highlightPalette" :key="color" 
+                                square
+                                :style="{'background-color': color, 'width': '24px', 'height': '24px'}"
+                                @click="highlightColor = color; editor.chain().focus().toggleHighlight({color: highlightColor}).run()"
+                                >
+                                </q-btn>
+                            </div>
+                        </div>
+                    </q-btn-dropdown>
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('marks') !== -1" />
 
@@ -199,6 +221,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
+import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 
 const Diff = require('diff')
@@ -249,6 +272,9 @@ export default {
                     Underline,
                     CustomImage,
                     Caption,
+                    CustomHighlight.configure({
+                        multicolor: true,
+                    }),
                     TrailingNode.configure({
                         node: 'paragraph', 
                         notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']
@@ -267,7 +293,13 @@ export default {
             toggleDiff: true,
             affixRelativeElement: 'affix-relative-element',
 
-            htmlEncode: Utils.htmlEncode
+            htmlEncode: Utils.htmlEncode,
+            highlightColor: '#ffff25',
+            highlightPalette: [
+                '#ffff25', '#00ff41', '#00ffff', '#ff00f9', '#0005fd',
+                '#ff0000', '#000177', '#00807a', '#008021', '#8e0075',
+                '#8f0000', '#817d0c', '#807d78', '#c4c1bb', '#000000'
+            ]
         }
     },
 

@@ -11,6 +11,8 @@ export default {
     .replace(/ΩΠгimg.+?src="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<img src="$1" alt="$2">')
     .replace(/ΩΠгlegend.+?label="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<legend label="$1" alt="$2">')
     .replace(/ΩΠг\/legendΏΠг/g, '</legend>')
+    .replace(/ΩΠгmark.+?data-color="(.*?)".+?style="(.*?)".*?ΏΠг/g, '<mark data-color="$1" style="$2">')
+    .replace(/ΩΠг\/markΏΠг/g, '</mark>')
     .replace(/ΩΠгpΏΠг/g, '<p>')
     .replace(/ΩΠг\/pΏΠг/g, '</p>')
     .replace(/ΩΠгpreΏΠг/g, '<pre>')
@@ -194,5 +196,22 @@ export default {
     if (regExp.test(value))
       return true
     return $t('msg.passwordComplexity')
+  },
+
+  // Return black or white color depending on background color
+  getTextColor: function(bgColor) {
+    var regex = /^#[0-9a-fA-F]{6}$/
+    if (!regex.test(bgColor))
+      return "#000000" //black
+
+    var color = bgColor.substring(1, 7)
+    var red = parseInt(color.substring(0, 2), 16) // hexToR
+    var green = parseInt(color.substring(2, 4), 16) // hexToG
+    var blue = parseInt(color.substring(4, 6), 16) // hexToB
+    
+    if ((red * 0.299) + (green * 0.587) + (blue * 0.114) > 186)
+      return "#000000" //black
+    else
+      return "#ffffff" //white
   }
 }
