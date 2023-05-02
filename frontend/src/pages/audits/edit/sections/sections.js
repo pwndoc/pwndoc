@@ -55,6 +55,9 @@ export default {
 
     beforeRouteLeave (to, from , next) {
         Utils.syncEditors(this.$refs)
+
+        var displayHighlightWarning = this.displayHighlightWarning()
+
         if (this.unsavedChanges()) {
             Dialog.create({
             title: $t('msg.thereAreUnsavedChanges'),
@@ -64,18 +67,41 @@ export default {
             })
             .onOk(() => next())
         }
+        else if (displayHighlightWarning) {
+            Dialog.create({
+                title: $t('msg.highlightWarningTitle'),
+                message: `${displayHighlightWarning}</mark>`,
+                html: true,
+                ok: {label: $t('btn.leave'), color: 'negative'},
+                cancel: {label: $t('btn.stay'), color: 'white'},
+            })
+            .onOk(() => next())
+        }
         else
             next()
     },
 
     beforeRouteUpdate (to, from , next) {
         Utils.syncEditors(this.$refs)
+
+        var displayHighlightWarning = this.displayHighlightWarning()
+
         if (this.unsavedChanges()) {
             Dialog.create({
             title: $t('msg.thereAreUnsavedChanges'),
             message: $t('msg.doYouWantToLeave'),
             ok: {label: $t('btn.confirm'), color: 'negative'},
             cancel: {label: $t('btn.cancel'), color: 'white'}
+            })
+            .onOk(() => next())
+        }
+        else if (displayHighlightWarning) {
+            Dialog.create({
+                title: $t('msg.highlightWarningTitle'),
+                message: `${displayHighlightWarning}</mark>`,
+                html: true,
+                ok: {label: $t('btn.leave'), color: 'negative'},
+                cancel: {label: $t('btn.stay'), color: 'white'},
             })
             .onOk(() => next())
         }
@@ -151,6 +177,28 @@ export default {
                 return true
 
             return false
+        },
+
+        // return the first match of highlighted text found
+        displayHighlightWarning: function() {
+            if (!this.$settings.report.enabled || !this.$settings.report.public.highlightWarning)
+                return null
+
+            var matchString = `(<mark data-color="${this.$settings.report.public.highlightWarningColor}".+?>.+?)</mark>`
+            var regex = new RegExp(matchString)
+            
+            if (this.section.customFields && this.section.customFields.length > 0) {
+                for (let i in this.section.customFields) {
+                    let field = this.section.customFields[i]
+                    if (field.customField && field.text && field.customField.fieldType === "text") {
+                        var result = regex.exec(field.text)
+                        if (result && result[1])
+                            return (result[1].length > 119) ? `<b>${field.customField.label}</b><br/>`+result[1].substring(0,119)+'...' : `<b>${field.customField.label}</b><br/>`+result[1]
+                    }
+                }
+            }
+            
+            return null
         }
     }
 }

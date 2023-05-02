@@ -136,6 +136,50 @@
                         </q-item-section>
                     </q-item>
                 </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-bold">{{$t('highlightWarning')}}</div>
+                    <br/>
+                    <div class="text-grey-8" v-html="$t('highlightWarningDescription')"></div>
+                    <br/>
+                    <q-item>
+                        <q-item-section class="col-md-2">
+                            <q-toggle :label="$t('btn.enable')" v-model="settings.report.public.highlightWarning" />
+                        </q-item-section>
+                        <q-item-section class="col-md-1">
+                            <input
+                            v-model="settings.report.public.highlightWarningColor"
+                            :disabled="!settings.report.public.highlightWarning"
+                            type="color"
+                            id="colorpicker" 
+                            style="pointer-events: none"
+                            >
+                                <q-popup-proxy>
+                                    <div class="row q-pa-xs" style="width: 144px; overflow: hidden">
+                                        <div class="q-gutter-xs">
+                                            <q-btn 
+                                            v-close-popup
+                                            v-for="color of highlightPalette" :key="color" 
+                                            square
+                                            :style="{'background-color': color, 'width': '24px', 'height': '24px'}"
+                                            @click="settings.report.public.highlightWarningColor = color"
+                                            >
+                                            </q-btn>
+                                        </div>
+                                    </div>
+                                </q-popup-proxy>
+                            </input>
+                        </q-item-section>
+                        <q-item-section class="col-md-2">
+                            <label
+                            :disabled="!settings.report.public.highlightWarning"
+                            for="colorpicker"
+                            class="vertical-center">
+                                {{$t('currentColor')}}: {{settings.report.public.highlightWarningColor}}
+                            </label>
+                        </q-item-section>
+                    </q-item>
+                </q-card-section>
             </div>
         </q-card>
 

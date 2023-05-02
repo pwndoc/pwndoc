@@ -11,6 +11,9 @@ export default {
         cancel: 'Cancel',
         confirm: 'Confirm',
         create: 'Create',
+        ok: 'ok',
+        leave: 'Leave',
+        stay: 'Stay',
         topButtonSection: {
             submitReview: 'Submit Review',
             cancelReview: 'Cancel Review',
@@ -108,6 +111,7 @@ export default {
         vulnerabilityMergeOk: 'Vulnerability merge successfully',
         tryingToContactBackend: '<p>Trying to contact backend</p>',
         wrongContactingBackend: 'Something went wrong contacting backend',
+        highlightWarningTitle: 'Highlighted Text still present !'
     },
     err: {
         notDefinedLanguage: 'Not defined for this language',
@@ -495,5 +499,8 @@ export default {
     twoStepVerification: '2-Step Verification',
     twoStepVerificationMessage: 'Open your authentication app and enter the security code it provides.',
     captions: 'Captions',
-    captionsDescription: 'Add Caption labels that will be used in the report (Default is \'Figure\')'
+    captionsDescription: 'Add Caption labels that will be used in the report (Default is \'Figure\')',
+    highlightWarning: 'Highlight Warning',
+    highlightWarningDescription: `Add a warning message when editing a report and specified color highlighted text is still present.<br />
+    Useful for generic text that should be replaced by reporter.`
   }

@@ -95,9 +95,10 @@ export default {
 
     beforeRouteLeave (to, from , next) {
         Utils.syncEditors(this.$refs)
-        if (this.$_.isEqual(this.audit, this.auditOrig))
-            next();
-        else {
+        
+        var displayHighlightWarning = this.displayHighlightWarning()
+
+        if (!this.$_.isEqual(this.audit, this.auditOrig)){
             Dialog.create({
                 title: $t('msg.thereAreUnsavedChanges'),
                 message: $t('msg.doYouWantToLeave'),
@@ -106,6 +107,18 @@ export default {
             })
             .onOk(() => next())
         }
+        else if (displayHighlightWarning) {
+            Dialog.create({
+                title: $t('msg.highlightWarningTitle'),
+                message: `${displayHighlightWarning}</mark>`,
+                html: true,
+                ok: {label: $t('btn.leave'), color: 'negative'},
+                cancel: {label: $t('btn.stay'), color: 'white'},
+            })
+            .onOk(() => next())
+        }
+        else
+            next()
     },
 
     methods: {
@@ -300,6 +313,28 @@ export default {
                 const needle = Utils.normalizeString(val)
                 this.selectCompanies = this.companies.filter(v => Utils.normalizeString(v.name).indexOf(needle) > -1)
             })
+        },
+
+        // return the first match of highlighted text found
+        displayHighlightWarning: function() {
+            if (!this.$settings.report.enabled || !this.$settings.report.public.highlightWarning)
+                return null
+
+            var matchString = `(<mark data-color="${this.$settings.report.public.highlightWarningColor}".+?>.+?)</mark>`
+            var regex = new RegExp(matchString)
+            
+            if (this.audit.customFields && this.audit.customFields.length > 0) {
+                for (let i in this.audit.customFields) {
+                    let field = this.audit.customFields[i]
+                    if (field.customField && field.text && field.customField.fieldType === "text") {
+                        var result = regex.exec(field.text)
+                        if (result && result[1])
+                            return (result[1].length > 119) ? `<b>${field.customField.label}</b><br/>`+result[1].substring(0,119)+'...' : `<b>${field.customField.label}</b><br/>`+result[1]
+                    }
+                }
+            }
+            
+            return null
         }
     }
 }

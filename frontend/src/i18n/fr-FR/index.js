@@ -11,6 +11,9 @@ export default {
         cancel: 'Annuler',
         confirm: 'Confirmer',
         create: 'Créer',
+        ok: 'ok',
+        leave: 'Partir',
+        stay: 'Rester',
         topButtonSection: {
             submitReview: 'Soumettre les modifications',
             cancelReview: 'Annuler les modifications',
@@ -103,6 +106,7 @@ export default {
         vulnerabilityMergeOk: 'Fusion des vulnérabilités réussie',
         tryingToContactBackend: '<p>Essaie de contacter le backend</p>',
         wrongContactingBackend: 'Une erreur s\'est produite lors du contact avec le backend',
+        highlightWarningTitle: 'Texte Surligné toujours présent !'
     },
     err: {
         notDefinedLanguage: 'Non défini pour cette langue',
@@ -346,4 +350,7 @@ export default {
     languageMoveToLeft: 'Langue (Déplacer vers la gauche)',
     merge: 'Fusionner',
     goBack: 'Revenir en arrière',
+    highlightWarning: 'Alerte de Texte Surligné',
+    highlightWarningDescription: `Ajoute un message d'avertissement lors de l'édition d'un rapport et que du texte surligné avec la couleur choisie est toujours présent.<br />
+    Utile pour du texte générique qui devrait être remplacé par le rédacteur.`
   }

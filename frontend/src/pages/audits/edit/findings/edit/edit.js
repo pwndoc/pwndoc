@@ -57,12 +57,25 @@ export default {
 
     beforeRouteLeave (to, from , next) {
         Utils.syncEditors(this.$refs)
+
+        var displayHighlightWarning = this.displayHighlightWarning()
+
         if (this.unsavedChanges()) {
             Dialog.create({
             title: $t('msg.thereAreUnsavedChanges'),
             message: $t('msg.doYouWantToLeave'),
             ok: {label: $t('btn.confirm'), color: 'negative'},
             cancel: {label: $t('btn.cancel'), color: 'white'}
+            })
+            .onOk(() => next())
+        }
+        else if (displayHighlightWarning) {
+            Dialog.create({
+                title: $t('msg.highlightWarningTitle'),
+                message: `${displayHighlightWarning}</mark>`,
+                html: true,
+                ok: {label: $t('btn.leave'), color: 'negative'},
+                cancel: {label: $t('btn.stay'), color: 'white'},
             })
             .onOk(() => next())
         }
@@ -73,12 +86,24 @@ export default {
     beforeRouteUpdate (to, from , next) {
         Utils.syncEditors(this.$refs)
 
+        var displayHighlightWarning = this.displayHighlightWarning()
+
         if (this.unsavedChanges()) {
             Dialog.create({
             title: $t('msg.thereAreUnsavedChanges'),
             message: $t('msg.doYouWantToLeave'),
             ok: {label: $t('btn.confirm'), color: 'negative'},
             cancel: {label: $t('btn.cancel'), color: 'white'}
+            })
+            .onOk(() => next())
+        }
+        else if (displayHighlightWarning) {
+            Dialog.create({
+                title: $t('msg.highlightWarningTitle'),
+                message: `${displayHighlightWarning}</mark>`,
+                html: true,
+                ok: {label: $t('btn.leave'), color: 'negative'},
+                cancel: {label: $t('btn.stay'), color: 'white'},
             })
             .onOk(() => next())
         }
@@ -299,6 +324,42 @@ export default {
                 return true
 
             return false
+        },
+
+        displayHighlightWarning: function() {
+            if (!this.$settings.report.enabled || !this.$settings.report.public.highlightWarning)
+            return null
+
+            var matchString = `(<mark data-color="${this.$settings.report.public.highlightWarningColor}".+?>.+?)</mark>`
+            var regex = new RegExp(matchString)
+            var result = ""
+
+            result = regex.exec(this.finding.description)
+            if (result && result[1])
+                return (result[1].length > 119) ? "<b>Description</b><br/>"+result[1].substring(0,119)+'...' : "<b>Description</b><br/>"+result[1]
+            result = regex.exec(this.finding.observation)
+            if (result && result[1])
+                return (result[1].length > 119) ? "<b>Observation</b><br/>"+result[1].substring(0,119)+'...' : "<b>Observation</b><br/>"+result[1]
+            result = regex.exec(this.finding.poc)
+            if (result && result[1])
+                return (result[1].length > 119) ? "<b>Proofs</b><br/>"+result[1].substring(0,119)+'...' : "<b>Proofs</b><br/>"+result[1]
+            result = regex.exec(this.finding.remediation)
+            if (result && result[1])
+                return (result[1].length > 119) ? "<b>Remediation</b><br/>"+result[1].substring(0,119)+'...' : "<b>Remediation</b><br/>"+result[1]
+            
+
+            if (this.finding.customFields && this.finding.customFields.length > 0) {
+                for (let i in this.finding.customFields) {
+                    let field = this.finding.customFields[i]
+                    if (field.customField && field.text && field.customField.fieldType === "text") {
+                        result = regex.exec(field.text)
+                        if (result && result[1])
+                            return (result[1].length > 119) ? `<b>${field.customField.label}</b><br/>`+result[1].substring(0,119)+'...' : `<b>${field.customField.label}</b><br/>`+result[1]
+                    }
+                }
+            }
+            
+            return null
         }
     }
 }

@@ -20,7 +20,9 @@ const SettingSchema = new Schema({
             captions: {
                 type: [{type: String, unique: true}],
                 default: ['Figure']
-            }
+            },
+            highlightWarning: { type: Boolean, default: false},
+            highlightWarningColor: { type: String, default: "#ffff25", validate: [colorValidator, 'Invalid color']}
         },
         private: {
             imageBorder: { type: Boolean, default: false },

@@ -13,7 +13,12 @@ export default {
             UserService: UserService,
             settings: {},
             settingsOrig : {},
-            canEdit: false
+            canEdit: false,
+            highlightPalette: [
+                '#ffff25', '#00ff41', '#00ffff', '#ff00f9', '#0005fd',
+                '#ff0000', '#000177', '#00807a', '#008021', '#8e0075',
+                '#8f0000', '#817d0c', '#807d78', '#c4c1bb', '#000000'
+            ]
         }
     },
     components: {
