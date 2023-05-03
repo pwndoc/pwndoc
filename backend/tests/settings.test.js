@@ -20,6 +20,8 @@ module.exports = function(request, app) {
                 "mediumColor": "#f9a009",
                 "noneColor": "#4a86e8",
               },
+              "highlightWarning": false,
+              "highlightWarningColor": "#ffff25",
             },
           },
         "reviews": {
@@ -49,6 +51,8 @@ module.exports = function(request, app) {
                 "mediumColor": "#f9a009",
                 "noneColor": "#4a86e8",
               },
+              "highlightWarning": false,
+              "highlightWarningColor": "#ffff25",
             },
           },
         "reviews": {
@@ -103,6 +107,8 @@ module.exports = function(request, app) {
                   "mediumColor": "#123456",
                   "noneColor": "#123456",
                 },
+                "highlightWarning": true,
+                "highlightWarningColor": "#123456",
               },
             },
           "reviews": {
