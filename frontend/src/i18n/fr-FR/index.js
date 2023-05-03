@@ -350,6 +350,10 @@ export default {
     languageMoveToLeft: 'Langue (Déplacer vers la gauche)',
     merge: 'Fusionner',
     goBack: 'Revenir en arrière',
+    twoStepVerification: 'Vérification en 2 étapes',
+    twoStepVerificationMessage: "Ouvrez votre application d'authentification et entrez le code de sécurité correspondant.",
+    captions: 'Légendes',
+    captionsDescription: 'Ajouter les valeurs des différentes légendes qui seront utilisés dans le rapport (\'Figure\' par défaut).',
     highlightWarning: 'Alerte de Texte Surligné',
     highlightWarningDescription: `Ajoute un message d'avertissement lors de l'édition d'un rapport et que du texte surligné avec la couleur choisie est toujours présent.<br />
     Utile pour du texte générique qui devrait être remplacé par le rédacteur.`
