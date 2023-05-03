@@ -103,7 +103,8 @@ export default {
                 title: $t('msg.thereAreUnsavedChanges'),
                 message: $t('msg.doYouWantToLeave'),
                 ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
+                cancel: {label: $t('btn.cancel'), color: 'white'},
+                focus: 'cancel'
             })
             .onOk(() => next())
         }
