@@ -1,6 +1,7 @@
 var expressions = require('angular-expressions');
 var html2ooxml = require('./html2ooxml');
 var translate = require('../translate')
+var _ = require('lodash');
 
 // *** Angular parser filters ***
 
