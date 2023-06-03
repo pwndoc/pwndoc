@@ -6,7 +6,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 mongo-data*
-.quasar
+.quasar/*
 report-templates
 custom-generator.js
 

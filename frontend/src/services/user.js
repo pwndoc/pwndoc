@@ -3,7 +3,7 @@ import User from '@/services/user';
 
 import { api } from 'boot/axios'
 
-import Router from '@/router'
+import { Router}  from '@/router'
 
 export default {
     user: {

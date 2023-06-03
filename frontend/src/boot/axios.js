@@ -1,7 +1,7 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 import User from '@/services/user'
-import Router from '../router'
+import { Router}  from '@/router'
 
 const api = axios.create({
   baseURL: `${window.location.origin}/api`
