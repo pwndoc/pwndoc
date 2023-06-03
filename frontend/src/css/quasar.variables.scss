@@ -1,0 +1,153 @@
+// App Shared Variables
+// --------------------------------------------------
+// To customize the look and feel of this app, you can override
+// the Stylus variables found in Quasar's source Stylus files. Setting
+// variables before Quasar's Stylus will use these variables rather than
+// Quasar's default Stylus variable values. Stylus variables specific
+// to the themes belong in either the variables.ios.styl or variables.mat.styl files.
+
+// Check documentation for full list of Quasar variables
+
+
+// App Shared Color Variables
+// --------------------------------------------------
+// It's highly recommended to change the default colors
+// to match your app's branding.
+
+$primary   : #3c4759;
+$secondary : #26A69A;
+$tertiary  : #555;
+
+$neutral   : #E0E1E2;
+$positive  : #21BA45;
+$negative  : #DB2828;
+$info      : #31CCEC;
+$warning   : #F2C037;
+
+// Color variables
+$diffBackground : #ffebee; // red-1
+$diffBackgroundDark : #f4433626; // red-6 + opacity
+
+$diffTextNegative : #fdb8c0;
+
+$cDark : #1d1d1d; // dark
+$darkPrimary : #9fa8da; // indigo-11
+$darkGrey : #424242; // grey-9
+
+// $cwhite : #fff;
+
+$item-font-size : 14px;
+$input-font-size : 14px;
+$typography-font-family : Helvetica, Arial, sans-serif;
+
+.q-input-target {
+    font-size: 14px !important;
+}
+
+.body--dark {
+	--q-color-primary: $darkPrimary;
+	.bg-fixed-primary {
+		background: $primary;
+	}
+	.text-fixed-primary {
+		color: $primary;
+	}
+	.bg-diffbackground {
+		background: $diffBackgroundDark !important;
+	}
+	.diffbackground-text {
+		color: $diffBackgroundDark;
+	}
+	.bg-white {
+		background: $cDark !important;
+	}
+	.bg-light-blue-2 {
+		background: rgba(3,169,244,0.212) !important;
+	}
+	.bg-orange-2 {
+		background: rgba(255,152,0,0.149) !important;
+	}
+	.text-grey-8 {
+		color: #9e9e9e !important;
+	}
+	.q-table__container {
+		thead {
+			tr {
+				background: $cDark;
+			}
+		}
+	}
+	.editor {
+		p {
+			code {
+				background: #616161;
+				color: #fff;
+			}
+		}
+	}
+	.diffrem {
+		background-color: #a03936;
+	}
+	pre {
+		.diffrem {
+			background-color: #f44336;
+		}
+		.diffadd {
+			background-color: #4caf50;
+		}
+	}
+	.diffadd {
+		background-color: #1d572d;
+	}
+	.login-form {
+		background: #fff;
+	}
+}
+
+.body--dark .bg-blue-grey-5,
+.body--dark .bg-blue-grey-2,
+.body--dark .bg-grey-4,
+.body--dark .bg-grey-3 {
+	background: $darkGrey !important;
+}
+.body--dark .q-field:not(.basic-editor) .q-field__control,
+.body--dark .expansion-header,
+.body--dark .editor {
+	background: #333 !important;
+}
+.body--light {
+	.bg-fixed-primary {
+		background: $primary;
+	}
+	.text-fixed-primary {
+		color: $primary;
+	}
+	.bg-diffbackground {
+		background: $diffBackground !important;
+	}
+	.diffbackground-text {
+		color: $diffBackground;
+	}
+	.q-table__container {
+		thead {
+			tr {
+				background: #fafafa;
+			}
+		}
+	}
+	.q-btn {
+		&.bg-white {
+			&.text-white {
+				color: #000 !important;
+			}
+		}
+	}
+}
+.body--light .q-field:not(.basic-editor) .q-field__control,
+.body--light .editor {
+	background: #fff;
+}
+.body--light .q-card:not(.editor):not(.cvsscalculator),
+.body--light .q-table__container {
+	background: #fafafa;
+}

@@ -11,7 +11,7 @@
       color="secondary"
       style="width:200px;"
       @click="$router.push('/')"
-    >{{$t('goBack')}}</q-btn>
+    >{{this.$t('goBack')}}</q-btn>
   </div>
 </template>
 

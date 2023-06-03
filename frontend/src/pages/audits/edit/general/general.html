@@ -1,7 +1,7 @@
 <div>
 <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
     <div slot="buttons">
-      <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" :label="$t('btn.save')+' (ctrl+s)'" no-caps @click="updateAuditGeneral" />
+      <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" :label="this.$t('btn.save')+' (ctrl+s)'" no-caps @click="updateAuditGeneral" />
     </div>
 </breadcrumb>
 
@@ -10,11 +10,11 @@
         <q-card>
             <q-card-section>
                 <div class="row q-col-gutter-md">
-                    <q-input class="col-md-6 col-12" :label="$t('name')+' *'" v-model="audit.name" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
+                    <q-input class="col-md-6 col-12" :label="this.$t('name')+' *'" v-model="audit.name" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
                     <div class="col"></div>
                     <q-select 
                     class="col-md-6 col-12"
-                    :label="$t('language')"
+                    :label="this.$t('language')"
                     v-model="audit.language" 
                     :options="languages" 
                     option-value="locale" 
@@ -27,7 +27,7 @@
                     />
                     <q-select
                     class="col-md-6 col-12"
-                    :label="$t('template')"
+                    :label="this.$t('template')"
                     v-model="audit.template"
                     :options="templates"
                     option-value="_id"
@@ -47,7 +47,7 @@
                 <div class="row q-col-gutter-md">
                     <q-select
                     class="col-md-6 col-12"
-                    :label="$t('company')"
+                    :label="this.$t('company')"
                     v-model="audit.company"
                     :options="selectCompanies"
                     option-value="_id"
@@ -64,7 +64,7 @@
                     />
                     <q-select
                     class="col-md-6 col-12"
-                    :label="$t('client')"
+                    :label="this.$t('client')"
                     stack-label
                     v-model="audit.client"
                     :options="selectClients"
@@ -79,7 +79,7 @@
                     <q-select 
                     v-if="$settings.reviews.enabled"
                     class="col-md-12 col-12"
-                    :label="$t('reviewers')"
+                    :label="this.$t('reviewers')"
                     stack-label
                     v-model="audit.reviewers"
                     :options="reviewers"
@@ -107,7 +107,7 @@
                     
                     <q-select 
                     class="col-md-12 col-12"
-                    :label="$t('collaborators')"
+                    :label="this.$t('collaborators')"
                     stack-label
                     v-model="audit.collaborators"
                     :options="collaborators"
@@ -149,7 +149,7 @@
 
             <q-card-section>
                 <div class="row q-col-gutter-md">
-                    <q-input class="col-md-4 col-12" :label="$t('startDate')" v-model="audit.date_start" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT">
+                    <q-input class="col-md-4 col-12" :label="this.$t('startDate')" v-model="audit.date_start" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT">
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateStartProxy" transition-show="scale" transition-hide="scale">
@@ -158,7 +158,7 @@
                             </q-icon>
                         </template>
                     </q-input>
-                    <q-input class="col-md-4 col-12" :label="$t('endDate')" v-model="audit.date_end" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT">
+                    <q-input class="col-md-4 col-12" :label="this.$t('endDate')" v-model="audit.date_end" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT">
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateEndProxy" transition-show="scale" transition-hide="scale">
@@ -167,7 +167,7 @@
                             </q-icon>
                         </template>
                     </q-input>
-                    <q-input class="col-md-4 col-12" :label="$t('reportingDate')" v-model="audit.date" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT">
+                    <q-input class="col-md-4 col-12" :label="this.$t('reportingDate')" v-model="audit.date" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT">
                         <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                             <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
@@ -180,10 +180,10 @@
             </q-card-section>
 
             <q-card-section>
-                <textarea-array :label="$t('auditScope')" v-model="audit.scope" no-empty-line :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
+                <textarea-array :label="this.$t('auditScope')" v-model="audit.scope" no-empty-line :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
             </q-card-section>
             <q-expansion-item 
-            :label="$t('customFields')"
+            :label="this.$t('customFields')"
             v-if="audit.customFields && audit.customFields.length > 0"
             default-opened
             header-class="bg-blue-grey-5 text-white" 

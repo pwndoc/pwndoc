@@ -3,11 +3,10 @@ import { Notify, Dialog } from 'quasar'
 import SettingsService from '@/services/settings'
 import UserService from '@/services/user'
 
-import { $t } from 'boot/i18n'
 import LanguageSelector from '@/components/language-selector';
 
 export default {
-    data: () => {
+    data() {
         return {
             loading: true,
             UserService: UserService,
@@ -28,10 +27,10 @@ export default {
     beforeRouteLeave (to, from , next) {
         if (this.unsavedChanges()) {
             Dialog.create({
-            title: $t('msg.thereAreUnsavedChanges'),
-            message: $t('msg.doYouWantToLeave'),
-            ok: {label: $t('btn.comfirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'}
+            title: this.$t('msg.thereAreUnsavedChanges'),
+            message: this.$t('msg.doYouWantToLeave'),
+            ok: {label: this.$t('btn.comfirm'), color: 'negative'},
+            cancel: {label: this.$t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
@@ -90,7 +89,7 @@ export default {
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.$settings.refresh();
                 Notify.create({
-                    message: $t('msg.settingsUpdatedOk'),
+                    message: this.$t('msg.settingsUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -108,17 +107,17 @@ export default {
 
         revertToDefaults: function() {
             Dialog.create({
-                title: $t('msg.revertingSettings'),
-                message: $t('msg.revertingSettingsConfirm'),
-                ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
+                title: this.$t('msg.revertingSettings'),
+                message: this.$t('msg.revertingSettingsConfirm'),
+                ok: {label: this.$t('btn.confirm'), color: 'negative'},
+                cancel: {label: this.$t('btn.cancel'), color: 'white'}
             })
             .onOk(async () => {
                 await SettingsService.revertDefaults();
                 this.$settings.refresh();
                 this.getSettings();
                 Notify.create({
-                    message: $t('settingsUpdatedOk'),
+                    message: this.$t('settingsUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -133,29 +132,29 @@ export default {
                     var settings = JSON.parse(fileReader.result);
                     if (typeof settings === 'object') {
                         Dialog.create({
-                            title: $t('msg.importingSettings'),
-                            message: $t('msg.importingSettingsConfirm'),
-                            ok: {label: $t('btn.confirm'), color: 'negative'},
-                            cancel: {label: $t('btn.cancel'), color: 'white'}
+                            title: this.$t('msg.importingSettings'),
+                            message: this.$t('msg.importingSettingsConfirm'),
+                            ok: {label: this.$t('btn.confirm'), color: 'negative'},
+                            cancel: {label: this.$t('btn.cancel'), color: 'white'}
                         })
                         .onOk(async () => {
                             await SettingsService.updateSettings(settings);
                             this.getSettings();
                             Notify.create({
-                                message: $t('msg.settingsImportedOk'),
+                                message: this.$t('msg.settingsImportedOk'),
                                 color: 'positive',
                                 textColor:'white',
                                 position: 'top-right'
                             })
                         })
                     } else {
-                        throw $t('err.jsonMustBeAnObject');
+                        throw this.$t('err.jsonMustBeAnObject');
                     }
                 }
                 catch (err) {
                     console.log(err);
-                    var errMsg = $t('err.importingSettingsError')
-                    if (err.message) errMsg = $t('err.errorWhileParsingJsonContent',[err.message]);
+                    var errMsg = this.$t('err.importingSettingsError')
+                    if (err.message) errMsg = this.$t('err.errorWhileParsingJsonContent',[err.message]);
                     Notify.create({
                         message: errMsg,
                         color: 'negative',

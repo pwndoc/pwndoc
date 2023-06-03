@@ -1,7 +1,7 @@
 <template>
     <!-- ...... -->
     <q-select
-        :label="$t('language')"
+        :label="this.$t('language')"
         v-model="lang"
         :options="langOptions"
         dense

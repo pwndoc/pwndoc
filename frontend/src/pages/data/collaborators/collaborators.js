@@ -6,10 +6,8 @@ import UserService from '@/services/user'
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
 
-import { $t } from '@/boot/i18n'
-
 export default {
-    data: () => {
+    data() {
         return {
             UserService: UserService,
             // Collaborators list
@@ -18,11 +16,11 @@ export default {
             loading: true,
             // Datatable headers
             dtHeaders: [
-                {name: 'username', label: $t('username'), field: 'username', align: 'left', sortable: true},
-                {name: 'firstname', label: $t('firstname'), field: 'firstname', align: 'left', sortable: true},
-                {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
-                {name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true},
-                {name: 'role', label: $t('role'), field: 'role', align: 'left', sortable: true},
+                {name: 'username', label: this.$t('username'), field: 'username', align: 'left', sortable: true},
+                {name: 'firstname', label: this.$t('firstname'), field: 'firstname', align: 'left', sortable: true},
+                {name: 'lastname', label: this.$t('lastname'), field: 'lastname', align: 'left', sortable: true},
+                {name: 'email', label: this.$t('email'), field: 'email', align: 'left', sortable: true},
+                {name: 'role', label: this.$t('role'), field: 'role', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -81,13 +79,13 @@ export default {
         createCollab: function() {
             this.cleanErrors();
             if (!this.currentCollab.lastname)
-                this.errors.lastname = $t('msg.lastnameRequired');
+                this.errors.lastname = this.$t('msg.lastnameRequired');
             if (!this.currentCollab.firstname)
-                this.errors.firstname = $t('msg.firstnameRequired');
+                this.errors.firstname = this.$t('msg.firstnameRequired');
             if (!this.currentCollab.username)
-                this.errors.username = $t('msg.usernameRequired');
+                this.errors.username = this.$t('msg.usernameRequired');
             if (!this.currentCollab.password)
-                this.errors.password = $t('msg.passwordRequired');
+                this.errors.password = this.$t('msg.passwordRequired');
 
             if (this.errors.lastname || this.errors.firstname || this.errors.username || this.errors.password || !this.$refs.pwdCreateRef.validate())
                 return;
@@ -97,7 +95,7 @@ export default {
                 this.getCollabs();
                 this.$refs.createModal.hide();
                 Notify.create({
-                    message: $t('msg.collaboratorCreatedOk'),
+                    message: this.$t('msg.collaboratorCreatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -116,11 +114,11 @@ export default {
         updateCollab: function() {
             this.cleanErrors();
             if (!this.currentCollab.lastname)
-                this.errors.lastname = $t('msg.lastnameRequired');
+                this.errors.lastname = this.$t('msg.lastnameRequired');
             if (!this.currentCollab.firstname)
-                this.errors.firstname = $t('msg.firstnameRequired');
+                this.errors.firstname = this.$t('msg.firstnameRequired');
             if (!this.currentCollab.username)
-                this.errors.username = $t('msg.usernameRequired');
+                this.errors.username = this.$t('msg.usernameRequired');
 
             if (this.errors.lastname || this.errors.firstname || this.errors.username || !this.$refs.pwdUpdateRef.validate())
                 return;
@@ -130,7 +128,7 @@ export default {
                 this.getCollabs();
                 this.$refs.editModal.hide();
                 Notify.create({
-                    message: $t('msg.collaboratorUpdatedOk'),
+                    message: this.$t('msg.collaboratorUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'

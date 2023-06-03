@@ -1,7 +1,7 @@
 <div>
-    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || $t('msg.auditTypeNotSet')})`" :state="parentState" :approvals="parentApprovals">
+    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || this.$t('msg.auditTypeNotSet')})`" :state="parentState" :approvals="parentApprovals">
     <div slot="buttons">
-        <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" :label="$t('btn.save')+' (ctrl+s)'" no-caps @click="updateSection" />
+        <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" :label="this.$t('btn.save')+' (ctrl+s)'" no-caps @click="updateSection" />
     </div>
 </breadcrumb>
 

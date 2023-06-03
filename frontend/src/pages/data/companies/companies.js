@@ -4,10 +4,8 @@ import Vue from 'vue'
 import CompanyService from '@/services/company'
 import Utils from '@/services/utils'
 
-import { $t } from '@/boot/i18n'
-
 export default {
-    data: () => {
+    data() {
         return {
             // Companies list
             companies: [],
@@ -15,9 +13,9 @@ export default {
             loading: true,
             // Datatable headers
             dtHeaders: [
-                {name: 'name', label: $t('name'), field: 'name', align: 'left', sortable: true},
-                {name: 'shortName', label: $t('shortName'), field: 'shortName', align: 'left', sortable: true},
-                {name: 'logo', label: $t('logo'), field: 'logo', align: 'left', sortable: true},
+                {name: 'name', label: this.$t('name'), field: 'name', align: 'left', sortable: true},
+                {name: 'shortName', label: this.$t('shortName'), field: 'shortName', align: 'left', sortable: true},
+                {name: 'logo', label: this.$t('logo'), field: 'logo', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -68,7 +66,7 @@ export default {
         createCompany: function() {
             this.cleanErrors();
             if (!this.currentCompany.name)
-                this.errors.name = $t('msg.nameRequired');
+                this.errors.name = this.$t('msg.nameRequired');
 
             if (this.errors.name)
                 return;
@@ -78,7 +76,7 @@ export default {
                 this.getCompanies();
                 this.$refs.createModal.hide();
                 Notify.create({
-                    message: $t('msg.companyCreatedOk'),
+                    message: this.$t('msg.companyCreatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -98,7 +96,7 @@ export default {
         updateCompany: function() {
             this.cleanErrors();
             if (!this.currentCompany.name)
-                this.errors.name = $t('msg.nameRequired');
+                this.errors.name = this.$t('msg.nameRequired');
 
             if (this.errors.name)
                 return;
@@ -108,7 +106,7 @@ export default {
                 this.getCompanies();
                 this.$refs.editModal.hide();
                 Notify.create({
-                    message: $t('msg.companyUpdatedOk'),
+                    message: this.$t('msg.companyUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -129,7 +127,7 @@ export default {
             .then(() => {
                 this.getCompanies();
                 Notify.create({
-                    message: $t('msg.companyDeletedOk'),
+                    message: this.$t('msg.companyDeletedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -147,10 +145,10 @@ export default {
 
         confirmDeleteCompany: function(company) {
             Dialog.create({
-                title: $t('msg.confirmSuppression'),
-                message: `${$t('company')} «${company.name}» ${$t('msg.deleteNotice')}`,
-                ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
+                title: this.$t('msg.confirmSuppression'),
+                message: `${this.$t('company')} «${company.name}» ${this.$t('msg.deleteNotice')}`,
+                ok: {label: this.$t('btn.confirm'), color: 'negative'},
+                cancel: {label: this.$t('btn.cancel'), color: 'white'}
             })
             .onOk(() => this.deleteCompany(company._id))
         },

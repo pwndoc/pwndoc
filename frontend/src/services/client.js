@@ -1,19 +1,19 @@
-import Vue from 'vue'
+import { api } from 'boot/axios'
 
 export default {
   getClients: function() {
-    return Vue.prototype.$axios.get(`clients`)
+    return api.get(`clients`)
   },
 
   createClient: function(client) {
-    return Vue.prototype.$axios.post('clients', client)
+    return api.post('clients', client)
   },
 
   updateClient: function(clientId, client) {
-    return Vue.prototype.$axios.put(`clients/${clientId}`, client)
+    return api.put(`clients/${clientId}`, client)
   },
 
   deleteClient: function(clientId) {
-    return Vue.prototype.$axios.delete(`clients/${clientId}`)
+    return api.delete(`clients/${clientId}`)
   }
 }

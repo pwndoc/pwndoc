@@ -7,7 +7,7 @@ module.exports = function (ctx) {
     // app boot (/src/boot)
     boot: [
       'axios',
-      'affix',
+      //'affix',
       'auth',
       'i18n',
       'darkmode',
@@ -16,7 +16,7 @@ module.exports = function (ctx) {
       'settings'
     ],
     css: [
-      'app.styl'
+      'app.scss'
     ],
     extras: [
       'material-icons',
@@ -55,7 +55,7 @@ module.exports = function (ctx) {
       port: 8081,
       proxy: {
         '/api': {
-          target: 'https://pwndoc-backend:5252',
+          target: 'https://pwndoc-backend:4242',
           changeOrigin: true,
           secure: false
         }

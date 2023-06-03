@@ -66,22 +66,22 @@ export default {
 
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .card-breadcrumb {
-    height: 50px
-    padding-right: 20px
+    height: 50px;
+    padding-right: 20px;
 }
 
 .breadcrumb-title {
-    margin-top: 11px
+    margin-top: 11px;
 }
 
 .breadcrumb-buttons {
-    margin-top: 7px
+    margin-top: 7px;
 }
 
 .card-breadcrumb>.q-breadcrumbs {
-    margin-top: 17px
+    margin-top: 17px;
 }
 
 .approvedMark {

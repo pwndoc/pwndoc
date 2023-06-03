@@ -8,10 +8,8 @@ import DataService from '@/services/data'
 import CompanyService from '@/services/company'
 import UserService from '@/services/user'
 
-import { $t } from '@/boot/i18n'
-
 export default {
-    data: () => {
+    data() {
         return {
             UserService: UserService,
             // Audits list
@@ -26,11 +24,11 @@ export default {
             languages: [],
             // Datatable headers
             dtHeaders: [
-                {name: 'name', label: $t('name'), field: 'name', align: 'left', sortable: true},
-                {name: 'language', label: $t('language'), field: 'language', align: 'left', sortable: true},
-                {name: 'company', label: $t('company'), field: row => (row.company)?row.company.name:'', align: 'left', sortable: true},
-                {name: 'users', label: $t('participants'), align: 'left', sortable: true},
-                {name: 'date', label: $t('date'), field: row => row.createdAt.split('T')[0], align: 'left', sortable: true},
+                {name: 'name', label: this.$t('name'), field: 'name', align: 'left', sortable: true},
+                {name: 'language', label: this.$t('language'), field: 'language', align: 'left', sortable: true},
+                {name: 'company', label: this.$t('company'), field: row => (row.company)?row.company.name:'', align: 'left', sortable: true},
+                {name: 'users', label: this.$t('participants'), align: 'left', sortable: true},
+                {name: 'date', label: this.$t('date'), field: row => row.createdAt.split('T')[0], align: 'left', sortable: true},
                 {name: 'connected', label: '', align: 'left', sortable: false},
                 {name: 'reviews', label: '', align: 'left', sortable: false},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},

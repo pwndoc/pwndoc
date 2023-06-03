@@ -16,7 +16,7 @@
             <div v-if="init">
                 <q-card-section>
                     <q-input
-                    :label="$t('username')"
+                    :label="this.$t('username')"
                     :error="!!errors.username"
                     :error-message="errors.username"
                     hide-bottom-space
@@ -30,7 +30,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
-                    :label="$t('firstname')"
+                    :label="this.$t('firstname')"
                     :error="!!errors.firstname"
                     :error-message="errors.firstname"
                     hide-bottom-space
@@ -42,7 +42,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
-                    :label="$t('lastname')"
+                    :label="this.$t('lastname')"
                     :error="!!errors.lastname"
                     :error-message="errors.lastname"
                     hide-bottom-space
@@ -55,7 +55,7 @@
                 <q-card-section>
                     <q-input
                     ref="pwdInitRef"
-                    :label="$t('password')"
+                    :label="this.$t('password')"
                     :error="!!errors.password"
                     :error-message="errors.password"
                     hide-bottom-space
@@ -70,14 +70,14 @@
                 </q-card-section>
 
                 <q-card-section align="center">
-                    <q-btn color="blue" class="full-width" unelevated no-caps @click="initUser()">{{$t('registerFirstUser')}}</q-btn>
+                    <q-btn color="blue" class="full-width" unelevated no-caps @click="initUser()">{{this.$t('registerFirstUser')}}</q-btn>
                 </q-card-section>
             </div>
             
             <div v-else>
                 <q-card-section v-show="step === 0">
                     <q-input
-                    :label="$t('username')"
+                    :label="this.$t('username')"
                     :error="!!errors.username"
                     :error-message="errors.username"
                     hide-bottom-space
@@ -94,7 +94,7 @@
                 </q-card-section>
                 <q-card-section v-show="step === 0">
                     <q-input
-                    :label="$t('password')"
+                    :label="this.$t('password')"
                     :error="!!errors.password"
                     :error-message="errors.password"
                     hide-bottom-space
@@ -113,11 +113,11 @@
                     <q-item class="q-pl-none">
                         <q-item-section avatar style="min-width:0" class="q-pr-sm">
                             <q-btn dense flat size="sm" icon="mdi-arrow-left" style="top:-8px" @click="step=0;totpToken=''">
-                            <q-tooltip>{{$t('goBack')}}</q-tooltip>
+                            <q-tooltip>{{this.$t('goBack')}}</q-tooltip>
                             </q-btn>
                         </q-item-section>
                         <q-item-section>
-                            <p class="text-left text-h6 text-center text-vertical">{{$t('twoStepVerification')}}</p>
+                            <p class="text-left text-h6 text-center text-vertical">{{this.$t('twoStepVerification')}}</p>
                         </q-item-section>
                     </q-item>
                     <q-item class="q-pl-none">
@@ -125,7 +125,7 @@
                         <q-icon name="mdi-cellphone-key" size="70px" />
                     </q-item-section>
                     <q-item-section>
-                        <p>{{$t('twoStepVerificationMessage')}}</p>
+                        <p>{{this.$t('twoStepVerificationMessage')}}</p>
                     </q-item-section>
                     </q-item>
                     <q-input
@@ -144,7 +144,7 @@
                 </q-card-section>
 
                 <q-card-section align="center">
-                    <q-btn :loading="loginLoading" color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
+                    <q-btn :loading="loginLoading" color="blue" class="full-width" unelevated no-caps @click="getToken()">{{this.$t('login')}}</q-btn>
                 </q-card-section>
             </div>
         </q-card>
@@ -156,8 +156,6 @@
 import {Loading} from 'quasar';
 import UserService from '@/services/user';
 import Utils from '@/services/utils'
-
-import { $t } from '@/boot/i18n'
 
 export default {
     data () {
@@ -178,8 +176,8 @@ export default {
 
     created: function() {
         if (this.$route.query.tokenError)
-            if (this.$route.query.tokenError === "2") this.errors.alert = $t('err.expiredToken');
-            else this.errors.alert = $t('err.invalidToken');
+            if (this.$route.query.tokenError === "2") this.errors.alert = this.$t('err.expiredToken');
+            else this.errors.alert = this.$t('err.invalidToken');
         this.checkInit();
     },
 
@@ -194,7 +192,7 @@ export default {
         },
 
         checkInit() {
-            Loading.show({message: $t('msg.tryingToContactBackend'), customClass: 'loading', backgroundColor: 'blue-grey-8'});
+            Loading.show({message: this.$t('msg.tryingToContactBackend'), customClass: 'loading', backgroundColor: 'blue-grey-8'});
             UserService.isInit()
             .then((data) => {
                 Loading.hide();
@@ -203,7 +201,7 @@ export default {
             })
             .catch(err => {
                 Loading.show({
-                    message: `<i class='material-icons'>wifi_off</i><br /><p>${$t('msg.wrongContactingBackend')}</p>`, 
+                    message: `<i class='material-icons'>wifi_off</i><br /><p>${this.$t('msg.wrongContactingBackend')}</p>`, 
                     spinner: null, 
                     backgroundColor: 'red-10', 
                     customClass: 'loading-error'})
@@ -214,15 +212,15 @@ export default {
          initUser() {
             this.cleanErrors();
             if (!this.username)
-                this.errors.username = $t('msg.usernameRequired');
+                this.errors.username = this.$t('msg.usernameRequired');
             if (Utils.strongPassword(this.password) !== true)
-                this.errors.newPassword = $t('msg.passwordComplexity')
+                this.errors.newPassword = this.$t('msg.passwordComplexity')
             if (!this.password)
-                this.errors.password = $t('msg.passwordRequired');
+                this.errors.password = this.$t('msg.passwordRequired');
             if (!this.firstname)
-                this.errors.firstname = $t('msg.firstnameRequired');
+                this.errors.firstname = this.$t('msg.firstnameRequired');
             if (!this.lastname)
-                this.errors.lastname = $t('msg.lastnameRequired');
+                this.errors.lastname = this.$t('msg.lastnameRequired');
 
             if (this.errors.username || this.errors.password || this.errors.firstname || this.errors.lastname || !this.$refs.pwdInitRef.validate())
                 return;
@@ -241,9 +239,9 @@ export default {
         getToken() {
             this.cleanErrors();
             if (!this.username)
-                this.errors.username = $t('msg.usernameRequired');
+                this.errors.username = this.$t('msg.usernameRequired');
             if (!this.password)
-                this.errors.password = $t('msg.passwordRequired');
+                this.errors.password = this.$t('msg.passwordRequired');
 
             if (this.errors.username || this.errors.password)
                 return;
@@ -262,7 +260,7 @@ export default {
                     })
                 }
                 else {
-                    let errmsg = $t('err.invalidCredentials');
+                    let errmsg = this.$t('err.invalidCredentials');
                     if (err.response.data.datas)
                         errmsg = err.response.data.datas;
                     this.errors.alert = errmsg;
@@ -276,9 +274,9 @@ export default {
 }
 </script>
 
-<style lang="stylus">
+<style lang="scss">
 .login-background {
-    background: linear-gradient(45deg, $blue, transparent)
+    background: linear-gradient(45deg, $blue, transparent);
 }
 
 .loading p {

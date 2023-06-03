@@ -8,15 +8,13 @@ import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
-import { $t } from '@/boot/i18n'
-
 export default {
     props: {
         frontEndAuditState: Number,
         parentState: String,
         parentApprovals: Array
     },
-    data: () => {
+    data() {
         return {
             // Set audit ID
             auditId: null,
@@ -60,20 +58,20 @@ export default {
 
         if (this.unsavedChanges()) {
             Dialog.create({
-            title: $t('msg.thereAreUnsavedChanges'),
-            message: $t('msg.doYouWantToLeave'),
-            ok: {label: $t('btn.confirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'}
+            title: this.$t('msg.thereAreUnsavedChanges'),
+            message: this.$t('msg.doYouWantToLeave'),
+            ok: {label: this.$t('btn.confirm'), color: 'negative'},
+            cancel: {label: this.$t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
         else if (displayHighlightWarning) {
             Dialog.create({
-                title: $t('msg.highlightWarningTitle'),
+                title: this.$t('msg.highlightWarningTitle'),
                 message: `${displayHighlightWarning}</mark>`,
                 html: true,
-                ok: {label: $t('btn.leave'), color: 'negative'},
-                cancel: {label: $t('btn.stay'), color: 'white'},
+                ok: {label: this.$t('btn.leave'), color: 'negative'},
+                cancel: {label: this.$t('btn.stay'), color: 'white'},
             })
             .onOk(() => next())
         }
@@ -88,20 +86,20 @@ export default {
 
         if (this.unsavedChanges()) {
             Dialog.create({
-            title: $t('msg.thereAreUnsavedChanges'),
-            message: $t('msg.doYouWantToLeave'),
-            ok: {label: $t('btn.confirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'}
+            title: this.$t('msg.thereAreUnsavedChanges'),
+            message: this.$t('msg.doYouWantToLeave'),
+            ok: {label: this.$t('btn.confirm'), color: 'negative'},
+            cancel: {label: this.$t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
         else if (displayHighlightWarning) {
             Dialog.create({
-                title: $t('msg.highlightWarningTitle'),
+                title: this.$t('msg.highlightWarningTitle'),
                 message: `${displayHighlightWarning}</mark>`,
                 html: true,
-                ok: {label: $t('btn.leave'), color: 'negative'},
-                cancel: {label: $t('btn.stay'), color: 'white'},
+                ok: {label: this.$t('btn.leave'), color: 'negative'},
+                cancel: {label: this.$t('btn.stay'), color: 'white'},
             })
             .onOk(() => next())
         }
@@ -144,7 +142,7 @@ export default {
             this.$nextTick(() => {
                 if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
                     Notify.create({
-                        message: $t('msg.fieldRequired'),
+                        message: this.$t('msg.fieldRequired'),
                         color: 'negative',
                         textColor:'white',
                         position: 'top-right'
@@ -155,7 +153,7 @@ export default {
                 .then(() => {
                     this.sectionOrig = this.$_.cloneDeep(this.section);
                     Notify.create({
-                        message: $t('msg.sectionUpdateOk'),
+                        message: this.$t('msg.sectionUpdateOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'

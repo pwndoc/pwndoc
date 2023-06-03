@@ -1,13 +1,13 @@
+import { boot } from 'quasar/wrappers'
 import io from 'socket.io-client'
 import {Loading} from 'quasar'
-import { $t } from '@/boot/i18n'
 
-export default ({ Vue }) => {
+export default boot(({ app }) => {
     var socket = io(`${window.location.protocol}//${window.location.hostname}:${process.env.API_PORT}`);
 
     socket.on('disconnect', (error) => {
         Loading.show({
-            message: `<i class='material-icons'>wifi_off</i><br /><p>${$t('msg.wrongContactingBackend')}</p>`, 
+            message: `<i class='material-icons'>wifi_off</i><br /><p>${this.$t('msg.wrongContactingBackend')}</p>`, 
             spinner: null, 
             backgroundColor: 'red-10', 
             customClass: 'loading-error',
@@ -18,5 +18,5 @@ export default ({ Vue }) => {
         Loading.hide()
     })
 
-    Vue.prototype.$socket = socket
-}  
+    app.config.globalProperties.$socket = socket
+})

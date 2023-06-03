@@ -1,6 +1,3 @@
-var _ = require('lodash')
-import { $t } from 'boot/i18n'
-
 export default {
   htmlEncode(html) {
     if(typeof(html) !== "string")  return "";
@@ -195,7 +192,7 @@ export default {
     var regExp = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
     if (regExp.test(value))
       return true
-    return $t('msg.passwordComplexity')
+    return this.$t('msg.passwordComplexity')
   },
 
   // Return black or white color depending on background color

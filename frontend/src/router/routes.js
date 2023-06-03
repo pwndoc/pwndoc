@@ -30,5 +30,5 @@ export default [
     {path: '404', name: '404', component: () => import('pages/404')}
   ]},
   {path: '/login', component: () => import('pages/login')},
-  {path: '*', redirect: '/'}
+  {path: '/:catchAll(.*)*', redirect: '/'}
 ]

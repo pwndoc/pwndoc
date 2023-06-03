@@ -1,8 +1,9 @@
+import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 import User from '@/services/user'
 import Router from '../router'
 
-const axiosInstance = axios.create({
+const api = axios.create({
   baseURL: `${window.location.origin}/api`
 })
 
@@ -10,7 +11,7 @@ var refreshPending = false
 var requestsQueue = []
 
 // Redirect to login if response is 401 (Unauthenticated)
-axiosInstance.interceptors.response.use(
+api.interceptors.response.use(
   response => {
     return response
   }, 
@@ -51,7 +52,7 @@ axiosInstance.interceptors.response.use(
     if (error.response.status === 401) {
       if (!refreshPending) {
         refreshPending = true
-        axiosInstance.get('/users/refreshtoken')
+        api.get('/users/refreshtoken')
         .then(() => {
           requestsQueue.forEach(e => e())
           requestsQueue = []
@@ -64,13 +65,15 @@ axiosInstance.interceptors.response.use(
         })
       }
       return new Promise((resolve) => {
-        requestsQueue.push(() => resolve(axiosInstance.request(originalRequest)))
+        requestsQueue.push(() => resolve(api.request(originalRequest)))
       })
     }
     return Promise.reject(error)
   }
 )
 
-export default ({ Vue }) => {
-  Vue.prototype.$axios = axiosInstance
-}
+export default boot(({ app }) => {
+  app.config.globalProperties.$axios = api
+})
+
+export { axios, api }

@@ -1,6 +1,6 @@
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Image as TipTapImage } from '@tiptap/extension-image'
-import { VueNodeViewRenderer } from '@tiptap/vue-2'
+import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import Component from './editor-image-template.vue'
 
 import ImageService from '@/services/image'

@@ -8,10 +8,8 @@ import Utils from '@/services/utils'
 import UserService from '@/services/user'
 import TemplateService from '@/services/template'
 
-import { $t } from '@/boot/i18n'
-
 export default {
-    data: () => {
+    data() {
         return {
             UserService: UserService,
             Utils: Utils,
@@ -37,15 +35,15 @@ export default {
             editCategories: [],
             editCategory: false,
             sortValueOptions: [
-                {label: $t('cvssScore'), value: 'cvssScore'},
-                {label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
-                {label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
-                {label: $t('priority'), value: 'priority'},
-                {label: $t('remediationDifficulty'), value: 'remediationComplexity'}
+                {label: this.$t('cvssScore'), value: 'cvssScore'},
+                {label: this.$t('cvssTemporalScore'), value: 'cvssTemporalScore'},
+                {label: this.$t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
+                {label: this.$t('priority'), value: 'priority'},
+                {label: this.$t('remediationDifficulty'), value: 'remediationComplexity'}
             ],
             sortOrderOptions: [
-                {label: $t('ascending'), value: 'asc'},
-                {label: $t('descending'), value: 'desc'}
+                {label: this.$t('ascending'), value: 'asc'},
+                {label: this.$t('descending'), value: 'desc'}
             ],
 
             customFields: [],
@@ -63,20 +61,20 @@ export default {
             },
             cfLocale: "",
             cfDisplayOptions: [
-                {label: $t('auditGeneral'), value: 'general'},
-                {label: $t('auditFinding'), value: 'finding'},
-                {label: $t('auditSection'), value: 'section'},
-                {label: $t('vulnerability'), value: 'vulnerability'}
+                {label: this.$t('auditGeneral'), value: 'general'},
+                {label: this.$t('auditFinding'), value: 'finding'},
+                {label: this.$t('auditSection'), value: 'section'},
+                {label: this.$t('vulnerability'), value: 'vulnerability'}
             ],
             cfComponentOptions: [
-                {label: $t('checkbox'), value: 'checkbox', icon: 'check_box'},
-                {label: $t('date'), value: 'date', icon: 'event'},
-                {label: $t('editor'), value: 'text', icon: 'mdi-format-pilcrow'},
-                {label: $t('input'), value: 'input', icon: 'title'},
-                {label: $t('radio'), value: 'radio', icon: 'radio_button_checked'},
-                {label: $t('select'), value: 'select', icon: 'far fa-caret-square-down'},
-                {label: $t('selectMultiple'), value: 'select-multiple', icon: 'filter_none'},
-                {label: $t('space'), value: 'space', icon: 'space_bar'}
+                {label: this.$t('checkbox'), value: 'checkbox', icon: 'check_box'},
+                {label: this.$t('date'), value: 'date', icon: 'event'},
+                {label: this.$t('editor'), value: 'text', icon: 'mdi-format-pilcrow'},
+                {label: this.$t('input'), value: 'input', icon: 'title'},
+                {label: this.$t('radio'), value: 'radio', icon: 'radio_button_checked'},
+                {label: this.$t('select'), value: 'select', icon: 'far fa-caret-square-down'},
+                {label: this.$t('selectMultiple'), value: 'select-multiple', icon: 'filter_none'},
+                {label: this.$t('space'), value: 'space', icon: 'space_bar'}
             ],
             newCustomOption: "",
 
@@ -437,11 +435,11 @@ export default {
 
         getSortOptions: function(category) {
             var options = [
-                {label: $t('cvssScore'), value: 'cvssScore'},
-                {label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
-                {label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
-                {label: $t('priority'), value: 'priority'},
-                {label: $t('remediationComplexity'), value: 'remediationComplexity'}
+                {label: this.$t('cvssScore'), value: 'cvssScore'},
+                {label: this.$t('cvssTemporalScore'), value: 'cvssTemporalScore'},
+                {label: this.$t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
+                {label: this.$t('priority'), value: 'priority'},
+                {label: this.$t('remediationComplexity'), value: 'remediationComplexity'}
             ]
             var allowedFieldTypes = ['date', 'input', 'radio', 'select']
             this.customFields.forEach(e => {
@@ -542,8 +540,8 @@ export default {
                     </div>
                 </div>
                 `,
-                ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'},
+                ok: {label: this.$t('btn.confirm'), color: 'negative'},
+                cancel: {label: this.$t('btn.cancel'), color: 'white'},
                 html: true,
                 style: "width: 600px"
             })

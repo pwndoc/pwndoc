@@ -5,10 +5,8 @@ import YAML from 'js-yaml'
 import VulnerabilityService from '@/services/vulnerability'
 import UserService from '@/services/user'
 
-import { $t } from '@/boot/i18n'
-
 export default {
-    data: () => {
+    data() {
         return {
             UserService: UserService,
             vulnerabilities: [],
@@ -43,14 +41,14 @@ export default {
                 var message = "";
                 var color = "positive";
                 if (data.data.datas.duplicates === 0) {
-                    message = $t('importVulnerabilitiesOk',[data.data.datas.created]);
+                    message = this.$t('importVulnerabilitiesOk',[data.data.datas.created]);
                 }
                 else if (data.data.datas.created === 0 && data.data.datas.duplicates > 0) {
-                    message = $t('importVulnerabilitiesAllExists',[data.data.datas.duplicates.length]);
+                    message = this.$t('importVulnerabilitiesAllExists',[data.data.datas.duplicates.length]);
                     color = "negative";
                 }
                 else {
-                    message = $t('importVulnerabilitiesPartial',[data.data.datas.created,data.data.datas.duplicates.length]);
+                    message = this.$t('importVulnerabilitiesPartial',[data.data.datas.created,data.data.datas.duplicates.length]);
                     color = "orange";
                 }
                 Notify.create({
@@ -101,12 +99,12 @@ export default {
                                         this.vulnerabilities.push(vulnFile);
                                 }
                                 else
-                                    throw new Error ($t('invalidYamlFormat'))
+                                    throw new Error (this.$t('invalidYamlFormat'))
                             }
                             catch(err) {
                                 console.log(err);
                                 var errMsg = err;
-                                if (err.mark) errMsg = $t('err.parsingError2',[err.mark.line,err.mark.column]);                              
+                                if (err.mark) errMsg = this.$t('err.parsingError2',[err.mark.line,err.mark.column]);                              
                                 Notify.create({
                                     message: errMsg,
                                     color: 'negative',
@@ -130,12 +128,12 @@ export default {
                                         this.vulnerabilities.push(vulnFile);
                                 }
                                 else
-                                    throw new Error ($t('err.invalidJsonFormat'))
+                                    throw new Error (this.$t('err.invalidJsonFormat'))
                             }
                             catch(err) {
                                 console.log(err);
                                 var errMsg = err;
-                                if (err.message) errMsg = $t('err.parsingError1',[err.message]);
+                                if (err.message) errMsg = this.$t('err.parsingError1',[err.message]);
                                 Notify.create({
                                     message: errMsg,
                                     color: 'negative',
@@ -234,16 +232,16 @@ export default {
 
         deleteAllVulnerabilities: function() {
             Dialog.create({
-                title: $t('msg.confirmSuppression'),
-                message: $t('msg.allVulnerabilitesDeleteNotice'),
-                ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
+                title: this.$t('msg.confirmSuppression'),
+                message: this.$t('msg.allVulnerabilitesDeleteNotice'),
+                ok: {label: this.$t('btn.confirm'), color: 'negative'},
+                cancel: {label: this.$t('btn.cancel'), color: 'white'}
             })
             .onOk(() => {
                 VulnerabilityService.deleteAllVulnerabilities()
                 .then(() => {
                     Notify.create({
-                        message: $t('msg.allVulnerabilitesDeleteOk'),
+                        message: this.$t('msg.allVulnerabilitesDeleteOk'),
                         color: 'positive',
                         textColor:'white',
                         position: 'top-right'

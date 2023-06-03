@@ -6,10 +6,8 @@ import TemplateService from '@/services/template'
 import UserService from '@/services/user'
 import Utils from '@/services/utils'
 
-import { $t } from '@/boot/i18n'
-
 export default {
-    data: () => {
+    data() {
         return {
             UserService: UserService,
             // Templates list
@@ -18,8 +16,8 @@ export default {
             loading: true,
             // Datatable headers
             dtHeaders: [
-                {name: 'name', label: $t('name'), field: 'name', align: 'left', sortable: true},
-                {name: 'ext', label: $t('extension'), field: 'ext', align: 'left', sortable: true},
+                {name: 'name', label: this.$t('name'), field: 'name', align: 'left', sortable: true},
+                {name: 'ext', label: this.$t('extension'), field: 'ext', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -80,7 +78,7 @@ export default {
             .catch((err) => {
                 if (err.response.status === 404) {
                     Notify.create({
-                        message: $t('msg.templateNotFound'),
+                        message: this.$t('msg.templateNotFound'),
                         color: 'negative',
                         textColor: 'white',
                         position: 'top-right'
@@ -94,9 +92,9 @@ export default {
         createTemplate: function() {
             this.cleanErrors();
             if (!this.currentTemplate.name)
-                this.errors.name = $t('msg.nameRequired');
+                this.errors.name = this.$t('msg.nameRequired');
             if (!this.currentTemplate.file)
-                this.errors.file = $t('msg.fileRequired');
+                this.errors.file = this.$t('msg.fileRequired');
                 
             if (this.errors.name || this.errors.file)
                 return;
@@ -106,7 +104,7 @@ export default {
                 this.getTemplates();
                 this.$refs.createModal.hide();
                 Notify.create({
-                    message: $t('msg.templateCreatedOk'),
+                    message: this.$t('msg.templateCreatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -125,7 +123,7 @@ export default {
         updateTemplate: function() {
             this.cleanErrors();
             if (!this.currentTemplate.name)
-                this.errors.name = $t('msg.nameRequired');
+                this.errors.name = this.$t('msg.nameRequired');
             
             if (this.errors.name)
                 return;
@@ -135,7 +133,7 @@ export default {
                 this.getTemplates();
                 this.$refs.editModal.hide();
                 Notify.create({
-                    message: $t('msg.templateUpdatedOk'),
+                    message: this.$t('msg.templateUpdatedOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'
@@ -174,10 +172,10 @@ export default {
 
         confirmDeleteTemplate: function(row) {
             Dialog.create({
-                title: $t('msg.confirmSuppression'),
-                message: `${$t('template')} «${row.name}» ${$t('msg.deleteNotice')}`,
-                ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
+                title: this.$t('msg.confirmSuppression'),
+                message: `${this.$t('template')} «${row.name}» ${this.$t('msg.deleteNotice')}`,
+                ok: {label: this.$t('btn.confirm'), color: 'negative'},
+                cancel: {label: this.$t('btn.cancel'), color: 'white'}
             })
             .onOk(() => this.deleteTemplate(row._id))
         },

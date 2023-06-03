@@ -3,19 +3,19 @@
         <q-card-section class="row">
             <div class="col-md-3" style="align-self:center">
             <span>
-                {{$t('cvss.title')}}
+                {{this.$t('cvss.title')}}
                 <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                    <span :style="tooltip.style">{{$t('cvss.tooltip.baseMetricGroup_Legend')}}</span>
+                    <span :style="tooltip.style">{{this.$t('cvss.tooltip.baseMetricGroup_Legend')}}</span>
                 </q-tooltip>
             </span>
             </div>
             <q-space />
             <div v-if="cvss.baseImpact && cvss.baseExploitability" style="margin-right:120px">
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss.impactSubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseImpact)}}</span></q-chip>
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss.exploitabilitySubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseExploitability)}}</span></q-chip>
+                <q-chip square color="blue-12" text-color="white">{{this.$t('cvss.impactSubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseImpact)}}</span></q-chip>
+                <q-chip square color="blue-12" text-color="white">{{this.$t('cvss.exploitabilitySubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseExploitability)}}</span></q-chip>
             </div>
             <div class="scoreRating" :class="cvss.baseSeverity">
-                <span class="baseSeverity" v-if="!cvss.baseMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
+                <span class="baseSeverity" v-if="!cvss.baseMetricScore">{{this.$t('cvss.infoWhenNoScore')}}</span>
                 <div v-else>
                     <span class="baseMetricScore">{{cvss.baseMetricScore}}</span>
                     <span class="baseSeverity">({{cvss.baseSeverity}})</span>
@@ -27,9 +27,9 @@
             <div class="col-md-6">
                 <div class="q-my-sm text-weight-bold">
                     <span>
-                        {{$t('cvss.attackVector')}}
+                        {{this.$t('cvss.attackVector')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.AV_Heading')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.AV_Heading')}}</span>
                         </q-tooltip>
                     </span>
                 </div>
@@ -45,30 +45,30 @@
                 >
                 <template v-slot:one>
                     <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                        <span :style="tooltip.style">{{$t('cvss.tooltip.AV_N_Label')}}</span>
+                        <span :style="tooltip.style">{{this.$t('cvss.tooltip.AV_N_Label')}}</span>
                     </q-tooltip>
                 </template>
                 <template v-slot:two>
                     <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                        <span :style="tooltip.style">{{$t('cvss.tooltip.AV_A_Label')}}</span>
+                        <span :style="tooltip.style">{{this.$t('cvss.tooltip.AV_A_Label')}}</span>
                     </q-tooltip>
                 </template>
                 <template v-slot:three>
                     <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                        <span :style="tooltip.style">{{$t('cvss.tooltip.AV_L_Label')}}</span>
+                        <span :style="tooltip.style">{{this.$t('cvss.tooltip.AV_L_Label')}}</span>
                     </q-tooltip>
                 </template>
                 <template v-slot:four>
                     <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                        <span :style="tooltip.style">{{$t('cvss.tooltip.AV_P_Label')}}</span>
+                        <span :style="tooltip.style">{{this.$t('cvss.tooltip.AV_P_Label')}}</span>
                     </q-tooltip>
                 </template>
                 </q-btn-toggle>
                 <div class="q-my-sm text-weight-bold">
                     <span>
-                        {{$t('cvss.attackComplexity')}}
+                        {{this.$t('cvss.attackComplexity')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.AC_Heading')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.AC_Heading')}}</span>
                         </q-tooltip>
                     </span>
                 </div>
@@ -83,20 +83,20 @@
                 >
                     <template v-slot:one>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.AC_L_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.AC_L_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:two>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.AC_H_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.AC_H_Label')}}</span>
                         </q-tooltip>
                     </template>
                 </q-btn-toggle>
                 <div class="q-my-sm text-weight-bold">
                     <span>
-                        {{$t('cvss.privilegesRequired')}}
+                        {{this.$t('cvss.privilegesRequired')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.PR_Heading')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.PR_Heading')}}</span>
                         </q-tooltip>
                     </span>
                 </div>
@@ -111,25 +111,25 @@
                 >
                     <template v-slot:one>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.PR_N_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.PR_N_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:two>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.PR_L_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.PR_L_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:three>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.PR_H_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.PR_H_Label')}}</span>
                         </q-tooltip>
                     </template>
                 </q-btn-toggle>
                 <div class="q-my-sm text-weight-bold">
                     <span>
-                        {{$t('cvss.userInteraction')}}
+                        {{this.$t('cvss.userInteraction')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.UI_Heading')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.UI_Heading')}}</span>
                         </q-tooltip>
                     </span>
                 </div>
@@ -144,12 +144,12 @@
                 >
                     <template v-slot:one>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.UI_N_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.UI_N_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:two>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.UI_R_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.UI_R_Label')}}</span>
                         </q-tooltip>
                     </template>
                 </q-btn-toggle>
@@ -157,9 +157,9 @@
             <div class="col-md-6">
                 <div class="q-my-sm text-weight-bold">
                     <span>
-                        {{$t('cvss.scope')}}
+                        {{this.$t('cvss.scope')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.S_Heading')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.S_Heading')}}</span>
                         </q-tooltip>
                     </span>
                 </div>
@@ -174,20 +174,20 @@
                 >
                     <template v-slot:one>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.S_U_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.S_U_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:two>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.S_C_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.S_C_Label')}}</span>
                         </q-tooltip>
                     </template>
                 </q-btn-toggle>
                 <div class="q-my-sm text-weight-bold">
                     <span>
-                        {{$t('cvss.confidentialityImpact')}}
+                        {{this.$t('cvss.confidentialityImpact')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.C_Heading')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.C_Heading')}}</span>
                         </q-tooltip>
                     </span>        
                 </div>
@@ -202,25 +202,25 @@
                 >
                     <template v-slot:one>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.C_N_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.C_N_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:two>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.C_L_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.C_L_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:three>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.C_H_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.C_H_Label')}}</span>
                         </q-tooltip>
                     </template>
                 </q-btn-toggle>
                 <div class="q-my-sm text-weight-bold">
                     <span>
-                        {{$t('cvss.integrityImpact')}}
+                        {{this.$t('cvss.integrityImpact')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.I_Heading')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.I_Heading')}}</span>
                         </q-tooltip>
                     </span>        
                 </div>
@@ -235,25 +235,25 @@
                 >
                     <template v-slot:one>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.I_N_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.I_N_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:two>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.I_L_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.I_L_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:three>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.I_H_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.I_H_Label')}}</span>
                         </q-tooltip>
                     </template>
                 </q-btn-toggle>
                 <div class="q-my-sm text-weight-bold">
                     <span>
-                        {{$t('cvss.availabilityImpact')}}
+                        {{this.$t('cvss.availabilityImpact')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.A_Heading')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.A_Heading')}}</span>
                         </q-tooltip>
                     </span>        
                 </div>
@@ -268,38 +268,38 @@
                 >
                     <template v-slot:one>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.A_N_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.A_N_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:two>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.A_L_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.A_L_Label')}}</span>
                         </q-tooltip>
                     </template>
                     <template v-slot:three>
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.A_H_Label')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.A_H_Label')}}</span>
                         </q-tooltip>
                     </template>
                 </q-btn-toggle>
             </div>
         </q-card-section>
         <q-expansion-item 
-        :label="$t('cvss.temporalEnvironmentalTitle')"
+        :label="this.$t('cvss.temporalEnvironmentalTitle')"
         header-class="bg-blue-grey-5 text-white" 
         expand-icon-class="text-white">
             <q-card-section class="row">
             <div class="col-md-6">
                 <span>
-                {{$t('cvss.temporalTitle')}}
+                {{this.$t('cvss.temporalTitle')}}
                 <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                    <span :style="tooltip.style">{{$t('cvss.tooltip.temporalMetricGroup_Legend')}}</span>
+                    <span :style="tooltip.style">{{this.$t('cvss.tooltip.temporalMetricGroup_Legend')}}</span>
                 </q-tooltip>
                 </span>
             </div>
             <q-space />
             <div class="scoreRating" :class="cvss.temporalSeverity">
-                <span class="baseSeverity" v-if="!cvss.temporalMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
+                <span class="baseSeverity" v-if="!cvss.temporalMetricScore">{{this.$t('cvss.infoWhenNoScore')}}</span>
                 <div v-else>
                     <span class="baseMetricScore">{{cvss.temporalMetricScore}}</span>
                     <span class="baseSeverity">({{cvss.temporalSeverity}})</span>
@@ -311,9 +311,9 @@
                 <div class="col">
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.exploitCodeMaturity')}}
+                            {{this.$t('cvss.exploitCodeMaturity')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.E_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.E_Heading')}}</span>
                             </q-tooltip>
                         </span>
                     </div>
@@ -328,35 +328,35 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.E_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.E_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.E_U_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.E_U_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.E_P_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.E_P_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.E_F_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.E_F_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:five>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.E_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.E_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.remediationLevel')}}
+                            {{this.$t('cvss.remediationLevel')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RL_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RL_Heading')}}</span>
                             </q-tooltip>
                         </span>        
                     </div>
@@ -371,35 +371,35 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RL_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RL_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RL_O_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RL_O_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RL_T_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RL_T_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RL_W_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RL_W_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:five>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RL_U_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RL_U_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.reportConfidence')}}
+                            {{this.$t('cvss.reportConfidence')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RC_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RC_Heading')}}</span>
                             </q-tooltip>
                         </span>
                     </div>
@@ -414,22 +414,22 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RC_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RC_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RC_U_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RC_U_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RC_R_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RC_R_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.RC_C_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.RC_C_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
@@ -439,19 +439,19 @@
             <q-card-section class="row">
                 <div class="col-md-3" style="align-self:center">
                     <span>
-                        {{$t('cvss.environmentalTitle')}}
+                        {{this.$t('cvss.environmentalTitle')}}
                         <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                            <span :style="tooltip.style">{{$t('cvss.tooltip.environmentalMetricGroup_Legend')}}</span>
+                            <span :style="tooltip.style">{{this.$t('cvss.tooltip.environmentalMetricGroup_Legend')}}</span>
                         </q-tooltip>
                     </span>
                 </div>
                 <q-space />
                 <div v-if="cvss.baseImpact && cvss.baseExploitability" style="margin-right:120px">
-                    <q-chip square color="blue-12" text-color="white">{{$t('cvss.environmentalModifiedImpact')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedImpact)}}</span></q-chip>
-                    <q-chip square color="blue-12" text-color="white">{{$t('cvss.environmentalModifiedExploitability')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedExploitability)}}</span></q-chip>
+                    <q-chip square color="blue-12" text-color="white">{{this.$t('cvss.environmentalModifiedImpact')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedImpact)}}</span></q-chip>
+                    <q-chip square color="blue-12" text-color="white">{{this.$t('cvss.environmentalModifiedExploitability')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedExploitability)}}</span></q-chip>
                 </div>
                 <div class="scoreRating" :class="cvss.environmentalSeverity">
-                    <span class="baseSeverity" v-if="!cvss.environmentalMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
+                    <span class="baseSeverity" v-if="!cvss.environmentalMetricScore">{{this.$t('cvss.infoWhenNoScore')}}</span>
                     <div v-else>
                         <span class="baseMetricScore">{{cvss.environmentalMetricScore}}</span>
                         <span class="baseSeverity">({{cvss.environmentalSeverity}})</span>
@@ -463,9 +463,9 @@
                 <div class="col-md-6">
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.confidentialityRequirement')}}
+                            {{this.$t('cvss.confidentialityRequirement')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.CR_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.CR_Heading')}}</span>
                             </q-tooltip>
                         </span>        
                     </div>
@@ -480,30 +480,30 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.CR_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.CR_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.CR_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.CR_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.CR_M_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.CR_M_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.CR_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.CR_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.integrityRequirement')}}
+                            {{this.$t('cvss.integrityRequirement')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.IR_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.IR_Heading')}}</span>
                             </q-tooltip>
                         </span>  
                     </div>
@@ -518,30 +518,30 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.IR_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.IR_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.IR_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.IR_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.IR_M_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.IR_M_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.IR_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.IR_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.availabilityRequirement')}}
+                            {{this.$t('cvss.availabilityRequirement')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.AR_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.AR_Heading')}}</span>
                             </q-tooltip>
                         </span>  
                     </div>
@@ -556,22 +556,22 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.AR_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.AR_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.AR_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.AR_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.AR_M_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.AR_M_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.AR_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.AR_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
@@ -579,9 +579,9 @@
                 <div class="col-md-6">
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.modifiedAttackVector')}}
+                            {{this.$t('cvss.modifiedAttackVector')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAV_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAV_Heading')}}</span>
                             </q-tooltip>
                         </span>        
                     </div>
@@ -596,35 +596,35 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAV_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAV_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAV_N_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAV_N_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAV_A_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAV_A_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAV_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAV_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:five>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAV_P_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAV_P_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.modifiedAttackComplexity')}}
+                            {{this.$t('cvss.modifiedAttackComplexity')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAC_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAC_Heading')}}</span>
                             </q-tooltip>
                         </span>        
                     </div>
@@ -639,25 +639,25 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAC_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAC_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAC_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAC_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MAC_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MAC_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.modifiedPrivilegesRequired')}}
+                            {{this.$t('cvss.modifiedPrivilegesRequired')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MPR_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MPR_Heading')}}</span>
                             </q-tooltip>
                         </span>
                     </div>
@@ -672,30 +672,30 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MPR_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MPR_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MPR_N_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MPR_N_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MPR_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MPR_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MPR_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MPR_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.modifiedUserInteraction')}}
+                            {{this.$t('cvss.modifiedUserInteraction')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MUI_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MUI_Heading')}}</span>
                             </q-tooltip>
                         </span>
                     </div>
@@ -710,25 +710,25 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MUI_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MUI_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MUI_N_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MUI_N_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MUI_R_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MUI_R_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.modifiedScope')}}
+                            {{this.$t('cvss.modifiedScope')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MS_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MS_Heading')}}</span>
                             </q-tooltip>
                         </span>
                     </div>
@@ -743,25 +743,25 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MS_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MS_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MS_U_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MS_U_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MS_C_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MS_C_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.modifiedConfidentialityImpact')}}
+                            {{this.$t('cvss.modifiedConfidentialityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MC_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MC_Heading')}}</span>
                             </q-tooltip>
                         </span>
                     </div>
@@ -776,30 +776,30 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MC_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MC_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MC_N_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MC_N_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MC_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MC_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MC_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MC_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.modifiedIntegrityImpact')}}
+                            {{this.$t('cvss.modifiedIntegrityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MI_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MI_Heading')}}</span>
                             </q-tooltip>
                         </span>
                     </div>
@@ -814,30 +814,30 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MI_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MI_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MI_N_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MI_N_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MI_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MI_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MI_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MI_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss.modifiedAvailabilityImpact')}}
+                            {{this.$t('cvss.modifiedAvailabilityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MA_Heading')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MA_Heading')}}</span>
                             </q-tooltip>
                         </span>
                     </div>
@@ -852,22 +852,22 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MA_X_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MA_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MA_N_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MA_N_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:three>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MA_L_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MA_L_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:four>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss.tooltip.MA_H_Label')}}</span>
+                                <span :style="tooltip.style">{{this.$t('cvss.tooltip.MA_H_Label')}}</span>
                             </q-tooltip>
                         </template>
                     </q-btn-toggle>
@@ -878,9 +878,6 @@
 </template>
 
 <script>
-import { $t } from '@/boot/i18n'
-
-
 export default {
     name: 'cvss-calculator',
     props: ['value', 'readonly'],
@@ -888,28 +885,28 @@ export default {
     data: function() {
         return {
             cvssItems: {
-                AV: [{label: $t("cvss.network"), value: "N", slot: 'one'}, {label: $t("cvss.adjacentNetwork"), value: "A", slot: 'two'}, {label: $t("cvss.local"), value: "L", slot: 'three'}, {label: $t("cvss.physical"), value: "P", slot: 'four'}],
-                AC: [{label: $t("cvss.low"), value: "L", slot: 'one'}, {label: $t("cvss.high"), value: "H", slot: 'two'}],
-                PR: [{label: $t("cvss.none"), value: "N", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
-                UI: [{label: $t("cvss.none"), value: "N", slot: 'one'}, {label: $t("cvss.required"), value: "R", slot: 'two'}],
-                S: [{label: $t("cvss.unchanged"), value: "U", slot: 'one'}, {label: $t("cvss.changed"), value: "C", slot: 'two'}],
-                C: [{label: $t("cvss.none"), value: "N", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
-                I: [{label: $t("cvss.none"), value: "N", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
-                A: [{label: $t("cvss.none"), value: "N", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
-                E: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.unproven"), value: "U", slot: 'two'}, {label: $t("cvss.poc"), value: "P", slot: 'three'}, {label: $t("cvss.functional"), value: "F", slot: 'four'}, {label: $t("cvss.high"), value: "H", slot: 'five'}],
-                RL: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.officialFix"), value: "O", slot: 'two'}, {label: $t("cvss.temporaryFix"), value: "T", slot: 'three'}, {label: $t("cvss.workaround"), value: "W", slot: 'four'}, {label: $t("cvss.unavailable"), value: "U", slot: 'five'}],
-                RC: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.unknown"), value: "U", slot: 'two'}, {label: $t("cvss.reasonable"), value: "R", slot: 'three'}, {label: $t("cvss.confirmed"), value: "C", slot: 'four'}],
-                CR: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                IR: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                AR: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.medium"), value: "M", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                MAV: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.network"), value: "N", slot: 'two'}, {label: $t("cvss.adjacentNetwork"), value: "A", slot: 'three'}, {label: $t("cvss.local"), value: "L", slot: 'four'}, {label: $t("cvss.physical"), value: "P", slot: 'five'}],
-                MAC: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.low"), value: "L", slot: 'two'}, {label: $t("cvss.high"), value: "H", slot: 'three'}],
-                MPR: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                MUI: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.required"), value: "R", slot: 'three'}],
-                MS: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.unchanged"), value: "U", slot: 'two'}, {label: $t("cvss.changed"), value: "C", slot: 'three'}],
-                MC: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                MI: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
-                MA: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
+                AV: [{label: this.$t("cvss.network"), value: "N", slot: 'one'}, {label: this.$t("cvss.adjacentNetwork"), value: "A", slot: 'two'}, {label: this.$t("cvss.local"), value: "L", slot: 'three'}, {label: this.$t("cvss.physical"), value: "P", slot: 'four'}],
+                AC: [{label: this.$t("cvss.low"), value: "L", slot: 'one'}, {label: this.$t("cvss.high"), value: "H", slot: 'two'}],
+                PR: [{label: this.$t("cvss.none"), value: "N", slot: 'one'}, {label: this.$t("cvss.low"), value: "L", slot: 'two'}, {label: this.$t("cvss.high"), value: "H", slot: 'three'}],
+                UI: [{label: this.$t("cvss.none"), value: "N", slot: 'one'}, {label: this.$t("cvss.required"), value: "R", slot: 'two'}],
+                S: [{label: this.$t("cvss.unchanged"), value: "U", slot: 'one'}, {label: this.$t("cvss.changed"), value: "C", slot: 'two'}],
+                C: [{label: this.$t("cvss.none"), value: "N", slot: 'one'}, {label: this.$t("cvss.low"), value: "L", slot: 'two'}, {label: this.$t("cvss.high"), value: "H", slot: 'three'}],
+                I: [{label: this.$t("cvss.none"), value: "N", slot: 'one'}, {label: this.$t("cvss.low"), value: "L", slot: 'two'}, {label: this.$t("cvss.high"), value: "H", slot: 'three'}],
+                A: [{label: this.$t("cvss.none"), value: "N", slot: 'one'}, {label: this.$t("cvss.low"), value: "L", slot: 'two'}, {label: this.$t("cvss.high"), value: "H", slot: 'three'}],
+                E: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.unproven"), value: "U", slot: 'two'}, {label: this.$t("cvss.poc"), value: "P", slot: 'three'}, {label: this.$t("cvss.functional"), value: "F", slot: 'four'}, {label: this.$t("cvss.high"), value: "H", slot: 'five'}],
+                RL: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.officialFix"), value: "O", slot: 'two'}, {label: this.$t("cvss.temporaryFix"), value: "T", slot: 'three'}, {label: this.$t("cvss.workaround"), value: "W", slot: 'four'}, {label: this.$t("cvss.unavailable"), value: "U", slot: 'five'}],
+                RC: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.unknown"), value: "U", slot: 'two'}, {label: this.$t("cvss.reasonable"), value: "R", slot: 'three'}, {label: this.$t("cvss.confirmed"), value: "C", slot: 'four'}],
+                CR: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.low"), value: "L", slot: 'two'}, {label: this.$t("cvss.medium"), value: "M", slot: 'three'}, {label: this.$t("cvss.high"), value: "H", slot: 'four'}],
+                IR: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.low"), value: "L", slot: 'two'}, {label: this.$t("cvss.medium"), value: "M", slot: 'three'}, {label: this.$t("cvss.high"), value: "H", slot: 'four'}],
+                AR: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.low"), value: "L", slot: 'two'}, {label: this.$t("cvss.medium"), value: "M", slot: 'three'}, {label: this.$t("cvss.high"), value: "H", slot: 'four'}],
+                MAV: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.network"), value: "N", slot: 'two'}, {label: this.$t("cvss.adjacentNetwork"), value: "A", slot: 'three'}, {label: this.$t("cvss.local"), value: "L", slot: 'four'}, {label: this.$t("cvss.physical"), value: "P", slot: 'five'}],
+                MAC: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.low"), value: "L", slot: 'two'}, {label: this.$t("cvss.high"), value: "H", slot: 'three'}],
+                MPR: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.none"), value: "N", slot: 'two'}, {label: this.$t("cvss.low"), value: "L", slot: 'three'}, {label: this.$t("cvss.high"), value: "H", slot: 'four'}],
+                MUI: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.none"), value: "N", slot: 'two'}, {label: this.$t("cvss.required"), value: "R", slot: 'three'}],
+                MS: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.unchanged"), value: "U", slot: 'two'}, {label: this.$t("cvss.changed"), value: "C", slot: 'three'}],
+                MC: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.none"), value: "N", slot: 'two'}, {label: this.$t("cvss.low"), value: "L", slot: 'three'}, {label: this.$t("cvss.high"), value: "H", slot: 'four'}],
+                MI: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.none"), value: "N", slot: 'two'}, {label: this.$t("cvss.low"), value: "L", slot: 'three'}, {label: this.$t("cvss.high"), value: "H", slot: 'four'}],
+                MA: [{label: this.$t("cvss.notDefined"), value: "", slot: 'one'}, {label: this.$t("cvss.none"), value: "N", slot: 'two'}, {label: this.$t("cvss.low"), value: "L", slot: 'three'}, {label: this.$t("cvss.high"), value: "H", slot: 'four'}],
             },
             cvssObj: {version:'3.1', AV:'', AC:'', PR:'', UI:'', S:'', C:'', I:'', A:'', E:'', RL:'', RC:'', CR:'', IR:'', AR:'', MAV:'', MAC:'', MPR:'', MUI:'', MS:'', MC:'', MI:'', MA:''},
             cvss: {

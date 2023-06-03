@@ -4,10 +4,8 @@ import Vue from 'vue'
 import UserService from '@/services/user'
 import Utils from '@/services/utils'
 
-import { $t } from 'boot/i18n'
-
 export default {
-    data: () => {
+    data() {
         return {
             user: {},
             totpEnabled: false,
@@ -104,17 +102,17 @@ export default {
         updateProfile: function() {
             this.cleanErrors();
             if (!this.user.username)
-                this.errors.username = $t('msg.usernameRequired');
+                this.errors.username = this.$t('msg.usernameRequired');
             if (!this.user.firstname)
-                this.errors.firstname = $t('msg.firstnameRequired');
+                this.errors.firstname = this.$t('msg.firstnameRequired');
             if (!this.user.lastname)
-                this.errors.lastname = $t('msg.lastnameRequired');
+                this.errors.lastname = this.$t('msg.lastnameRequired');
             if (!this.user.currentPassword)
-                this.errors.currentPassword = $t('msg.currentPasswordRequired');
+                this.errors.currentPassword = this.$t('msg.currentPasswordRequired');
             if (Utils.strongPassword(this.user.newPassword) !== true)
-                this.errors.newPassword = $t('msg.passwordComplexity')
+                this.errors.newPassword = this.$t('msg.passwordComplexity')
             if (this.user.newPassword !== this.user.confirmPassword)
-                this.errors.newPassword = $t('msg.confirmPasswordDifferents');
+                this.errors.newPassword = this.$t('msg.confirmPasswordDifferents');
             
             
             if (this.errors.username || this.errors.firstname || this.errors.lastname || this.errors.currentPassword || this.errors.newPassword)
@@ -124,7 +122,7 @@ export default {
             .then((data) => {
                 UserService.refreshToken()
                 Notify.create({
-                    message: $t('msg.profileUpdateOk'),
+                    message: this.$t('msg.profileUpdateOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'

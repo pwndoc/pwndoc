@@ -5,15 +5,13 @@ import Breadcrumb from 'components/breadcrumb';
 import AuditService from '@/services/audit';
 import Utils from '@/services/utils';
 
-import { $t } from '@/boot/i18n'
-
 export default {
     props: {
         frontEndAuditState: Number,
         parentState: String,
         parentApprovals: Array
     },
-    data: () => {
+    data() {
         return {
             auditId: null,
             audit: {
@@ -68,10 +66,10 @@ export default {
             next();
         else {
             Dialog.create({
-                title: $t('msg.thereAreUnsavedChanges'),
-                message: $t('msg.doYouWantToLeave'),
-                ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
+                title: this.$t('msg.thereAreUnsavedChanges'),
+                message: this.$t('msg.doYouWantToLeave'),
+                ok: {label: this.$t('btn.confirm'), color: 'negative'},
+                cancel: {label: this.$t('btn.cancel'), color: 'white'}
             })
             .onOk(() => next())
         }
@@ -80,9 +78,9 @@ export default {
     computed: {
         selectHostsLabel: function() {
             if (this.targetsOptions && this.targetsOptions.length > 0)
-                return $t('msg.selectHost')
+                return this.$t('msg.selectHost')
             else
-                return $t('msg.importHostsFirst')
+                return this.$t('msg.importHostsFirst')
         }
     },
 
@@ -114,7 +112,7 @@ export default {
             .then(() => {
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 Notify.create({
-                    message: $t('msg.auditUpdateOk'),
+                    message: this.$t('msg.auditUpdateOk'),
                     color: 'positive',
                     textColor:'white',
                     position: 'top-right'

@@ -1,7 +1,7 @@
 <div>
 <div class="row">
     <div v-if="languages.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-        <p>{{$t('noLanguage')}} <a href="/data/custom">{{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('languages')}}</a></p>
+        <p>{{this.$t('noLanguage')}} <a href="/data/custom">{{this.$t('nav.data')}} -> {{this.$t('customData')}} -> {{this.$t('languages')}}</a></p>
     </div>
     <div v-else class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
@@ -21,7 +21,7 @@
                 <q-select 
                 class="col-md-2"
                 v-model="dtLanguage" 
-                :label="$t('language')" 
+                :label="this.$t('language')" 
                 :options="languages" 
                 option-value="locale"
                 option-label="language" 
@@ -30,13 +30,13 @@
                 options-sanitize
                 outlined
                 />
-                <q-toggle :label="$t('btn.valid')" v-model="search.valid" :true-value=0 />
-                <q-toggle :label="$t('btn.new')" color="light-blue" v-model="search.new" :true-value=1 />
-                <q-toggle :label="$t('btn.updates')" color="orange" v-model="search.updates" :true-value=2 />
+                <q-toggle :label="this.$t('btn.valid')" v-model="search.valid" :true-value=0 />
+                <q-toggle :label="this.$t('btn.new')" color="light-blue" v-model="search.new" :true-value=1 />
+                <q-toggle :label="this.$t('btn.updates')" color="orange" v-model="search.updates" :true-value=2 />
                 <q-btn 
                 v-if="UserService.isAllowed('vulnerabilities:update')"
                 class="q-ml-md"
-                :label="$t('mergeVulnerabilities')"
+                :label="this.$t('mergeVulnerabilities')"
                 outline
                 color="secondary" 
                 no-caps
@@ -48,13 +48,13 @@
                 unelevated
                 color="secondary"
                 no-caps
-                :label="$t('newVulnerability')"
+                :label="this.$t('newVulnerability')"
                 >
                     <q-list separator>
-                        <q-item-label header>{{$t('selectCategory')}}</q-item-label>
+                        <q-item-label header>{{this.$t('selectCategory')}}</q-item-label>
                         <q-item clickable v-close-popup @click="currentCategory = null; cleanCurrentVulnerability(); $refs.createModal.show()">
                             <q-item-section>
-                              <q-item-label>{{$t('noCategory')}}</q-item-label>
+                              <q-item-label>{{this.$t('noCategory')}}</q-item-label>
                             </q-item-section>
                         </q-item>
                         <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="currentCategory = $_.cloneDeep(category); cleanCurrentVulnerability(); $refs.createModal.show()">
@@ -71,7 +71,7 @@
                     <q-td style="width: 60%">
                         <q-input 
                         dense
-                        :label="$t('search')"
+                        :label="this.$t('search')"
                         v-model="search.title"
                         clearable
                         autofocus
@@ -81,7 +81,7 @@
                     <q-td style="width: 20%">
                         <q-select 
                         dense
-                        :label="$t('search')"
+                        :label="this.$t('search')"
                         v-model="search.category"
                         clearable
                         :options="vulnCategoriesOptions"
@@ -92,7 +92,7 @@
                     <q-td style="width: 20%">
                         <q-select 
                         dense
-                        :label="$t('search')"
+                        :label="this.$t('search')"
                         v-model="search.type"
                         clearable
                         :options="vulnTypeOptions"
@@ -110,33 +110,33 @@
                         {{getDtTitle(props.row)}}
                     </q-td>
                     <q-td key="category" :props="props">
-                        {{props.row.category || $t('noCategory')}}
+                        {{props.row.category || this.$t('noCategory')}}
                     </q-td>
                     <q-td key="type" :props="props">
                         {{getDtType(props.row)}}
                     </q-td>
                     <q-td key="action" :props="props" style="width:1px">
                         <q-btn v-if="UserService.isAllowed('vulnerabilities:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>                                                    
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.edit')}}</q-tooltip>                                                    
                         </q-btn>
                         <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); $refs.editModal.show()">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.view')}}</q-tooltip>                            
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.view')}}</q-tooltip>                            
                         </q-btn>
                         <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.findAudits')}}</q-tooltip>                            
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.findAudits')}}</q-tooltip>                            
                         </q-btn>
                         <q-btn v-if="UserService.isAllowed('vulnerabilities:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>                            
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.delete')}}</q-tooltip>                            
                         </q-btn>
                     </q-td>
                 </q-tr>
             </template>          
             
             <template v-slot:bottom="scope">
-                <span v-if="computedVulnerabilities.length === 1">{{filteredRowsCount}} / 1 {{$t('vulnerabilityNum1')}} ({{$t('total')}}: {{vulnerabilities.length}})</span>                
-                <span v-else>{{filteredRowsCount}} / {{computedVulnerabilities.length}} {{$t('vulnerabilitiesNums')}} ({{$t('total')}}: {{vulnerabilities.length}})</span>    
+                <span v-if="computedVulnerabilities.length === 1">{{filteredRowsCount}} / 1 {{this.$t('vulnerabilityNum1')}} ({{this.$t('total')}}: {{vulnerabilities.length}})</span>                
+                <span v-else>{{filteredRowsCount}} / {{computedVulnerabilities.length}} {{this.$t('vulnerabilitiesNums')}} ({{this.$t('total')}}: {{vulnerabilities.length}})</span>    
                 <q-space />
-                <span>{{$t('resultsPerPage')}}</span>
+                <span>{{this.$t('resultsPerPage')}}</span>
                 <q-select
                 class="q-px-md"
                 v-model="pagination.rowsPerPage"
@@ -159,8 +159,8 @@
     <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
         <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
-                <span v-if="currentCategory">{{$t('addVulnerability')}} ({{currentCategory.name}})</span>
-                <span v-else>{{$t('addVulnerability')}} ({{$t('noCategory')}})</span>
+                <span v-if="currentCategory">{{this.$t('addVulnerability')}} ({{currentCategory.name}})</span>
+                <span v-else>{{this.$t('addVulnerability')}} ({{this.$t('noCategory')}})</span>
             </div>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
@@ -169,7 +169,7 @@
         <q-card-section>
             <div class="q-col-gutter-md row">
                 <q-input
-                :label="$t('title')+' *'"
+                :label="this.$t('title')+' *'"
                 stack-label
                 class="col-md-8"
                 autofocus
@@ -182,7 +182,7 @@
                 />
                 <q-select 
                 class="col-md-2"
-                :label="$t('type')"
+                :label="this.$t('type')"
                 v-model="currentVulnerability.details[currentDetailsIndex].vulnType" 
                 :options="vulnTypesLang" 
                 option-value="name" 
@@ -193,7 +193,7 @@
                 outlined
                 />
                 <q-select
-                :label="$t('language')"
+                :label="this.$t('language')"
                 stack-label
                 class="col-md-2"
                 v-model="currentLanguage"
@@ -208,14 +208,14 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('description')" stack-label>
+            <q-field borderless :label="this.$t('description')" stack-label>
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('observation')" stack-label>
+            <q-field borderless :label="this.$t('observation')" stack-label>
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
@@ -230,7 +230,7 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('remediation')" stack-label>
+            <q-field borderless :label="this.$t('remediation')" stack-label>
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
@@ -239,22 +239,22 @@
         <q-card-section>
             <div class="q-col-gutter-md row">
                 <q-select
-                :label="$t('remediationComplexity')"
+                :label="this.$t('remediationComplexity')"
                 stack-label
                 class="col-md-6"
                 v-model="currentVulnerability.remediationComplexity"
-                :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
+                :options="[{label: this.$t('easy'), value: 1},{label: this.$t('medium'), value: 2},{label: this.$t('complex'), value: 3}]"
                 map-options
                 emit-value
                 options-sanitize
                 outlined
                 />
                 <q-select
-                :label="$t('remediationPriority')"
+                :label="this.$t('remediationPriority')"
                 stack-label
                 class="col-md-6"
                 v-model="currentVulnerability.priority"
-                :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
+                :options="[{label: this.$t('low'), value: 1},{label: this.$t('medium'), value: 2},{label: this.$t('high'), value: 3},{label: this.$t('urgent'), value: 4}]"
                 map-options
                 emit-value
                 options-sanitize
@@ -263,11 +263,11 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
+            <textarea-array :label="this.$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
         </q-card-section>
 
         <q-expansion-item 
-        :label="$t('customFields')"
+        :label="this.$t('customFields')"
         default-opened
         header-class="bg-blue-grey-5 text-white" 
         expand-icon-class="text-white"
@@ -285,8 +285,8 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-            <q-btn color="secondary" unelevated @click="createVulnerability()">{{$t('btn.create')}}</q-btn>
+            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="secondary" unelevated @click="createVulnerability()">{{this.$t('btn.create')}}</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
@@ -295,19 +295,19 @@
     <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
         <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
-                <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
-                <span v-else>{{$t('editVulnerability')}} ({{$t('noCategory')}})</span>
+                <span v-if="currentVulnerability.category">{{this.$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
+                <span v-else>{{this.$t('editVulnerability')}} ({{this.$t('noCategory')}})</span>
             </div>
             <q-separator vertical color="white" class="q-mx-md" />
             <q-btn-dropdown
-            :label="$t('changeCategory')"
+            :label="this.$t('changeCategory')"
             color="white"
             >
             <q-list separator>
-                <q-item-label header>{{$t('selectCategory')}}</q-item-label>
+                <q-item-label header>{{this.$t('selectCategory')}}</q-item-label>
                 <q-item clickable v-close-popup @click="editChangeCategory()">
                     <q-item-section>
-                      <q-item-label>{{$t('noCategory')}}</q-item-label>
+                      <q-item-label>{{this.$t('noCategory')}}</q-item-label>
                     </q-item-section>
                 </q-item>
                 <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="editChangeCategory(category)">
@@ -332,7 +332,7 @@
         <q-card-section>
             <div class="q-col-gutter-md row">
                 <q-input
-                :label="$t('title')+' *'"
+                :label="this.$t('title')+' *'"
                 stack-label
                 class="col-md-8"
                 autofocus
@@ -345,7 +345,7 @@
                 />
                 <q-select 
                 class="col-md-2"
-                :label="$t('type')"
+                :label="this.$t('type')"
                 v-model="currentVulnerability.details[currentDetailsIndex].vulnType" 
                 :options="vulnTypesLang" 
                 option-value="name" 
@@ -356,7 +356,7 @@
                 outlined
                 />
                 <q-select
-                :label="$t('language')"
+                :label="this.$t('language')"
                 stack-label
                 class="col-md-2"
                 v-model="currentLanguage"
@@ -371,14 +371,14 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('description')" stack-label class="basic-editor">
+            <q-field borderless :label="this.$t('description')" stack-label class="basic-editor">
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                 </template>
             </q-field>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('observation')" stack-label class="basic-editor">
+            <q-field borderless :label="this.$t('observation')" stack-label class="basic-editor">
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                 </template>
@@ -393,7 +393,7 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <q-field borderless :label="$t('remediation')" stack-label class="basic-editor">
+            <q-field borderless :label="this.$t('remediation')" stack-label class="basic-editor">
                 <template v-slot="control">
                     <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                 </template>
@@ -402,22 +402,22 @@
         <q-card-section>
             <div class="q-col-gutter-md row">
                 <q-select
-                :label="$t('remediationComplexity')"
+                :label="this.$t('remediationComplexity')"
                 stack-label
                 class="col-md-6"
                 v-model="currentVulnerability.remediationComplexity"
-                :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
+                :options="[{label: this.$t('easy'), value: 1},{label: this.$t('medium'), value: 2},{label: this.$t('complex'), value: 3}]"
                 map-options
                 emit-value
                 options-sanitize
                 outlined
                 />
                 <q-select
-                :label="$t('remediationPriority')"
+                :label="this.$t('remediationPriority')"
                 stack-label
                 class="col-md-6"
                 v-model="currentVulnerability.priority"
-                :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
+                :options="[{label: this.$t('low'), value: 1},{label: this.$t('medium'), value: 2},{label: this.$t('high'), value: 3},{label: this.$t('urgent'), value: 4}]"
                 map-options
                 emit-value
                 options-sanitize
@@ -426,11 +426,11 @@
             </div>
         </q-card-section>
         <q-card-section>
-            <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
+            <textarea-array :label="this.$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
         </q-card-section>
 
         <q-expansion-item 
-        :label="$t('customFields')"
+        :label="this.$t('customFields')"
         default-opened
         header-class="bg-blue-grey-5 text-white" 
         expand-icon-class="text-white">
@@ -445,9 +445,9 @@
         <q-separator />
 
         <q-card-actions align="right" v-if="UserService.isAllowed('vulnerabilities:update')">
-            <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
+            <q-btn color="primary" outline @click="$refs.editModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
             <q-btn v-if="currentVulnerability.status === 1" label="Approve" color="light-blue" unelevated @click="updateVulnerability()" />
-            <q-btn v-else color="secondary" unelevated @click="updateVulnerability()">{{$t('btn.update')}}</q-btn>
+            <q-btn v-else color="secondary" unelevated @click="updateVulnerability()">{{this.$t('btn.update')}}</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
@@ -457,7 +457,7 @@
         <q-header elevated>    
                 <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
-                    {{$t('updateVulnerability')}}
+                    {{this.$t('updateVulnerability')}}
                 </div>
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.updatesModal.hide()" />
@@ -475,12 +475,12 @@
                         indicator-color="primary"
                         class="bg-blue-grey-2"
                         >
-                            <q-tab name="current" :label="$t('current')" />
+                            <q-tab name="current" :label="this.$t('current')" />
                         </q-tabs>
                     </q-card-section>
                     <q-card-section class="q-col-gutter-md row q-pt-none">
                         <q-input
-                        :label="$t('title')+' *'"
+                        :label="this.$t('title')+' *'"
                         stack-label
                         class="col-md-8"
                         v-model="currentVulnerability.details[currentDetailsIndex].title" 
@@ -489,7 +489,7 @@
                         />
                         <q-select 
                         class="col-md-2"
-                        :label="$t('type')"
+                        :label="this.$t('type')"
                         v-model="currentVulnerability.details[currentDetailsIndex].vulnType" 
                         :options="vulnTypesLang" 
                         option-value="name" 
@@ -500,7 +500,7 @@
                         outlined
                         />
                         <q-select
-                        :label="$t('language')"
+                        :label="this.$t('language')"
                         stack-label
                         class="col-md-2"
                         v-model="currentLanguage"
@@ -515,14 +515,14 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <q-field borderless :label="$t('description')" stack-label class="basic-editor">
+                        <q-field borderless :label="this.$t('description')" stack-label class="basic-editor">
                             <template v-slot="control">
                                 <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
                             </template>
                         </q-field>
                     </q-card-section>
                     <q-card-section>
-                        <q-field borderless :label="$t('observation')" stack-label class="basic-editor">
+                        <q-field borderless :label="this.$t('observation')" stack-label class="basic-editor">
                             <template v-slot="control">
                                 <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
                             </template>
@@ -535,7 +535,7 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <q-field borderless :label="$t('remediation')" stack-label class="basic-editor">
+                        <q-field borderless :label="this.$t('remediation')" stack-label class="basic-editor">
                             <template v-slot="control">
                                 <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
                             </template>
@@ -543,7 +543,7 @@
                     </q-card-section>
                     <q-card-section class="q-col-gutter-md row">
                         <q-select
-                        :label="$t('remediationComplexity')"
+                        :label="this.$t('remediationComplexity')"
                         stack-label
                         class="col-md-6"
                         v-model="currentVulnerability.remediationComplexity"
@@ -554,7 +554,7 @@
                         outlined
                         />
                         <q-select
-                        :label="$t('remediationPriority')"
+                        :label="this.$t('remediationPriority')"
                         stack-label
                         class="col-md-6"
                         v-model="currentVulnerability.priority"
@@ -566,11 +566,11 @@
                         />
                     </q-card-section>
                     <q-card-section>
-                        <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
+                        <textarea-array :label="this.$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
                     </q-card-section>
 
                     <q-expansion-item 
-                    :label="$t('customFields')"
+                    :label="this.$t('customFields')"
                     default-opened
                     header-class="bg-blue-grey-5 text-white" 
                     expand-icon-class="text-white">
@@ -587,8 +587,8 @@
                     <q-separator />
             
                     <q-card-actions align="right">
-                        <q-btn color="primary" outline @click="$refs.updatesModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                        <q-btn color="orange" unelevated :label="$t('btn.update')" @click="updateVulnerability()" />
+                        <q-btn color="primary" outline @click="$refs.updatesModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+                        <q-btn color="orange" unelevated :label="this.$t('btn.update')" @click="updateVulnerability()" />
                     </q-card-actions>
                 </q-card>
                 <q-card class="col-md-6">
@@ -608,7 +608,7 @@
                         <q-tab-panel v-for="update of vulnUpdates" :key="update._id" :name="update._id" class="q-pa-none">
                             <q-card-section class="row q-col-gutter-md q-pt-none">
                                 <q-input
-                                :label="$t('title')+' *'"
+                                :label="this.$t('title')+' *'"
                                 stack-label
                                 class="col-md-8"
                                 v-model="update.title"
@@ -618,7 +618,7 @@
                                 <q-select 
                                 class="col-md-2"
                                 :bg-color="(currentVulnerability.details[currentDetailsIndex].vulnType != update.vulnType)?'diffbackground':''"
-                                :label="$t('type')"
+                                :label="this.$t('type')"
                                 v-model="update.vulnType" 
                                 :options="vulnTypesLang" 
                                 option-value="name" 
@@ -630,7 +630,7 @@
                                 outlined
                                 />
                                 <q-select
-                                :label="$t('language')"
+                                :label="this.$t('language')"
                                 stack-label
                                 class="col-md-2"
                                 v-model="update.locale"
@@ -647,7 +647,7 @@
                             <q-card-section>
                                 <q-field 
                                 borderless 
-                                :label="$t('description')" 
+                                :label="this.$t('description')" 
                                 stack-label
                                 :class="
                                     (currentVulnerability.details[currentDetailsIndex].description || update.description) &&
@@ -667,7 +667,7 @@
                             <q-card-section>
                                 <q-field 
                                 borderless 
-                                :label="$t('observation')" 
+                                :label="this.$t('observation')" 
                                 stack-label
                                 :class="
                                 (currentVulnerability.details[currentDetailsIndex].observation || update.observation) &&
@@ -695,7 +695,7 @@
                             <q-card-section>
                                 <q-field 
                                 borderless 
-                                :label="$t('remediation')" 
+                                :label="this.$t('remediation')" 
                                 stack-label
                                 :class="
                                 (currentVulnerability.details[currentDetailsIndex].remediation || update.remediation) &&
@@ -715,7 +715,7 @@
                             <q-card-section class="q-col-gutter-md row">
                                 <q-select
                                 :bg-color="(currentVulnerability.remediationComplexity != update.remediationComplexity)?'diffbackground':''"
-                                :label="$t('remediationComplexity')"
+                                :label="this.$t('remediationComplexity')"
                                 stack-label
                                 class="col-md-6"
                                 v-model="update.remediationComplexity"
@@ -728,7 +728,7 @@
                                 />
                                 <q-select
                                 :bg-color="(currentVulnerability.priority != update.priority)?'diffbackground':''"
-                                :label="$t('remediationPriority')"
+                                :label="this.$t('remediationPriority')"
                                 stack-label
                                 class="col-md-6"
                                 v-model="update.priority"
@@ -743,7 +743,7 @@
                             <q-card-section>
                                 <q-input
                                 :bg-color="!($_.isEqual(currentVulnerability.details[currentDetailsIndex].references, update.references))?'diffbackground':''"
-                                :label="$t('references')"
+                                :label="this.$t('references')"
                                 stack-label
                                 :value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"
                                 type="textarea"
@@ -752,7 +752,7 @@
                             </q-card-section>
 
                             <q-expansion-item 
-                            :label="$t('customFields')"
+                            :label="this.$t('customFields')"
                             default-opened
                             header-class="bg-blue-grey-5 text-white" 
                             expand-icon-class="text-white">
@@ -778,19 +778,19 @@
 <q-dialog persistent ref="mergeModal">
     <q-card style="width: 1000px; max-width: 1000px; height: 60vh">
         <q-bar class="bg-fixed-primary text-white">
-            <span>{{$t('mergeVulnerabilities')}}</span>
+            <span>{{this.$t('mergeVulnerabilities')}}</span>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.mergeModal.hide()" />
         </q-bar>
 
         <div v-if="languages.length < 2">
-            <q-card-section v-html="$t('mergeVulnerabilitiesInfo')"></q-card-section>
+            <q-card-section v-html="this.$t('mergeVulnerabilitiesInfo')"></q-card-section>
         </div>
         <div v-else class="row">
             <div class="col-md-6 col-6">
                 <q-card-section class="col-md-6">
                     <q-select
-                    :label="$t('languageAddFromRight')"
+                    :label="this.$t('languageAddFromRight')"
                     v-model="mergeLanguageLeft"
                     :options="languages"
                     option-value="locale"
@@ -821,7 +821,7 @@
             <div class="col">
                 <q-card-section>
                     <q-select
-                    :label="$t('languageMoveToLeft')"
+                    :label="this.$t('languageMoveToLeft')"
                     v-model="mergeLanguageRight"
                     :options="languages"
                     option-value="locale"
@@ -851,7 +851,7 @@
         </div>
         <q-separator />
         <q-card-actions align="center">
-                <q-btn color="secondary" unelevated @click="mergeVulnerabilities" :disable="mergeVulnLeft === '' || mergeVulnRight === ''">{{$t('merge')}}</q-btn>
+                <q-btn color="secondary" unelevated @click="mergeVulnerabilities" :disable="mergeVulnLeft === '' || mergeVulnRight === ''">{{this.$t('merge')}}</q-btn>
             </q-card-actions>
     </q-card>
 </q-dialog>

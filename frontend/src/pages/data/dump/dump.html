@@ -3,15 +3,15 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-card>
             <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
-                <div class="text-h6">{{$t('nav.vulnerabilities')}}</div>
+                <div class="text-h6">{{this.$t('nav.vulnerabilities')}}</div>
             </q-card-section>
             <q-separator />
             <div v-if="UserService.isAllowed('vulnerabilities:create')">
                 <q-card-section>
-                    <div class="text-bold">{{$t('importVulnerabilities')}}</div>
+                    <div class="text-bold">{{this.$t('importVulnerabilities')}}</div>
                 </q-card-section>
                 <q-card-section>
-                    <div class="text-grey-8" v-html="$t('importVulnerabilitiesInfo')"></div>
+                    <div class="text-grey-8" v-html="this.$t('importVulnerabilitiesInfo')"></div>
                 </q-card-section>
                 <q-card-section>
                     <input
@@ -24,7 +24,7 @@
                     @change="importVulnerabilities($event.target.files)"
                     />
                     <q-btn 
-                    :label="$t('import')"
+                    :label="this.$t('import')"
                     color="secondary"
                     flat
                     class="bg-secondary text-white"
@@ -34,14 +34,14 @@
                 <q-separator />
             </div>
             <q-card-section>
-                <div class="text-bold">{{$t('exportVulnerabilities')}}</div>
+                <div class="text-bold">{{this.$t('exportVulnerabilities')}}</div>
             </q-card-section>
             <q-card-section>
-                    <div class="text-grey-8" v-html="$t('exportVulnerabilitiesInfo')"></div>
+                    <div class="text-grey-8" v-html="this.$t('exportVulnerabilitiesInfo')"></div>
                 </q-card-section>
                 <q-card-section>
                     <q-btn 
-                    :label="$t('export')"
+                    :label="this.$t('export')"
                     color="secondary"
                     flat
                     class="bg-secondary text-white"
@@ -51,14 +51,14 @@
                 <q-separator />
                 <div v-if="UserService.isAllowed('vulnerabilities:delete-all')">
                     <q-card-section>
-                        <div class="text-bold">{{$t('deleteAllVulnerabilities')}}</div>
+                        <div class="text-bold">{{this.$t('deleteAllVulnerabilities')}}</div>
                     </q-card-section>
                     <q-card-section>
-                        <div class="text-grey-8" v-html="$t('deleteAllVulnerabilitiesInfo')"></div>
+                        <div class="text-grey-8" v-html="this.$t('deleteAllVulnerabilitiesInfo')"></div>
                     </q-card-section>
                     <q-card-section>
                         <q-btn 
-                        :label="$t('btn.deleteAll')"
+                        :label="this.$t('btn.deleteAll')"
                         flat
                         class="bg-negative text-white"
                         @click="deleteAllVulnerabilities"
@@ -71,7 +71,7 @@
     <div class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-card>
             <q-card-section class="q-py-xs bg-blue-grey-5 text-white">
-                <div class="text-h6">{{$t('nav.audits')}}</div>
+                <div class="text-h6">{{this.$t('nav.audits')}}</div>
             </q-card-section>
             <q-separator />
             <q-card-section>

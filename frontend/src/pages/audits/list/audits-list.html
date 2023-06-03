@@ -1,10 +1,10 @@
 <div>
 <div class="row">
     <div v-if="languages.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-        <p>{{$t('noLanguage')}}<a href="/data/custom">{{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('language')}}</a></p>
+        <p>{{this.$t('noLanguage')}}<a href="/data/custom">{{this.$t('nav.data')}} -> {{this.$t('customData')}} -> {{this.$t('language')}}</a></p>
     </div>
     <div v-if="auditTypes.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-        <p>{{$t('noAudit')}}<a href="/data/custom">{{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('auditTypes')}}</a></p>
+        <p>{{this.$t('noAudit')}}<a href="/data/custom">{{this.$t('nav.data')}} -> {{this.$t('customData')}} -> {{this.$t('auditTypes')}}</a></p>
     </div>
     <div v-if="languages.length > 0 && auditTypes.length > 0" class="col-md-8 col-12 offset-md-2 q-mt-md">
         <q-table
@@ -23,7 +23,7 @@
             <template v-slot:top>
                 <q-input
                 class="col-md-3"
-                :label="$t('searchFinds')"
+                :label="this.$t('searchFinds')"
                 v-model="search.finding"
                 @keyup.enter="getAudits"
                 outlined
@@ -33,14 +33,14 @@
                         <q-icon v-if="search.finding" name="cancel" @click.stop="search.finding = null; getAudits()" class="cursor-pointer" />
                     </template>
                 </q-input>
-                <q-toggle :label="$t('myAudits')" v-model="myAudits" />
-                <q-toggle v-if="UserService.isAllowed('audits:users-connected')" :label="$t('usersConnected')" v-model="displayConnected" />
-                <q-toggle v-if="$settings.reviews.enabled && (UserService.isAllowed('audits:review') || UserService.isAllowed('audits:review-all'))" :label="$t('awaitingMyReview')" v-model="displayReadyForReview" />
+                <q-toggle :label="this.$t('myAudits')" v-model="myAudits" />
+                <q-toggle v-if="UserService.isAllowed('audits:users-connected')" :label="this.$t('usersConnected')" v-model="displayConnected" />
+                <q-toggle v-if="$settings.reviews.enabled && (UserService.isAllowed('audits:review') || UserService.isAllowed('audits:review-all'))" :label="this.$t('awaitingMyReview')" v-model="displayReadyForReview" />
                 <q-space />
                 <q-btn 
                 color="secondary"
                 unelevated
-                :label="$t('newAudit')"
+                :label="this.$t('newAudit')"
                 no-caps
                 @click="cleanCurrentAudit(); $refs.createModal.show()"
                 />    
@@ -56,7 +56,7 @@
                         <div v-if="['name', 'users', 'date'].indexOf(col.name) > -1">
                             <q-input 
                             dense
-                            :label="$t('search')"
+                            :label="this.$t('search')"
                             v-model="search[col.name]"
                             clearable
                             :autofocus="col.name === 'name'"
@@ -66,7 +66,7 @@
                         <div v-else-if="col.name === 'company'">
                             <q-select
                                 dense 
-                                :label="$t('search')"
+                                :label="this.$t('search')"
                                 :options="companies"
                                 v-model="search.company"
                                 option-value="name"
@@ -81,7 +81,7 @@
                         <div v-else-if="col.name === 'language'">
                             <q-select 
                             dense
-                            :label="$t('search')"
+                            :label="this.$t('search')"
                             :options="languages"
                             v-model="search.language"
                             option-value="locale"
@@ -106,9 +106,9 @@
             <q-td slot="body-cell-connected" slot-scope="props">
                 <q-chip v-if="UserService.isAllowed('audits:users-connected') && props.row.connected && props.row.connected.length > 0" square size="11px">
                     <q-avatar color="green" text-color="white">{{props.row.connected.length}}</q-avatar>
-                    {{$t('users')}}
+                    {{this.$t('users')}}
                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
-                        {{$t('tooltip.usersConnected')}}
+                        {{this.$t('tooltip.usersConnected')}}
                         <div v-for="(user,idx) of props.row.connected" :key="idx">
                             {{user}}
                         </div>
@@ -120,21 +120,21 @@
             </q-td>
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                 <q-btn size="sm" flat color="primary" :to="'/audits/'+props.row._id" icon="fa fa-edit">
-					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editAudit')}}</q-tooltip> 
+					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.editAudit')}}</q-tooltip> 
                 </q-btn>
                 <q-btn size="sm" flat color="info" @click="generateReport(props.row._id)" icon="fa fa-download">
-					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.downloadReport')}}</q-tooltip> 
+					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.downloadReport')}}</q-tooltip> 
                 </q-btn>
                 <q-btn size="sm" flat color="negative" @click="confirmDeleteAudit(props.row)" icon="fa fa-trash">
-					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteAudit')}}</q-tooltip> 
+					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.deleteAudit')}}</q-tooltip> 
                 </q-btn>
             </q-td>
 
             <template v-slot:bottom="scope">
-                <span v-if="audits.length === 1">1 {{$t('auditNum1')}}</span>                
-                <span v-else>{{audits.length}} {{$t('auditNums')}}</span> 
+                <span v-if="audits.length === 1">1 {{this.$t('auditNum1')}}</span>                
+                <span v-else>{{audits.length}} {{this.$t('auditNums')}}</span> 
                 <q-space />
-                <span>{{$t('resultsPerPage')}}</span>
+                <span>{{this.$t('resultsPerPage')}}</span>
                 <q-select
                 class="q-px-md"
                 v-model="pagination.rowsPerPage"
@@ -156,14 +156,14 @@
     <q-card style="width:800px">
         <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
-                {{$t('createAudit')}}
+                {{this.$t('createAudit')}}
             </div>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
         </q-bar>
         <q-card-section>
             <q-input
-            :label="$t('name')+' *'"
+            :label="this.$t('name')+' *'"
             :error="!!errors.name"
             :error-message="errors.name"
             autofocus
@@ -172,7 +172,7 @@
             outlined
             />
             <q-select
-            :label="$t('selectAssessment')+' *'"
+            :label="this.$t('selectAssessment')+' *'"
             :error="!!errors.auditType"
             :error-message="errors.auditType"
             v-model="currentAudit.auditType"
@@ -185,7 +185,7 @@
             outlined
             /> 
             <q-select 
-            :label="$t('selectLanguage')+' *'"
+            :label="this.$t('selectLanguage')+' *'"
             :error="!!errors.language"
             :error-message="errors.language"
             v-model="currentAudit.language" 
@@ -202,8 +202,8 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-            <q-btn color="secondary" unelevated @click="createAudit()">{{$t('btn.create')}}</q-btn>
+            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="secondary" unelevated @click="createAudit()">{{this.$t('btn.create')}}</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>

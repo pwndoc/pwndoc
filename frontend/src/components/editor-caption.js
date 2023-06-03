@@ -1,5 +1,5 @@
 import { Node } from "@tiptap/core";
-import { VueNodeViewRenderer } from '@tiptap/vue-2'
+import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import Component from './editor-caption-template.vue'
 
 export default Node.create({

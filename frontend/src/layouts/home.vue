@@ -8,21 +8,21 @@
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-fingerprint" />
             </q-item-section>
-            <q-item-section>{{$t('nav.audits')}}</q-item-section>
+            <q-item-section>{{this.$t('nav.audits')}}</q-item-section>
             </q-item>
 
             <q-item to='/vulnerabilities' active-class="text-green">
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-shield-alt" />
             </q-item-section>
-            <q-item-section>{{$t('nav.vulnerabilities')}}</q-item-section>
+            <q-item-section>{{this.$t('nav.vulnerabilities')}}</q-item-section>
             </q-item>
 
             <q-item to='/data' active-class="text-green">
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
                 <q-icon name="fa fa-database" />
             </q-item-section>
-            <q-item-section>{{$t('nav.data')}}</q-item-section>
+            <q-item-section>{{this.$t('nav.data')}}</q-item-section>
             </q-item>
 
             <q-space />
@@ -31,7 +31,7 @@
               <q-item-section avatar style="min-width:0" class="q-pr-sm">
                   <q-icon name="fa fa-cog" />
               </q-item-section>
-              <q-item-section>{{$t('settings')}}</q-item-section>
+              <q-item-section>{{this.$t('settings')}}</q-item-section>
               </q-item>
             <q-btn-dropdown auto-close flat icon="fa fa-user-circle" no-caps :label="userService.user.username">
                 <q-list>
@@ -41,12 +41,12 @@
                   </q-item>
                   <q-item clickable @click="$router.push('/profile')">
                     <q-item-section side><q-icon size="xs" name="fa fa-id-card" /></q-item-section>
-                    <q-item-section>{{$t('profile')}}</q-item-section>
+                    <q-item-section>{{this.$t('profile')}}</q-item-section>
                   </q-item>
                   <q-separator />
                   <q-item clickable @click="logout()">
                     <q-item-section side><q-icon size="xs" name="fa fa-sign-out-alt" /></q-item-section>
-                    <q-item-section>{{$t('logout')}}</q-item-section>
+                    <q-item-section>{{this.$t('logout')}}</q-item-section>
                   </q-item>
                 </q-list>
             </q-btn-dropdown>
@@ -77,7 +77,7 @@ export default {
 }
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .home-background {
     background-color: #e6ecf0;
 }

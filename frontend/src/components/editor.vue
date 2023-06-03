@@ -214,7 +214,7 @@
 
 <script>
 // Import the editor
-import { Editor, EditorContent } from '@tiptap/vue-2'
+import { Editor, EditorContent } from '@tiptap/vue-3'
 
 // Import Extensions
 import StarterKit from '@tiptap/starter-kit'

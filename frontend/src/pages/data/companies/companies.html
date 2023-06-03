@@ -16,7 +16,7 @@
                 <q-space />
                 <q-btn 
                 unelevated 
-                :label="$t('addCompany')"
+                :label="this.$t('addCompany')"
                 color="secondary" 
                 no-caps
                 @click="cleanCurrentCompany(); $refs.createModal.show()"
@@ -28,7 +28,7 @@
                     <q-td style="width: 50%">
                         <q-input 
                         dense
-                        :label="$t('search')"
+                        :label="this.$t('search')"
                         v-model="search.name"
                         clearable
                         outlined
@@ -45,18 +45,18 @@
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                 <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.edit')}}</q-tooltip>
                 </q-btn>
                 <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCompany(props.row)">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.delete')}}</q-tooltip>
                 </q-btn>
             </q-td>
 
             <template v-slot:bottom="scope">
-                <span v-if="companies.length === 1">1 {{$t('quantifier')}}{{$t('company')}}</span>                
-                <span v-else>{{companies.length}} {{$t('quantifier')}}{{$t('companies')}}</span>    
+                <span v-if="companies.length === 1">1 {{this.$t('quantifier')}}{{this.$t('company')}}</span>                
+                <span v-else>{{companies.length}} {{this.$t('quantifier')}}{{this.$t('companies')}}</span>    
                 <q-space />
-                <span>{{$t('resultsPerPage')}}</span>
+                <span>{{this.$t('resultsPerPage')}}</span>
                 <q-select
                 class="q-px-md"
                 v-model="pagination.rowsPerPage"
@@ -79,7 +79,7 @@
     <q-card style="width:800px">
         <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
-                {{$t('addCompany')}}
+                {{this.$t('addCompany')}}
             </div>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
@@ -88,7 +88,7 @@
         <q-card-section>
             <div class="row q-col-gutter-md">
                 <q-input
-                    :label="$t('name')+' *'"
+                    :label="this.$t('name')+' *'"
                     autofocus
                     class="col-md-12"
                     :error="!!errors.name"
@@ -99,7 +99,7 @@
                     hide-bottom-space
                     />
                 <q-input
-                    :label="$t('shortName')"
+                    :label="this.$t('shortName')"
                     class="col-md-12"
                     @keyup.enter="createCompany()"
                     v-model="currentCompany.shortName" 
@@ -110,7 +110,7 @@
                         ref="addUploader"
                         class="full-width"
                         url=""
-                        :label="$t('logo')"
+                        :label="this.$t('logo')"
                         accept='.gif,.jpg,.jpeg,.png'
                         hide-upload-btn
                         @added="handleImage"
@@ -121,8 +121,8 @@
         </q-card-section>
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-            <q-btn color="secondary" unelevated @click="createCompany()">{{$t('btn.create')}}</q-btn>
+            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="secondary" unelevated @click="createCompany()">{{this.$t('btn.create')}}</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
@@ -131,7 +131,7 @@
     <q-card style="width:800px">
         <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
-                {{$t('editCompany')}}
+                {{this.$t('editCompany')}}
             </div>
             <q-space />
             <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
@@ -140,7 +140,7 @@
         <q-card-section>
             <div class="row q-col-gutter-md">
                 <q-input
-                    :label="$t('name')+' *'"
+                    :label="this.$t('name')+' *'"
                     autofocus
                     class="col-md-12"
                     :error="!!errors.name"
@@ -151,7 +151,7 @@
                     hide-bottom-space
                     />
                 <q-input
-                    :label="$t('shortName')"
+                    :label="this.$t('shortName')"
                     class="col-md-12"
                     @keyup.enter="updateCompany()"
                     v-model="currentCompany.shortName"
@@ -162,7 +162,7 @@
                         ref="addUploader"
                         class="full-width"
                         url=""
-                        :label="$t('logo')"
+                        :label="this.$t('logo')"
                         accept='.gif,.jpg,.jpeg,.png'
                         hide-upload-btn
                         @added="handleImage"
@@ -173,8 +173,8 @@
         </q-card-section>
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
-            <q-btn color="secondary" unelevated @click="updateCompany()">{{$t('btn.update')}}</q-btn>
+            <q-btn color="primary" outline @click="$refs.editModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="secondary" unelevated @click="updateCompany()">{{this.$t('btn.update')}}</q-btn>
         </q-card-actions>
     </q-card>
 </q-dialog>
