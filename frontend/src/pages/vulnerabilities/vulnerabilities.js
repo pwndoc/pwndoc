@@ -325,7 +325,7 @@ export default {
             })
             .onOk(() => {
                 if (category){
-                    this.currentVulnerability.category = category.name
+                    this.currentVulnerability.category = category
                 }
                 else {
                     this.currentVulnerability.category = null
@@ -346,7 +346,7 @@ export default {
             this.currentVulnerability.details = [];
             this.currentLanguage = this.dtLanguage;
             if (this.currentCategory && this.currentCategory.name) 
-                this.currentVulnerability.category = this.currentCategory.name
+                this.currentVulnerability.category = this.currentCategory
             else
                 this.currentVulnerability.category = null
 
@@ -442,7 +442,7 @@ export default {
             var result = rows && rows.filter(row => {
                 var title = this.getDtTitle(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var type = this.getDtType(row).toLowerCase()
-                var category = (row.category || $t('noCategory')).toLowerCase()
+                var category = (row.category ? row.category.name : $t('noCategory')).toLowerCase()
                 var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.type || "").toLowerCase()

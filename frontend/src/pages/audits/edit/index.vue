@@ -281,7 +281,7 @@ export default {
 			'audit.findings': {
 				handler(newVal, oldVal) {
 					var result = _.chain(this.audit.findings)
-					.groupBy("category")
+					.groupBy("category.name")
 					.map((value, key) => {
 						if (key === 'undefined') key = 'No Category'
 						var sortOption = this.audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
@@ -606,7 +606,7 @@ export default {
 					if (category === 'No Category')
 						return !e.category
 					else
-						return e.category === category
+						return e.category.name === category.name
 				})
 				if (index > -1) {
 					var realOldIndex = event.oldIndex + index

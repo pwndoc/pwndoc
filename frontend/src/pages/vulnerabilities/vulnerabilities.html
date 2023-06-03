@@ -110,7 +110,7 @@
                         {{getDtTitle(props.row)}}
                     </q-td>
                     <q-td key="category" :props="props">
-                        {{props.row.category || $t('noCategory')}}
+                        {{props.row.category ? props.row.category.name : $t('noCategory')}}
                     </q-td>
                     <q-td key="type" :props="props">
                         {{getDtType(props.row)}}
@@ -295,7 +295,7 @@
     <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
         <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
-                <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
+                <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category.name}})</span>
                 <span v-else>{{$t('editVulnerability')}} ({{$t('noCategory')}})</span>
             </div>
             <q-separator vertical color="white" class="q-mx-md" />

@@ -242,6 +242,7 @@ module.exports = function(app) {
         vulnCat.name = req.body.name;
 
         // Optional parameters
+        if (!_.isNil(req.body.description)) vulnCat.description = req.body.description
         if (!_.isNil(req.body.sortValue)) vulnCat.sortValue = req.body.sortValue
         if (!_.isNil(req.body.sortOrder)) vulnCat.sortOrder = req.body.sortOrder
         if (!_.isNil(req.body.sortAuto)) vulnCat.sortAuto = req.body.sortAuto
@@ -268,9 +269,10 @@ module.exports = function(app) {
         var vulnCategories = []
         req.body.forEach(e => {
             // Required parameters
-            var tmpCat = {name: e.name}
+            var tmpCat = {_id:e._id, name: e.name}
 
             // Optional parameters
+            if (!_.isNil(e.description)) tmpCat.description = e.description
             if (!_.isNil(e.sortValue)) tmpCat.sortValue = e.sortValue
             if (!_.isNil(e.sortOrder)) tmpCat.sortOrder = e.sortOrder
             if (!_.isNil(e.sortAuto)) tmpCat.sortAuto = e.sortAuto

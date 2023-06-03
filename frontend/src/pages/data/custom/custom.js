@@ -388,7 +388,7 @@ export default {
 
             DataService.createVulnerabilityCategory(this.newVulnCat)
             .then((data) => {
-                this.newVulnCat = {name: "", sortValue: "cvssScore", sortOrder: "desc", sortAuto: true}
+                this.newVulnCat = {name: "", description: "", sortValue: "cvssScore", sortOrder: "desc", sortAuto: true}
                 this.getVulnerabilityCategories();
                 Notify.create({
                     message: 'Vulnerability category created successfully',

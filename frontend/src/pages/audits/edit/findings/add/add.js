@@ -76,7 +76,7 @@ export default {
     computed: {
         vulnCategoriesOptions: function() {
             return this.$_.uniq(this.$_.map(this.vulnerabilities, vuln => {
-                return vuln.category || $t('noCategory')
+                return vuln.category ? vuln.category.name : $t('noCategory')
             }))
         },
 
@@ -135,7 +135,7 @@ export default {
             var result = rows && rows.filter(row => {
                 var title = (row.detail.title || $t('err.notDefinedLanguage')).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var type = (row.detail.vulnType || $t('undefined')).toLowerCase()
-                var category = (row.category || $t('noCategory')).toLowerCase()
+                var category = (row.category ? row.category.name : $t('noCategory')).toLowerCase()
                 var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.vulnType || "").toLowerCase()
