@@ -745,7 +745,7 @@
                                 :bg-color="!($_.isEqual(currentVulnerability.details[currentDetailsIndex].references, update.references))?'diffbackground':''"
                                 :label="this.$t('references')"
                                 stack-label
-                                :value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"
+                                :model-value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"
                                 type="textarea"
                                 readonly
                                 />

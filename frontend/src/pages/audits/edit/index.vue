@@ -1,6 +1,6 @@
 <template>
 <div>
-	<q-drawer side="left" :value="true" :width="400">
+	<q-drawer side="left" :model-value="true" :width="400">
 		<q-splitter horizontal v-model="splitterRatio" :limits="[50, 80]" style="height: 100%">
 			<template v-slot:before>
 				<q-list class="home-drawer">

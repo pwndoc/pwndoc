@@ -15,7 +15,7 @@
                 hide-bottom-space
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
-                :value="field.text"
+                :model-value="field.text"
                 >
                     <template v-slot:control>
                         <basic-editor 
@@ -153,7 +153,7 @@
                 v-if="field.customField.fieldType === 'checkbox'"
                 :label="field.customField.label"
                 stack-label
-                :value="field.text"
+                :model-value="field.text"
                 :hint="field.description"
                 hide-bottom-space
                 outlined
@@ -181,7 +181,7 @@
                 v-if="field.customField.fieldType === 'radio'"
                 :label="field.customField.label"
                 stack-label
-                :value="field.text"
+                :model-value="field.text"
                 :hint="field.description"
                 hide-bottom-space
                 outlined

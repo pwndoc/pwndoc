@@ -1,6 +1,6 @@
 <template>
 <div>
-    <q-drawer side="left" :value="true">
+    <q-drawer side="left" :model-value="true">
         <q-list class="home-drawer">
             <q-item-label header>{{this.$t('handleCustomData')}}</q-item-label>
         
