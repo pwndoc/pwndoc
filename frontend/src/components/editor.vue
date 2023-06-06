@@ -441,7 +441,12 @@ export default {
         border-bottom: 1px solid rgba(0,0,0,0.12);
         border-right: 1px solid rgba(0,0,0,0.12);
         top: 50px!important;
-        z-index: 1000
+        z-index: 1000;
+        position: fixed;
+    }
+
+    .affix-top {
+        top: unset!important;
     }
 }
 
