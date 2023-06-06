@@ -107,7 +107,7 @@
                 <q-chip v-if="UserService.isAllowed('audits:users-connected') && props.row.connected && props.row.connected.length > 0" square size="11px">
                     <q-avatar color="green" text-color="white">{{props.row.connected.length}}</q-avatar>
                     {{this.$t('users')}}
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
                         {{this.$t('tooltip.usersConnected')}}
                         <div v-for="(user,idx) of props.row.connected" :key="idx">
                             {{user}}
@@ -120,13 +120,13 @@
             </q-td>
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                 <q-btn size="sm" flat color="primary" :to="'/audits/'+props.row._id" icon="fa fa-edit">
-					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.editAudit')}}</q-tooltip> 
+					<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.editAudit')}}</q-tooltip> 
                 </q-btn>
                 <q-btn size="sm" flat color="info" @click="generateReport(props.row._id)" icon="fa fa-download">
-					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.downloadReport')}}</q-tooltip> 
+					<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.downloadReport')}}</q-tooltip> 
                 </q-btn>
                 <q-btn size="sm" flat color="negative" @click="confirmDeleteAudit(props.row)" icon="fa fa-trash">
-					<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.deleteAudit')}}</q-tooltip> 
+					<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.deleteAudit')}}</q-tooltip> 
                 </q-btn>
             </q-td>
 

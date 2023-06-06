@@ -3,7 +3,7 @@
     <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix" class="bg-grey-4">
             <q-toolbar class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">
-                    <q-tooltip :delay="500" content-class="text-bold">Text Format</q-tooltip>
+                    <q-tooltip :delay="500" class="text-bold">Text Format</q-tooltip>
                     <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel" style="width:42px" class="text-bold">
                         <q-list dense>
                             <q-item 
@@ -60,7 +60,7 @@
                     :class="{ 'is-active': editor.isActive('bold') }"
                     @click="editor.chain().focus().toggleBold().run()"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Bold</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Bold</q-tooltip>
                         <q-icon name="format_bold" />
                     </q-btn>
 
@@ -68,7 +68,7 @@
                     :class="{ 'is-active': editor.isActive('italic') }"
                     @click="editor.chain().focus().toggleItalic().run()"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Italic</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Italic</q-tooltip>
                         <q-icon name="format_italic" />
                     </q-btn>
 
@@ -76,7 +76,7 @@
                     :class="{ 'is-active': editor.isActive('underline') }"
                     @click="editor.chain().focus().toggleUnderline().run()"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Underline</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Underline</q-tooltip>
                         <q-icon name="format_underline" />
                     </q-btn>
 
@@ -84,7 +84,7 @@
                     :class="{ 'is-active': editor.isActive('strike') }"
                     @click="editor.chain().focus().toggleStrike().run()"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Strikethrough</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Strikethrough</q-tooltip>
                         <q-icon name="format_strikethrough" />
                     </q-btn>
 
@@ -92,7 +92,7 @@
                     @click="editor.chain().focus().toggleHighlight({color: highlightColor}).run()"
                     >
                         <template v-slot:label>
-                            <q-tooltip :delay="500" content-class="text-bold">Highlight</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Highlight</q-tooltip>
                             <i class="material-symbols-outlined q-icon" :style="{ 'color': highlightColor }">format_ink_highlighter</i>
                         </template>
 
@@ -117,7 +117,7 @@
                     :class="{ 'is-active': editor.isActive('bulletList') }"
                     @click="editor.chain().focus().toggleBulletList().run()"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Bullets</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Bullets</q-tooltip>
                         <q-icon name="format_list_bulleted" />
                     </q-btn>
 
@@ -125,7 +125,7 @@
                     :class="{ 'is-active': editor.isActive('orderedList') }"
                     @click="editor.chain().focus().toggleOrderedList().run()"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Numbering</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Numbering</q-tooltip>
                         <q-icon name="format_list_numbered" />
                     </q-btn>
                 </div>
@@ -136,7 +136,7 @@
                     :class="{ 'is-active': editor.isActive('code') }"
                     @click="editor.chain().focus().toggleCode().run()"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Code</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Code</q-tooltip>
                         <q-icon name="code" />
                     </q-btn>
 
@@ -144,14 +144,14 @@
                     :class="{ 'is-active': editor.isActive('codeBlock') }"
                     @click="editor.chain().focus().toggleCodeBlock().run()"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Code Block</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Code Block</q-tooltip>
                         <q-icon name="mdi-console" />
                     </q-btn>
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
                     
                 <div v-if="toolbar.indexOf('image') !== -1">
-                    <q-tooltip :delay="500" content-class="text-bold">Insert Image</q-tooltip>
+                    <q-tooltip :delay="500" class="text-bold">Insert Image</q-tooltip>
                     <q-btn flat size="sm" dense>
                         <label class="cursor-pointer">
                             <input
@@ -168,7 +168,7 @@
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('image') !== -1" />
 
                 <div v-if="toolbar.indexOf('caption') !== -1">
-                    <q-tooltip :delay="500" content-class="text-bold">Insert Caption</q-tooltip>
+                    <q-tooltip :delay="500" class="text-bold">Insert Caption</q-tooltip>
                     <q-btn-dropdown flat size="sm" dense icon="subtitles">
                         <q-list dense>
                             <q-item v-for="caption of $settings.report.public.captions" :key="caption" clickable v-close-popup @click="editor.chain().focus().setCaption({label: caption, alt: ''}).run()">
@@ -182,14 +182,14 @@
                 <q-btn flat size="sm" dense
                 @click="editor.commands.undo"
                 >
-                    <q-tooltip :delay="500" content-class="text-bold">Undo</q-tooltip>
+                    <q-tooltip :delay="500" class="text-bold">Undo</q-tooltip>
                     <q-icon name="undo" />
                 </q-btn>
 
                 <q-btn flat size="sm" dense
                 @click="editor.commands.redo"
                 >
-                    <q-tooltip :delay="500" content-class="text-bold">Redo</q-tooltip>
+                    <q-tooltip :delay="500" class="text-bold">Redo</q-tooltip>
                     <q-icon name="redo" />
                 </q-btn>
 

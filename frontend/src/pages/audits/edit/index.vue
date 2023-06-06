@@ -9,28 +9,28 @@
 						<template v-if="$settings.reviews.enabled">
 						<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="secondary" :label="this.$t('btn.topButtonSection.submitReview')" no-caps @click="toggleAskReview" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.topButtonSection.submitReview')}}</q-tooltip> 
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.topButtonSection.submitReview')}}</q-tooltip> 
 							</q-btn>
 						</q-item-section>
 						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
 							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="amber-9" :label="this.$t('btn.topButtonSection.cancelReview')" no-caps @click="toggleAskReview" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.topButtonSection.cancelReview')}}</q-tooltip> 
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.topButtonSection.cancelReview')}}</q-tooltip> 
 							</q-btn>
 						</q-item-section>
 						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN].includes(frontEndAuditState)">
 							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="green" :label="this.$t('btn.topButtonSection.approve')" no-caps @click="toggleApproval" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.topButtonSection.approve')}}</q-tooltip> 
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.topButtonSection.approve')}}</q-tooltip> 
 							</q-btn>
 						</q-item-section>
 						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
 							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="warning" :label="this.$t('btn.topButtonSection.removeApproval')" no-caps @click="toggleApproval" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.topButtonSection.removeApproval')}}</q-tooltip> 
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.topButtonSection.removeApproval')}}</q-tooltip> 
 							</q-btn>
 						</q-item-section>
 						</template>
 						<q-item-section side class="topButtonSection">
 							<q-btn flat color="info" @click="generateReport">
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.downloadReport')}}</q-tooltip> 
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.downloadReport')}}</q-tooltip> 
 								<i class="fa fa-download fa-lg"></i>
 							</q-btn>
 						</q-item-section>
@@ -87,8 +87,8 @@
 								</q-item-section>
 								<q-item-section avatar>
 									<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-										<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.sortOptions')}}</q-tooltip>
-										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left">
+										<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.sortOptions')}}</q-tooltip>
+										<q-menu style="width: 300px" anchor="bottom middle" self="top left">
 											<q-item>
 												<q-item-section>
 													<q-toggle 

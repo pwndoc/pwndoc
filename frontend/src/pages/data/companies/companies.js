@@ -1,5 +1,4 @@
 import { Dialog, Notify } from 'quasar';
-import Vue from 'vue'
 
 import CompanyService from '@/services/company'
 import Utils from '@/services/utils'

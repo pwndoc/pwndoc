@@ -117,16 +117,16 @@
                     </q-td>
                     <q-td key="action" :props="props" style="width:1px">
                         <q-btn v-if="UserService.isAllowed('vulnerabilities:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.edit')}}</q-tooltip>                                                    
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.edit')}}</q-tooltip>                                                    
                         </q-btn>
                         <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); $refs.editModal.show()">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.view')}}</q-tooltip>                            
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.view')}}</q-tooltip>                            
                         </q-btn>
                         <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.findAudits')}}</q-tooltip>                            
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.findAudits')}}</q-tooltip>                            
                         </q-btn>
                         <q-btn v-if="UserService.isAllowed('vulnerabilities:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{this.$t('tooltip.delete')}}</q-tooltip>                            
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.delete')}}</q-tooltip>                            
                         </q-btn>
                     </q-td>
                 </q-tr>

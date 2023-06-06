@@ -1,5 +1,4 @@
 import { Dialog, Notify } from 'quasar'
-import Vue from 'vue'
 import YAML from 'js-yaml'
 
 import VulnerabilityService from '@/services/vulnerability'

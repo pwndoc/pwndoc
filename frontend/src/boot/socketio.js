@@ -7,8 +7,9 @@ export default boot(({ app }) => {
 
     socket.on('disconnect', (error) => {
         Loading.show({
+            html: true,
             message: `<i class='material-icons'>wifi_off</i><br /><p>${this.$t('msg.wrongContactingBackend')}</p>`, 
-            spinner: null, 
+            spinner: null,
             backgroundColor: 'red-10', 
             customClass: 'loading-error',
             delay: 5000
