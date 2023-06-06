@@ -1,6 +1,6 @@
 <template>
 <div>
-	<q-drawer side="left" :model-value="true" :width="400">
+	<q-drawer side="left" :model-value="true" :width="400" :mini="miniState" @mouseover="miniState = false" @mouseout="miniState = true">
 		<q-splitter horizontal v-model="splitterRatio" :limits="[50, 80]" style="height: 100%">
 			<template v-slot:before>
 				<q-list class="home-drawer">
@@ -238,7 +238,15 @@ import UserService from '@/services/user';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
+import { ref } from 'vue'
+
 export default {
+    setup () {
+        return {
+            miniState: ref(true)
+        }
+    },
+
 		data () {
 				return {
 					auditId: "",

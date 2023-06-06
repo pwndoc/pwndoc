@@ -1,11 +1,7 @@
 <template>
 <div>
-    <q-drawer side="left" :model-value="true">
+    <q-drawer side="left" :model-value="true" :mini="miniState" @mouseover="miniState = false" @mouseout="miniState = true">
         <q-list class="home-drawer">
-            <q-item-label header>{{this.$t('handleCustomData')}}</q-item-label>
-        
-            <q-separator />
-        
             <q-item to='/data/collaborators'>
                 <q-item-section avatar>
                     <q-icon name="fa fa-users" />
@@ -55,7 +51,14 @@
 import Breadcrumb from 'components/breadcrumb'
 import UserService from '@/services/user'
 
+import { ref } from 'vue'
+
 export default {
+    setup () {
+        return {
+            miniState: ref(true)
+        }
+    },
     data: () => {
         return {
             UserService: UserService
