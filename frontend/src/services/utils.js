@@ -192,7 +192,7 @@ export default {
     var regExp = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
     if (regExp.test(value))
       return true
-    return this.$t('msg.passwordComplexity')
+    return false
   },
 
   // Return black or white color depending on background color
