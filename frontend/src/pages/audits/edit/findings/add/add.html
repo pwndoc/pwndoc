@@ -1,5 +1,5 @@
 <div>
-    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
+    <breadcrumb buttons :title="`${audit.name} (${audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
     </breadcrumb>
 
 <div class="row q-col-gutter-md q-pa-md">
@@ -7,7 +7,7 @@
         <q-table
         class="sticky-header-table-addfinding"
         :columns="dtVulnHeaders"
-        :data="vulnerabilities"
+        :rows="vulnerabilities"
         :filter="search"
         :filter-method="customFilter"
         :pagination.sync="vulnPagination"

@@ -1,5 +1,5 @@
 <div>
-    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
+    <breadcrumb buttons :title="`${audit.name} (${audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
     <div slot="buttons" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
         <q-btn-dropdown 
         class="q-mr-sm"
@@ -8,7 +8,7 @@
         auto-close
         >
             <q-list>
-                <q-item clickable @click="$refs.nmapFile.click()">
+                <q-item clickable @click="this.$refs.nmapFile.click()">
                     <q-item-section>
                         <q-item-label>
                             Nmap
@@ -23,7 +23,7 @@
                     </q-item-section>
                 </q-item>
                 <q-separator />
-                <q-item clickable @click="$refs.nessusFile.click()">
+                <q-item clickable @click="this.$refs.nessusFile.click()">
                     <q-item-section>
                         <q-item-label>
                             Nessus
@@ -87,7 +87,7 @@
     <div v-if="currentHost !== null" class="col-md-6">
         <q-table
         :title="`${currentHost.ip} (${currentHost.hostname})`"
-        :data="currentHost.services"
+        :rows="currentHost.services"
         :columns="dtHostHeaders"
         :pagination.sync="hostPagination"
         row-key="port"

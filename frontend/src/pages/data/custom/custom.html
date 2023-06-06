@@ -1036,7 +1036,7 @@
                                         <template v-slot:append>
                                             <q-icon name="event" class="cursor-pointer">
                                             <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text[getFieldLocaleText(idx)].value" @input="$refs.qDateProxy.forEach(e => e.hide())" />
+                                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text[getFieldLocaleText(idx)].value" @input="this.$refs.qDateProxy.forEach(e => e.hide())" />
                                             </q-popup-proxy>
                                             </q-icon>
                                         </template>

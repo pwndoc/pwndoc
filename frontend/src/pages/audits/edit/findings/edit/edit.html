@@ -1,5 +1,5 @@
 <div>
-    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
+    <breadcrumb buttons :title="`${audit.name} (${audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
     <div slot="buttons">
         <q-btn
         color="orange"
@@ -75,7 +75,7 @@
                     custom-element="QCardSection" 
                     no-sync-editor
                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    :locale="$parent.audit.language"
+                    :locale="audit.language"
                     />
                 </q-expansion-item>
 

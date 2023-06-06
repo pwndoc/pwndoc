@@ -45,7 +45,7 @@ $typography-font-family : Helvetica, Arial, sans-serif;
 }
 
 .body--dark {
-	--q-color-primary: $darkPrimary;
+	--q-primary: $darkPrimary;
 	.bg-fixed-primary {
 		background: $primary;
 	}

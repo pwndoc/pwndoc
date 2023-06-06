@@ -4,7 +4,7 @@
         <q-table
             class="sticky-header-table"
             :columns="dtHeaders"
-            :data="companies"
+            :rows="companies"
             :filter="search"
             :filter-method="customFilter"
             :pagination.sync="pagination"
@@ -19,7 +19,7 @@
                 :label="this.$t('addCompany')"
                 color="secondary" 
                 no-caps
-                @click="cleanCurrentCompany(); $refs.createModal.show()"
+                @click="cleanCurrentCompany(); this.$refs.createModal.show()"
                 />    
             </template>
 
@@ -44,7 +44,7 @@
             </q-td>
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); this.$refs.editModal.show()">
                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.edit')}}</q-tooltip>
                 </q-btn>
                 <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCompany(props.row)">
@@ -82,7 +82,7 @@
                 {{this.$t('addCompany')}}
             </div>
             <q-space />
-            <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+            <q-btn dense flat icon="close" @click="this.$refs.createModal.hide()" />
         </q-bar>
 
         <q-card-section>
@@ -121,7 +121,7 @@
         </q-card-section>
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="primary" outline @click="this.$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
             <q-btn color="secondary" unelevated @click="createCompany()">{{this.$t('btn.create')}}</q-btn>
         </q-card-actions>
     </q-card>
@@ -134,7 +134,7 @@
                 {{this.$t('editCompany')}}
             </div>
             <q-space />
-            <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
+            <q-btn dense flat icon="close" @click="this.$refs.editModal.hide()" />
         </q-bar>
 
         <q-card-section>
@@ -173,7 +173,7 @@
         </q-card-section>
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.editModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="primary" outline @click="this.$refs.editModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
             <q-btn color="secondary" unelevated @click="updateCompany()">{{this.$t('btn.update')}}</q-btn>
         </q-card-actions>
     </q-card>

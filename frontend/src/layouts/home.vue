@@ -5,24 +5,24 @@
             <img src="pwndoc-logo-white.png" style="max-height:50px;" />
             
             <q-item to='/audits' active-class="text-green">
-            <q-item-section avatar style="min-width:0" class="q-pr-sm">
-                <q-icon name="fa fa-fingerprint" />
-            </q-item-section>
-            <q-item-section>{{this.$t('nav.audits')}}</q-item-section>
+              <q-item-section avatar style="min-width:0" class="q-pr-sm">
+                  <q-icon name="fa fa-fingerprint" />
+              </q-item-section>
+              <q-item-section>{{this.$t('nav.audits')}}</q-item-section>
             </q-item>
 
             <q-item to='/vulnerabilities' active-class="text-green">
-            <q-item-section avatar style="min-width:0" class="q-pr-sm">
-                <q-icon name="fa fa-shield-alt" />
-            </q-item-section>
-            <q-item-section>{{this.$t('nav.vulnerabilities')}}</q-item-section>
+              <q-item-section avatar style="min-width:0" class="q-pr-sm">
+                  <q-icon name="fa fa-shield-alt" />
+              </q-item-section>
+              <q-item-section>{{this.$t('nav.vulnerabilities')}}</q-item-section>
             </q-item>
 
             <q-item to='/data' active-class="text-green">
-            <q-item-section avatar style="min-width:0" class="q-pr-sm">
-                <q-icon name="fa fa-database" />
-            </q-item-section>
-            <q-item-section>{{this.$t('nav.data')}}</q-item-section>
+              <q-item-section avatar style="min-width:0" class="q-pr-sm">
+                  <q-icon name="fa fa-database" />
+              </q-item-section>
+              <q-item-section>{{this.$t('nav.data')}}</q-item-section>
             </q-item>
 
             <q-space />
@@ -63,17 +63,18 @@ import UserService from '@/services/user';
 
 export default {
   name: 'LayoutHome',
+
   data () {
     return {
       userService: UserService
     }
   },
 
-    methods: {
-        logout: function() {
-            UserService.destroyToken();
-        }
-    }
+  methods: {
+      logout: function() {
+          UserService.destroyToken();
+      }
+  }
 }
 </script>
 

@@ -18,7 +18,6 @@ export default {
         frontEndAuditState: Number,
         parentState: String,
         parentApprovals: Array
-
     },
     data() {
         return {

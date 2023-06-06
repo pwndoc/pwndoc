@@ -11,7 +11,7 @@
             class="sticky-header-table"
             :columns="dtHeaders"
             :visible-columns="visibleColumns"
-            :data="audits"
+            :rows="audits"
             :filter="search"
             :filter-method="customFilter"
             :pagination.sync="pagination"
@@ -42,7 +42,7 @@
                 unelevated
                 :label="this.$t('newAudit')"
                 no-caps
-                @click="cleanCurrentAudit(); $refs.createModal.show()"
+                @click="cleanCurrentAudit(); this.$refs.createModal.show()"
                 />    
             </template>
            
@@ -159,7 +159,7 @@
                 {{this.$t('createAudit')}}
             </div>
             <q-space />
-            <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+            <q-btn dense flat icon="close" @click="this.$refs.createModal.hide()" />
         </q-bar>
         <q-card-section>
             <q-input
@@ -202,7 +202,7 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="primary" outline @click="this.$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
             <q-btn color="secondary" unelevated @click="createAudit()">{{this.$t('btn.create')}}</q-btn>
         </q-card-actions>
     </q-card>

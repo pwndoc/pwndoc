@@ -7,7 +7,7 @@
         <q-table
             class="sticky-header-table"
             :columns="dtHeaders"
-            :data="computedVulnerabilities"
+            :rows="computedVulnerabilities"
             :filter="search"
             :filter-method="customFilter"
             :pagination.sync="pagination"
@@ -40,7 +40,7 @@
                 outline
                 color="secondary" 
                 no-caps
-                @click="$refs.mergeModal.show()"
+                @click="this.$refs.mergeModal.show()"
                 />
                 <q-space />
                 <q-btn-dropdown 
@@ -52,12 +52,12 @@
                 >
                     <q-list separator>
                         <q-item-label header>{{this.$t('selectCategory')}}</q-item-label>
-                        <q-item clickable v-close-popup @click="currentCategory = null; cleanCurrentVulnerability(); $refs.createModal.show()">
+                        <q-item clickable v-close-popup @click="currentCategory = null; cleanCurrentVulnerability(); this.$refs.createModal.show()">
                             <q-item-section>
                               <q-item-label>{{this.$t('noCategory')}}</q-item-label>
                             </q-item-section>
                         </q-item>
-                        <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="currentCategory = $_.cloneDeep(category); cleanCurrentVulnerability(); $refs.createModal.show()">
+                        <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="currentCategory = $_.cloneDeep(category); cleanCurrentVulnerability(); this.$refs.createModal.show()">
                             <q-item-section>
                               <q-item-label>{{category.name}}</q-item-label>
                             </q-item-section>
@@ -119,7 +119,7 @@
                         <q-btn v-if="UserService.isAllowed('vulnerabilities:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.edit')}}</q-tooltip>                                                    
                         </q-btn>
-                        <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); $refs.editModal.show()">
+                        <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); this.$refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{this.$t('tooltip.view')}}</q-tooltip>                            
                         </q-btn>
                         <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
@@ -163,7 +163,7 @@
                 <span v-else>{{this.$t('addVulnerability')}} ({{this.$t('noCategory')}})</span>
             </div>
             <q-space />
-            <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+            <q-btn dense flat icon="close" @click="this.$refs.createModal.hide()" />
         </q-bar>
 
         <q-card-section>
@@ -285,7 +285,7 @@
         <q-separator />
 
         <q-card-actions align="right">
-            <q-btn color="primary" outline @click="$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="primary" outline @click="this.$refs.createModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
             <q-btn color="secondary" unelevated @click="createVulnerability()">{{this.$t('btn.create')}}</q-btn>
         </q-card-actions>
     </q-card>
@@ -326,7 +326,7 @@
                 </span>
             </div>
             <q-space />
-            <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
+            <q-btn dense flat icon="close" @click="this.$refs.editModal.hide()" />
         </q-bar>
 
         <q-card-section>
@@ -445,7 +445,7 @@
         <q-separator />
 
         <q-card-actions align="right" v-if="UserService.isAllowed('vulnerabilities:update')">
-            <q-btn color="primary" outline @click="$refs.editModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+            <q-btn color="primary" outline @click="this.$refs.editModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
             <q-btn v-if="currentVulnerability.status === 1" label="Approve" color="light-blue" unelevated @click="updateVulnerability()" />
             <q-btn v-else color="secondary" unelevated @click="updateVulnerability()">{{this.$t('btn.update')}}</q-btn>
         </q-card-actions>
@@ -460,7 +460,7 @@
                     {{this.$t('updateVulnerability')}}
                 </div>
                 <q-space />
-                <q-btn dense flat icon="close" @click="$refs.updatesModal.hide()" />
+                <q-btn dense flat icon="close" @click="this.$refs.updatesModal.hide()" />
             </q-bar>
         </q-header>
         <q-page-container>
@@ -587,7 +587,7 @@
                     <q-separator />
             
                     <q-card-actions align="right">
-                        <q-btn color="primary" outline @click="$refs.updatesModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
+                        <q-btn color="primary" outline @click="this.$refs.updatesModal.hide()">{{this.$t('btn.cancel')}}</q-btn>
                         <q-btn color="orange" unelevated :label="this.$t('btn.update')" @click="updateVulnerability()" />
                     </q-card-actions>
                 </q-card>
@@ -780,7 +780,7 @@
         <q-bar class="bg-fixed-primary text-white">
             <span>{{this.$t('mergeVulnerabilities')}}</span>
             <q-space />
-            <q-btn dense flat icon="close" @click="$refs.mergeModal.hide()" />
+            <q-btn dense flat icon="close" @click="this.$refs.mergeModal.hide()" />
         </q-bar>
 
         <div v-if="languages.length < 2">
@@ -810,7 +810,7 @@
                                         <q-radio v-model="mergeVulnLeft" :val="vuln._id" />
                                     </q-item-section>
                                     <q-item-section>
-                                            <q-item-label>{{getVulnTitleLocale(vuln, mergeLanguageLeft)}}</q-item-label>
+                                        <q-item-label>{{getVulnTitleLocale(vuln, mergeLanguageLeft)}}</q-item-label>
                                     </q-item-section>
                             </q-item>
                         </q-list>
@@ -841,7 +841,7 @@
                                         <q-radio v-model="mergeVulnRight" :val="vuln._id" />
                                     </q-item-section>
                                     <q-item-section>
-                                            <q-item-label>{{getVulnTitleLocale(vuln, mergeLanguageRight)}}</q-item-label>
+                                        <q-item-label>{{getVulnTitleLocale(vuln, mergeLanguageRight)}}</q-item-label>
                                     </q-item-section>
                             </q-item>
                         </q-list>
@@ -851,8 +851,8 @@
         </div>
         <q-separator />
         <q-card-actions align="center">
-                <q-btn color="secondary" unelevated @click="mergeVulnerabilities" :disable="mergeVulnLeft === '' || mergeVulnRight === ''">{{this.$t('merge')}}</q-btn>
-            </q-card-actions>
+            <q-btn color="secondary" unelevated @click="mergeVulnerabilities" :disable="mergeVulnLeft === '' || mergeVulnRight === ''">{{this.$t('merge')}}</q-btn>
+        </q-card-actions>
     </q-card>
 </q-dialog>
 </div>
