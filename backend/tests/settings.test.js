@@ -22,6 +22,23 @@ module.exports = function(request, app) {
               },
               "highlightWarning": false,
               "highlightWarningColor": "#ffff25",
+              "requiredFields": {
+                "company": false,
+                "client": false,
+                "dateStart": false,
+                "dateEnd": false,
+                "dateReport": false,
+                "findingType": false,
+                "scope": false,
+                "findingDescription": false,
+                "findingObservation": false,
+                "findingReferences": false,
+                "findingProofs": false,
+                "findingAffected": false,
+                "findingRemediationDifficulty": false,
+                "findingPriority": false,
+                "findingRemediation": false
+              }
             },
           },
         "reviews": {
@@ -53,6 +70,23 @@ module.exports = function(request, app) {
               },
               "highlightWarning": false,
               "highlightWarningColor": "#ffff25",
+              "requiredFields": {
+                "company": false,
+                "client": false,
+                "dateStart": false,
+                "dateEnd": false,
+                "dateReport": false,
+                "findingType": false,
+                "scope": false,
+                "findingDescription": false,
+                "findingObservation": false,
+                "findingReferences": false,
+                "findingProofs": false,
+                "findingAffected": false,
+                "findingRemediationDifficulty": false,
+                "findingPriority": false,
+                "findingRemediation": false
+              }
             },
           },
         "reviews": {
@@ -109,6 +143,24 @@ module.exports = function(request, app) {
                 },
                 "highlightWarning": true,
                 "highlightWarningColor": "#123456",
+                "requiredFields": {
+                  "company": true,
+                  "client": false,
+                  "dateStart": true,
+                  "dateEnd": true,
+                  "dateReport": false,
+                  "findingType": false,
+                  "scope": true,
+                  "findingDescription": false,
+                  "findingObservation": false,
+                  "findingReferences": false,
+                  "findingProofs": false,
+                  "findingAffected": false,
+                  "findingRemediationDifficulty": false,
+                  "findingPriority": false,
+                  "findingRemediation": false
+                }
+                
               },
             },
           "reviews": {
