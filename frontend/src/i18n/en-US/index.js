@@ -358,7 +358,8 @@ export default {
     type: 'Type',
     description: 'Description',
     observation: 'Observation',
-    references: 'References (One per line)',
+    references: 'References',
+    one_per_line: '(One per line)',
     customFields: 'Custom Fields',
     affectedAssets: 'Affected Assets',
     courseOfActions: 'Course of actions',
@@ -502,5 +503,10 @@ export default {
     captionsDescription: 'Add Caption labels that will be used in the report (Default is \'Figure\')',
     highlightWarning: 'Highlight Warning',
     highlightWarningDescription: `Add a warning message when editing a report and specified color highlighted text is still present.<br />
-    Useful for generic text that should be replaced by reporter.`
+    Useful for generic text that should be replaced by reporter.`,
+    defaultFieldsRequired: 'Default Fields',
+    defaultFieldsRequiredDescription: 'Manage requirement of default Fields in Audits',
+    general: 'General',
+    scope: 'Scope',
+    fieldIsRequired: 'Field is required',
   }

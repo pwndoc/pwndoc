@@ -22,7 +22,24 @@ const SettingSchema = new Schema({
                 default: ['Figure']
             },
             highlightWarning: { type: Boolean, default: false},
-            highlightWarningColor: { type: String, default: "#ffff25", validate: [colorValidator, 'Invalid color']}
+            highlightWarningColor: { type: String, default: "#ffff25", validate: [colorValidator, 'Invalid color']},
+            requiredFields: {
+                company: {type: Boolean, default: false},
+                client: {type: Boolean, default: false},
+                dateStart: {type: Boolean, default: false},
+                dateEnd: {type: Boolean, default: false},
+                dateReport: {type: Boolean, default: false},
+                scope: {type: Boolean, default: false},
+                findingType: {type: Boolean, default: false},
+                findingDescription: {type: Boolean, default: false},
+                findingObservation: {type: Boolean, default: false},
+                findingReferences: {type: Boolean, default: false},
+                findingProofs: {type: Boolean, default: false},
+                findingAffected: {type: Boolean, default: false},
+                findingRemediationDifficulty: {type: Boolean, default: false},
+                findingPriority: {type: Boolean, default: false},
+                findingRemediation: {type: Boolean, default: false},
+            }
         },
         private: {
             imageBorder: { type: Boolean, default: false },

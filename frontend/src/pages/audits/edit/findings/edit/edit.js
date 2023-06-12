@@ -188,7 +188,9 @@ export default {
         updateFinding: function() {
             Utils.syncEditors(this.$refs)
             this.$nextTick(() => {
-                if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
+                var customFieldsEmpty = this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()
+                var defaultFieldsEmpty = this.requiredFieldsEmpty()
+                if (customFieldsEmpty || defaultFieldsEmpty) {
                     Notify.create({
                         message: $t('msg.fieldRequired'),
                         color: 'negative',
@@ -362,6 +364,44 @@ export default {
             }
             
             return null
+        },
+
+        requiredFieldsEmpty: function() {
+            if (this.$refs.titleField) {
+                this.$refs.titleField.validate()
+                this.$refs.typeField.validate()
+                this.$refs.descriptionField.validate()
+                this.$refs.observationField.validate()
+                this.$refs.referencesField.validate()
+
+                return (
+                    this.$refs.titleField.hasError ||
+                    this.$refs.typeField.hasError ||
+                    this.$refs.descriptionField.hasError ||
+                    this.$refs.observationField.hasError ||
+                    this.$refs.referencesField.hasError
+                )
+            }
+            else if (this.$refs.pocField) {
+                this.$refs.pocField.validate()
+
+                return this.$refs.pocField.hasError
+            }
+            else if (this.$refs.affectedField) {
+                this.$refs.affectedField.validate()
+                this.$refs.remediationDifficultyField.validate()
+                this.$refs.priorityField.validate()
+                this.$refs.remediationField.validate()
+
+                return (
+                    this.$refs.affectedField.hasError ||
+                    this.$refs.remediationDifficultyField.hasError ||
+                    this.$refs.priorityField.hasError ||
+                    this.$refs.remediationField.hasError
+                )
+            }
+            
+            return false
         }
     }
 }

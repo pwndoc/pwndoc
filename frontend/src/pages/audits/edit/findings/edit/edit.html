@@ -35,11 +35,24 @@
     <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 col-12 offset-md-2 q-mt-md" @before-transition="syncEditors" @transition="updateOrig" >
         <q-tab-panel name="definition">
             <q-card>
-                <q-card-section class="row q-col-gutter-md">
-                    <q-input class="col-md-8 col-12" :label="$t('title')+' *'" stack-label v-model="finding.title" outlined :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
-                    <q-select 
+                <q-card-section class="row q-col-gutter-md q-pt-none">
+                    <q-input
+                    ref="titleField"
+                    class="col-md-8 col-12" 
+                    label-slot
+                    stack-label v-model="finding.title"
+                    outlined
+                    :rules="[val => !!val || $t('fieldIsRequired')]"
+                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                    >
+                    <template v-slot:label>
+                        {{$t('title')}} <span class="text-red">*</span>
+                    </template>
+                    </q-input>
+                    <q-select
+                    ref="typeField"
                     class="col-md-4 col-12"
-                    :label="$t('type')"
+                    label-slot
                     v-model="finding.vulnType" 
                     :options="vulnTypesLang" 
                     option-value="name" 
@@ -48,19 +61,53 @@
                     map-options
                     options-sanitize
                     outlined
+                    :rules="($settings.report.public.requiredFields.findingType) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                    lazy-rules="ondemand"
                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    />
-                    <q-field class="col-md-12 basic-editor" borderless :label="$t('description')" stack-label>
+                    >
+                        <template v-slot:label>
+                            {{$t('type')}} <span v-if="$settings.report.public.requiredFields.findingType" class="text-red">*</span>
+                        </template>
+                    </q-select>
+                    <q-field
+                    ref="descriptionField"
+                    class="col-md-12 basic-editor q-pt-none"
+                    label-slot
+                    borderless
+                    stack-label
+                    :rules="($settings.report.public.requiredFields.findingDescription) ? [val => !!finding.description || $t('fieldIsRequired')] : ['']"
+                    lazy-rules="ondemand"
+                    >
                         <template v-slot="control">
                             <basic-editor ref="basiceditor_description" noSync v-model="finding.description" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
                         </template>
+                        <template v-slot:label>
+                            {{$t('description')}} <span v-if="$settings.report.public.requiredFields.findingDescription" class="text-red">*</span>
+                        </template>
                     </q-field>
-                    <q-field class="col-md-12 basic-editor" borderless :label="$t('observation')" stack-label>
+                    <q-field
+                    ref="observationField"
+                    class="col-md-12 basic-editor q-pt-none"
+                    borderless
+                    label-slot
+                    stack-label
+                    :rules="($settings.report.public.requiredFields.findingObservation) ? [val => !!finding.observation || $t('fieldIsRequired')] : ['']"
+                    lazy-rules="ondemand"
+                    >
                         <template v-slot="control">
                             <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
                         </template>
+                        <template v-slot:label>
+                            {{$t('observation')}} <span v-if="$settings.report.public.requiredFields.findingObservation" class="text-red">*</span>
+                        </template>
                     </q-field>
-                    <textarea-array class="col-12" :label="$t('references')" v-model="finding.references" :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
+                    <textarea-array
+                    ref="referencesField"
+                    class="col-12 q-pt-none"
+                    :label="$t('references')+' '+$t('one_per_line')"
+                    v-model="finding.references"
+                    :rules="($settings.report.public.requiredFields.findingReferences) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
                 </q-card-section>
 
                 <q-expansion-item 
@@ -86,7 +133,22 @@
                 <div class="col-12">
                     <q-card>
                         <q-card-section>
-                            <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                            <q-field
+                            ref="pocField"
+                            class="col-md-12 basic-editor q-pt-none"
+                            borderless
+                            label-slot
+                            stack-label
+                            :rules="($settings.report.public.requiredFields.findingProofs) ? [val => !!finding.poc || $t('fieldIsRequired')] : ['']"
+                            lazy-rules="ondemand"
+                            >
+                                <template v-slot="control">
+                                    <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                                </template>
+                                <template v-slot:label>
+                                    {{$t('proofs')}} <span v-if="$settings.report.public.requiredFields.findingProofs" class="text-red">*</span>
+                                </template>
+                            </q-field>
                         </q-card-section>
                     </q-card>
                 </div>
@@ -94,12 +156,21 @@
         </q-tab-panel>
         <q-tab-panel name="details">
             <q-card>
-                <q-card-section>{{$t('affectedAssets')}}</q-card-section>
-                <q-separator />
                 <q-card-section>
-                    <q-field borderless>
+                    <q-field 
+                    ref="affectedField"
+                    class="col-md-12 basic-editor q-pt-none"
+                    borderless
+                    label-slot
+                    stack-label
+                    :rules="($settings.report.public.requiredFields.findingAffected) ? [val => !!finding.scope || $t('fieldIsRequired')] : ['']"
+                    lazy-rules="ondemand"
+                    >
                         <template v-slot="control">
                             <basic-editor v-model="finding.scope" :toolbar="['format', 'marks', 'list']" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                        </template>
+                        <template v-slot:label>
+                            {{$t('affectedAssets')}} <span v-if="$settings.report.public.requiredFields.findingAffected" class="text-red">*</span>
                         </template>
                     </q-field>
                 </q-card-section>
@@ -118,7 +189,8 @@
                 <q-card-section>
                     <div class="q-col-gutter-md row">
                         <q-select
-                        :label="$t('remediationDifficulty')"
+                        ref="remediationDifficultyField"
+                        label-slot
                         stack-label
                         class="col-md-6 col-12"
                         v-model="finding.remediationComplexity"
@@ -127,10 +199,17 @@
                         emit-value
                         options-sanitize
                         outlined
+                        :rules="($settings.report.public.requiredFields.findingRemediationDifficulty) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                        lazy-rules="ondemand"
                         :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                        />
+                        >
+                            <template v-slot:label>
+                                {{$t('remediationDifficulty')}} <span v-if="$settings.report.public.requiredFields.findingRemediationDifficulty" class="text-red">*</span>
+                            </template>
+                        </q-select>
                         <q-select
-                        :label="$t('priority')"
+                        ref="priorityField"
+                        label-slot
                         stack-label
                         class="col-md-6 col-12"
                         v-model="finding.priority"
@@ -139,14 +218,31 @@
                         emit-value
                         options-sanitize
                         outlined
+                        :rules="($settings.report.public.requiredFields.findingPriority) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                        lazy-rules="ondemand"
                         :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                        />
+                        >
+                            <template v-slot:label>
+                                {{$t('priority')}} <span v-if="$settings.report.public.requiredFields.findingPriority" class="text-red">*</span>
+                            </template>
+                        </q-select>
                     </div>
                 </q-card-section>
-                <q-card-section>
-                    <q-field class="col-md-12 basic-editor" borderless :label="$t('remediation')" stack-label>
+                <q-card-section class="q-pt-none">
+                    <q-field
+                    ref="remediationField"
+                    class="col-md-12 basic-editor"
+                    borderless
+                    label-slot
+                    stack-label
+                    :rules="($settings.report.public.requiredFields.findingRemediation) ? [val => !!finding.remediation || $t('fieldIsRequired')] : ['']"
+                    lazy-rules="ondemand"
+                    >
                         <template v-slot="control">
                             <basic-editor ref="basiceditor_remediation" noSync v-model="finding.remediation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                        </template>
+                        <template v-slot:label>
+                            {{$t('remediation')}} <span v-if="$settings.report.public.requiredFields.findingRemediation" class="text-red">*</span>
                         </template>
                     </q-field>
                 </q-card-section>

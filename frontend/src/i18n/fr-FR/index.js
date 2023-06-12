@@ -212,7 +212,8 @@ export default {
     type: 'Type',
     description: 'Description',
     observation: 'Observation',
-    references: 'Références (Une par ligne)',
+    references: 'Références',
+    one_per_line: '(Une par ligne)',
     customFields: 'Champs Personnalisés',
     affectedAssets: 'Actifs Impactés',
     courseOfActions: 'Plan d\'action',
@@ -356,5 +357,10 @@ export default {
     captionsDescription: 'Ajouter les valeurs des différentes légendes qui seront utilisés dans le rapport (\'Figure\' par défaut).',
     highlightWarning: 'Alerte de Texte Surligné',
     highlightWarningDescription: `Ajoute un message d'avertissement lors de l'édition d'un rapport et que du texte surligné avec la couleur choisie est toujours présent.<br />
-    Utile pour du texte générique qui devrait être remplacé par le rédacteur.`
+    Utile pour du texte générique qui devrait être remplacé par le rédacteur.`,
+    defaultFieldsRequired: 'Champs par défaut',
+    defaultFieldsRequiredDescription: 'Gestion des champs par défaut requis dans la section Audits',
+    general: 'Général',
+    scope: 'Périmètre',
+    fieldIsRequired: 'Ce champ est requis',
   }
