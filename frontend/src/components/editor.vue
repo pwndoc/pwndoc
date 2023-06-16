@@ -1,6 +1,6 @@
 <template>
-<q-card flat bordered class="editor full-width text-primary" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix" class="bg-grey-4">
+<q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
+    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix" class="bg-grey-4" v-if="editable">
             <q-toolbar class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">
                     <q-tooltip :delay="500" content-class="text-bold">Text Format</q-tooltip>
@@ -312,8 +312,8 @@ export default {
             this.editor.commands.setContent(content);
        },
 
-       editable (value) {
-           this.editor.setEditable(this.editable, false)
+        editable (value) {
+            this.editor.setEditable(this.editable, false)
        }
     },
 
@@ -600,4 +600,9 @@ pre .diffrem {
 pre .diffadd {
     background-color: $green-6;
 }
+
+.text-negative .editor:not(.q-dark) {
+    color:var(--q-color-primary)!important;
+}
+
 </style>
