@@ -83,5 +83,13 @@ export default {
 
   updateReadyForReview: function(auditId, data) {
     return Vue.prototype.$axios.put(`audits/${auditId}/updateReadyForReview`, data);
+  },
+
+  getRetest: function(auditId) {
+    return Vue.prototype.$axios.get(`audits/${auditId}/retest`);
+  },
+
+  createRetest: function(auditId, data) {
+    return Vue.prototype.$axios.post(`audits/${auditId}/retest`, data);
   }
 }

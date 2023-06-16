@@ -19,6 +19,8 @@ export default {
             cancelReview: 'Annuler les modifications',
             approve: 'Accepter',
             removeApproval: 'Retirer l\'approbation',
+            createRetest: 'Créer un Retest',
+            navigateRetest: 'Accéder au Retest'
         },
         backupFinding: "Proposer la création  / Mettre à jour dans la base de données",
         delete: 'Supprimer',
@@ -40,6 +42,8 @@ export default {
             cancelReview: 'Apporter des modifications à l\'audit',
             approve: 'Approuver cet audit',
             removeApproval: 'Retirer l\'approbation',
+            createRetest: 'Créer un Retest pour cet Audit',
+            navigateRetest: 'Naviguer vers le Retest de cet Audit'
         },
         sortOptions: 'Options de tri',
         addToFindings: 'Ajouter aux découvertes',
@@ -363,4 +367,8 @@ export default {
     general: 'Général',
     scope: 'Périmètre',
     fieldIsRequired: 'Ce champ est requis',
+    corrected: 'Corrigé',
+    not_corrected: 'Non Corrigé',
+    partially_corrected: 'Partiellement Corrigé',
+    not_verifiable: 'Non Vérifiable'
   }

@@ -117,6 +117,11 @@ module.exports = function(app) {
         // Optional parameters
         if (req.body.sections) auditType.sections = req.body.sections
         if (req.body.hidden) auditType.hidden = req.body.hidden
+        if (req.body.stage) auditType.stage = req.body.stage
+
+        // Fix hidden sections for multi and retest audits
+        if (auditType.stage === 'multi' || auditType.stage === 'retest')
+            auditType.hidden = ['network']
 
         AuditType.create(auditType)
         .then(msg => Response.Created(res, msg))
@@ -148,7 +153,23 @@ module.exports = function(app) {
 
         var auditTypes = []
         req.body.forEach(e => {
-            auditTypes.push({name: e.name, templates: e.templates, sections: e.sections, hidden: e.hidden})
+            // Fix hidden sections for multi and retest audits
+            if (e.stage === 'multi' || e.stage === 'retest')
+                auditTypes.push({
+                    name: e.name,
+                    templates: e.templates,
+                    sections: e.sections,
+                    hidden: ['network'],
+                    stage: e.stage
+                })
+            else
+                auditTypes.push({
+                    name: e.name,
+                    templates: e.templates,
+                    sections: e.sections,
+                    hidden: e.hidden,
+                    stage: e.stage
+                })
         })
 
         AuditType.updateAll(auditTypes)

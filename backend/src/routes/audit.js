@@ -67,6 +67,24 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
+    // Get audit retest with auditId
+    app.get("/api/audits/:auditId/retest", acl.hasPermission('audits:read'), function(req, res) {
+        Audit.getRetest(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then(msg => Response.Ok(res, msg))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Create audit retest with auditId
+    app.post("/api/audits/:auditId/retest", acl.hasPermission('audits:create'), function(req, res) {
+        if (!req.body.auditType) {
+            Response.BadParameters(res, 'Missing some required parameters: auditType');
+            return;
+        }
+        Audit.createRetest(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id, req.body.auditType)
+        .then(inserted => Response.Created(res, {message: 'Audit Retest created successfully', audit: inserted}))
+        .catch(err => Response.Internal(res, err))
+    });
+
     // Delete audit if creator or admin
     app.delete("/api/audits/:auditId", acl.hasPermission('audits:delete'), function(req, res) {
         Audit.delete(acl.isAllowed(req.decodedToken.role, 'audits:delete-all'), req.params.auditId, req.decodedToken.id)
@@ -291,6 +309,8 @@ module.exports = function(app, io) {
         if (req.body.status !== undefined) finding.status = req.body.status;
         if (req.body.category) finding.category = req.body.category
         if (req.body.customFields) finding.customFields = req.body.customFields
+        if (req.body.retestDescription) finding.retestDescription = req.body.retestDescription
+        if (req.body.retestStatus) finding.retestStatus = req.body.retestStatus
 
         if (settings.reviews.enabled && settings.reviews.private.removeApprovalsUponUpdate) {
             Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });

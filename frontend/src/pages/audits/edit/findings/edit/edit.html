@@ -2,6 +2,7 @@
     <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
     <div slot="buttons">
         <q-btn
+        v-if="$parent.audit.type === 'default'"
         color="orange"
         class="q-mr-sm"
         :label="$t('btn.backupFinding')"
@@ -14,13 +15,16 @@
         :label="$t('btn.delete')"
         no-caps
         @click="deleteFinding()"
-        v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+        v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT && $parent.audit.type === 'default'"
         />
+        <q-btn color="primary" icon="vertical_split" flat @click="toggleSplitView()" class="q-mr-sm" v-if="$parent.audit.type === 'retest'">
+			<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.retestSplitView')}}</q-tooltip> 
+        </q-btn>
         <q-btn color="positive" :label="$t('btn.save')+'(ctrl+s)'" no-caps @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
     </div>
 </breadcrumb>
 
-<div class="row">
+<div class="row" v-if="$parent.audit.type === 'default'">
     <q-tabs v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width">
         <q-tab name="definition" default :label="$t('definition')" />
         <q-tab name="proofs" :label="$t('proofs')"/>
@@ -250,4 +254,213 @@
         </q-tab-panel>
     </q-tab-panels>
 </div>
+
+<!-- RETEST VIEW -->
+
+<div class="row" v-if="$parent.audit.type === 'retest'">
+    <q-splitter
+    class="q-ma-md" 
+    v-model="$parent.retestSplitRatio" 
+    :limits="$parent.retestSplitLimits" 
+    style="width: 100%;" 
+    after-class="after-class" 
+    separator-class="bg-blue-grey-2"
+    :separator-style="($parent.retestSplitView) ? 'width: 4px' : 'display:none'"
+    :disable="!$parent.retestSplitView"
+    >
+        <template v-slot:before>
+            <div class="row">
+                <q-card :class="($parent.retestSplitView) ? '' : 'col-md-8 col-12 offset-md-2'">
+                    <q-card-section class="row q-col-gutter-md">
+                        <q-input
+                        class="col-md-8 col-12" 
+                        :label="$t('title')"
+                        stack-label
+                        v-model="finding.title"
+                        outlined
+                        readonly
+                        />
+                        <q-select
+                        class="col-md-4 col-12"
+                        :label="$t('type')"
+                        v-model="finding.vulnType" 
+                        :options="vulnTypesLang" 
+                        option-value="name" 
+                        option-label="name" 
+                        emit-value 
+                        map-options
+                        options-sanitize
+                        outlined
+                        readonly
+                        />
+                        <div>
+                            <q-radio keep-color color="green" v-model="finding.retestStatus" val="ok" :label="$t('corrected')" />
+                            <q-radio keep-color color="red" v-model="finding.retestStatus" val="ko" :label="$t('not_corrected')" />
+                            <q-radio keep-color color="orange" v-model="finding.retestStatus" val="partial" :label="$t('partially_corrected')" />
+                            <q-radio keep-color color="brown" v-model="finding.retestStatus" val="unknown" :label="$t('not_verifiable')" />
+                        </div>
+                        <q-field
+                        ref="retestDescriptionField"
+                        class="col-md-12 basic-editor"
+                        label-slot
+                        borderless
+                        stack-label
+                        :rules="($settings.report.public.requiredFields.retestDescription) ? [val => !!finding.retestDescription || $t('fieldIsRequired')] : ['']"
+                        lazy-rules="ondemand"
+                        >
+                            <template v-slot="control">
+                                <basic-editor ref="basiceditor_retestdescription" v-model="finding.retestDescription" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                            </template>
+                            <template v-slot:label>
+                                {{$t('description')}} <span v-if="$settings.report.public.requiredFields.retestDescription" class="text-red">*</span>
+                            </template>
+                        </q-field>
+                    </q-card-section>
+                </q-card>
+            </div>
+        </template>
+        <template v-slot:separator>
+            <q-icon color="primary" name="fas fa-grip-lines-vertical" size="sm" />
+        </template>
+        <template v-slot:after>
+            <q-card>
+                <q-card-section class="row q-col-gutter-md">
+                    <q-input
+                    class="col-md-8 col-12" 
+                    :label="$t('title')"
+                    stack-label
+                    v-model="finding.title"
+                    outlined
+                    readonly
+                    />
+                    <q-select
+                    class="col-md-4 col-12"
+                    :label="$t('type')"
+                    v-model="finding.vulnType" 
+                    :options="vulnTypesLang" 
+                    option-value="name" 
+                    option-label="name" 
+                    emit-value 
+                    map-options
+                    options-sanitize
+                    outlined
+                    readonly
+                    />
+                    <q-field
+                    class="col-md-12 basic-editor q-pt-none"
+                    :label="$t('description')"
+                    borderless
+                    stack-label
+                    >
+                        <template v-slot="control">
+                            <basic-editor ref="basiceditor_description" noSync v-model="finding.description" :editable="false"/>
+                        </template>
+                    </q-field>
+                    <q-field
+                    class="col-md-12 basic-editor q-pt-none"
+                    borderless
+                    :label="$t('observation')"
+                    stack-label
+                    >
+                        <template v-slot="control">
+                            <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" :editable="false"/>
+                        </template>
+                    </q-field>
+                    <textarea-array
+                    class="col-12"
+                    :label="$t('references')+' '+$t('one_per_line')"
+                    v-model="finding.references"
+                    readonly
+                    />
+                </q-card-section>
+                <q-card-section>
+                    <q-field
+                    class="col-md-12 basic-editor"
+                    borderless
+                    :label="$t('proofs')"
+                    stack-label
+                    >
+                        <template v-slot="control">
+                            <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="false"/>
+                        </template>
+                    </q-field>
+                </q-card-section>
+                <q-card-section>
+                    <q-field 
+                    class="col-md-12 basic-editor"
+                    borderless
+                    :label="$t('affectedAssets')"
+                    stack-label
+                    >
+                        <template v-slot="control">
+                            <basic-editor v-model="finding.scope" :editable="false"/>
+                        </template>
+                    </q-field>
+                </q-card-section>
+                <q-card-section>
+                    <cvss-calculator 
+                    v-model="finding.cvssv3"
+                    readonly
+                    />
+                </q-card-section>
+                <q-card-section>{{$t('courseOfActions')}}</q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="q-col-gutter-md row">
+                        <q-select
+                        :label="$t('remediationDifficulty')"
+                        stack-label
+                        class="col-md-6 col-12"
+                        v-model="finding.remediationComplexity"
+                        :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        readonly
+                        />
+                        <q-select
+                        :label="$t('priority')"
+                        stack-label
+                        class="col-md-6 col-12"
+                        v-model="finding.priority"
+                        :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        readonly
+                        />
+                    </div>
+                </q-card-section>
+                <q-card-section class="q-pt-none">
+                    <q-field
+                    class="col-md-12 basic-editor"
+                    :label="$t('remediation')"
+                    borderless
+                    stack-label
+                    >
+                        <template v-slot="control">
+                            <basic-editor ref="basiceditor_remediation" noSync v-model="finding.remediation" :editable="false"/>
+                        </template>
+                    </q-field>
+                </q-card-section>
+                <q-expansion-item 
+                :label="$t('customFields')"
+                v-if="finding.customFields && finding.customFields.length > 0"
+                default-opened
+                header-class="bg-blue-grey-5 text-white" 
+                expand-icon-class="text-white">
+                    <custom-fields 
+                    v-model="finding.customFields" 
+                    custom-element="QCardSection" 
+                    no-sync-editor
+                    readonly
+                    />
+                </q-expansion-item>
+            </q-card>
+        </template>
+    </q-splitter>
+</div>
+
 </div>

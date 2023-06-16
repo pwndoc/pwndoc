@@ -23,7 +23,7 @@ export default {
             editLanguage: false,
 
             auditTypes: [],
-            newAuditType: {name: "", templates: [], sections: [], hidden: []},
+            newAuditType: {name: "", templates: [], sections: [], hidden: [], stage: 'default'},
             editAuditTypes: [],
             editAuditType: false,
 

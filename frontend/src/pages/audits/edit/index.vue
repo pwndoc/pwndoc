@@ -5,28 +5,64 @@
 			<template v-slot:before>
 				<q-list class="home-drawer">
 					<q-item style="padding:0px">
-						<q-item-section class="q-mx-md">{{$t('sections')}}</q-item-section>
+						<template v-if="audit.parentId">
+							<q-item-section avatar class="topButtonSection">
+								<q-btn :to="`/audits/${audit.parentId}`" flat color="secondary" icon="arrow_back" />
+							</q-item-section>
+							<q-item-section></q-item-section>
+						</template>
+						<template v-if="audit.type == 'default'">
+							<q-item-section avatar>
+								<q-btn
+								v-if="auditRetest"
+								class="q-mx-xs q-px-xs"
+								size="11px"
+								unelevated
+								dense
+								color="secondary"
+								:label="$t('btn.topButtonSection.navigateRetest')"
+								no-caps
+								@click="goToAudit(auditRetest)"
+								>
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.navigateRetest')}}</q-tooltip> 
+								</q-btn>
+								<q-btn
+								v-else
+								class="q-mx-xs q-px-xs"
+								size="11px"
+								unelevated
+								dense
+								color="secondary"
+								:label="$t('btn.topButtonSection.createRetest')"
+								no-caps
+								@click="createRetest"
+								>
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.createRetest')}}</q-tooltip> 
+								</q-btn>
+							</q-item-section>
+							<q-item-section />
+						</template>
 						<template v-if="$settings.reviews.enabled">
-						<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="secondary" :label="$t('btn.topButtonSection.submitReview')" no-caps @click="toggleAskReview" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.submitReview')}}</q-tooltip> 
-							</q-btn>
-						</q-item-section>
-						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
-							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="amber-9" :label="$t('btn.topButtonSection.cancelReview')" no-caps @click="toggleAskReview" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.cancelReview')}}</q-tooltip> 
-							</q-btn>
-						</q-item-section>
-						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN].includes(frontEndAuditState)">
-							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="green" :label="$t('btn.topButtonSection.approve')" no-caps @click="toggleApproval" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.approve')}}</q-tooltip> 
-							</q-btn>
-						</q-item-section>
-						<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
-							<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="warning" :label="$t('btn.topButtonSection.removeApproval')" no-caps @click="toggleApproval" >
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.removeApproval')}}</q-tooltip> 
-							</q-btn>
-						</q-item-section>
+							<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+								<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="secondary" :label="$t('btn.topButtonSection.submitReview')" no-caps @click="toggleAskReview" >
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.submitReview')}}</q-tooltip> 
+								</q-btn>
+							</q-item-section>
+							<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
+								<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="amber-9" :label="$t('btn.topButtonSection.cancelReview')" no-caps @click="toggleAskReview" >
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.cancelReview')}}</q-tooltip> 
+								</q-btn>
+							</q-item-section>
+							<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN].includes(frontEndAuditState)">
+								<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="green" :label="$t('btn.topButtonSection.approve')" no-caps @click="toggleApproval" >
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.approve')}}</q-tooltip> 
+								</q-btn>
+							</q-item-section>
+							<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
+								<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="warning" :label="$t('btn.topButtonSection.removeApproval')" no-caps @click="toggleApproval" >
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.removeApproval')}}</q-tooltip> 
+								</q-btn>
+							</q-item-section>
 						</template>
 						<q-item-section side class="topButtonSection">
 							<q-btn flat color="info" @click="generateReport">
@@ -75,7 +111,7 @@
 								round
 								dense
 								color="secondary"
-								v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+								v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT && audit.type === 'default'"
 								/>
 							</q-item-section>
 						</q-item>
@@ -172,8 +208,12 @@
 											<q-item-section>
 												<span>{{finding.title}}</span>
 											</q-item-section>
-											<q-item-section side v-if="finding.status === 0">
-												<q-icon name="check" color="green" />
+											<q-item-section side>
+												<q-icon v-if="audit.type === 'default' && finding.status === 0" name="check" color="green" />
+												<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ok'" name="check" color="green" />
+												<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ko'" name="fas fa-xmark" color="red" />
+												<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'partial'" name="priority_high" color="orange" />
+												<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'unknown'" name="question_mark" color="brown" />
 											</q-item-section>
 										</q-item>
 										<div class="row">
@@ -242,21 +282,25 @@ import { $t } from '@/boot/i18n';
 
 export default {
 		data () {
-				return {
-					auditId: "",
-					findings: [],
-					users: [],
-					audit: {findings: {}},
-					sections: [],
-					splitterRatio: 80,
-					loading: true,
-					vulnCategories: [],
-					customFields: [],
-					auditTypes: [],
-					findingList: [],
-					frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
-					AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
-				}
+			return {
+				auditId: "",
+				findings: [],
+				users: [],
+				audit: {findings: {}},
+				sections: [],
+				splitterRatio: 80,
+				loading: true,
+				vulnCategories: [],
+				customFields: [],
+				auditTypes: [],
+				findingList: [],
+				frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
+				AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+				auditRetest: "",
+				retestSplitView: false,
+				retestSplitRatio: 100,
+				retestSplitLimits: [100, 100]
+			}
 		},
 
 		components: {
@@ -267,7 +311,8 @@ export default {
 			this.auditId = this.$route.params.auditId;
 			this.getCustomFields();
 			this.getAuditTypes();
-			this.getAudit(); // Calls getSections				
+			this.getAudit(); // Calls getSections
+			this.getRetest();		
 		},
 
 		destroyed: function() {
@@ -669,6 +714,40 @@ export default {
 						position: 'top-right'
 					})
 				});
+			},
+
+			goToAudit: function(auditId) {
+				this.$router.push({path: `/audits/${auditId}`, query: {retest: true}})
+			},
+
+			getRetest: function() {
+				AuditService.getRetest(this.auditId)
+				.then((msg) => {
+					if (msg)
+						this.auditRetest = msg.data.datas._id
+				})
+				.catch((err) => {
+					// console.log(err)
+				})
+			},
+
+			createRetest: function() {
+				var auditTypesRetest = this.auditTypes.filter(e => e.stage == 'retest')
+				var auditType = auditTypesRetest[0]
+				AuditService.createRetest(this.auditId, {auditType: auditType.name})
+				.then((msg) => {
+					if (msg.data.datas.audit._id)
+						this.$router.push(`/audits/${msg.data.datas.audit._id}`)
+				})
+				.catch((err) => {
+					console.log(err)
+					Notify.create({
+						message: err.response.data.datas || err.message,
+						color: 'negative',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
 			}
 		}
 }

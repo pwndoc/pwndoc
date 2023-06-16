@@ -296,6 +296,18 @@ export default {
             }
         },
 
+        toggleSplitView: function() {
+            this.$parent.retestSplitView = !this.$parent.retestSplitView
+            if (this.$parent.retestSplitView) {
+                this.$parent.retestSplitRatio = 50
+                this.$parent.retestSplitLimits = [40, 60]
+            }
+            else {
+                this.$parent.retestSplitRatio = 100
+                this.$parent.retestSplitLimits = [100, 100]
+            }
+        },
+
         unsavedChanges: function() {
             if (this.finding.title !== this.findingOrig.title)
                 return true
@@ -325,6 +337,11 @@ export default {
                 return true
 
             if (this.finding.status !== this.findingOrig.status)
+                return true
+            
+            if ((this.finding.retestStatus || this.findingOrig.retestStatus) && this.finding.retestStatus !== this.findingOrig.retestStatus)
+                return true
+            if ((this.finding.retestDescription || this.findingOrig.retestDescription) && this.finding.retestDescription !== this.findingOrig.retestDescription)
                 return true
 
             return false
@@ -367,41 +384,50 @@ export default {
         },
 
         requiredFieldsEmpty: function() {
+            var hasErrors = false
+
             if (this.$refs.titleField) {
                 this.$refs.titleField.validate()
+                hasErrors = hasErrors || this.$refs.titleField.hasError
+            }
+            if (this.$refs.typeField) {
                 this.$refs.typeField.validate()
+                hasErrors = hasErrors || this.$refs.typeField.hasError
+            }
+            if (this.$refs.descriptionField) {
                 this.$refs.descriptionField.validate()
+                hasErrors = hasErrors || this.$refs.descriptionField.hasError
+            }
+            if (this.$refs.observationField) {
                 this.$refs.observationField.validate()
+                hasErrors = hasErrors || this.$refs.observationField.hasError
+            }
+            if (this.$refs.referencesField) {
                 this.$refs.referencesField.validate()
-
-                return (
-                    this.$refs.titleField.hasError ||
-                    this.$refs.typeField.hasError ||
-                    this.$refs.descriptionField.hasError ||
-                    this.$refs.observationField.hasError ||
-                    this.$refs.referencesField.hasError
-                )
+                hasErrors = hasErrors || this.$refs.referencesField.hasError
             }
-            else if (this.$refs.pocField) {
+            if (this.$refs.pocField) {
                 this.$refs.pocField.validate()
-
-                return this.$refs.pocField.hasError
+                hasErrors = hasErrors || this.$refs.pocField.hasError
             }
-            else if (this.$refs.affectedField) {
+            if (this.$refs.affectedField) {
                 this.$refs.affectedField.validate()
-                this.$refs.remediationDifficultyField.validate()
-                this.$refs.priorityField.validate()
-                this.$refs.remediationField.validate()
-
-                return (
-                    this.$refs.affectedField.hasError ||
-                    this.$refs.remediationDifficultyField.hasError ||
-                    this.$refs.priorityField.hasError ||
-                    this.$refs.remediationField.hasError
-                )
+                hasErrors = hasErrors || this.$refs.affectedField.hasError
             }
-            
-            return false
+            if (this.$refs.remediationDifficultyField) {
+                this.$refs.remediationDifficultyField.validate()
+                hasErrors = hasErrors || this.$refs.remediationDifficultyField.hasError
+            }
+            if (this.$refs.priorityField) {
+                this.$refs.priorityField.validate()
+                hasErrors = hasErrors || this.$refs.priorityField.hasError
+            }
+            if (this.$refs.remediationField) {
+                this.$refs.remediationField.validate()
+                hasErrors = hasErrors || this.$refs.remediationField.hasError
+            }
+
+            return hasErrors
         }
     }
 }

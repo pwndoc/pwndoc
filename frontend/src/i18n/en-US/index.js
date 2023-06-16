@@ -19,6 +19,8 @@ export default {
             cancelReview: 'Cancel Review',
             approve: 'Approve',
             removeApproval: 'Remove Approval',
+            createRetest: 'Create Retest',
+            navigateRetest: 'Access Retest'
         },
         backupFinding: "Propose Creation / Update in Vulnerability Database",
         delete: 'Delete',
@@ -44,6 +46,8 @@ export default {
             cancelReview: 'Make changes to the audit',
             approve: 'Approve this audit',
             removeApproval: 'Remove audit approval',
+            createRetest: 'Create a Retest for this Audit',
+            navigateRetest: 'Navigate to the Retest of this Audit'
         },
         sortOptions: 'Sort Options',
         addToFindings: 'Add to Findings',
@@ -52,6 +56,7 @@ export default {
         findAudits: 'Find Audits',
         delete: 'Delete',
         download: 'Download',
+        retestSplitView: 'Enable Dual View with Original Finding Data'
     },
     msg: {
         auditReviewUpdateOk: 'Audit review status updated successfully',
@@ -509,4 +514,8 @@ export default {
     general: 'General',
     scope: 'Scope',
     fieldIsRequired: 'Field is required',
+    corrected: 'Corrected',
+    not_corrected: 'Not Corrected',
+    partially_corrected: 'Partially Corrected',
+    not_verifiable: 'Not Verifiable'
   }
