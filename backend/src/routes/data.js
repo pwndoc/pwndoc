@@ -110,6 +110,7 @@ module.exports = function(app) {
         }
 
         var auditType = {};
+        auditType.stage = 'default'
         // Required parameters
         auditType.name = req.body.name;
         auditType.templates = req.body.templates;
@@ -117,7 +118,8 @@ module.exports = function(app) {
         // Optional parameters
         if (req.body.sections) auditType.sections = req.body.sections
         if (req.body.hidden) auditType.hidden = req.body.hidden
-        if (req.body.stage) auditType.stage = req.body.stage
+        if (req.body.stage && (req.body.stage === 'multi' || req.body.stage === 'retest'))
+            auditType.stage = req.body.stage
 
         // Fix hidden sections for multi and retest audits
         if (auditType.stage === 'multi' || auditType.stage === 'retest')
@@ -168,7 +170,7 @@ module.exports = function(app) {
                     templates: e.templates,
                     sections: e.sections,
                     hidden: e.hidden,
-                    stage: e.stage
+                    stage: 'default'
                 })
         })
 
