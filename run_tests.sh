@@ -11,6 +11,8 @@ function usage {
 
 function full_test {
     docker-compose stop
+    docker-compose -f backend/docker-compose.dev.yml stop
+    
     docker-compose -f backend/docker-compose.test.yml build
     docker-compose -f backend/docker-compose.test.yml run --rm backend-test
     rc=$?
