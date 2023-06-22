@@ -11,7 +11,8 @@ export default [
         {path: 'network', name: 'network', component: () => import('pages/audits/edit/network')},
         {path: 'findings/add', name: 'addFindings', component: () => import('pages/audits/edit/findings/add')},
         {path: 'findings/:findingId', name: 'editFinding', component: () => import('pages/audits/edit/findings/edit')},
-        {path: 'sections/:sectionId', name: 'editSection', component: () => import('pages/audits/edit/sections')}
+        {path: 'sections/:sectionId', name: 'editSection', component: () => import('pages/audits/edit/sections')},
+        {path: 'audits/add', name: 'addAudits', component: () => import('pages/audits/edit/add-audits')}
       ]}
     ]},
     {path: 'data', component: () => import('pages/data'), meta: {breadcrumb: 'Datas'}, children: [

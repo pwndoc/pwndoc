@@ -1,5 +1,12 @@
 <div>
-    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
+<breadcrumb
+buttons
+:title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`"
+:state="parentState"
+:approvals="parentApprovals"
+:path="($parent.audit.parentId) ? `/audits/${$parent.audit.parentId}` : ''"
+:path-name="($parent.audit.type === 'retest') ? $t('originalAudit') : ($parent.audit.type === 'default') ? $t('multi') : ''"
+>
     <div slot="buttons">
         <q-btn
         v-if="$parent.audit.type === 'default'"
@@ -18,7 +25,7 @@
         v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT && $parent.audit.type === 'default'"
         />
         <q-btn color="primary" icon="vertical_split" flat @click="toggleSplitView()" class="q-mr-sm" v-if="$parent.audit.type === 'retest'">
-			<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.retestSplitView')}}</q-tooltip> 
+            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.retestSplitView')}}</q-tooltip> 
         </q-btn>
         <q-btn color="positive" :label="$t('btn.save')+'(ctrl+s)'" no-caps @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
     </div>

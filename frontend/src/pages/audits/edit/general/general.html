@@ -1,5 +1,12 @@
 <div>
-<breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
+<breadcrumb
+buttons
+:title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`"
+:state="parentState"
+:approvals="parentApprovals"
+:path="($parent.audit.parentId) ? `/audits/${$parent.audit.parentId}` : ''"
+:path-name="($parent.audit.type === 'retest') ? $t('originalAudit') : ($parent.audit.type === 'default') ? $t('multi') : ''"
+>
     <div slot="buttons">
       <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" :label="$t('btn.save')+' (ctrl+s)'" no-caps @click="updateAuditGeneral" />
     </div>
@@ -102,35 +109,6 @@
                         </template>
                     </q-select>
                     <q-select 
-                    v-if="$settings.reviews.enabled"
-                    class="col-md-12 col-12 q-pt-none"
-                    :label="$t('reviewers')"
-                    stack-label
-                    v-model="audit.reviewers"
-                    :options="reviewers"
-                    option-value="username"
-                    :option-label="(item) => (item)? item.firstname+' '+item.lastname: 'undefined'"
-                    multiple
-                    use-chips
-                    options-sanitize
-                    outlined 
-                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    >
-                        <template v-slot:selected-item="scope">
-                            <q-chip
-                            dense
-                            :removable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
-                            @remove="scope.removeAtIndex(scope.index)"
-                            :tabindex="scope.tabindex"
-                            color="blue-grey-5"
-                            text-color="white"
-                            >
-                                {{scope.opt.firstname}} {{scope.opt.lastname}}
-                            </q-chip>
-                        </template>
-                    </q-select>
-                    
-                    <q-select 
                     class="col-md-12 col-12 q-pt-none"
                     :label="$t('collaborators')"
                     stack-label
@@ -154,6 +132,34 @@
                                 {{audit.creator.firstname}} {{audit.creator.lastname}}
                             </q-chip>
                         </template>
+                        <template v-slot:selected-item="scope">
+                            <q-chip
+                            dense
+                            :removable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                            @remove="scope.removeAtIndex(scope.index)"
+                            :tabindex="scope.tabindex"
+                            color="blue-grey-5"
+                            text-color="white"
+                            >
+                                {{scope.opt.firstname}} {{scope.opt.lastname}}
+                            </q-chip>
+                        </template>
+                    </q-select>
+                    <q-select 
+                    v-if="$settings.reviews.enabled"
+                    class="col-md-12 col-12"
+                    :label="$t('reviewers')"
+                    stack-label
+                    v-model="audit.reviewers"
+                    :options="reviewers"
+                    option-value="username"
+                    :option-label="(item) => (item)? item.firstname+' '+item.lastname: 'undefined'"
+                    multiple
+                    use-chips
+                    options-sanitize
+                    outlined 
+                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                    >
                         <template v-slot:selected-item="scope">
                             <q-chip
                             dense

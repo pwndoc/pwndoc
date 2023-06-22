@@ -1,29 +1,16 @@
 <template>
-    <q-card flat color="white" text-color="black" class="row card-breadcrumb">
-        <q-btn 
-        v-if="typeof(buttons) !== 'undefined'" 
-        flat 
-        color="secondary"
-        @click="$router.push('/audits')"
-        >
-            <i class="fa fa-home fa-lg"></i>
-        </q-btn>
-        <span v-if="typeof(title) === 'undefined'" class="breadcrumb-title">{{bread[last].name}}</span>
-        <div v-else-if="$settings.reviews.enabled && state !== 'EDIT'" class="breadcrumb-title">
-            <span class="text-bold">{{title}}</span> 
+    <q-bar class="card-breadcrumb bg-white">
+        <template v-if="path">
+            <q-btn :to="path" :label="pathName" no-caps dense flat color="secondary" icon="arrow_back" />
+            <q-separator class="q-mr-sm" vertical inset />
+        </template>
+        <span class="text-bold">{{title}}</span>
+        <div v-if="$settings.reviews.enabled && state !== 'EDIT'">
             <audit-state-icon class="q-mx-sm" :approvals="approvals" :state="state"/>
         </div>
-        <div v-else class="q-mt-md">
-            <span class="text-bold">{{title}}</span> 
-        </div>
         <q-space />
-        <q-breadcrumbs v-if="typeof(buttons) === 'undefined'" separator="/" active-color="secondary" color="light" align="right">
-            <q-breadcrumbs-el v-for="breadcrumb in bread" :label="breadcrumb.name" :to="breadcrumb.path" :key="breadcrumb.path" />
-        </q-breadcrumbs>
-        <div v-else class="breadcrumb-buttons">
-            <slot name="buttons"></slot>
-        </div>
-    </q-card>
+        <slot name="buttons"></slot>
+    </q-bar>
 </template>
 
 <script>
@@ -31,7 +18,7 @@ import AuditStateIcon from 'components/audit-state-icon';
 
 export default {
     name: 'breadcrumb',
-    props: ['buttons', 'title', 'approvals', 'state'],
+    props: ['buttons', 'title', 'approvals', 'state', 'path', 'pathName'],
 
     components: {
         AuditStateIcon
@@ -39,37 +26,29 @@ export default {
 
     data: function() {
         return {
-            bread: [],
-            last: 0
+            
         }
     },
 
     created: function() {
-        this.initBreadcrumb();
     },
 
     methods: {
-        initBreadcrumb: function() {
-            var breadArray = this.$route.matched;
-            breadArray.forEach((element) => {
-                var entry = {};
-                if (element.meta.breadcrumb) {
-                    entry.name = element.meta.breadcrumb;
-                    entry.path = (element.path === "") ? "/" : element.path;
-                    this.bread.push(entry);
-                }
-            });
-            this.last = this.bread.length - 1;
-        }
+        
     }
 }
 
 </script>
 
-<style lang="stylus" scoped>
+<style lang="stylus">
 .card-breadcrumb {
     height: 50px
     padding-right: 20px
+    font-size: 14px
+}
+
+.card-breadcrumb .q-btn {
+    font-size: 14px
 }
 
 .breadcrumb-title {

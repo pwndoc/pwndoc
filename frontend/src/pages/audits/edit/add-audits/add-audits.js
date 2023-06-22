@@ -11,6 +11,11 @@ import UserService from '@/services/user'
 import { $t } from '@/boot/i18n'
 
 export default {
+    props: {
+        frontEndAuditState: Number,
+        parentState: String,
+        parentApprovals: Array
+    },
     data: () => {
         return {
             UserService: UserService,
@@ -27,7 +32,6 @@ export default {
             // Datatable headers
             dtHeaders: [
                 {name: 'name', label: $t('name'), field: 'name', align: 'left', sortable: true},
-                {name: 'auditType', label: $t('auditType'), field: 'auditType', align: 'left', sortable: true},
                 {name: 'language', label: $t('language'), field: 'language', align: 'left', sortable: true},
                 {name: 'company', label: $t('company'), field: row => (row.company)?row.company.name:'', align: 'left', sortable: true},
                 {name: 'users', label: $t('participants'), align: 'left', sortable: true},
@@ -36,7 +40,7 @@ export default {
                 {name: 'reviews', label: '', align: 'left', sortable: false},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
-            visibleColumns: ['name', 'auditType', 'language', 'company', 'users', 'date', 'action'],
+            visibleColumns: ['name', 'language', 'company', 'users', 'date', 'action'],
             // Datatable pagination
             pagination: {
                 page: 1,
@@ -51,10 +55,8 @@ export default {
                 {label:'All', value:0}
             ],
             // Search filter
-            search: {finding: '', auditType: '', name: '', language: '', company: '', users: '', date: ''},
+            search: {name: '', language: '', company: '', users: '', date: ''},
             myAudits: false,
-            displayConnected: false,
-            displayReadyForReview: false,
             // Errors messages
             errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
@@ -70,21 +72,17 @@ export default {
     mounted: function() {
         this.search.finding = this.$route.params.finding;
 
-        if (this.UserService.isAllowed('audits:users-connected'))
-            this.visibleColumns.push('connected')
         if (this.$settings.reviews.enabled)
             this.visibleColumns.push('reviews')
+
+        this.currentAudit.language = this.$parent.audit.language
 
         this.getAudits();
         this.getLanguages();
         this.getAuditTypes();
         this.getCompanies();
-    },
 
-    computed: {
-        modalAuditTypes: function() {
-            return this.auditTypes.filter(type => type.stage === this.currentAudit.type)
-        }
+        this.$socket.emit('menu', {menu: 'addAudits', room: this.$parent.auditId});
     },
 
     methods: {
@@ -121,9 +119,9 @@ export default {
 
         getAudits: function() {
             this.loading = true
-            AuditService.getAudits({findingTitle: this.search.finding})
+            AuditService.getAudits({type: 'default'})
             .then((data) => {
-                this.audits = data.data.datas
+                this.audits = data.data.datas.filter(e => !e.parentId)
                 this.loading = false
             })
             .catch((err) => {
@@ -144,6 +142,8 @@ export default {
             if (this.errors.name || this.errors.language || this.errors.auditType)
                 return;
 
+            this.currentAudit.parentId = this.$parent.auditId
+
             AuditService.createAudit(this.currentAudit)
             .then((response) => {
                 this.$refs.createModal.hide();
@@ -159,99 +159,27 @@ export default {
             })
         },
 
-        deleteAudit: function(uuid) {
-            AuditService.deleteAudit(uuid)
-            .then(() => {
-                this.getAudits();
-                Notify.create({
-                    message: 'Audit deleted successfully',
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
+        updateAuditParent: function(audit) {
+            if (audit && audit._id) {
+                AuditService.updateAuditParent(audit._id, this.$parent.auditId)
+                .then(() => {
+                    this.audits = this.audits.filter(e => e._id !== audit._id)
+                    Notify.create({
+                        message: $t('msg.auditUpdateOk'),
+                        color: 'positive',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-            .catch((err) => {
-                Notify.create({
-                    message: err.response.data.datas,
-                    color: 'negative',
-                    textColor:'white',
-                    position: 'top-right'
+                .catch((err) => {
+                    Notify.create({
+                        message: err.response.data.datas,
+                        color: 'negative',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
                 })
-            })
-        },
-
-        confirmDeleteAudit: function(audit) {
-            Dialog.create({
-                title: 'Confirm Suppression',
-                message: `Audit «${audit.name}» will be permanently deleted`,
-                ok: {label: 'Confirm', color: 'negative'},
-                cancel: {label: 'Cancel', color: 'white'}
-            })
-            .onOk(() => this.deleteAudit(audit._id))
-        },
-
-        // Convert blob to text
-        BlobReader: function(data) {
-            const fileReader = new FileReader();
-
-            return new Promise((resolve, reject) => {
-                fileReader.onerror = () => {
-                    fileReader.abort()
-                    reject(new Error('Problem parsing blob'));
-                }
-
-                fileReader.onload = () => {
-                    resolve(fileReader.result)
-                }
-
-                fileReader.readAsText(data)
-            })
-        },
-
-        generateReport: function(auditId) {
-            var downloadNotif = Notify.create({
-                spinner: QSpinnerGears,
-                message: 'Generating the Report',
-                color: "blue",
-                timeout: 0,
-                group: false
-            })
-            AuditService.generateAuditReport(auditId)
-            .then(response => {
-                var blob = new Blob([response.data], {type: "application/octet-stream"});
-                var link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = response.headers['content-disposition'].split('"')[1];
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-
-                downloadNotif({
-                    icon: 'done',
-                    spinner: false,
-                    message: 'Report successfully generated',
-                    color: 'green',
-                    timeout: 2500
-                })
-              })
-            .catch( async err => {
-                var message = "Error generating template"
-                if (err.response && err.response.data) {
-                    var blob = new Blob([err.response.data], {type: "application/json"})
-                    var blobData = await this.BlobReader(blob)
-                    message = JSON.parse(blobData).datas
-                }
-                downloadNotif()
-                Notify.create({
-                    message: message,
-                    type: 'negative',
-                    textColor:'white',
-                    position: 'top',
-                    closeBtn: true,
-                    timeout: 0,
-                    classes: "text-pre-wrap"
-                })
-            })
+            }
         },
 
         cleanErrors: function() {
@@ -263,7 +191,7 @@ export default {
         cleanCurrentAudit: function() {
             this.cleanErrors();
             this.currentAudit.name = '';
-            this.currentAudit.language = '';
+            this.currentAudit.language = this.$parent.audit.language;
             this.currentAudit.auditType = '';
             this.currentAudit.type = 'default';
         },
@@ -287,7 +215,6 @@ export default {
             var username = this.UserService.user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
             var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            var auditTypeTerm = (terms.auditType || "").toLowerCase()
             var languageTerm = (terms.language)? terms.language.toLowerCase(): ""
             var companyTerm = (terms.company)? terms.company.toLowerCase(): ""
             var usersTerm = (terms.users || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -295,14 +222,12 @@ export default {
 
             return rows && rows.filter(row => {
                 var name = (row.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                var auditType = (row.auditType || "").toLowerCase()
                 var language = (row.language)? row.language.toLowerCase(): ""
                 var companyName = (row.company)? row.company.name.toLowerCase(): ""
                 var users = this.convertParticipants(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var date = (row.createdAt)? row.createdAt.split('T')[0]: "";
 
                 return name.indexOf(nameTerm) > -1 &&
-                    (!auditTypeTerm || auditTypeTerm === auditType) &&
                     language.indexOf(languageTerm) > -1 &&
                     (!companyTerm || companyTerm === companyName) &&
                     users.indexOf(usersTerm) > -1 &&
@@ -314,7 +239,8 @@ export default {
         },
 
         dblClick: function(evt, row) {
-            this.$router.push('/audits/'+row._id)      
+            if (row)
+                this.updateAuditParent(row)
         }
     }
 }

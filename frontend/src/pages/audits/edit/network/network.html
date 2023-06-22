@@ -1,5 +1,12 @@
 <div>
-    <breadcrumb buttons :title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`" :state="parentState" :approvals="parentApprovals">
+<breadcrumb
+buttons
+:title="`${$parent.audit.name} (${$parent.audit.auditType || 'Audit Type not set'})`"
+:state="parentState"
+:approvals="parentApprovals"
+:path="($parent.audit.parentId) ? `/audits/${$parent.audit.parentId}` : ''"
+:path-name="($parent.audit.type === 'retest') ? $t('originalAudit') : ($parent.audit.type === 'default') ? $t('multi') : ''"
+>
     <div slot="buttons" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
         <q-btn-dropdown 
         class="q-mr-sm"

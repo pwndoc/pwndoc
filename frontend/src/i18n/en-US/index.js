@@ -41,6 +41,7 @@ export default {
         editAudit: 'Edit Audit',
         downloadReport: 'Download Report',
         deleteAudit: 'Delete Audit',
+        removeAudit: 'Remove Audit (Audit will not be deleted)',
         topButtonSection: {
             submitReview: 'Mark audit as ready for review',
             cancelReview: 'Make changes to the audit',
@@ -56,7 +57,8 @@ export default {
         findAudits: 'Find Audits',
         delete: 'Delete',
         download: 'Download',
-        retestSplitView: 'Enable Dual View with Original Finding Data'
+        retestSplitView: 'Enable split view with original Finding data',
+        addAudit: 'Add Audit'
     },
     msg: {
         auditReviewUpdateOk: 'Audit review status updated successfully',
@@ -82,6 +84,7 @@ export default {
         clientDeletedOk: 'Client deleted successfully',
         deleteNotice: 'will be permanently deleted',
         confirmSuppression: 'Confirm Suppression',
+        confirmRemoval: 'Confirm Removal',
         usernameRequired: 'Username required',
         passwordRequired: 'Password required',
         currentPasswordRequired: 'Current Password required',
@@ -116,7 +119,8 @@ export default {
         vulnerabilityMergeOk: 'Vulnerability merge successfully',
         tryingToContactBackend: '<p>Trying to contact backend</p>',
         wrongContactingBackend: 'Something went wrong contacting backend',
-        highlightWarningTitle: 'Highlighted Text still present !'
+        highlightWarningTitle: 'Highlighted Text still present !',
+        noAuditTypeForThisStage: 'No Assessments. Create an Audit Type first'
     },
     err: {
         notDefinedLanguage: 'Not defined for this language',
@@ -304,6 +308,7 @@ export default {
     noLanguage: 'No languages are defined.  Please create Languages in ',
     noAudit: 'No Audit Types are defined.  Please create Audit Types in ',
     auditTypes: 'Audit Types',
+    auditType: 'Audit Type',
     searchFinds: 'Search Finding',
     myAudits: 'My Audits',
     usersConnected: 'Users Connected',
@@ -517,5 +522,13 @@ export default {
     corrected: 'Corrected',
     not_corrected: 'Not Corrected',
     partially_corrected: 'Partially Corrected',
-    not_verifiable: 'Not Verifiable'
+    not_verifiable: 'Not Verifiable',
+    audits: 'Audits',
+    multi: 'Multi-Phases',
+    retest: 'Retest',
+    default: 'Default',
+    audit: 'Audit',
+    originalAudit: 'Original Audit',
+    willBeRemoved: 'will be removed',
+    auditPhase: 'Audit Phase'
   }

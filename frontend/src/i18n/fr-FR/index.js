@@ -37,6 +37,7 @@ export default {
         editAudit: 'Modifier l\'Audit',
         downloadReport: 'Télécharger le Rapport',
         deleteAudit: 'Supprimer l\'Audit',
+        removeAudit: 'Retirer l\'Audit (l\'Audit ne sera pas supprimé)',
         topButtonSection: {
             submitReview: 'Marquer l\'audit comme prêt pour examin',
             cancelReview: 'Apporter des modifications à l\'audit',
@@ -52,6 +53,8 @@ export default {
         findAudits: 'Rechercher des Audits',
         delete: 'Supprimer',
         download: 'Télécharger',
+        retestSplitView: 'Activer la vue partagée avec les données de la vulnérabilité originale',
+        addAudit: 'Ajouter l\'Audit'
     },
     msg: {
         auditReviewUpdateOk: 'État de l\'examin d\'audit mis à jour avec succès',
@@ -110,7 +113,8 @@ export default {
         vulnerabilityMergeOk: 'Fusion des vulnérabilités réussie',
         tryingToContactBackend: '<p>Essaie de contacter le backend</p>',
         wrongContactingBackend: 'Une erreur s\'est produite lors du contact avec le backend',
-        highlightWarningTitle: 'Texte Surligné toujours présent !'
+        highlightWarningTitle: 'Texte Surligné toujours présent !',
+        noAuditTypeForThisStage: 'Aucun type d\'Audit pour cette phase'
     },
     err: {
         notDefinedLanguage: 'Non défini pour cette langue',
@@ -160,6 +164,7 @@ export default {
     noLanguage: 'Aucune Langue n\'est définie. Veuillez créer des Langues dans ',
     noAudit: 'Aucun type d\'Audit n\'est défini. Veuillez créer des types d\'Audit dans ',
     auditTypes: 'Types d\'Audit',
+    auditType: 'Type d\'Audit',
     searchFinds: 'Rechercher une découverte',
     myAudits: 'Mes Audits',
     usersConnected: 'Utilisateur Connecté',
@@ -370,5 +375,13 @@ export default {
     corrected: 'Corrigé',
     not_corrected: 'Non Corrigé',
     partially_corrected: 'Partiellement Corrigé',
-    not_verifiable: 'Non Vérifiable'
+    not_verifiable: 'Non Vérifiable',
+    audits: 'Audits',
+    multi: 'Multi-Phases',
+    retest: 'Retest',
+    default: 'Default',
+    audit: 'Audit',
+    originalAudit: 'Audit Original',
+    willBeRemoved: 'sera retiré',
+    auditPhase: 'Phase d\'Audit'
   }

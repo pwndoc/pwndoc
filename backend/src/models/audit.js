@@ -98,7 +98,7 @@ AuditSchema.statics.getAudits = (isAdmin, userId, filters) => {
         query.populate('reviewers', 'username firstname lastname')
         query.populate('approvals', 'username firstname lastname')
         query.populate('company', 'name')
-        query.select('id name language creator collaborators company createdAt state')
+        query.select('id name auditType language creator collaborators company createdAt state type parentId')
         query.exec()
         .then((rows) => {
             resolve(rows)
@@ -135,6 +135,26 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             resolve(row)
+        })
+        .catch((err) => {
+            if (err.name === "CastError")
+                reject({fn: 'BadParameters', message: 'Bad Audit Id'})
+            else
+                reject(err)
+        })
+    })
+}
+
+AuditSchema.statics.getAuditChildren = (isAdmin, auditId, userId) => {
+    return new Promise((resolve, reject) => {
+        var query = Audit.find({parentId: auditId})
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
+        query.exec()
+        .then((rows) => {
+            if (!rows)
+                throw({fn: 'NotFound', message: 'Children not found or Insufficient Privileges'})
+            resolve(rows)
         })
         .catch((err) => {
             if (err.name === "CastError")
@@ -926,6 +946,44 @@ AuditSchema.statics.updateApprovals = (isAdmin, auditId, userId, update) => {
             reject(err)
         })
     });
+}
+
+// Update audit parent
+AuditSchema.statics.updateParent = (isAdmin, auditId, userId, parentId) => {
+    return new Promise(async(resolve, reject) => { 
+        var query = Audit.findByIdAndUpdate(auditId, {parentId: parentId})
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.exec()
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+            
+            resolve("Audit Parent updated successfully")
+        })
+        .catch((err) => {
+            reject(err)
+        })
+    })
+}
+
+// Delete audit parent
+AuditSchema.statics.deleteParent = (isAdmin, auditId, userId) => {
+    return new Promise(async(resolve, reject) => { 
+        var query = Audit.findByIdAndUpdate(auditId, {parentId: null})
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.exec()
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+            
+            resolve(row)
+        })
+        .catch((err) => {
+            reject(err)
+        })
+    })
 }
 
 /*

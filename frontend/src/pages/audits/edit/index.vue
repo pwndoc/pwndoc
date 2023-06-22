@@ -5,14 +5,18 @@
 			<template v-slot:before>
 				<q-list class="home-drawer">
 					<q-item style="padding:0px">
-						<template v-if="audit.parentId">
-							<q-item-section avatar class="topButtonSection">
-								<q-btn :to="`/audits/${audit.parentId}`" flat color="secondary" icon="arrow_back" />
-							</q-item-section>
-							<q-item-section></q-item-section>
-						</template>
+						<q-item-section avatar v-if="audit.type === 'multi'">
+							<q-chip square size="md" outline color="green" :label="$t('multi')" />
+						</q-item-section>
+						<q-item-section avatar v-else-if="audit.type === 'retest'">
+							<q-chip square outline color="orange" :label="$t('retest')" />
+						</q-item-section>
+						<q-item-section avatar v-else>
+							<q-chip square size="md" outline color="info" :label="$t('audit')" />
+						</q-item-section>
+						<q-item-section />
 						<template v-if="audit.type == 'default'">
-							<q-item-section avatar>
+							<q-item-section side>
 								<q-btn
 								v-if="auditRetest"
 								class="q-mx-xs q-px-xs"
@@ -35,12 +39,18 @@
 								color="secondary"
 								:label="$t('btn.topButtonSection.createRetest')"
 								no-caps
-								@click="createRetest"
+								@click="(auditTypesRetest && auditTypesRetest.length === 1) ? createRetest(auditTypesRetest[0]) : ''"
 								>
 									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.createRetest')}}</q-tooltip> 
+									<q-menu content-style="width: 300px" >
+										<q-item clickable v-for="retest of auditTypesRetest" :key="retest.name">
+											<q-item-section @click="createRetest(retest)">
+												{{ retest.name }}
+											</q-item-section>
+										</q-item>
+									</q-menu>
 								</q-btn>
 							</q-item-section>
-							<q-item-section />
 						</template>
 						<template v-if="$settings.reviews.enabled">
 							<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
@@ -103,7 +113,8 @@
 							<q-item-section avatar>
 								<q-icon name="fa fa-list"></q-icon>
 							</q-item-section>
-							<q-item-section>{{$t('findings')}} ({{audit.findings.length || 0}})</q-item-section>
+							<q-item-section v-if="audit.type === 'multi'">{{$t('audits')}} ({{audit.findings.length || 0}})</q-item-section>
+							<q-item-section v-else>{{$t('findings')}} ({{audit.findings.length || 0}})</q-item-section>
 							<q-item-section avatar>
 								<q-btn
 								@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
@@ -113,116 +124,152 @@
 								color="secondary"
 								v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT && audit.type === 'default'"
 								/>
+								<q-btn
+								@click="$router.push('/audits/'+auditId+'/audits/add').catch(err=>{})"
+								icon="add"
+								round
+								dense
+								color="secondary"
+								v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT && audit.type === 'multi'"
+								/>
 							</q-item-section>
 						</q-item>
 						
-						<div v-for="categoryFindings of findingList" :key="categoryFindings.category">
-							<q-item>
-								<q-item-section>
-									<q-item-label header>{{categoryFindings.category}}</q-item-label>
-								</q-item-section>
-								<q-item-section avatar>
-									<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-										<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
-										<q-menu content-style="width: 300px" anchor="bottom middle" self="top left">
-											<q-item>
-												<q-item-section>
-													<q-toggle 
-													v-model="categoryFindings.sortOption.sortAuto" 
-													:label="$t('automaticSorting')"
-													@input="updateSortFindings"
-													/>
-												</q-item-section>
-											</q-item>
-											<q-separator />
-											<q-item>
-												<q-item-section>
-													<q-item-label>{{$t('sortBy')}}</q-item-label>
-												</q-item-section>
-											</q-item>
-											<q-item>
-												<q-item-section>
-													<q-option-group
-													v-model="categoryFindings.sortOption.sortValue"
-													:options="getSortOptions(categoryFindings.sortOption.category)"
-													type="radio"
-													:disable="!categoryFindings.sortOption.sortAuto"
-													@input="updateSortFindings"
-													/>
-												</q-item-section>
-											</q-item>
-											<q-separator />
-											<q-item>
-												<q-item-section>
-													<q-btn 
-													flat
-													icon="fa fa-long-arrow-alt-up"
-													:label="$t('ascending')"
-													dense
-													no-caps
-													align="left"
-													:disable="!categoryFindings.sortOption.sortAuto"
-													:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':''" 
-													@click="categoryFindings.sortOption.sortOrder = 'asc'; updateSortFindings()" 
-													/>
-												</q-item-section>
-											</q-item>
-											<q-item>
-												<q-item-section>
-													<q-btn 
-													flat
-													icon="fa fa-long-arrow-alt-down"
-													:label="$t('descending')"
-													dense
-													no-caps
-													align="left"
-													:disable="!categoryFindings.sortOption.sortAuto"
-													:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':''" 
-													@click="categoryFindings.sortOption.sortOrder = 'desc'; updateSortFindings()" 
-													/>
-												</q-item-section>
-											</q-item>
-										</q-menu>
-									</q-btn>
-								</q-item-section>
-							</q-item>
+						<div v-if="audit.type === 'multi'">
 							<q-list no-border>
-								<draggable :list="categoryFindings.findings" @end="moveFindingPosition($event, categoryFindings.category)" handle=".handle" ghost-class="drag-ghost">
-									<div v-for="finding of categoryFindings.findings" :key="finding._id">
-										<q-item
-										dense
-										class="cursor-pointer"
-										:to="'/audits/'+auditId+'/findings/'+finding._id"
-										>
-											<q-item-section side v-if="!categoryFindings.sortOption.sortAuto && frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-												<q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
-											</q-item-section>
-											<q-item-section side>
-												<q-chip
-													class="text-white"
-													size="sm"
-													square
-													:style="`background: ${getFindingColor(finding)}`"
-												>{{getFindingSeverity(finding).substring(0,1)}}</q-chip>
-											</q-item-section>
-											<q-item-section>
-												<span>{{finding.title}}</span>
-											</q-item-section>
-											<q-item-section side>
-												<q-icon v-if="audit.type === 'default' && finding.status === 0" name="check" color="green" />
-												<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ok'" name="check" color="green" />
-												<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ko'" name="fas fa-xmark" color="red" />
-												<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'partial'" name="priority_high" color="orange" />
-												<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'unknown'" name="question_mark" color="brown" />
-											</q-item-section>
-										</q-item>
-										<div class="row">
-											<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
-										</div>
-									</div>
-								</draggable>
+								<div class="q-mt-md"></div>
+								<div v-for="audit of children" :key="audit._id">
+									<q-item
+									dense
+									clickable
+									>
+										<q-item-section @click="$router.push(`/audits/${audit._id}`)">
+											<span>{{audit.name}} <b>({{audit.auditType}})</b></span>
+										</q-item-section>
+										<q-item-section side>
+											<q-btn
+											v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+											size="sm"
+											flat
+											color="negative"
+											@click="confirmDeleteParent(audit)" icon="fa fa-minus-circle">
+												<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.removeAudit')}}</q-tooltip> 
+											</q-btn>
+										</q-item-section>
+									</q-item>
+								</div>
 							</q-list>
 						</div>
+						<div v-else>
+							<div v-for="categoryFindings of findingList" :key="categoryFindings.category">
+								<q-item>
+									<q-item-section>
+										<q-item-label header>{{categoryFindings.category}}</q-item-label>
+									</q-item-section>
+									<q-item-section avatar>
+										<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+											<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
+											<q-menu content-style="width: 300px" anchor="bottom middle" self="top left">
+												<q-item>
+													<q-item-section>
+														<q-toggle 
+														v-model="categoryFindings.sortOption.sortAuto" 
+														:label="$t('automaticSorting')"
+														@input="updateSortFindings"
+														/>
+													</q-item-section>
+												</q-item>
+												<q-separator />
+												<q-item>
+													<q-item-section>
+														<q-item-label>{{$t('sortBy')}}</q-item-label>
+													</q-item-section>
+												</q-item>
+												<q-item>
+													<q-item-section>
+														<q-option-group
+														v-model="categoryFindings.sortOption.sortValue"
+														:options="getSortOptions(categoryFindings.sortOption.category)"
+														type="radio"
+														:disable="!categoryFindings.sortOption.sortAuto"
+														@input="updateSortFindings"
+														/>
+													</q-item-section>
+												</q-item>
+												<q-separator />
+												<q-item>
+													<q-item-section>
+														<q-btn 
+														flat
+														icon="fa fa-long-arrow-alt-up"
+														:label="$t('ascending')"
+														dense
+														no-caps
+														align="left"
+														:disable="!categoryFindings.sortOption.sortAuto"
+														:color="(categoryFindings.sortOption.sortOrder === 'asc')?'green':''" 
+														@click="categoryFindings.sortOption.sortOrder = 'asc'; updateSortFindings()" 
+														/>
+													</q-item-section>
+												</q-item>
+												<q-item>
+													<q-item-section>
+														<q-btn 
+														flat
+														icon="fa fa-long-arrow-alt-down"
+														:label="$t('descending')"
+														dense
+														no-caps
+														align="left"
+														:disable="!categoryFindings.sortOption.sortAuto"
+														:color="(categoryFindings.sortOption.sortOrder === 'desc')?'green':''" 
+														@click="categoryFindings.sortOption.sortOrder = 'desc'; updateSortFindings()" 
+														/>
+													</q-item-section>
+												</q-item>
+											</q-menu>
+										</q-btn>
+									</q-item-section>
+								</q-item>
+								<q-list no-border>
+									<draggable :list="categoryFindings.findings" @end="moveFindingPosition($event, categoryFindings.category)" handle=".handle" ghost-class="drag-ghost">
+										<div v-for="finding of categoryFindings.findings" :key="finding._id">
+											<q-item
+											dense
+											class="cursor-pointer"
+											:to="'/audits/'+auditId+'/findings/'+finding._id"
+											>
+												<q-item-section side v-if="!categoryFindings.sortOption.sortAuto && frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+													<q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
+												</q-item-section>
+												<q-item-section side>
+													<q-chip
+														class="text-white"
+														size="sm"
+														square
+														:style="`background: ${getFindingColor(finding)}`"
+													>{{getFindingSeverity(finding).substring(0,1)}}</q-chip>
+												</q-item-section>
+												<q-item-section>
+													<span>{{finding.title}}</span>
+												</q-item-section>
+												<q-item-section side>
+													<q-icon v-if="audit.type === 'default' && finding.status === 0" name="check" color="green" />
+													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ok'" name="check" color="green" />
+													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ko'" name="fas fa-xmark" color="red" />
+													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'partial'" name="priority_high" color="orange" />
+													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'unknown'" name="question_mark" color="brown" />
+												</q-item-section>
+											</q-item>
+											<div class="row">
+												<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
+											</div>
+										</div>
+									</draggable>
+								</q-list>
+							</div>
+						</div>
+
 						<q-separator class="q-my-sm" />
 					</div>
 					<q-list v-for="section of audit.sections" :key="section._id">
@@ -270,7 +317,7 @@
 </template>
 
 <script>
-import { Notify, QSpinnerGears } from 'quasar';
+import { Dialog, Notify, QSpinnerGears } from 'quasar';
 import draggable from 'vuedraggable'
 
 import AuditService from '@/services/audit';
@@ -297,9 +344,11 @@ export default {
 				frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
 				AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
 				auditRetest: "",
+				auditTypesRetest: [],
 				retestSplitView: false,
 				retestSplitRatio: 100,
-				retestSplitLimits: [100, 100]
+				retestSplitLimits: [100, 100],
+				children: []
 			}
 		},
 
@@ -312,7 +361,8 @@ export default {
 			this.getCustomFields();
 			this.getAuditTypes();
 			this.getAudit(); // Calls getSections
-			this.getRetest();		
+			this.getRetest();
+			this.getAuditChildren();	
 		},
 
 		destroyed: function() {
@@ -423,6 +473,8 @@ export default {
 					return {menu: 'editFinding', finding: this.$router.currentRoute.params.findingId, room: this.auditId}
 				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editSection' && this.$router.currentRoute.params.sectionId)
 					return {menu: 'editSection', section: this.$router.currentRoute.params.sectionId, room: this.auditId}
+				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addAudits')
+					return {menu: 'addAudits', room: this.auditId}
 				
 				return {menu: 'undefined', room: this.auditId}
 			},
@@ -447,6 +499,7 @@ export default {
 				})
 				this.$socket.on('updateAudit', () => {
 					this.getAudit();
+					this.getAuditChildren();
 				})
 				this.$socket.on('disconnect', () => {
 					this.$socket.emit('join', {username: UserService.user.username, room: this.auditId})
@@ -506,7 +559,7 @@ export default {
 				})
 				.then((data) => {
 					this.audit = data.data.datas;
-					this.getUIState();
+					this.getUIState()
 					this.getSections()
 					if (this.loading)
 						this.handleSocket()
@@ -517,6 +570,16 @@ export default {
 						this.$router.push({name: '403', params: {error: err.response.data.datas}})
 					else if (err.response.status === 404)
 						this.$router.push({name: '404', params: {error: err.response.data.datas}})
+				})
+			},
+
+			getAuditChildren: function() {
+				AuditService.getAuditChildren(this.auditId)
+				.then((data) => {
+					this.children = data.data.datas
+				})
+				.catch((err) => {
+					console.log(err)
 				})
 			},
 
@@ -551,6 +614,7 @@ export default {
 				DataService.getAuditTypes()
 				.then((data) => {
 					this.auditTypes = data.data.datas;
+					this.auditTypesRetest = this.auditTypes.filter(e => e.stage == 'retest')
 				})
 				.catch((err) => {
 					console.log(err);
@@ -731,9 +795,7 @@ export default {
 				})
 			},
 
-			createRetest: function() {
-				var auditTypesRetest = this.auditTypes.filter(e => e.stage == 'retest')
-				var auditType = auditTypesRetest[0]
+			createRetest: function(auditType) {
 				AuditService.createRetest(this.auditId, {auditType: auditType.name})
 				.then((msg) => {
 					if (msg.data.datas.audit._id)
@@ -748,8 +810,39 @@ export default {
 						position: 'top-right'
 					})
 				})
+			},
+
+			deleteParent: function(auditId) {
+				AuditService.deleteAuditParent(auditId)
+				.then(() => {
+					Notify.create({
+						message: 'Audit removed successfully',
+						color: 'positive',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
+				.catch((err) => {
+					Notify.create({
+						message: err.response.data.datas,
+						color: 'negative',
+						textColor:'white',
+						position: 'top-right'
+					})
+				})
+			},
+
+			confirmDeleteParent: function(audit) {
+				Dialog.create({
+					title: $t('msg.confirmSuppression'),
+					message: `${$t('audit')} «${audit.name}» ${$t('willBeRemoved')}`,
+					ok: {label: $t('btn.confirm'), color: 'negative'},
+					cancel: {label: $t('btn.cancel'), color: 'white'},
+					focus: 'cancel'
+				})
+				.onOk(() => this.deleteParent(audit._id))
+				},
 			}
-		}
 }
 </script>
 

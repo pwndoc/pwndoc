@@ -18,6 +18,10 @@ module.exports = function(app, io) {
         var filters = {};
         if (req.query.findingTitle) 
             filters['findings.title'] = new RegExp(utils.escapeRegex(req.query.findingTitle), 'i')
+        if (req.query.type && req.query.type === 'default')
+            filters.$or = [{type: 'default'}, {type: {$exists:false}}]
+        if (req.query.type && ['multi', 'retest'].includes(req.query.type))
+            filters.type = req.query.type
             
         Audit.getAudits(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.decodedToken.id, filters)
         .then(msg => {
@@ -27,6 +31,7 @@ module.exports = function(app, io) {
                     a._id = audit._id
                     a.name = audit.name
                     a.language = audit.language
+                    a.auditType = audit.auditType
                     a.creator = audit.creator
                     a.collaborators = audit.collaborators
                     a.company = audit.company
@@ -34,6 +39,8 @@ module.exports = function(app, io) {
                     a.reviewers = audit.reviewers
                     a.approvals = audit.approvals
                     a.state = audit.state
+                    a.type = audit.type
+                    a.parentId = audit.parentId
                     if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected')){
                         a.connected = getUsersRoom(audit._id.toString())
                     }
@@ -44,7 +51,8 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
-    // Create audit with name, auditType, language provided
+    // Create audit (default or multi) with name, auditType, language provided
+    // parentId can be set only if type is default
     app.post("/api/audits", acl.hasPermission('audits:create'), function(req, res) {
         if (!req.body.name || !req.body.language || !req.body.auditType) {
             Response.BadParameters(res, 'Missing some required parameters: name, language, auditType');
@@ -61,9 +69,39 @@ module.exports = function(app, io) {
         audit.name = req.body.name;
         audit.language = req.body.language;
         audit.auditType = req.body.auditType;
+        audit.type = 'default';
+
+        // Optional params
+        if (req.body.type && req.body.type === 'multi') audit.type = req.body.type;
+        if (audit.type === 'default' && req.body.parentId) audit.parentId = req.body.parentId; 
 
         Audit.create(audit, req.decodedToken.id)
         .then(inserted => Response.Created(res, {message: 'Audit created successfully', audit: inserted}))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Get audits children
+    app.get("/api/audits/:auditId/children", acl.hasPermission('audits:read'), function(req, res) {
+        var getUsersRoom = function(room) {
+            return utils.getSockets(io, room).map(s => s.username)
+        }
+        Audit.getAuditChildren(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then(msg => {
+                var result = []
+                msg.forEach(audit => {
+                    var a = {}
+                    a._id = audit._id
+                    a.name = audit.name
+                    a.auditType = audit.auditType
+                    a.approvals = audit.approvals
+                    a.state = audit.state
+                    if (acl.isAllowed(req.decodedToken.role, 'audits:users-connected')){
+                        a.connected = getUsersRoom(audit._id.toString())
+                    }
+                    result.push(a)
+                })
+            Response.Ok(res, result)
+        })
         .catch(err => Response.Internal(res, err))
     });
 
@@ -543,5 +581,43 @@ module.exports = function(app, io) {
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err));
+    });
+
+    // Update parentId of Audit
+    app.put("/api/audits/:auditId/updateParent", acl.hasPermission('audits:create'), async function(req, res) {
+        var settings = await Settings.getAll();
+        var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.body.parentId, req.decodedToken.id);
+        if (settings.reviews.enabled && audit.state !== "EDIT") {
+            Response.Forbidden(res, "The audit is not in the EDIT state and therefore cannot be edited.");
+            return;
+        }
+        if (!req.body.parentId) {
+            Response.BadParameters(res, 'Missing some required parameters: parentId');
+            return;
+        }
+        Audit.updateParent(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.body.parentId)
+        .then(msg => {
+            io.to(req.body.parentId).emit('updateAudit');
+            Response.Ok(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Delete parentId of Audit
+    app.delete("/api/audits/:auditId/deleteParent", acl.hasPermission('audits:delete'), async function(req, res) {
+        var settings = await Settings.getAll();
+        var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id);
+        var parentAudit = await Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), audit.parentId, req.decodedToken.id);
+        if (settings.reviews.enabled && parentAudit.state !== "EDIT") {
+            Response.Forbidden(res, "The audit is not in the EDIT state and therefore cannot be edited.");
+            return;
+        }
+        Audit.deleteParent(acl.isAllowed(req.decodedToken.role, 'audits:delete-all'), req.params.auditId, req.decodedToken.id)
+        .then(msg => {
+            if (msg.parentId)
+                io.to(msg.parentId.toString()).emit('updateAudit');
+            Response.Ok(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
     });
 }
