@@ -147,7 +147,7 @@ module.exports = function(request, app) {
         expect(response.body.datas).toHaveLength(0)
       })
 
-      it('Create audit type Internal', async () => {
+      it('Create audit type Retest', async () => {
         // Get the template ID first
         response = await request(app).get('/api/templates')
           .set('Cookie', [
@@ -157,8 +157,57 @@ module.exports = function(request, app) {
         var templates = response.body.datas
 
         var auditType = {
-          name: 'Internal Test',
-          templates: templates
+          name: 'Retest',
+          templates: templates,
+          stage: "retest"
+        }
+
+        var response = await request(app).post('/api/data/audit-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(auditType)
+      
+        expect(response.status).toBe(201)
+      })
+
+      it('Create audit type Multi', async () => {
+        // Get the template ID first
+        response = await request(app).get('/api/templates')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        
+        var templates = response.body.datas
+
+        var auditType = {
+          name: 'Multi',
+          templates: templates,
+          stage: 'multi'
+        }
+
+        var response = await request(app).post('/api/data/audit-types')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(auditType)
+      
+        expect(response.status).toBe(201)
+      })
+
+      it('Create audit type with wrong stage', async () => {
+        // Get the template ID first
+        response = await request(app).get('/api/templates')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        
+        var templates = response.body.datas
+
+        var auditType = {
+          name: 'Wifi',
+          templates: templates,
+          stage: 'itdoesnotexist'
         }
 
         var response = await request(app).post('/api/data/audit-types')
@@ -216,8 +265,10 @@ module.exports = function(request, app) {
 
       it('Get audit types', async () => {
         const expected = [
-          {"hidden": [], "name": "Internal Test", "sections": [], "templates": [{}]},
-          {"hidden": [], "name": "Web", "sections": [], "templates": [{}]}
+          {"hidden": ["network"], "name": "Retest", "sections": [], "templates": [{}], "stage": "retest"},
+          {"hidden": ["network"], "name": "Multi", "sections": [], "templates": [{}], "stage": "multi"},
+          {"hidden": [], "name": "Wifi", "sections": [], "templates": [{}], "stage": "default"},
+          {"hidden": [], "name": "Web", "sections": [], "templates": [{}], "stage": "default"}
         ]
         var response = await request(app).get('/api/data/audit-types')
           .set('Cookie', [
@@ -229,7 +280,7 @@ module.exports = function(request, app) {
       })
 
       it('Delete audit type', async () => {
-        var response = await request(app).delete('/api/data/audit-types/Internal%20Test')
+        var response = await request(app).delete('/api/data/audit-types/Wifi')
           .set('Cookie', [
             `token=JWT ${userToken}`
           ])
@@ -239,7 +290,7 @@ module.exports = function(request, app) {
           .set('Cookie', [
             `token=JWT ${userToken}`
           ])
-        expect(response.body.datas).toHaveLength(1)
+        expect(response.body.datas).toHaveLength(3)
       })
 
       it('Should not delete audit type with nonexistent name', async () => {
