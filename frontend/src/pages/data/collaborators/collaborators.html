@@ -297,7 +297,7 @@
                 type="password"
                 @keyup.enter="updateCollab()"
                 outlined
-                :rules="strongPassword"
+                :rules="(currentCollab.password) ? strongPassword : ['']"
                 />
             </q-card-section>
             <q-card-section>
