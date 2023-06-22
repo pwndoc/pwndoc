@@ -27,7 +27,8 @@ export default {
             proofsTabVisited: false,
             detailsTabVisited: false,
             vulnTypes: [],
-            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+            overrideLeaveCheck: false
         }
     },
 
@@ -238,6 +239,7 @@ export default {
                         position: 'top-right'
                     })
                     this.findingOrig = this.finding
+                    this.overrideLeaveCheck = true
                     var currentIndex = this.$parent.audit.findings.findIndex(e => e._id === this.findingId)
                     if (this.$parent.audit.findings.length === 1)
                         this.$router.push(`/audits/${this.$parent.auditId}/findings/add`)
@@ -309,6 +311,9 @@ export default {
         },
 
         unsavedChanges: function() {
+            if (this.overrideLeaveCheck)
+                return false
+
             if (this.finding.title !== this.findingOrig.title)
                 return true
             if ((this.finding.vulnType || this.findingOrig.vulnType) && this.finding.vulnType !== this.findingOrig.vulnType)
@@ -348,8 +353,11 @@ export default {
         },
 
         displayHighlightWarning: function() {
+            if (this.overrideLeaveCheck)
+                return null
+
             if (!this.$settings.report.enabled || !this.$settings.report.public.highlightWarning)
-            return null
+                return null
 
             var matchString = `(<mark data-color="${this.$settings.report.public.highlightWarningColor}".+?>.+?)</mark>`
             var regex = new RegExp(matchString)
