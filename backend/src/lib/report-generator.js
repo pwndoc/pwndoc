@@ -388,7 +388,9 @@ async function prepAuditData(data, settings) {
             affected: finding.scope || "",
             status: finding.status || "",
             category: $t(finding.category) || $t("No Category"),
-            identifier: "IDX-" + utils.lPad(finding.identifier)
+            identifier: "IDX-" + utils.lPad(finding.identifier),
+            retestStatus: finding.retestStatus || "",
+            retestDescription: await splitHTMLParagraphs(finding.retestDescription)
         }
         // Handle CVSS
         tmpFinding.cvss = {
