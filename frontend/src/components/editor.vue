@@ -285,8 +285,8 @@ export default {
                         return
                     this.updateHTML()
                 },
-                disableInputRules: true,
-                disablePasteRules: true
+                enableInputRules: false,
+                enablePasteRules: false
             }),
             json: '',
             html: '',
