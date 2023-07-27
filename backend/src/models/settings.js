@@ -43,7 +43,8 @@ const SettingSchema = new Schema({
         },
         private: {
             imageBorder: { type: Boolean, default: false },
-            imageBorderColor: { type: String, default: "#000000", validate: [colorValidator, 'Invalid color'] }
+            imageBorderColor: { type: String, default: "#000000", validate: [colorValidator, 'Invalid color'] },
+            defaultDataRetentionDays: {type: Number, default: 0, min: 0, validate: [Number.isInteger, 'Invalid integer'] },
         }
      },
     reviews: {
