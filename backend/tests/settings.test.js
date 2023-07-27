@@ -54,6 +54,7 @@ module.exports = function(request, app) {
         "report": {
             "enabled": true,
             "private": {
+              "defaultDataRetentionDays": 0,
               "imageBorder": false,
               "imageBorderColor": "#000000",
             },
@@ -126,6 +127,7 @@ module.exports = function(request, app) {
           "report": {
               "enabled": false,
               "private": {
+                "defaultDataRetentionDays": 10,
                 "imageBorder": true,
                 "imageBorderColor": "#123456",
               },
