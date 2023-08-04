@@ -986,6 +986,231 @@ AuditSchema.statics.deleteParent = (isAdmin, auditId, userId) => {
     })
 }
 
+AuditSchema.statics.getAuditsImages = (auditsIds = []) => {
+    return new Promise((resolve, reject) => {
+        var imgRegex = new RegExp(/img src=["']([0-9a-f]{24})["']/)
+        var matchFilter = {
+            $or: [
+                {"customFields.text": {$regex: imgRegex}},
+                {"sections.customFields.text": {$regex: imgRegex}},
+                {"findings.description": {$regex: imgRegex}},
+                {"findings.observation": {$regex: imgRegex}},
+                {"findings.poc": {$regex: imgRegex}},
+                {"findings.remediation": {$regex: imgRegex}},
+                {"findings.retestDescription": {$regex: imgRegex}},
+                {"findings.customFields.text": {$regex: imgRegex}}
+            ]
+        }
+        if (auditsIds.length > 0)
+            matchFilter['_id'] = {$in: auditsIds.map(e => new mongoose.Types.ObjectId(e))}
+        var query = Audit.aggregate([{$match: matchFilter}])
+        query.unwind({path: '$customFields', preserveNullAndEmptyArrays: true})
+        query.unwind('$sections')
+        query.unwind('$sections.customFields')
+        query.unwind('$findings')
+        query.unwind({path: '$findings.customFields', preserveNullAndEmptyArrays: true})
+        query.addFields({
+            imageFields: {
+                $concat: [
+                    {$ifNull: ["$customFields.text", ""]},
+                    {$ifNull: ["$sections.customFields.text", ""]},
+                    {$ifNull: ["$findings.description", ""]},
+                    {$ifNull: ["$findings.observation", ""]},
+                    {$ifNull: ["$findings.poc", ""]},
+                    {$ifNull: ["$findings.remediation", ""]},
+                    {$ifNull: ["$findings.retestDescription", ""]},
+                    {$ifNull: ["$findings.customFields.text", ""]},
+                ],
+            },
+        })
+        query.project({
+            _id: 0,
+            name: "$name",
+            images: {
+                $regexFindAll: {
+                    input: "$imageFields",
+                    regex: imgRegex,
+                },
+            },
+        })
+        query.exec()
+        .then(row => {
+            if (!row)
+            throw ({ fn: 'NotFound', message: 'Audit not found' })
+            else {
+                var images = []
+                console.log(row.length)
+                row.forEach(e => e.images.forEach(img => images.push(img.captures[0])))
+                var imagesUniq = [...new Set(images)]
+                console.log(imagesUniq.length, imagesUniq)
+                resolve(imagesUniq);
+            }
+        })
+        .catch((err) => {
+            reject(err)
+        })
+    })
+}
+
+AuditSchema.statics.backup = (path, auditsIds = []) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportAuditsPromise() {
+            return new Promise((resolve, reject) => {
+                let filters = {}
+                const writeStream = fs.createWriteStream(`${path}/audits.json`)
+                writeStream.write('[')
+
+                if (auditsIds.length > 0)
+                    filters = {'_id': {$in: auditsIds}}
+                let audits = Audit.find(filters).cursor()
+                let isFirst = true
+
+                audits.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        function exportImagesPromise() {
+            return new Promise(async (resolve, reject) => {
+                const Image = mongoose.model("Image");
+                const writeStream = fs.createWriteStream(`${path}/audits-images.json`)
+                writeStream.write('[')
+
+                let auditsImages = await Audit.getAuditsImages(auditsIds)
+                let images = Image.find({'_id': {'$in': auditsImages}}).cursor()
+
+                let isFirst = true
+                images.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await Promise.all([exportAuditsPromise(), exportImagesPromise()])
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Audit'})
+        }
+            
+    })
+}
+
+AuditSchema.statics.restore = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importAuditsPromise() {
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/audits.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', (document) => {
+                    Audit.findOneAndReplace({_id: document._id}, document, { upsert: true })
+                    .catch(err => {
+                        reject(err)
+                    })
+                })
+                jsonStream.on('end', () => {
+                    resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        function importImagesPromise() {
+            return new Promise((resolve, reject) => {
+                const Image = mongoose.model("Image");
+                const readStream = fs.createReadStream(`${path}/audits-images.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', (document) => {
+                    Image.findOneAndReplace({_id: document._id}, document, { upsert: true })
+                    .catch(err => {
+                        reject(err)
+                    })
+                })
+                jsonStream.on('end', () => {
+                    resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+           })
+        }
+
+        try {
+            await Promise.all([importAuditsPromise(), importImagesPromise()])
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Audit'})
+        }
+    })
+}
+
 /*
 *** Methods ***
 */

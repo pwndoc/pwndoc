@@ -106,6 +106,101 @@ ClientSchema.statics.delete = (clientId) => {
     });
 }
 
+ClientSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportClientsPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/clients.json`)
+                writeStream.write('[')
+
+                let clients = Client.find().cursor()
+                let isFirst = true
+
+                clients.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportClientsPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Clients'})
+        }
+            
+    })
+}
+
+ClientSchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importClientsPromise () {
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/clients.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    delete document._id
+                    Client.findOneAndReplace({email: document.email}, document, { upsert: true, new: true })
+                    .catch(err => {
+                        console.log(err)
+                        reject(err)
+                    })
+                })
+                jsonStream.on('end', () => {
+                    resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await Client.deleteMany()
+            await importClientsPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Clients'})
+        }
+    })
+}
+
 /*
 *** Methods ***
 */

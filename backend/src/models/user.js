@@ -362,6 +362,100 @@ UserSchema.statics.cancelTotp = function (token, username){
     })
 }
 
+UserSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportUsersPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/users.json`)
+                writeStream.write('[')
+
+                let users = User.find().cursor()
+                let isFirst = true
+
+                users.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportUsersPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Users'})
+        }
+            
+    })
+}
+
+UserSchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importUsersPromise () {
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/users.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    User.findOneAndReplace({_id: document._id}, document, { upsert: true, new: true })
+                    .catch(err => {
+                        console.log(err)
+                        reject(err)
+                    })
+                })
+                jsonStream.on('end', () => {
+                    resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await User.deleteMany()
+            await importUsersPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Users'})
+        }
+    })
+}
+
 /*
 *** Methods ***
 */

@@ -108,6 +108,99 @@ SettingSchema.statics.restoreDefaults = () => {
     });
 };
 
+SettingSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportSettingsPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/settings.json`)
+                writeStream.write('[')
+
+                let settings = Settings.find().cursor()
+                let isFirst = true
+
+                settings.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportSettingsPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Settings'})
+        }
+            
+    })
+}
+
+SettingSchema.statics.restore = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importSettingsPromise () {
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/settings.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    Settings.findOneAndReplace({_id: document._id}, document, { upsert: true, new: true })
+                    .catch(err => {
+                        console.log(err)
+                        reject(err)
+                    })
+                })
+                jsonStream.on('end', () => {
+                    resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            await Settings.deleteMany()
+            await importSettingsPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Settings'})
+        }
+    })
+}
+
 const Settings = mongoose.model('Settings', SettingSchema);
 
 // Populate/update settings when server starts

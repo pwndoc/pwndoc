@@ -130,6 +130,24 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
+    // Test backup !!!
+    app.get("/api/audits/backup", async function(req, res) {
+        Audit.backupAudits(['63501b1e0a03ed001c9bfba7', '6310fc417397010011a51573'])
+        // Audit.backupAudits()
+        .then(msg => {
+            Response.Ok(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
+    app.get("/api/audits/restore", async function(req, res) {
+        Audit.restoreAudits()
+        .then(msg => {
+            Response.Ok(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
     /* ### AUDITS EDIT ### */
 
     // Get Audit with ID

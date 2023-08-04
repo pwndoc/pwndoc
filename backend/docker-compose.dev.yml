@@ -24,6 +24,7 @@ services:
       - ./src:/app/src
       - ./ssl:/app/ssl
       - ./report-templates:/app/report-templates
+      - ./backup:/app/backup
     depends_on:
       - mongodb
     restart: always
