@@ -22,7 +22,8 @@ var io = require('socket.io')(https, {
   }
 })
 var bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser')
+var cookieParser = require('cookie-parser');
+var acl = require('./lib/auth').acl;
 var utils = require('./lib/utils');
 
 // Get configuration
@@ -58,6 +59,20 @@ require('./models/settings');
 
 // Socket IO configuration
 io.on('connection', (socket) => {
+  let jwt = socket.handshake.headers.cookie.match(/token=(JWT[^;]+)/);
+  if(jwt == null) {
+    socket.disconnect();
+    return;
+  }
+  if(jwt.length != 2) {
+    socket.disconnect();
+    return;
+  }
+  jwt = jwt[1];
+  if(!acl.hasPermission("websocket:connect", jwt)) {
+    socket.disconnect();
+    return;
+  }
   socket.on('join', (data) => {
     console.log(`user ${data.username.replace(/\n|\r/g, "")} joined room ${data.room.replace(/\n|\r/g, "")}`)
     socket.username = data.username;

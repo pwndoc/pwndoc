@@ -367,8 +367,8 @@ export default {
 
 		destroyed: function() {
 			if (!this.loading) {
-				this.$socket.emit('leave', {username: UserService.user.username, room: this.auditId});
-				this.$socket.off()
+				this.$socket.io.emit('leave', {username: UserService.user.username, room: this.auditId});
+				this.$socket.io.off()
 			}
 		},
 
@@ -481,8 +481,8 @@ export default {
 
 			// Sockets handle
 			handleSocket: function() {
-				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
-				this.$socket.on('roomUsers', (users) => {
+				this.$socket.io.emit('join', {username: UserService.user.username, room: this.auditId});
+				this.$socket.io.on('roomUsers', (users) => {
 					var userIndex = 0;
 					this.users = users.map((user,index) => {
 						if (user.username === UserService.user.username) {
@@ -494,10 +494,10 @@ export default {
 					});
 					this.users.unshift(this.users.splice(userIndex, 1)[0]);
 				})
-				this.$socket.on('updateUsers', () => {
-					this.$socket.emit('updateUsers', {room: this.auditId})
+				this.$socket.io.on('updateUsers', () => {
+					this.$socket.io.emit('updateUsers', {room: this.auditId})
 				})
-				this.$socket.on('updateAudit', () => {
+				this.$socket.io.on('updateAudit', () => {
 					this.getAudit();
 					this.getAuditChildren();
 				})
