@@ -3,7 +3,7 @@ import {Loading} from 'quasar'
 import { $t } from '@/boot/i18n'
 
 export default ({ Vue }) => {
-    var socket = io(`${window.location.protocol}//${window.location.hostname}:${process.env.API_PORT}`);
+    var socket = io(`${window.location.protocol}//${window.location.hostname}:${window.location.port != '' ? ':'+window.location.port : ''}`);
 
     socket.on('disconnect', (error) => {
         Loading.show({
