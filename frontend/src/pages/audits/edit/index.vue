@@ -255,10 +255,10 @@
 												</q-item-section>
 												<q-item-section side>
 													<q-icon v-if="audit.type === 'default' && finding.status === 0" name="check" color="green" />
-													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ok'" name="check" color="green" />
-													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ko'" name="fas fa-xmark" color="red" />
-													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'partial'" name="priority_high" color="orange" />
-													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'unknown'" name="question_mark" color="brown" />
+													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'Closed'" name="check" color="green" />
+													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'Open'" name="fas fa-xmark" color="red" />
+													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'Partial Fix'" name="priority_high" color="orange" />
+													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'Not Retested'" name="question_mark" color="brown" />
 												</q-item-section>
 											</q-item>
 											<div class="row">
