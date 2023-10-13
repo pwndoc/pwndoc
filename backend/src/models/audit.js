@@ -31,7 +31,7 @@ var Finding = {
     status:                 {type: Number, enum: [0,1], default: 1}, // 0: done, 1: redacting
     category:               String,
     customFields:           [customField],
-    retestStatus:           {type: String, enum: ['ok', 'ko', 'unknown', 'partial']},
+    retestStatus:           {type: String, enum: ['Closed', 'Open', 'Not Retested', 'Partial Fix']},
     retestDescription:      String
 }
 
