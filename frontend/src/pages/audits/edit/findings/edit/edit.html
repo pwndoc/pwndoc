@@ -301,10 +301,10 @@ buttons
                         readonly
                         />
                         <div>
-                            <q-radio keep-color color="green" v-model="finding.retestStatus" val="ok" :label="$t('corrected')" />
-                            <q-radio keep-color color="red" v-model="finding.retestStatus" val="ko" :label="$t('not_corrected')" />
-                            <q-radio keep-color color="orange" v-model="finding.retestStatus" val="partial" :label="$t('partially_corrected')" />
-                            <q-radio keep-color color="brown" v-model="finding.retestStatus" val="unknown" :label="$t('not_verifiable')" />
+                            <q-radio keep-color color="green" v-model="finding.retestStatus" val="Closed" :label="$t('Closed')" />
+                            <q-radio keep-color color="red" v-model="finding.retestStatus" val="Open" :label="$t('Open')" />
+                            <q-radio keep-color color="orange" v-model="finding.retestStatus" val="Partial Fix" :label="$t('Partial Fix')" />
+                            <q-radio keep-color color="brown" v-model="finding.retestStatus" val="Not Retested" :label="$t('Not Retested')" />
                         </div>
                         <q-field
                         ref="retestDescriptionField"
