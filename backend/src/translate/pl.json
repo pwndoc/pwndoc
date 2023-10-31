@@ -1,0 +1,37 @@
+{
+    "Attack Vector": "Wektor ataku",
+    "Attack Complexity": "Poziom skomplikowania ataku",
+    "Privileges Required": "Wymagane uprawnienia",
+    "User Interaction": "Wymagana interakcja użytkownika",
+    "Scope": "Czy ma wpływ na inne komponenty",
+    "Confidentiality": "Wpływ na poufność",
+    "Integrity": "Wpływ na integralność",
+    "Availability": "Wpływ na dostępność",
+
+    "None_S": "Brak",
+    "Low_S": "Niskie",
+    "High_S": "Wysokie",
+    "Medium_S": "Średnie",
+    "Critical_S": "Krytyczne",
+
+    "Network": "Przez sieć",
+    "Adjacent Network": "Przez sieć przylegającą",
+    "Local": "Przez dostep lokalny",
+    "Physical": "Przez dostęp fizyczny",
+
+    "None_PR": "Żadne",
+    "Low_PR": "Niskie",
+    "High_PR": "Wysokie",
+
+    "None": "Brak",
+    "Low": "Niski",
+    "Medium": "Średni",
+    "High": "Wysoki",
+
+    "None_UI": "Nie",
+    "Required_UI": "Tak",
+
+    "Unchanged": "Nie",
+    "Changed": "Tak",
+    "No Category": "Brak kategorii"
+}
