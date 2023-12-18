@@ -334,6 +334,22 @@ expressions.filters.count = function(input, severity) {
     return count;
 }
 
+// Count by vulnType 
+// Example: {findings | counttype: 'Info'}
+// This is good for custom vulnType, instead using "count" which is using only cvss severity. in base case when cvss is 0.0 = Informational , you wont be able to count the informative findings.
+expressions.filters.counttype = function(input, vulnType) {
+    if (!input) return input;
+    var count = 0;
+
+    for (var i = 0; i < input.length; i++) {
+        if (input[i].VulnType === vulnType) {
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
 // Translate using locale from 'translate' folder
 // Example: {input | translate: 'fr'}
 expressions.filters.translate = function(input, locale) {
