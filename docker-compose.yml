@@ -12,7 +12,7 @@ services:
       - MONGO_DB:pwndoc
     networks:
       backend:
-        ipv4_address: 172.20.0.3
+        ipv4_address: 172.20.0.4
 
   pwndoc-backend:
     build: ./backend
@@ -30,7 +30,7 @@ services:
       - mongodb
     networks: 
       backend:
-        ipv4_address: 172.20.0.2
+        ipv4_address: 172.20.0.3
 
   pwndoc-frontend:
     build: ./frontend
@@ -41,7 +41,7 @@ services:
     #   - 8443:8443
     networks:
       backend:
-        ipv4_address: 172.20.0.1
+        ipv4_address: 172.20.0.2
 
 volumes:
   mongo-data:
