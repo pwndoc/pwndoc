@@ -6,16 +6,17 @@ services:
     volumes:
       - ./backend/mongo-data:/data/db
     restart: always
-    ports:
-      - 127.0.0.1:27017:27017
+    # ports:
+    #   - 127.0.0.1:27017:27017
     environment:
       - MONGO_DB:pwndoc
     networks:
-      - backend
+      backend:
+        ipv4_address: 172.20.0.3
 
   pwndoc-backend:
     build: ./backend
-    image: yeln4ts/pwndoc:backend
+    image: efigo/pwndoc:backend
     container_name: pwndoc-backend
     volumes:
       - ./backend/report-templates:/app/report-templates
@@ -23,26 +24,30 @@ services:
     depends_on:
       - mongodb
     restart: always
-    ports:
-      - 4242:4242
+    # ports:
+    #   - 4242:4242
     links:
       - mongodb
     networks: 
-      - backend
+      backend:
+        ipv4_address: 172.20.0.2
 
   pwndoc-frontend:
     build: ./frontend
-    image: yeln4ts/pwndoc:frontend
+    image: efigo/pwndoc:frontend
     container_name: pwndoc-frontend
     restart: always
-    ports:
-      - 8443:8443
+    # ports:
+    #   - 8443:8443
     networks:
-      - backend
+      backend:
+        ipv4_address: 172.20.0.1
 
 volumes:
   mongo-data:
 
 networks:
   backend:
-      driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
