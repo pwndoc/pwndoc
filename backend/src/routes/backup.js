@@ -44,7 +44,10 @@ module.exports = function(app) {
     function getBackupState() {
         try {
             const state = fs.readFileSync(`${backupPath}/.state`, 'utf8')
-            return state.trim()
+            if (state.split('\n').length > 1)
+                return {state: state.split('\n')[0].trim(), message: state.split('\n')[1].trim()}
+            else
+                return {state: state, message: ''}
         }
         catch(error) {
             if (error.code === 'ENOENT') {
@@ -58,8 +61,11 @@ module.exports = function(app) {
         }
     }
 
-    function setBackupState(state) {
-        fs.writeFileSync(`${backupPath}/.state`, state)
+    function setBackupState(state, message = null) {
+        if (message)
+            fs.writeFileSync(`${backupPath}/.state`, state + '\n' + message)
+        else
+            fs.writeFileSync(`${backupPath}/.state`, state)
     }
 
     function readBackupInfo(file) {
@@ -140,10 +146,31 @@ module.exports = function(app) {
 
     app.get("/api/backups/status", function(req, res) {
         const state = getBackupState()
-        if (state === 'error')
-            Response.Internal(res, state)
-        else
-            Response.Ok(res, state)
+        let response = {operation: 'idle', state: state.state, message: state.message}
+        if ([
+            STATE_BACKUP_STARTED, 
+            STATE_DUMPING_DATABASE, 
+            STATE_BUILDING_DATA, 
+            STATE_ENCRYPTING_DATA, 
+            STATE_BUILDING_ARCHIVE,
+            
+        ].includes(state.state))
+            response.operation = 'backup'
+        else if ([
+            STATE_RESTORE_STARTED,
+            STATE_EXTRACTING_INFO,
+            STATE_DECRYPTING_DATA,
+            STATE_EXTRACTING_DATA,
+            STATE_RESTORING_DATA,
+        ].includes(state.state))
+            response.operation = 'restore'
+        else if ([
+            STATE_BACKUP_ERROR,
+            STATE_RESTORE_ERROR
+        ].includes(state.state)) 
+            response.operation = 'idle'
+
+        Response.Ok(res, response)
     });
 
     app.delete("/api/backups/:slug", function(req, res) {
@@ -162,7 +189,7 @@ module.exports = function(app) {
     });
 
     app.post("/api/backups", function(req, res) {
-        if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState())) {
+        if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
             Response.Processing(res, 'Operation already in progress')
             return
         }
@@ -465,7 +492,7 @@ module.exports = function(app) {
     }
 
     app.post("/api/backups/:slug/restore", function(req, res) {
-        if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState())) {
+        if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
             Response.Processing(res, 'Operation already in progress')
             return
         }
@@ -688,7 +715,7 @@ module.exports = function(app) {
             }
         })
         .catch(err => {
-            setBackupState(STATE_RESTORE_ERROR)
+            setBackupState(STATE_RESTORE_ERROR, err.message)
             console.log(err)
         })
         .finally(() => {

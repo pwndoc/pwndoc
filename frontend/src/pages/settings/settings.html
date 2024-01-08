@@ -412,6 +412,11 @@
                     {{$t('listBackupDescription')}}
                 </div>
             </q-card-section>
+            <q-card-section v-if="backupStatus.state === 'backup_error' || backupStatus.state === 'restore_error'">
+                <q-banner class="text-white bg-red">
+                    {{$t(backupStatus.state) + ' - ' + $t(backupStatus.message)}}
+                </q-banner>
+            </q-card-section>
             
             <q-separator />
             
@@ -441,7 +446,7 @@
                         class="col-md-2"
                         v-if="UserService.isAllowed('backups:create')"
                         unelevated
-                        :loading="backupStatus !== 'idle'"
+                        :loading="backupStatus.operation !== 'idle'"
                         :label="$t('createBackup')"
                         color="secondary" 
                         no-caps
@@ -449,7 +454,7 @@
                         >
                             <template v-slot:loading>
                                 <q-spinner-hourglass class="on-left" />
-                                {{$t(backupStatus)}}
+                                {{$t(backupStatus.operation) + ' - ' + $t(backupStatus.state)}}
                           </template>
                         </q-btn>
                     </div>
@@ -566,16 +571,17 @@
                         <q-btn dense flat icon="close" @click="$refs.restoreBackupModal.hide()" />
                     </q-bar>
             
-                    <div v-if="restoreInProgress">
+                    <div v-if="backupStatus.operation !== 'idle'">
                         <div class="text-center">
                             <q-card-section>
                                 <q-spinner-hourglass color="secondary" size="100px" />
                             </q-card-section>
                             <q-card-section>
-                                <span class="text-h5">{{$t('restoreInProgress')}}</span>
+                                <span v-if="backupStatus.operation == 'restore'" class="text-h5">{{$t('restoreInProgress')}}</span>
+                                <span v-else class="text-h5">{{$t('backupInProgress')}}</span>
                             </q-card-section>
                             <q-card-section>
-                                <span class="text-subtitle1">{{$t('restoreInProgressDescription')}}</span>
+                                <span class="text-subtitle1">{{$t(backupStatus.state)}}</span>
                             </q-card-section>
                         </div>
                     </div>
@@ -584,7 +590,7 @@
                             <span class="text-h5">{{currentBackup.name}}</span>
                         </q-card-section>
                         <q-card-section>
-                            <span v-if="currentBackup.type === 'full'" class="text-subtitle1">{{$t('fullBackup')}}</span>
+                            <span v-if="backupType === 'full'" class="text-subtitle1">{{$t('fullBackup')}}</span>
                             <span v-else class="text-subtitle1">{{$t('partialBackup')}}</span>
                         </q-card-section>
                         <q-card-section>
@@ -597,7 +603,7 @@
                         <q-card-section>
                             <span class="text-bold">{{$t('selectWhatToRestore')}}</span>
                         </q-card-section>
-                        <q-card-section v-if="currentBackup.type === 'full'" class="q-pt-none">
+                        <q-card-section v-if="backupType === 'full'" class="q-pt-none">
                             <span class="text-bold">{{$t('restoreType')}}</span>
                             <div class="q-gutter-sm">
                                 <q-radio v-model="backupType" val="full" :label="$t('full')" />
@@ -618,6 +624,8 @@
                         <q-card-section v-if="currentBackup.protected" class="q-pt-none">
                             <q-input
                             :label="$t('password')+' *'"
+                            type="password"
+                            autofocus
                             stack-label
                             @keyup.enter="confirmRestoreBackup()"
                             v-model="currentBackup.password"
@@ -629,7 +637,14 @@
                 
                         <q-card-actions align="right">
                             <q-btn color="primary" outline @click="$refs.restoreBackupModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                            <q-btn color="secondary" unelevated @click="confirmRestoreBackup()">{{$t('btn.restore')}}</q-btn>
+                            <q-btn 
+                            color="secondary" 
+                            unelevated 
+                            :disabled="(currentBackup.protected && !currentBackup.password) || currentBackup.data.length === 0"                            
+                            @click="confirmRestoreBackup()"
+                            >
+                                {{$t('btn.restore')}}
+                            </q-btn>
                         </q-card-actions>
                     </div>
                 </q-card>

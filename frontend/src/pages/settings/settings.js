@@ -268,9 +268,9 @@ export default {
         getBackupStatus: function() {
             BackupService.getBackupStatus()
             .then((data) => {
-                let oldStatus = this.backupStatus
+                let oldStatus = this.backupStatus.state
                 this.backupStatus = data.data.datas
-                if (oldStatus !== this.backupStatus)
+                if (oldStatus !== 'idle' && this.backupStatus.state === 'idle')
                     this.getBackups()
             })
         },
@@ -342,7 +342,8 @@ export default {
         confirmRestoreBackup: function() {
             Dialog.create({
                 title: $t('msg.confirmRestore'),
-                message: `${$t('backup')} «${this.currentBackup.name}» ${$t('msg.restoreNotice')}`,
+                message: `${$t('backup')} « <b>${this.currentBackup.name} »</b> ${$t('msg.restoreNotice')}`,
+                html: true,
                 ok: {label: $t('btn.confirm'), color: 'negative'},
                 cancel: {label: $t('btn.cancel'), color: 'white'},
                 focus: 'cancel'
@@ -368,7 +369,7 @@ export default {
                     textColor:'white',
                     position: 'top-right'
                 })
-                this.restoreInProgress = false
+                this.getBackupStatus()
             }
             )
             .catch((err) => {
@@ -378,7 +379,6 @@ export default {
                     textColor:'white',
                     position: 'top-right'
                 })
-                this.restoreInProgress = false
             })
         },
 
@@ -400,7 +400,8 @@ export default {
         confirmDeleteBackup: function(backup) {
             Dialog.create({
                 title: $t('msg.confirmSuppression'),
-                message: `${$t('backup')} «${backup.name}» ${$t('msg.deleteNotice')}`,
+                message: `${$t('backup')} <b>« ${backup.name} »</b> ${$t('msg.deleteNotice')}`,
+                html: true,
                 ok: {label: $t('btn.confirm'), color: 'negative'},
                 cancel: {label: $t('btn.cancel'), color: 'white'},
                 focus: 'cancel'
