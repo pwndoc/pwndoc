@@ -1036,13 +1036,11 @@ AuditSchema.statics.getAuditsImages = (auditsIds = []) => {
         query.exec()
         .then(row => {
             if (!row)
-            throw ({ fn: 'NotFound', message: 'Audit not found' })
+            throw ({ fn: 'NotFound', message: 'Audits not found' })
             else {
                 var images = []
-                console.log(row.length)
                 row.forEach(e => e.images.forEach(img => images.push(img.captures[0])))
                 var imagesUniq = [...new Set(images)]
-                console.log(imagesUniq.length, imagesUniq)
                 resolve(imagesUniq);
             }
         })

@@ -107,6 +107,101 @@ CustomFieldSchema.statics.delete = (fieldId) => {
     })
 }
 
+CustomFieldSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportCustomFieldsPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/customFields.json`)
+                writeStream.write('[')
+
+                let customFields = CustomField.find().cursor()
+                let isFirst = true
+
+                customFields.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportCustomFieldsPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'CustomField'})
+        }
+            
+    })
+}
+
+CustomFieldSchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importCustomFieldsPromise () {
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/customFields.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    delete document._id
+                    CustomField.findOneAndReplace({label: document.label, display: document.display, displaySub: document.displaySub}, document, { upsert: true, new: true })
+                    .catch(err => {
+                        console.log(err)
+                        reject(err)
+                    })
+                })
+                jsonStream.on('end', () => {
+                    resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await CustomField.deleteMany()
+            await importCustomFieldsPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'CustomField'})
+        }
+    })
+}
+
 /*
 *** Methods ***
 */

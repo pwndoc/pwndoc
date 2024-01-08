@@ -111,6 +111,8 @@ module.exports = function (ctx) {
         'QSelect',
         'QSeparator',
         'QSpace',
+        'QSpinner',
+        'QSpinnerHourglass',
         'QSpinnerGears',
         'QSplitter',
         'QTab',

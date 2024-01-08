@@ -2,6 +2,8 @@ import { Notify, Dialog } from 'quasar'
 
 import SettingsService from '@/services/settings'
 import UserService from '@/services/user'
+import BackupService from '@/services/backup'
+import Utils from '@/services/utils'
 
 import { $t } from 'boot/i18n'
 import LanguageSelector from '@/components/language-selector';
@@ -18,7 +20,67 @@ export default {
                 '#ffff25', '#00ff41', '#00ffff', '#ff00f9', '#0005fd',
                 '#ff0000', '#000177', '#00807a', '#008021', '#8e0075',
                 '#8f0000', '#817d0c', '#807d78', '#c4c1bb', '#000000'
-            ]
+            ],
+
+            // Backups
+            loadingBackups: true,
+            backups: [],
+            // Datatable headers
+            dtBackupHeaders: [
+                {name: 'name', label: '', field: 'name', align: 'left', sortable: true},
+                {name: 'date', label: '', field: row => Utils.getRelativeDate(row.date), align: 'left', sortable: true},
+                {name: 'date2', label: '', field: 'date', align: 'left', sortable: true},
+                {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
+            ],
+            // Datatable pagination
+            pagination: {
+                page: 1,
+                rowsPerPage: 10,
+                sortBy: 'date2',
+                descending: true
+            },
+            rowsPerPageOptions: [
+                {label:'25', value:25},
+                {label:'50', value:50},
+                {label:'100', value:100},
+                {label:'All', value:0}
+            ],
+            // Search filter
+            searchBackup: {name: ''},
+            customFilter: Utils.customFilter,
+            // Selected or New Backup
+            currentBackup: {
+                name: '',
+                data: [],
+                password: ''
+            },
+            backupType: 'full',
+            backupEncrypted: false,
+            backupStatus: 'idle',
+            // If following object modified, update handleBackupTicked accordingly
+            backupOptions: [
+                {label: $t('audits'), value: 'Audits'},
+                {label: $t('vulnerabilities'), value: 'Vulnerabilities', tickStrategy: 'strict', children: [
+                    {label: $t('includeVulnerabilitiesUpdates'), value: 'Vulnerabilities Updates'},
+                ]},
+                {label: $t('users'), value: 'Users'},
+                {label: $t('customers'), value: 'Customers', children: [
+                    {label: $t('companies'), value: 'Companies'},
+                    {label: $t('clients'), value: 'Clients'}
+                ]},
+                {label: $t('templates'), value: 'Templates'},
+                {label: $t('customData'), value: 'Custom Data', children: [
+                    {label: $t('auditTypes'), value: 'Audit Types'},
+                    {label: $t('vulnerabilityTypes'), value: 'Vulnerability Types'},
+                    {label: $t('vulnerabilityCategories'), value: 'Vulnerability Categories'},
+                    {label: $t('customFields'), value: 'Custom Fields'},
+                    {label: $t('customSections'), value: 'Custom Sections'}
+                ]},
+                {label: $t('settings'), value: 'Settings'},
+            ],
+            restoreOptions: [],
+            restoreInProgress: false,
+            restoreMode: 'revert'
         }
     },
     components: {
@@ -42,6 +104,9 @@ export default {
     mounted: function() {
         if (UserService.isAllowed('settings:read')) {
             this.getSettings()
+            this.getBackupStatus()
+            setInterval(() => {this.getBackupStatus()}, 10000); // 10 seconds
+            this.getBackups()
             this.canEdit = this.UserService.isAllowed('settings:update');
             document.addEventListener('keydown', this._listener, false)
         }
@@ -181,6 +246,189 @@ export default {
 
         unsavedChanges() {
             return JSON.stringify(this.settingsOrig) !== JSON.stringify(this.settings);
+        },
+
+        getBackups: function() {
+            BackupService.getBackups()
+            .then((data) => {
+                this.backups = data.data.datas
+                this.loadingBackups = false
+                this.cleanCurrentBackup()
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+        getBackupStatus: function() {
+            BackupService.getBackupStatus()
+            .then((data) => {
+                let oldStatus = this.backupStatus
+                this.backupStatus = data.data.datas
+                if (oldStatus !== this.backupStatus)
+                    this.getBackups()
+            })
+        },
+
+        createBackup: function() {
+            BackupService.createBackup(this.currentBackup)
+            .then((data) => {
+                this.$refs.createBackupModal.hide();
+                Notify.create({
+                    message: data.data.datas,
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+                this.getBackupStatus()
+            }
+            )
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+        },
+
+        cleanCurrentBackup: function() {
+            const date = new Date()
+            this.backupType = 'full'
+            this.currentBackup = {
+                name: `${date.toLocaleDateString("en-us", {year: "numeric", month: "short", day: "2-digit"})}`,
+                data: [],
+                password: ''
+            }
+            this.backupEncrypted = false
+        },
+
+        handleBackupTicked: function(ticked) {
+            if (ticked.includes('Clients')) {
+                if (!ticked.includes('Companies'))
+                    ticked.push('Companies')
+                this.backupOptions[3].children[0].disabled = true
+                this.backupOptions[3].children[0].label = $t('companies') + ' '+ $t('companies_backupNeededFor')
+            }
+            else {
+                this.backupOptions[3].children[0].disabled = false
+                this.backupOptions[3].children[0].label = $t('companies')
+            }
+
+            if (ticked.includes('Audit Types')) {
+                if (!ticked.includes('Templates')) 
+                    ticked.push('Templates')
+                if (!ticked.includes('Custom Sections')) 
+                    ticked.push('Custom Sections')
+                this.backupOptions[4].disabled = true
+                this.backupOptions[4].label = $t('templates') + ' '+ $t('templates_backupNeededFor')
+                this.backupOptions[5].children[4].disabled = true
+                this.backupOptions[5].children[4].label = $t('customSections') + ' '+ $t('customSections_backupNeededFor')
+            }
+            else {
+                this.backupOptions[4].disabled = false
+                this.backupOptions[4].label = $t('templates')
+                this.backupOptions[5].children[4].disabled = false
+                this.backupOptions[5].children[4].label = $t('customSections')
+            }
+        },
+
+        confirmRestoreBackup: function() {
+            Dialog.create({
+                title: $t('msg.confirmRestore'),
+                message: `${$t('backup')} «${this.currentBackup.name}» ${$t('msg.restoreNotice')}`,
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'},
+                focus: 'cancel'
+            })
+            .onOk(() => {
+                this.restoreBackup();
+            })
+        },
+
+        restoreBackup: function() {
+            this.restoreInProgress = true
+            let postData = {
+                data: (this.backupType === 'partial') ? this.currentBackup.data : [],
+                password: this.currentBackup.password || '',
+                mode: this.restoreMode
+            }
+            BackupService.restoreBackup(this.currentBackup.slug, postData)
+            .then((data) => {
+                this.$refs.restoreBackupModal.hide();
+                Notify.create({
+                    message: data.data.datas,
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+                this.restoreInProgress = false
+            }
+            )
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+                this.restoreInProgress = false
+            })
+        },
+
+        backupRowClick: function(row) {
+            this.cleanCurrentBackup()
+            Object.assign(this.currentBackup, row)
+            this.backupType = this.currentBackup.type
+            this.restoreOptions = this.backupOptions.filter((option) => {
+                if (option.children)
+                    return option.children.some((child) => {
+                        return this.currentBackup.data.includes(child.value)
+                    })
+                else
+                    return this.currentBackup.data.includes(option.value)
+            })
+            this.$refs.restoreBackupModal.show()       
+        },
+
+        confirmDeleteBackup: function(backup) {
+            Dialog.create({
+                title: $t('msg.confirmSuppression'),
+                message: `${$t('backup')} «${backup.name}» ${$t('msg.deleteNotice')}`,
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'},
+                focus: 'cancel'
+            })
+            .onOk(() => {
+                this.deleteBackup(backup);
+            })
+        },
+
+        deleteBackup: function(backup) {
+            BackupService.deleteBackup(backup.slug)
+            .then((data) => {
+                this.getBackups();
+                Notify.create({
+                    message: data.data.datas,
+                    color: 'positive',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            })
         }
     }
 }

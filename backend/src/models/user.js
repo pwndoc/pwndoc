@@ -375,6 +375,8 @@ UserSchema.statics.backup = (path) => {
                 let isFirst = true
 
                 users.eachAsync(async (document) => {
+                    document = document.toObject()
+                    delete document.refreshTokens // Remove refreshTokens from backup
                     if (!isFirst) {
                         writeStream.write(',')
                     } else {

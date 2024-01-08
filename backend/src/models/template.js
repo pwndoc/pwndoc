@@ -95,6 +95,101 @@ TemplateSchema.statics.delete = (templateId) => {
     });
 }
 
+TemplateSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportTemplatesPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/templates.json`)
+                writeStream.write('[')
+
+                let templates = Template.find().cursor()
+                let isFirst = true
+
+                templates.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportTemplatesPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Template'})
+        }
+            
+    })
+}
+
+TemplateSchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importTemplatesPromise() {
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/templates.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    delete document._id
+                    Template.findOneAndReplace({ name: document.name }, document, { upsert: true, new: true })
+                        .catch(err => {
+                            console.log(err)
+                            reject(err)
+                        })
+                })
+                jsonStream.on('end', () => {
+                    resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await Template.deleteMany()
+            await importTemplatesPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({ error: error, model: 'Template' })
+        }
+    })
+}
+
 /*
 *** Methods ***
 */
