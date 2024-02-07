@@ -201,15 +201,7 @@ module.exports = function(app) {
 
     
     // Upload backup file
-    let checkUsersInit = async (req, res, next) => {
-        req.bypassPermission = false
-        users = await User.getAll()
-        if (users && users.length === 0)
-            req.bypassPermission = true
-        next()
-    }
-
-    app.post("/api/backups/upload", checkUsersInit, acl.hasPermission('backups:create'), function(req, res) {
+    app.post("/api/backups/upload", acl.hasPermission('backups:create'), function(req, res) {
         const fileSize = req.headers['content-length'] || 0
         const diskUsage = diskusage.checkSync('/')
         const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
