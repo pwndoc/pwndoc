@@ -1140,11 +1140,13 @@ AuditSchema.statics.backup = (path, auditsIds = []) => {
     })
 }
 
-AuditSchema.statics.restore = (path) => {
+AuditSchema.statics.restore = (path, mode = "upsert") => {
     return new Promise(async (resolve, reject) => {
         const fs = require('fs')
 
         function importAuditsPromise() {
+            let documents = []
+            
             return new Promise((resolve, reject) => {
                 const readStream = fs.createReadStream(`${path}/audits.json`)
                 const JSONStream = require('JSONStream')
@@ -1157,13 +1159,44 @@ AuditSchema.statics.restore = (path) => {
                 })
 
                 jsonStream.on('data', (document) => {
-                    Audit.findOneAndReplace({_id: document._id}, document, { upsert: true })
-                    .catch(err => {
-                        reject(err)
-                    })
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        Audit.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {_id: document._id},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+
+                        documents = []
+                    }
                 })
                 jsonStream.on('end', () => {
-                    resolve()
+                    if (documents.length > 0) {
+                        Audit.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {_id: document._id},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })  
+                    }
+                    else
+                        resolve()
                 })
                 jsonStream.on('error', (error) => {
                     reject(error)
@@ -1172,6 +1205,8 @@ AuditSchema.statics.restore = (path) => {
         }
 
         function importImagesPromise() {
+            let documents = []
+
             return new Promise((resolve, reject) => {
                 const Image = mongoose.model("Image");
                 const readStream = fs.createReadStream(`${path}/audits-images.json`)
@@ -1185,13 +1220,43 @@ AuditSchema.statics.restore = (path) => {
                 })
 
                 jsonStream.on('data', (document) => {
-                    Image.findOneAndReplace({_id: document._id}, document, { upsert: true })
-                    .catch(err => {
-                        reject(err)
-                    })
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        Image.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {_id: document._id},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
                 })
                 jsonStream.on('end', () => {
-                    resolve()
+                    if (documents.length > 0) {
+                        Image.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {_id: document._id},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
                 })
                 jsonStream.on('error', (error) => {
                     reject(error)
@@ -1200,6 +1265,8 @@ AuditSchema.statics.restore = (path) => {
         }
 
         try {
+            if (mode === "revert")
+                await Audit.deleteMany()
             await Promise.all([importAuditsPromise(), importImagesPromise()])
             resolve()
         }

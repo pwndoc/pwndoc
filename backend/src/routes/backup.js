@@ -4,6 +4,7 @@ module.exports = function(app) {
     const fs = require('fs')
     const tar = require('tar-stream')
     const zlib = require('zlib')
+    const diskusage = require('diskusage')
 
     const Response = require('../lib/httpResponse.js');
     const acl = require('../lib/auth.js').acl;
@@ -45,7 +46,7 @@ module.exports = function(app) {
         try {
             const state = fs.readFileSync(`${backupPath}/.state`, 'utf8')
             if (state.split('\n').length > 1)
-                return {state: state.split('\n')[0].trim(), message: state.split('\n')[1].trim()}
+                return {state: state.split('\n')[0].trim(), message: state.split('\n').slice(1).join('\n').trim()}
             else
                 return {state: state, message: ''}
         }
@@ -84,7 +85,7 @@ module.exports = function(app) {
                     stream.on('end', () => {
                         try {
                             jsonData = JSON.parse(jsonData)
-                            const keys = ['name', 'date', 'type', 'protected', 'data']
+                            const keys = ['name', 'date', 'slug', 'type', 'protected', 'data']
                             if (keys.every(e => Object.keys(jsonData).includes(e)))
                                 resolve(jsonData)
                             else
@@ -109,9 +110,9 @@ module.exports = function(app) {
         
             readStream
             .pipe(zlib.createGunzip())
-            .on('error', err => reject(err))
+            .on('error', err => reject(new Error('Wrong backup file')))
             .pipe(extract)
-            .on('error', err => reject(err))
+            .on('error', err => reject(new Error('Wrong backup file')))
         })
     }
 
@@ -171,6 +172,93 @@ module.exports = function(app) {
             response.operation = 'idle'
 
         Response.Ok(res, response)
+    });
+
+    // Download backup file
+    app.get("/api/backups/download/:slug", acl.hasPermission('backups:read'), function(req, res) {
+        const filenames = fs.readdirSync(backupPath)
+        let found = false
+        const { resolve } = require('path')
+
+        filenames.forEach(file => {
+            if (file === `${req.params.slug}.tar`) {
+                found = true
+                const filePath = `${backupPath}/${req.params.slug}.tar`
+                const fileStats = fs.statSync(filePath)
+                const fileSize = fileStats.size
+
+                const fileStream = fs.createReadStream(resolve(filePath))
+                res.setHeader('Content-Length', fileSize)
+                res.setHeader('Content-Type', 'application/octet-stream')
+                res.setHeader('Content-Disposition', `attachment; filename=${req.params.slug}.tar`)
+                fileStream.pipe(res)
+            }
+        })
+        if (!found) {
+            Response.NotFound(res, 'Backup File not found')
+        }
+    });
+
+    
+    // Upload backup file
+    let checkUsersInit = async (req, res, next) => {
+        req.bypassPermission = false
+        users = await User.getAll()
+        if (users && users.length === 0)
+            req.bypassPermission = true
+        next()
+    }
+
+    app.post("/api/backups/upload", checkUsersInit, acl.hasPermission('backups:create'), function(req, res) {
+        const fileSize = req.headers['content-length'] || 0
+        const diskUsage = diskusage.checkSync('/')
+        const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
+        if (fileSize > maxFileSize) {
+            Response.BadParameters(res, 'Backup too large. Not enough space on disk')
+            return
+        }
+
+        const multer = require('multer');
+        const storage = multer.diskStorage({
+            destination: (req, file, cb) => {
+                cb(null, `${backupPath}/`);
+            },
+            filename: (req, file, cb) => {
+                cb(null, file.originalname);
+            },
+        });
+        const upload = multer({
+            storage: storage,
+            fileFilter: (req, file, cb) => {
+                if (file.mimetype === 'application/x-tar' && file.originalname.endsWith('.tar'))
+                    cb(null, true);
+                else
+                    cb(new Error('Only .tar archives are allowed'));
+            },
+            limits: {
+                fileSize: maxFileSize
+            }    
+        }).single('file')
+        
+        upload(req, res, (err) => {
+            if (err instanceof multer.MulterError) {
+                Response.BadParameters(res, err);
+            }
+            else if (err) {
+                Response.Internal(res, err);
+            }
+            else {
+                // Check if file is a valid backup file
+                readBackupInfo(req.file.originalname)
+                .then(result => {
+                    Response.Created(res, result)
+                })
+                .catch(error => {
+                    fs.rmSync(`${backupPath}/${req.file.originalname}`, {force: true})
+                    Response.BadParameters(res, error.message)
+                })
+            }
+        })
     });
 
     app.delete("/api/backups/:slug", function(req, res) {
@@ -434,8 +522,12 @@ module.exports = function(app) {
                 readStream.close()
                 if ((countExtracted > 0 && files.length === 0) || countExtracted === files.length)
                     resolve()
-                else
-                    reject(new Error(`${countExtracted} files extracted on ${files.length} files`))
+                else {
+                    if (files.length - countExtracted === 1)
+                        reject(new Error(`Missing ${files.length - countExtracted} file in the archive`))
+                    else
+                        reject(new Error(`Missing ${files.length - countExtracted} files in the archive`))
+                }
             })
 
             readStream.on('error', err => {
@@ -489,6 +581,21 @@ module.exports = function(app) {
                 }
             })
         })
+    }
+
+    async function processPromisesSequentially(promises) {
+        const results = [];
+        for (const promise of promises) {
+            console.log(results.length, promise)
+            try {
+            const result = await promise;
+            results.push({ status: 'fulfilled', value: result });
+            } catch (error) {
+            results.push({ status: 'rejected', reason: error });
+            }
+        }
+        
+        return results;
     }
 
     app.post("/api/backups/:slug/restore", function(req, res) {
@@ -641,12 +748,12 @@ module.exports = function(app) {
 
             // Vulnerabilities
             if (info.data.includes('Vulnerabilities') && backupData.includes('Vulnerabilities')) {
-                restorePromises.push(Vulnerability.restore(restoreTmpPath))
+                restorePromises.push(Vulnerability.restore(restoreTmpPath, restoreMode))
             }
 
             // Vulnerabilities Updates
             if (info.data.includes('Vulnerabilities Updates') && backupData.includes('Vulnerabilities Updates')) {
-                restorePromises.push(VulnerabilityUpdate.restore(restoreTmpPath))
+                restorePromises.push(VulnerabilityUpdate.restore(restoreTmpPath, restoreMode))
             }
 
             // Users
@@ -690,7 +797,8 @@ module.exports = function(app) {
             }
             
             
-            return Promise.allSettled(restorePromises)
+            // return Promise.allSettled(restorePromises)
+            return processPromisesSequentially(restorePromises)
         })
         .then(results => {
             let errors = []

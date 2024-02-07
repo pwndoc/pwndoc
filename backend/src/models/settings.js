@@ -175,7 +175,7 @@ SettingSchema.statics.restore = (path) => {
                 })
 
                 jsonStream.on('data', async (document) => {
-                    Settings.findOneAndReplace({_id: document._id}, document, { upsert: true, new: true })
+                    Settings.findOneAndReplace({_id: document._id}, document, { upsert: true })
                     .catch(err => {
                         console.log(err)
                         reject(err)

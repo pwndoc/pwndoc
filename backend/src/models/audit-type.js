@@ -55,7 +55,7 @@ AuditTypeSchema.statics.getByName = (name) => {
 AuditTypeSchema.statics.create = (auditType) => {
     return new Promise(async (resolve, reject) => {
         const lastDocument = await AuditType.findOne({}, {}, { sort: { order: -1 } });
-        const newOrder = lastDocument ? lastDocument.order + 1 : 1;
+        const newOrder = (lastDocument && lastDocument.order) ? lastDocument.order + 1 : 1;
         auditType.order = newOrder;
         var query = new AuditType(auditType);
         query.save()
@@ -163,6 +163,8 @@ AuditTypeSchema.statics.restore = (path, mode = "upsert") => {
         const fs = require('fs')
 
         function importAuditTypesPromise () {
+            let documents = []
+
             return new Promise((resolve, reject) => {
                 const readStream = fs.createReadStream(`${path}/auditTypes.json`)
                 const JSONStream = require('JSONStream')
@@ -175,15 +177,44 @@ AuditTypeSchema.statics.restore = (path, mode = "upsert") => {
                 })
 
                 jsonStream.on('data', async (document) => {
-                    delete document._id
-                    AuditType.findOneAndReplace({name: document.name}, document, { upsert: true, new: true })
-                    .catch(err => {
-                        console.log(err)
-                        reject(err)
-                    })
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        AuditType.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {name: document.name},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+
+                        documents = []
+                    }
                 })
                 jsonStream.on('end', () => {
-                    resolve()
+                    if (documents.length > 0) {
+                        AuditType.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {name: document.name},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })  
+                    }
+                    else
+                        resolve()
                 })
                 jsonStream.on('error', (error) => {
                     reject(error)

@@ -136,6 +136,8 @@ CompanySchema.statics.restore = (path, mode = "upsert") => {
         const fs = require('fs')
 
         function importCompaniesPromise () {
+            let documents = []
+
             return new Promise((resolve, reject) => {
                 const readStream = fs.createReadStream(`${path}/companies.json`)
                 const JSONStream = require('JSONStream')
@@ -148,15 +150,43 @@ CompanySchema.statics.restore = (path, mode = "upsert") => {
                 })
 
                 jsonStream.on('data', async (document) => {
-                    delete document._id
-                    Company.findOneAndReplace({name: document.name}, document, { upsert: true, new: true })
-                    .catch(err => {
-                        console.log(err)
-                        reject(err)
-                    })
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        Company.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {name: document.name},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
                 })
                 jsonStream.on('end', () => {
-                    resolve()
+                    if (documents.length > 0) {
+                        Company.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {name: document.name},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
                 })
                 jsonStream.on('error', (error) => {
                     reject(error)

@@ -162,6 +162,8 @@ CustomFieldSchema.statics.restore = (path, mode = "upsert") => {
         const fs = require('fs')
 
         function importCustomFieldsPromise () {
+            let documents = []
+
             return new Promise((resolve, reject) => {
                 const readStream = fs.createReadStream(`${path}/customFields.json`)
                 const JSONStream = require('JSONStream')
@@ -174,15 +176,43 @@ CustomFieldSchema.statics.restore = (path, mode = "upsert") => {
                 })
 
                 jsonStream.on('data', async (document) => {
-                    delete document._id
-                    CustomField.findOneAndReplace({label: document.label, display: document.display, displaySub: document.displaySub}, document, { upsert: true, new: true })
-                    .catch(err => {
-                        console.log(err)
-                        reject(err)
-                    })
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        CustomField.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {label: document.label, display: document.display, displaySub: document.displaySub},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
                 })
                 jsonStream.on('end', () => {
-                    resolve()
+                    if (documents.length > 0) {
+                        CustomField.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {label: document.label, display: document.display, displaySub: document.displaySub},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
                 })
                 jsonStream.on('error', (error) => {
                     reject(error)

@@ -130,6 +130,8 @@ LanguageSchema.statics.restore = (path, mode = "upsert") => {
         const fs = require('fs')
 
         function importLanguagesPromise () {
+            let documents = []
+
             return new Promise((resolve, reject) => {
                 const readStream = fs.createReadStream(`${path}/languages.json`)
                 const JSONStream = require('JSONStream')
@@ -142,15 +144,43 @@ LanguageSchema.statics.restore = (path, mode = "upsert") => {
                 })
 
                 jsonStream.on('data', async (document) => {
-                    delete document._id
-                    Language.findOneAndReplace({language: document.language, locale: document.locale}, document, { upsert: true, new: true })
-                    .catch(err => {
-                        console.log(err)
-                        reject(err)
-                    })
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        Language.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {language: document.language, locale: document.locale},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
                 })
                 jsonStream.on('end', () => {
-                    resolve()
+                    if (documents.length > 0) {
+                        Language.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {language: document.language, locale: document.locale},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
                 })
                 jsonStream.on('error', (error) => {
                     reject(error)

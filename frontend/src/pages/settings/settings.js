@@ -1,4 +1,4 @@
-import { Notify, Dialog } from 'quasar'
+import { Notify, Dialog, exportFile } from 'quasar'
 
 import SettingsService from '@/services/settings'
 import UserService from '@/services/user'
@@ -79,8 +79,10 @@ export default {
                 {label: $t('settings'), value: 'Settings'},
             ],
             restoreOptions: [],
-            restoreInProgress: false,
-            restoreMode: 'revert'
+            restoreMode: 'revert',
+            uploadBackupFile: null,
+            uploadBackupLoading: false,
+            uploadProgress: 0
         }
     },
     components: {
@@ -306,6 +308,7 @@ export default {
                 data: [],
                 password: ''
             }
+            this.handleBackupTicked(this.currentBackup.data)
             this.backupEncrypted = false
         },
 
@@ -314,7 +317,7 @@ export default {
                 if (!ticked.includes('Companies'))
                     ticked.push('Companies')
                 this.backupOptions[3].children[0].disabled = true
-                this.backupOptions[3].children[0].label = $t('companies') + ' '+ $t('companies_backupNeededFor')
+                this.backupOptions[3].children[0].label = $t('companies') + ' (' + $t('neededForClients') + ')'
             }
             else {
                 this.backupOptions[3].children[0].disabled = false
@@ -327,9 +330,9 @@ export default {
                 if (!ticked.includes('Custom Sections')) 
                     ticked.push('Custom Sections')
                 this.backupOptions[4].disabled = true
-                this.backupOptions[4].label = $t('templates') + ' '+ $t('templates_backupNeededFor')
+                this.backupOptions[4].label = $t('templates') + ' (' + $t('neededForAuditTypes') + ')'
                 this.backupOptions[5].children[4].disabled = true
-                this.backupOptions[5].children[4].label = $t('customSections') + ' '+ $t('customSections_backupNeededFor')
+                this.backupOptions[5].children[4].label = $t('customSections') + ' (' + $t('neededForAuditTypes') + ')'
             }
             else {
                 this.backupOptions[4].disabled = false
@@ -337,6 +340,14 @@ export default {
                 this.backupOptions[5].children[4].disabled = false
                 this.backupOptions[5].children[4].label = $t('customSections')
             }
+
+            if (ticked.includes('Vulnerabilities Updates')) {
+                if (!ticked.includes('Vulnerabilities')) 
+                    ticked.push('Vulnerabilities')
+                this.backupOptions[1].label = $t('vulnerabilities') + ' (' + $t('neededForVulnUpdates') + ')'
+            }
+            else
+                this.backupOptions[1].label = $t('vulnerabilities')
         },
 
         confirmRestoreBackup: function() {
@@ -354,7 +365,6 @@ export default {
         },
 
         restoreBackup: function() {
-            this.restoreInProgress = true
             let postData = {
                 data: (this.backupType === 'partial') ? this.currentBackup.data : [],
                 password: this.currentBackup.password || '',
@@ -385,6 +395,7 @@ export default {
         backupRowClick: function(row) {
             this.cleanCurrentBackup()
             Object.assign(this.currentBackup, row)
+            this.handleBackupTicked(this.currentBackup.data)
             this.backupType = this.currentBackup.type
             this.restoreOptions = this.backupOptions.filter((option) => {
                 if (option.children)
@@ -430,6 +441,60 @@ export default {
                     position: 'top-right'
                 })
             })
-        }
+        },
+
+        downloadBackup: function(row) {
+            BackupService.downloadBackup(row.slug)
+        },
+
+        // Upload Backup functions
+        uploadBackup: function() {
+            if (this.uploadBackupFile) {
+                this.uploadBackupLoading = true
+                const formData = new FormData()
+                formData.append('file', this.uploadBackupFile)
+                BackupService.uploadBackup(formData, progress => {
+                    console.log(progress)
+                    this.uploadProgress = progress
+                })
+                .then(data => {
+                    this.getBackups();
+                    Notify.create({
+                        message: data.data.datas,
+                        color: 'positive',
+                        textColor:'white',
+                        position: 'top-right'
+                    })
+                })
+                .catch(err => {
+                    Notify.create({
+                        message: err.response.data.datas.message || err.response.data.datas,
+                        color: 'negative',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                })
+                .finally(() => {
+                    this.$refs.uploadBackupModal.hide();
+                    this.uploadBackupLoading = false
+                    this.uploadBackupFile = null
+                    this.uploadProgress = 0
+                })
+            }
+        },
+
+        counterLabelFn ({ totalSize, filesNumber, maxFiles }) {
+            return (filesNumber > 0) ? totalSize : ''
+        },
+
+        rejectUploadFile (rejectedEntries) {
+            Notify.create({
+                message: $t('wrongFileFormat'),
+                color: 'negative',
+                textColor: 'white',
+                position: 'top-right'
+            })
+          }
+        
     }
 }

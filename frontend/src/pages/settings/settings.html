@@ -396,7 +396,7 @@
             </q-card-section>
         </q-card>
 
-        <q-card v-if="UserService.isAllowed('settings:backup')" class="q-my-lg">
+        <q-card v-if="UserService.isAllowed('backups:read')" class="q-my-lg">
             <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                 <q-item style="padding:0px;">
                     <q-item-section class="col-11">
@@ -414,11 +414,9 @@
             </q-card-section>
             <q-card-section v-if="backupStatus.state === 'backup_error' || backupStatus.state === 'restore_error'">
                 <q-banner class="text-white bg-red">
-                    {{$t(backupStatus.state) + ' - ' + $t(backupStatus.message)}}
+                    {{$t(backupStatus.state) + ': ' + backupStatus.message}}
                 </q-banner>
             </q-card-section>
-            
-            <q-separator />
             
             <q-table
                 class="sticky-header-table"
@@ -446,7 +444,7 @@
                         class="col-md-2"
                         v-if="UserService.isAllowed('backups:create')"
                         unelevated
-                        :loading="backupStatus.operation !== 'idle'"
+                        :loading="backupStatus.operation !== 'idle' || uploadBackupLoading"
                         :label="$t('createBackup')"
                         color="secondary" 
                         no-caps
@@ -454,8 +452,27 @@
                         >
                             <template v-slot:loading>
                                 <q-spinner-hourglass class="on-left" />
-                                {{$t(backupStatus.operation) + ' - ' + $t(backupStatus.state)}}
+                                <span v-if="backupStatus.operation !== 'idle'">
+                                    {{$t(backupStatus.operation) + ' - ' + $t(backupStatus.state)}}
+                                </span>
+                                <span v-else>
+                                    {{$t('backup_uploading')}} - {{uploadProgress}}%
+                                </span>
                           </template>
+                        </q-btn>
+                        <q-btn class="q-ml-md" flat icon="more_vert" :disabled="backupStatus.operation !== 'idle'">
+                            <q-menu auto-close content-style="width: 300px">
+                                <q-item clickable>
+                                    <q-item-section @click="getBackups()">
+                                        {{ $t('refresh') }}
+                                    </q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section @click=$refs.uploadBackupModal.show()>
+                                        {{ $t('upload')}} {{$t('backup') }}
+                                    </q-item-section>
+                                </q-item>
+                            </q-menu>
                         </q-btn>
                     </div>
                 </template>
@@ -468,10 +485,26 @@
                 </q-td>
 
                 <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                    <q-btn v-if="UserService.isAllowed('backups:update')" size="sm" flat color="info" icon="fa fa-download" @click="downloadBackup(props.row)">
+                    <q-btn
+                    v-if="UserService.isAllowed('backups:update')" 
+                    size="sm" 
+                    flat 
+                    color="info" 
+                    icon="fa fa-download" 
+                    @click="downloadBackup(props.row)"
+                    :disabled="backupStatus.operation !== 'idle'"
+                    >
                         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.download')}}</q-tooltip>
                     </q-btn>
-                    <q-btn v-if="UserService.isAllowed('backups:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteBackup(props.row)">
+                    <q-btn
+                    v-if="UserService.isAllowed('backups:delete')"
+                    size="sm" 
+                    flat 
+                    color="negative" 
+                    icon="fa fa-trash" 
+                    @click="confirmDeleteBackup(props.row)"
+                    :disabled="backupStatus.operation !== 'idle'"
+                    >
                         <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                     </q-btn>
                 </q-td>
@@ -544,6 +577,7 @@
                             <q-input
                             :label="$t('password')+' *'"
                             stack-label
+                            type="password"
                             autofocus
                             @keyup.enter="createBackup()"
                             v-model="currentBackup.password"
@@ -565,23 +599,25 @@
                 <q-card style="width:800px">
                     <q-bar class="bg-fixed-primary text-white">
                         <div class="q-toolbar-title">
-                            {{$t('restoreBackup')}}
+                            {{$t('restore')}} {{$t('backup')}}
                         </div>
                         <q-space />
                         <q-btn dense flat icon="close" @click="$refs.restoreBackupModal.hide()" />
                     </q-bar>
             
-                    <div v-if="backupStatus.operation !== 'idle'">
+                    <div v-if="backupStatus.operation !== 'idle' || uploadBackupLoading">
                         <div class="text-center">
                             <q-card-section>
                                 <q-spinner-hourglass color="secondary" size="100px" />
                             </q-card-section>
                             <q-card-section>
-                                <span v-if="backupStatus.operation == 'restore'" class="text-h5">{{$t('restoreInProgress')}}</span>
+                                <span v-if="uploadBackupLoading" class="text-h5">{{$t('backup_uploading')}}</span>
+                                <span v-else-if="backupStatus.operation == 'restore'" class="text-h5">{{$t('restoreInProgress')}}</span>
                                 <span v-else class="text-h5">{{$t('backupInProgress')}}</span>
                             </q-card-section>
                             <q-card-section>
-                                <span class="text-subtitle1">{{$t(backupStatus.state)}}</span>
+                                <span v-if="!uploadBackupLoading" class="text-subtitle1">{{$t(backupStatus.state)}}</span>
+                                <span v-else class="text-subtitle1">{{uploadProgress}}%</span>
                             </q-card-section>
                         </div>
                     </div>
@@ -590,21 +626,24 @@
                             <span class="text-h5">{{currentBackup.name}}</span>
                         </q-card-section>
                         <q-card-section>
-                            <span v-if="backupType === 'full'" class="text-subtitle1">{{$t('fullBackup')}}</span>
+                            <span v-if="currentBackup.type == 'full'" class="text-subtitle1">{{$t('fullBackup')}}</span>
                             <span v-else class="text-subtitle1">{{$t('partialBackup')}}</span>
                         </q-card-section>
                         <q-card-section>
                             <span class="text-bold">{{$t('restoreMode')}}</span>
                             <div class="q-gutter-sm">
-                                <q-radio v-model="restoreMode" val="revert" :label="$t('revert')" />
-                                <q-radio v-model="restoreMode" val="upsert" :label="$t('upsert')" />
+                                <q-radio v-model="restoreMode" val="revert" :label="$t('revert')">
+                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.restoreRevert')}}</q-tooltip>
+                                </q-radio>
+                                <q-radio v-model="restoreMode" val="upsert" :label="$t('upsert')">
+                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.restoreUpsert')}}</q-tooltip>
+                                </q-radio>
                             </div>
                         </q-card-section>
                         <q-card-section>
                             <span class="text-bold">{{$t('selectWhatToRestore')}}</span>
                         </q-card-section>
-                        <q-card-section v-if="backupType === 'full'" class="q-pt-none">
-                            <span class="text-bold">{{$t('restoreType')}}</span>
+                        <q-card-section v-if="currentBackup.type === 'full'" class="q-pt-none">
                             <div class="q-gutter-sm">
                                 <q-radio v-model="backupType" val="full" :label="$t('full')" />
                                 <q-radio v-model="backupType" val="partial" :label="$t('partial')" />
@@ -618,6 +657,7 @@
                             default-expand-all
                             no-connectors
                             :ticked.sync="currentBackup.data"
+                            @update:ticked="handleBackupTicked"
                             />
                             <q-separator />
                         </q-card-section>
@@ -647,6 +687,62 @@
                             </q-btn>
                         </q-card-actions>
                     </div>
+                </q-card>
+            </q-dialog>
+
+            <q-dialog ref="uploadBackupModal" no-backdrop-dismiss @show="$refs.uploadBackupFile.pickFiles()">
+                <q-card style="width:800px">
+                    <q-bar class="bg-fixed-primary text-white">
+                        <div class="q-toolbar-title">
+                            {{$t('upload')}} {{$t('backup')}}
+                        </div>
+                        <q-space />
+                        <q-btn dense flat icon="close" @click="$refs.uploadBackupModal.hide()" />
+                    </q-bar>
+                    <q-card-section>
+                        <q-file
+                        ref="uploadBackupFile"
+                        v-model="uploadBackupFile"
+                        :label="$t('upload') + ' ' + $t('backup')"
+                        :loading="uploadBackupLoading"
+                        :disable="uploadBackupLoading"
+                        outlined
+                        counter
+                        :counter-label="counterLabelFn"
+                        accept=".tar"
+                        @rejected="rejectUploadFile"
+                        >
+                            <template v-slot:prepend>
+                                <q-icon name="backup" />
+                            </template>
+                            <template v-slot:file="{file}">
+                                <div class="ellipsis relative-position">
+                                    {{file.name}}
+                                </div>
+                                <q-linear-progress
+                                    size="20px"
+                                    rounded
+                                    :value="0.1"
+                                    color="green"
+                                    track-color="grey-7"
+                                >
+                                    <div class="absolute-full flex flex-center">
+                                        <q-badge color="transparent" :label="uploadProgress + '%'" />
+                                    </div>
+                                </q-linear-progress>
+                            </template>
+                        </q-file>
+                    </q-card-section>
+                    <q-card-actions v-if="!uploadBackupLoading" align="right">
+                        <q-btn color="primary" outline @click="$refs.uploadBackupModal.hide()">{{$t('btn.cancel')}}</q-btn>
+                        <q-btn 
+                        color="secondary" 
+                        unelevated
+                        @click="uploadBackup()"
+                        >
+                            {{$t('upload')}}
+                        </q-btn>
+                    </q-card-actions>
                 </q-card>
             </q-dialog>
         </q-card>
