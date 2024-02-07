@@ -626,6 +626,14 @@ module.exports = function(app) {
             return
         }
 
+        const diskUsage = diskusage.checkSync('/')
+        const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
+        const fileSize = fs.statSync(`${backupPath}/${req.params.slug}.tar`).size
+        if (fileSize > maxFileSize) {
+            Response.BadParameters(res, 'Not enough space on disk for restauration')
+            return
+        }
+
         setBackupState(STATE_RESTORE_STARTED)
         console.log('restore started')
 
