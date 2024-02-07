@@ -20,7 +20,7 @@ services:
     volumes:
       - ./backend/report-templates:/app/report-templates
       - ./backend/src/config:/app/src/config
-      - ./backup:/app/backup
+      - ./backend/backup:/app/backup
     depends_on:
       - mongodb
     restart: always
