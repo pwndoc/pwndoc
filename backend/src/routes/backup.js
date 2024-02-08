@@ -471,32 +471,48 @@ module.exports = function(app) {
         return new Promise((resolve, reject) => {
             const readStream = fs.createReadStream(archivePath)
             const extract = tar.extract()
-            let countExtracted = 0
-            
+            let filesExtracted = []
+            const directories = files.filter(e => e.endsWith('/'))
+            console.log(directories)
 
             extract.on('entry', (header, stream, next) => {
                 console.log('entry: ', header.name)
-                if (files.length === 0 || files.includes(header.name)) {
-                    const writeStream = fs.createWriteStream(`${destPath}/${header.name}`)
-                    let chunks = []
+                if (
+                    files.length === 0 || 
+                    files.includes(header.name) || 
+                    directories.some(e => header.name.startsWith(e))
+                ) {
+                    if (header.type === "directory") {
+                        try {
+                            console.log(`Creating directory ${destPath}/${header.name}`)
+                            fs.mkdirSync(`${destPath}/${header.name}`)
+                            filesExtracted.push(header.name)
+                            next()
+                        } catch (error) {
+                            reject(error)
+                        }
+                        
+                    }
+                    else {
+                        console.log('extracting')
+                        const writeStream = fs.createWriteStream(`${destPath}/${header.name}`)
 
-                    stream.on('data', (chunk) => {
-                        // chunks.push(chunk)
-                        writeStream.write(chunk)
-                    })
+                        stream.on('data', (chunk) => {
+                            writeStream.write(chunk)
+                        })
 
-                    stream.on('end', () => {
-                        console.log('stream end: ', header.name)
-                        // fs.writeFileSync(`${destPath}/${header.name}`, Buffer.concat(chunks))
-                        writeStream.end()
-                        countExtracted += 1
-                        next()
-                    })
+                        stream.on('end', () => {
+                            console.log('stream end: ', header.name)
+                            writeStream.end()
+                            filesExtracted.push(header.name)
+                            next()
+                        })
 
-                    stream.on('error', (error) => {
-                        console.log('stream error')
-                        reject(error)
-                    })
+                        stream.on('error', (error) => {
+                            console.log('stream error')
+                            reject(error)
+                        })
+                    }
                     stream.resume()
                 }
                 stream.on('error', error => reject(error))
@@ -512,14 +528,16 @@ module.exports = function(app) {
             extract.on('finish', () => {
                 console.log('finish')
                 readStream.close()
-                if ((countExtracted > 0 && files.length === 0) || countExtracted === files.length)
+                const missingFiles = files.filter(x => !filesExtracted.includes(x))
+                console.log(filesExtracted.length)
+                console.log(files)
+                console.log(missingFiles)
+                if (filesExtracted.length === 0 )
+                    reject(new Error('No files were extracted from the Archive'))
+                else if (missingFiles.length > 0)
+                    reject(new Error(`Missing files in the archive: ${missingFiles.toString()}`))
+                else
                     resolve()
-                else {
-                    if (files.length - countExtracted === 1)
-                        reject(new Error(`Missing ${files.length - countExtracted} file in the archive`))
-                    else
-                        reject(new Error(`Missing ${files.length - countExtracted} files in the archive`))
-                }
             })
 
             readStream.on('error', err => {
@@ -575,20 +593,21 @@ module.exports = function(app) {
         })
     }
 
-    async function processPromisesSequentially(promises) {
-        const results = [];
-        for (const promise of promises) {
-            console.log(results.length, promise)
-            try {
-            const result = await promise;
-            results.push({ status: 'fulfilled', value: result });
-            } catch (error) {
-            results.push({ status: 'rejected', reason: error });
-            }
-        }
+    // async function processPromisesSequentially(promises) {
+    //     const results = [];
+    //     for (const promise of promises) {
+    //         console.log(results.length, promise)
+    //         try {
+    //         const result = await promise;
+    //         results.push({ status: 'fulfilled', value: result });
+    //         } catch (error) {
+    //             console.log(error)
+    //         results.push({ status: 'rejected', reason: error });
+    //         }
+    //     }
         
-        return results;
-    }
+    //     return results;
+    // }
 
     app.post("/api/backups/:slug/restore", function(req, res) {
         if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
@@ -629,7 +648,7 @@ module.exports = function(app) {
         const diskUsage = diskusage.checkSync('/')
         const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
         const fileSize = fs.statSync(`${backupPath}/${req.params.slug}.tar`).size
-        if (fileSize > maxFileSize) {
+        if ((fileSize * 3) > maxFileSize) {
             Response.BadParameters(res, 'Not enough space on disk for restauration')
             return
         }
@@ -703,6 +722,7 @@ module.exports = function(app) {
             // Templates
             if (info.data.includes('Templates') && backupData.includes('Templates')) {
                 files.push('templates.json')
+                files.push('report-templates/')
             }
 
             // Custom Data
@@ -797,8 +817,8 @@ module.exports = function(app) {
             }
             
             
-            // return Promise.allSettled(restorePromises)
-            return processPromisesSequentially(restorePromises)
+            return Promise.allSettled(restorePromises)
+            // return processPromisesSequentially(restorePromises)
         })
         .then(results => {
             let errors = []
