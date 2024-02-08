@@ -86,8 +86,10 @@ module.exports = function(app) {
                         try {
                             jsonData = JSON.parse(jsonData)
                             const keys = ['name', 'date', 'slug', 'type', 'protected', 'data']
-                            if (keys.every(e => Object.keys(jsonData).includes(e)))
+                            if (keys.every(e => Object.keys(jsonData).includes(e))) {
+                                jsonData.filename = file
                                 resolve(jsonData)
+                            }
                             else
                                 reject(new Error('Wrong backup.json structure'))
                         }
@@ -118,8 +120,6 @@ module.exports = function(app) {
 
     function getBackupList() {
         return new Promise((resolve, reject) => {
-            
-    
             const filenames = fs.readdirSync(backupPath)
             let backupList = []
             let promises = []
@@ -136,6 +136,23 @@ module.exports = function(app) {
                     }
                 })
                 resolve(backupList)
+            })
+        })
+    }
+
+    function getBackupFilename(slug) {
+        return new Promise((resolve, reject) => {
+            const filenames = fs.readdirSync(backupPath)
+            let promises = []
+            filenames.forEach(file => {
+                if (file.endsWith('.tar')) {
+                    promises.push(readBackupInfo(file))
+                }
+            })
+            Promise.allSettled(promises)
+            .then(results => {
+                const result = results.find(e => e.status === 'fulfilled' && e.value.slug === slug)
+                resolve(result.value.filename)
             })
         })
     }
@@ -175,22 +192,23 @@ module.exports = function(app) {
     });
 
     // Download backup file
-    app.get("/api/backups/download/:slug", acl.hasPermission('backups:read'), function(req, res) {
+    app.get("/api/backups/download/:slug", acl.hasPermission('backups:read'), async function(req, res) {
         const filenames = fs.readdirSync(backupPath)
         let found = false
         const { resolve } = require('path')
 
+        const filename = await getBackupFilename(req.params.slug)
         filenames.forEach(file => {
-            if (file === `${req.params.slug}.tar`) {
+            if (file === `${filename}`) {
                 found = true
-                const filePath = `${backupPath}/${req.params.slug}.tar`
+                const filePath = `${backupPath}/${filename}`
                 const fileStats = fs.statSync(filePath)
                 const fileSize = fileStats.size
 
                 const fileStream = fs.createReadStream(resolve(filePath))
                 res.setHeader('Content-Length', fileSize)
                 res.setHeader('Content-Type', 'application/octet-stream')
-                res.setHeader('Content-Disposition', `attachment; filename=${req.params.slug}.tar`)
+                res.setHeader('Content-Disposition', `attachment; filename=${filename}`)
                 fileStream.pipe(res)
             }
         })
@@ -253,11 +271,12 @@ module.exports = function(app) {
         })
     });
 
-    app.delete("/api/backups/:slug", function(req, res) {
+    app.delete("/api/backups/:slug", async function(req, res) {
         const filenames = fs.readdirSync(backupPath)
         let deleted = false
+        const filename = await getBackupFilename(req.params.slug)
         filenames.forEach(file => {
-            if (file === `${req.params.slug}.tar`) {
+            if (file === `${filename}`) {
                 fs.rmSync(`${backupPath}/${file}`, {force: true})
                 deleted = true
             }
@@ -609,7 +628,7 @@ module.exports = function(app) {
     //     return results;
     // }
 
-    app.post("/api/backups/:slug/restore", function(req, res) {
+    app.post("/api/backups/:slug/restore", async function(req, res) {
         if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
             Response.Processing(res, 'Operation already in progress')
             return
@@ -640,14 +659,15 @@ module.exports = function(app) {
             return
         }
 
-        if (!fs.existsSync(`${backupPath}/${req.params.slug}.tar`)) {
+        const filename = await getBackupFilename(req.params.slug)
+        if (!filename || !fs.existsSync(`${backupPath}/${filename}`)) {
             Response.NotFound(res, 'Backup File not found')
             return
         }
 
         const diskUsage = diskusage.checkSync('/')
         const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
-        const fileSize = fs.statSync(`${backupPath}/${req.params.slug}.tar`).size
+        const fileSize = fs.statSync(`${backupPath}/${filename}`).size
         if ((fileSize * 3) > maxFileSize) {
             Response.BadParameters(res, 'Not enough space on disk for restauration')
             return
@@ -664,7 +684,7 @@ module.exports = function(app) {
         if (req.body.mode && req.body.mode === 'revert')
             restoreMode = "revert"
 
-        readBackupInfo(`${req.params.slug}.tar`)
+        readBackupInfo(`${filename}`)
         .then(result => {
             setBackupState(STATE_EXTRACTING_INFO)
             console.log('restore extracting info')
@@ -674,9 +694,9 @@ module.exports = function(app) {
             if (info.protected && !req.body.password)
                 throw ({fn: 'BadParameters', message: 'Backup is protected, password is required'})
             else if (info.protected)
-                return extractFiles(`${backupPath}/${req.params.slug}.tar`, backupPath, ['data.tar.gz.enc'])
+                return extractFiles(`${backupPath}/${filename}`, backupPath, ['data.tar.gz.enc'])
             else
-                return extractFiles(`${backupPath}/${req.params.slug}.tar`, backupPath, ['data.tar.gz'])
+                return extractFiles(`${backupPath}/${filename}`, backupPath, ['data.tar.gz'])
         })
         .then(async () => {
             if (info.protected) {
