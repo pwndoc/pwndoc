@@ -612,21 +612,23 @@ module.exports = function(app) {
         })
     }
 
-    // async function processPromisesSequentially(promises) {
-    //     const results = [];
-    //     for (const promise of promises) {
-    //         console.log(results.length, promise)
-    //         try {
-    //         const result = await promise;
-    //         results.push({ status: 'fulfilled', value: result });
-    //         } catch (error) {
-    //             console.log(error)
-    //         results.push({ status: 'rejected', reason: error });
-    //         }
-    //     }
+    function processPromisesSequentially(promises) {
+        return new Promise(async (resolve, reject) => {
+            const results = [];
+            for (const promise of promises) {
+                console.log((results.length + 1) + ' / ' + promises.length)
+                try {
+                    const result = await promise;
+                    results.push({ status: 'fulfilled', value: result });
+                } catch (error) {
+                    console.log(error)
+                    results.push({ status: 'rejected', reason: error });
+                }
+            }
+            resolve(results);
+        })
         
-    //     return results;
-    // }
+    }
 
     app.post("/api/backups/:slug/restore", async function(req, res) {
         if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
@@ -837,8 +839,8 @@ module.exports = function(app) {
             }
             
             
-            return Promise.allSettled(restorePromises)
-            // return processPromisesSequentially(restorePromises)
+            // return Promise.allSettled(restorePromises)
+            return processPromisesSequentially(restorePromises)
         })
         .then(results => {
             let errors = []

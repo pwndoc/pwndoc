@@ -1161,6 +1161,7 @@ AuditSchema.statics.restore = (path, mode = "upsert") => {
                 jsonStream.on('data', (document) => {
                     documents.push(document)
                     if (documents.length === 100) {
+                        jsonStream.pause()
                         Audit.bulkWrite(documents.map(document => {
                             return {
                                 replaceOne: {
@@ -1170,11 +1171,13 @@ AuditSchema.statics.restore = (path, mode = "upsert") => {
                                 }
                             }
                         }))
+                        .then(() => {
+                            documents = []
+                            jsonStream.resume()
+                        })
                         .catch(err => {
                             reject(err)
                         })
-
-                        documents = []
                     }
                 })
                 jsonStream.on('end', () => {
@@ -1222,6 +1225,7 @@ AuditSchema.statics.restore = (path, mode = "upsert") => {
                 jsonStream.on('data', (document) => {
                     documents.push(document)
                     if (documents.length === 100) {
+                        jsonStream.pause()
                         Image.bulkWrite(documents.map(document => {
                             return {
                                 replaceOne: {
@@ -1231,10 +1235,13 @@ AuditSchema.statics.restore = (path, mode = "upsert") => {
                                 }
                             }
                         }))
+                        .then(() => {
+                            documents = []
+                            jsonStream.resume()
+                        })
                         .catch(err => {
                             reject(err)
                         })
-                        documents = []
                     }
                 })
                 jsonStream.on('end', () => {
@@ -1267,7 +1274,9 @@ AuditSchema.statics.restore = (path, mode = "upsert") => {
         try {
             if (mode === "revert")
                 await Audit.deleteMany()
-            await Promise.all([importAuditsPromise(), importImagesPromise()])
+            await importAuditsPromise()
+            await importImagesPromise()
+            // await Promise.all([importAuditsPromise(), importImagesPromise()])
             resolve()
         }
         catch (error) {
