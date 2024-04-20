@@ -135,11 +135,17 @@ export default {
             var result = rows && rows.filter(row => {
                 var title = (row.detail.title || $t('err.notDefinedLanguage')).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var type = (row.detail.vulnType || $t('undefined')).toLowerCase()
+                var description = (row.detail.description || $t('undefined')).toLowerCase()
+                var observation = (row.detail.observation || $t('undefined')).toLowerCase()
+                var remediation = (row.detail.remediation || $t('undefined')).toLowerCase()
                 var category = (row.category || $t('noCategory')).toLowerCase()
                 var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.vulnType || "").toLowerCase()
-                return title.indexOf(termTitle) > -1 && 
+                return (title.indexOf(termTitle) > -1 || 
+                description.indexOf(termTitle) > -1 || 
+                observation.indexOf(termTitle) > -1 || 
+                remediation.indexOf(termTitle) > -1) && 
                 type.indexOf(termVulnType) > -1 &&
                 category.indexOf(termCategory) > -1
             })
