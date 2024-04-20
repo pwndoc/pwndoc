@@ -22,10 +22,11 @@
     "High_S": "Wysokie",
     "Medium_S": "Średnie",
     "Critical_S": "Krytyczne",
+    "_S": "N/A",
 
     "Network_AV": "Przez sieć",
     "Adjacent Network_AV": "Przez sieć przylegającą",
-    "Local_AV": "Przez dostep lokalny",
+    "Local_AV": "Przez dostęp lokalny",
     "Physical_AV": "Przez dostęp fizyczny",
 
     "Low_AC": "Niski",
