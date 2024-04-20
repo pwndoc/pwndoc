@@ -1,0 +1,55 @@
+{
+    "Attack Vector": "Wektor ataku",
+    "Attack Complexity": "Poziom skomplikowania ataku",
+    "Privileges Required": "Wymagane uprawnienia",
+    "User Interaction": "Wymagana interakcja użytkownika",
+    "Scope": "Czy ma wpływ na inne komponenty",
+    "Confidentiality": "Wpływ na poufność",
+    "Integrity": "Wpływ na integralność",
+    "Availability": "Wpływ na dostępność",
+    "Low": "Low",
+    "High": "High",
+    "Medium": "Medium",
+    "Critical": "Critical",
+    "None": "None",
+    "Required": "Required",
+    "Unchanged": "Unchanged",
+    "Changed": "Changed",
+    "No Category": "Brak kategori",
+
+    "None_S": "Brak",
+    "Low_S": "Niskie",
+    "High_S": "Wysokie",
+    "Medium_S": "Średnie",
+    "Critical_S": "Krytyczne",
+
+    "Network_AV": "Przez sieć",
+    "Adjacent Network_AV": "Przez sieć przylegającą",
+    "Local_AV": "Przez dostep lokalny",
+    "Physical_AV": "Przez dostęp fizyczny",
+
+    "Low_AC": "Niski",
+    "High_AC": "Wysoki",
+
+    "None_PR": "Żadne",
+    "Low_PR": "Niskie",
+    "High_PR": "Wysokie",
+
+    "None_C": "Brak",
+    "Low_C": "Niski",
+    "High_C": "Wysoki",
+
+    "None_I": "Brak",
+    "Low_I": "Niski",
+    "High_I": "Wysoki",
+
+    "None_A": "Brak",
+    "Low_A": "Niski",
+    "High_A": "Wysoki",
+
+    "None_UI": "Nie",
+    "Required_UI": "Tak",
+
+    "Unchanged_S": "Nie",
+    "Changed_S": "Tak"
+}

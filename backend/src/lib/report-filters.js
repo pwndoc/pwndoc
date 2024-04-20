@@ -343,3 +343,12 @@ expressions.filters.translate = function(input, locale) {
 }
 
 module.exports = expressions
+
+// Trim 
+// Example: {input | trim}
+expressions.filters.trim = function(input, locale) {
+    if (!input || input == "undefined") return input;
+    return input.trim();
+}
+
+module.exports = expressions
