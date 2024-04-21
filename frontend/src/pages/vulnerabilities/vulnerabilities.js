@@ -95,7 +95,7 @@ export default {
 
     watch: {
         currentLanguage: function(val, oldVal) {
-            this.setCurrentDetails();
+            this.setCurrentDetailsOnLanguageChange();
         }
     },
 
@@ -378,6 +378,31 @@ export default {
             this.currentDetailsIndex = index;
         },
 
+        setCurrentDetailsOnLanguageChange: function(value) {
+            // if language already present in the vulnerability then coppy the contents to new language for ease of translation
+            var index = this.currentVulnerability.details.findIndex(obj => obj.locale === this.currentLanguage);
+            if (index < 0) {
+                var details = {
+                    locale: this.currentLanguage,
+                    title: this.currentVulnerability.details[0].title,
+                    vulnType: this.currentVulnerability.details[0].vulnType,
+                    description: this.currentVulnerability.details[0].description,
+                    observation: this.currentVulnerability.details[0].observation,
+                    remediation: this.currentVulnerability.details[0].remediation,
+                    references: this.currentVulnerability.details[0].references,
+                    customFields: this.currentVulnerability.details[0].customFields
+                }
+                details.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, [], this.currentLanguage)
+                
+                this.currentVulnerability.details.push(details)
+                index = this.currentVulnerability.details.length - 1;
+            }
+            else {
+                this.currentVulnerability.details[index].customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, this.currentVulnerability.details[index].customFields, this.currentLanguage)
+            }
+            this.currentDetailsIndex = index;
+        },
+
         isTextInCustomFields: function(field) {
 
             if (this.currentVulnerability.details[this.currentDetailsIndex].customFields) {
@@ -405,6 +430,30 @@ export default {
                 return $t('err.notDefinedLanguage');
             else
                 return row.details[index].title;         
+        },
+
+        getDtDescription: function(row) {
+            var index = row.details.findIndex(obj => obj.locale === this.dtLanguage);
+            if (index < 0 || !row.details[index].description)
+                return $t('err.notDefinedLanguage');
+            else
+                return row.details[index].description;         
+        },
+
+        getDtObservation: function(row) {
+            var index = row.details.findIndex(obj => obj.locale === this.dtLanguage);
+            if (index < 0 || !row.details[index].observation)
+                return $t('err.notDefinedLanguage');
+            else
+                return row.details[index].observation;         
+        },
+
+        getDtRemediation: function(row) {
+            var index = row.details.findIndex(obj => obj.locale === this.dtLanguage);
+            if (index < 0 || !row.details[index].remediation)
+                return $t('err.notDefinedLanguage');
+            else
+                return row.details[index].remediation;         
         },
 
         getDtType: function(row) {
@@ -442,11 +491,17 @@ export default {
             var result = rows && rows.filter(row => {
                 var title = this.getDtTitle(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var type = this.getDtType(row).toLowerCase()
+                var description = this.getDtDescription(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                var observation = this.getDtObservation(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                var remediation = this.getDtRemediation(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var category = (row.category || $t('noCategory')).toLowerCase()
                 var termTitle = (terms.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var termCategory = (terms.category || "").toLowerCase()
                 var termVulnType = (terms.type || "").toLowerCase()
-                return title.indexOf(termTitle) > -1 && 
+                return (title.indexOf(termTitle) > -1 || 
+                description.indexOf(termTitle) > -1 ||
+                observation.indexOf(termTitle) > -1 ||
+                remediation.indexOf(termTitle) > -1) && 
                 type.indexOf(termVulnType||"") > -1 &&
                 category.indexOf(termCategory||"") > -1 &&
                 (row.status === terms.valid || row.status === terms.new || row.status === terms.updates)
