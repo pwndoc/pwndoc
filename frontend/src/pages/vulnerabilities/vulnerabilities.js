@@ -95,7 +95,7 @@ export default {
 
     watch: {
         currentLanguage: function(val, oldVal) {
-            this.setCurrentDetails();
+            this.setCurrentDetailsOnLanguageChange();
         }
     },
 
@@ -366,6 +366,31 @@ export default {
                     remediation: '',
                     references: [],
                     customFields: []
+                }
+                details.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, [], this.currentLanguage)
+                
+                this.currentVulnerability.details.push(details)
+                index = this.currentVulnerability.details.length - 1;
+            }
+            else {
+                this.currentVulnerability.details[index].customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, this.currentVulnerability.details[index].customFields, this.currentLanguage)
+            }
+            this.currentDetailsIndex = index;
+        },
+
+        setCurrentDetailsOnLanguageChange: function(value) {
+            // if language already present in the vulnerability then coppy the contents to new language for ease of translation
+            var index = this.currentVulnerability.details.findIndex(obj => obj.locale === this.currentLanguage);
+            if (index < 0) {
+                var details = {
+                    locale: this.currentLanguage,
+                    title: this.currentVulnerability.details[0].title,
+                    vulnType: this.currentVulnerability.details[0].vulnType,
+                    description: this.currentVulnerability.details[0].description,
+                    observation: this.currentVulnerability.details[0].observation,
+                    remediation: this.currentVulnerability.details[0].remediation,
+                    references: this.currentVulnerability.details[0].references,
+                    customFields: this.currentVulnerability.details[0].customFields
                 }
                 details.customFields = Utils.filterCustomFields('vulnerability', this.currentVulnerability.category, this.customFields, [], this.currentLanguage)
                 
