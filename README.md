@@ -56,3 +56,22 @@ Thank you for your support
 
 [<img src="https://github.com/relaxedricky.png" height="50" />](https://github.com/relaxedricky)
 [<img src="https://github.com/belane.png" height="50" />](https://github.com/belane)
+
+# Develop
+
+To setup the docker development env perform following actions.
+
+## Start backend
+
+1. Open `backend` directory
+2. Run `docker compose -f ./docker-compose.dev.yml build`
+3. Run `docker compose -f ./docker-compose.dev.yml up [-d]` - '-d' starts in detached mode.
+
+## Start frontend
+
+1. Open `frontend` directory
+2. Run `docker compose -f ./docker-compose.dev.yml build`
+3. Run `docker compose -f ./docker-compose.dev.yml up [-d]` - without '-d' we can see the build logs and other in the console.
+
+The app can now be accessed on `https://127.0.0.1:8081/`.
+The changes to the code are automatically upadated and pushed to browser.
