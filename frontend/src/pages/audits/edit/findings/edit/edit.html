@@ -27,7 +27,8 @@ buttons
         <q-btn color="primary" icon="vertical_split" flat @click="toggleSplitView()" class="q-mr-sm" v-if="$parent.audit.type === 'retest'">
             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.retestSplitView')}}</q-tooltip> 
         </q-btn>
-        <q-btn color="positive" :label="$t('btn.save')+'(ctrl+s)'" no-caps @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
+        <q-btn color="positive" :label="$t('btn.save')+'(ctrl+s)'" no-caps class="q-mr-sm" @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
+        <q-btn color="grey" :label="$t('btn.copy')" no-caps @click="findingToClipboard()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
     </div>
 </breadcrumb>
 

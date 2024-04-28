@@ -194,6 +194,56 @@ export default {
             }
         },
 
+        addFindingFromClip: async function(){
+            try {
+                const text = await navigator.clipboard.readText();
+                const clipFinding = JSON.parse(text)
+                var finding = {
+                    title: clipFinding.title ? clipFinding.title : "",
+                    vulnType: clipFinding.vulnType ? clipFinding.vulnType : "",
+                    description: clipFinding.description ? clipFinding.description : "",
+                    observation: clipFinding.observation ? clipFinding.observation : "",
+                    remediation: clipFinding.remediation ? clipFinding.remediation : "",
+                    remediationComplexity: clipFinding.remediationComplexity ? clipFinding.remediationComplexity : "",
+                    priority: clipFinding.priority ? clipFinding.priority : "",
+                    references: clipFinding.references ? clipFinding.references : [],
+                    cvssv3: clipFinding.cvssv3 ? clipFinding.cvssv3 : "",
+                    poc: clipFinding.poc ? clipFinding.poc : "",
+                    scope: clipFinding.scope ? clipFinding.scope : "", 
+                    category: clipFinding.category ? clipFinding.category : category.name,
+                    customFields: clipFinding.customFields ? clipFinding.customFields : Utils.filterCustomFields('finding', clipFinding.category ? clipFinding.category : category.name, this.$parent.customFields, [], this.$parent.audit.language)
+                };
+
+                if (finding) {
+                    AuditService.createFinding(this.auditId, finding)
+                    .then(() => {
+                        this.findingTitle = "";
+                        Notify.create({
+                            message: $t('msg.findingCreateOk'),
+                            color: 'positive',
+                            textColor:'white',
+                            position: 'top-right'
+                        })
+                    })
+                    .catch((err) => {
+                        Notify.create({
+                            message: err.response.data.datas,
+                            color: 'negative',
+                            textColor:'white',
+                            position: 'top-right'
+                        })
+                    })
+                }
+            } catch ({ name, message }) {
+                Notify.create({
+                    message: message,
+                    color: 'negative',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            }
+        },
+
         addFinding: function(category) {
             var finding = null;
             if (category && this.findingTitle) {

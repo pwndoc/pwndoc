@@ -37,7 +37,7 @@
                 outlined
                 />
                 <q-space />
-                <q-input v-model="findingTitle" :label="$t('title')" class="q-pl-md col-md-6" @keyup.enter="addFinding()" outlined>
+                <q-input v-model="findingTitle" :label="$t('title')" class="q-pl-md q-pr-md  col-md-6" @keyup.enter="addFinding()" outlined>
                     <template v-slot:append>
                         <q-btn-dropdown :label="$t('btn.create')" no-caps flat>
                             <q-list separator>
@@ -56,6 +56,7 @@
                         </q-btn-dropdown>
                     </template>
                 </q-input>
+                <q-btn color="grey" :label="$t('btn.paste')" class="p-l-1" no-caps @click="addFindingFromClip()"  />
             </template>
 
             <template v-slot:top-row="props">

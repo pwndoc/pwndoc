@@ -222,6 +222,10 @@ export default {
             })
         },
 
+        findingToClipboard: function() {
+            navigator.clipboard.writeText(JSON.stringify(this.finding));
+        },
+
         deleteFinding: function() {
             Dialog.create({
                 title: $t('msg.deleteFindingConfirm'),
