@@ -8,6 +8,8 @@ export default {
         data: 'Data',
     },
     btn: {
+        copy: 'Copy',
+        paste: 'Paste',
         cancel: 'Cancel',
         confirm: 'Confirm',
         create: 'Create',
