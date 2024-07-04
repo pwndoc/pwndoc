@@ -20,6 +20,10 @@ export default {
     return Vue.prototype.$axios.post('audits', audit)
   },
 
+  createFindings: function(auditId, findings) {
+    return Vue.prototype.$axios.post(`audits/${auditId}/Allfindings`, findings)
+  },
+
   deleteAudit: function(auditId) {
     return Vue.prototype.$axios.delete(`audits/${auditId}`)
   },
