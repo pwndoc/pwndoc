@@ -9,7 +9,7 @@ var utils = require('./utils');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
 var Settings = require('mongoose').model('Settings');
-var CVSS31 = require('./cvsscalc31.js');
+const cvss = require('ae-cvss-calculator');
 var translate = require('../translate')
 var $t
 
@@ -374,7 +374,7 @@ async function prepAuditData(data, settings) {
 
     result.findings = []
     for (var finding of data.findings) {
-        var tmpCVSS = CVSS31.calculateCVSSFromVector(finding.cvssv3);
+        var tmpCVSS = new cvss.Cvss3P1(finding.cvssv3);
         var tmpFinding = {
             title: finding.title || "",
             vulnType: $t(finding.vulnType) || "",

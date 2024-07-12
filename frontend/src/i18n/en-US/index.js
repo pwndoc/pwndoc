@@ -296,6 +296,9 @@ export default {
             MA_H_Label: "There is total loss of availability, resulting in the attacker being able to fully deny access to resources in the impacted component; this loss is either sustained (while the attacker continues to deliver the attack) or persistent (the condition persists even after the attack has completed). Alternatively, the attacker has the ability to deny some availability, but the loss of availability presents a direct, serious consequence to the impacted component (e.g., the attacker cannot disrupt existing connections, but can prevent new connections; the attacker can repeatedly exploit a vulnerability that, in each instance of a successful attack, leaks a only small amount of memory, but after repeated exploitation causes a service to become completely unavailable)."
         }
     },
+    cvss4: {
+        title: 'CVSS v4 Base Score',
+    },
     registerFirstUser: 'Register First User',
     customData: 'Custom Data',
     custom: 'Custom',
@@ -516,6 +519,10 @@ export default {
     Useful for generic text that should be replaced by reporter.`,
     defaultFieldsRequired: 'Default Fields',
     defaultFieldsRequiredDescription: 'Manage requirement of default Fields in Audits',
+    scoringTypes: 'Vulnerability Scoring Systems',
+    scoringTypesDescription: 'The types of vulnerability scoring systems used for the reports.',
+    cvss3Name: 'CVSS v3.1',
+    cvss4Name: 'CVSS v4',
     general: 'General',
     scope: 'Scope',
     fieldIsRequired: 'Field is required',

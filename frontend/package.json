@@ -32,7 +32,8 @@
     "vue-i18n": "^8.25.0",
     "vue-lodash": "^2.0.0",
     "vue2-dragula": "^2.5.4",
-    "vuedraggable": "^2.23.2"
+    "vuedraggable": "^2.23.2",
+    "ae-cvss-calculator": "^1.0.1"
   },
   "devDependencies": {
     "@quasar/app": "^2.0.0",

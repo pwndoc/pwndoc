@@ -2,7 +2,8 @@ import { Dialog, Notify } from 'quasar';
 
 import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb'
-import CvssCalculator from 'components/cvsscalculator'
+import Cvss3Calculator from 'components/cvss3calculator'
+import Cvss4Calculator from 'components/cvss4calculator'
 import TextareaArray from 'components/textarea-array'
 import CustomFields from 'components/custom-fields'
 
@@ -50,7 +51,8 @@ export default {
             errors: {title: ''},
             // Selected or New Vulnerability
             currentVulnerability: {
-                cvssv3: '',
+                cvss: '',
+                cvss4: '',
                 priority: '',
                 remediationComplexity: '',
                 details: [] 
@@ -80,7 +82,8 @@ export default {
     components: {
         BasicEditor,
         Breadcrumb,
-        CvssCalculator,
+        Cvss3Calculator,
+        Cvss4Calculator,
         TextareaArray,
         CustomFields
     },
@@ -340,7 +343,8 @@ export default {
 
         cleanCurrentVulnerability: function() {
             this.cleanErrors();
-            this.currentVulnerability.cvssv3 = '';
+            this.currentVulnerability.cvss = '';
+            this.currentVulnerability.cvss4 = '';
             this.currentVulnerability.priority = '';
             this.currentVulnerability.remediationComplexity = '';
             this.currentVulnerability.details = [];

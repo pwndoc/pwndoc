@@ -327,6 +327,8 @@ import Utils from '@/services/utils';
 
 import { $t } from '@/boot/i18n';
 
+import { Cvss3P1 } from 'ae-cvss-calculator'
+
 export default {
 		data () {
 			return {
@@ -445,8 +447,9 @@ export default {
 
 			getFindingSeverity: function(finding) {
 				let severity = "None"
-				let cvss = CVSS31.calculateCVSSFromVector(finding.cvssv3)
-				if (cvss.success) {
+				let cvss = new Cvss3P1(finding.cvssv3).createJsonSchema(true)
+
+				if (cvss.baseScore >= 0) {
 					severity = cvss.baseSeverity
 
 					let category = finding.category || "No Category"
@@ -459,7 +462,7 @@ export default {
 							severity = cvss.temporalSeverity
 					}
 				}
-				return severity
+				return severity.charAt(0).toUpperCase() + severity.slice(1).toLowerCase();
 			},
 
 			getMenuSection: function() {

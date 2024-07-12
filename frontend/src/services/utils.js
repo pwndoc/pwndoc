@@ -1,4 +1,4 @@
-var _ = require('lodash')
+import _ from 'lodash';
 import { $t } from 'boot/i18n'
 
 export default {

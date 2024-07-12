@@ -2,7 +2,8 @@ import { Notify, Dialog } from 'quasar';
 
 import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
-import CvssCalculator from 'components/cvsscalculator'
+import Cvss3Calculator from 'components/cvss3calculator'
+import Cvss4Calculator from 'components/cvss4calculator'
 import TextareaArray from 'components/textarea-array'
 import CustomFields from 'components/custom-fields'
 
@@ -35,7 +36,8 @@ export default {
     components: {
         BasicEditor,
         Breadcrumb,
-        CvssCalculator,
+        Cvss3Calculator,
+        Cvss4Calculator,
         TextareaArray,
         CustomFields
     },
@@ -332,7 +334,9 @@ export default {
             
             if ((this.finding.scope || this.findingOrig.scope) && this.finding.scope !== this.findingOrig.scope)
                 return true
-            if ((this.finding.cvssv3 || this.findingOrig.cvssv3) && this.finding.cvssv3 !== this.findingOrig.cvssv3)
+            if (!this.$settings.report.public.scoringMethods.CVSS3 && (this.finding.cvss || this.findingOrig.cvss) && this.finding.cvss !== this.findingOrig.cvss)
+                return true
+            if (!this.$settings.report.public.scoringMethods.CVSS4 && (this.finding.cvss4 || this.findingOrig.cvss4) && this.finding.cvss4 !== this.findingOrig.cvss4)
                 return true
             if ((this.finding.remediationComplexity || this.findingOrig.remediationComplexity) && this.finding.remediationComplexity !== this.findingOrig.remediationComplexity)
                 return true

@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');//.set('debug', true);
-const CVSS31 = require('../lib/cvsscalc31');
+const cvss = require('ae-cvss-calculator');
 var Schema = mongoose.Schema;
 
 var Paragraph = {
@@ -25,6 +25,7 @@ var Finding = {
     priority:               {type: Number, enum: [1,2,3,4]},
     references:             [String],
     cvssv3:                 String,
+    cvssv4:                 String,
     paragraphs:             [Paragraph],
     poc:                    String,
     scope:                  String,
@@ -828,8 +829,8 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
 
                 var tmpFindings = group.findings
                 .sort((a,b) => {
-                    var cvssA = CVSS31.calculateCVSSFromVector(a.cvssv3)
-                    var cvssB = CVSS31.calculateCVSSFromVector(b.cvssv3)
+                    var cvssA = new cvss.Cvss3P1(a.cvssv3)
+                    var cvssB = new cvss.Cvss3P1(b.cvssv3)
 
                     // Get built-in value (findings[sortValue])
                     var left = a[group.sortOption.sortValue]
