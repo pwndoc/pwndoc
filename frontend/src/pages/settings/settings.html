@@ -136,6 +136,188 @@
                         </q-item-section>
                     </q-item>
                 </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-bold">{{$t('highlightWarning')}}</div>
+                    <br/>
+                    <div class="text-grey-8" v-html="$t('highlightWarningDescription')"></div>
+                    <br/>
+                    <q-item>
+                        <q-item-section class="col-md-2">
+                            <q-toggle :label="$t('btn.enable')" v-model="settings.report.public.highlightWarning" />
+                        </q-item-section>
+                        <q-item-section class="col-md-1">
+                            <input
+                            v-model="settings.report.public.highlightWarningColor"
+                            :disabled="!settings.report.public.highlightWarning"
+                            type="color"
+                            id="colorpicker" 
+                            style="pointer-events: none"
+                            >
+                                <q-popup-proxy>
+                                    <div class="row q-pa-xs" style="width: 144px; overflow: hidden">
+                                        <div class="q-gutter-xs">
+                                            <q-btn 
+                                            v-close-popup
+                                            v-for="color of highlightPalette" :key="color" 
+                                            square
+                                            :style="{'background-color': color, 'width': '24px', 'height': '24px'}"
+                                            @click="settings.report.public.highlightWarningColor = color"
+                                            >
+                                            </q-btn>
+                                        </div>
+                                    </div>
+                                </q-popup-proxy>
+                            </input>
+                        </q-item-section>
+                        <q-item-section class="col-md-2">
+                            <label
+                            :disabled="!settings.report.public.highlightWarning"
+                            for="colorpicker"
+                            class="vertical-center">
+                                {{$t('currentColor')}}: {{settings.report.public.highlightWarningColor}}
+                            </label>
+                        </q-item-section>
+                    </q-item>
+                </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-bold">{{$t('defaultFieldsRequired')}}</div>
+                    <br/>
+                    <div class="text-grey-8">{{$t('defaultFieldsRequiredDescription')}}</div>
+                    <br/>
+                    <q-item>
+                        <q-item-label>
+                            <div class="text-bold text-italic">{{$t('general')}}</div>
+                        </q-item-label>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('company')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.company" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('client')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.client" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('startDate')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.dateStart" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('endDate')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.dateEnd" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('reportingDate')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.dateReport" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('scope')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.scope" />
+                        </q-item-section>
+                    </q-item>
+                    <br/>
+                    <q-item>
+                        <q-item-label>
+                            <div class="text-bold text-italic">{{$t('findings')}}</div>
+                        </q-item-label>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('type')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingType" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('description')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingDescription" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('observation')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingObservation" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('references')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingReferences" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('proofs')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingProofs" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('affectedAssets')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingAffected" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('remediationDifficulty')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingRemediationDifficulty" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('remediationPriority')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingPriority" />
+                        </q-item-section>
+                    </q-item>
+                    <q-item dense>
+                        <q-item-section class="col-md-2">
+                            <q-item-label>{{$t('remediation')}} {{$t('required')}}</q-item-label>
+                        </q-item-section>
+                        <q-item-section>
+                            <q-toggle v-model="settings.report.public.requiredFields.findingRemediation" />
+                        </q-item-section>
+                    </q-item>
+                </q-card-section>
             </div>
         </q-card>
 

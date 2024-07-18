@@ -1,7 +1,40 @@
 module.exports = function () {
   var html2ooxml = require("../src/lib/html2ooxml")
+  var utils = require("../src/lib/utils")
 
   describe('Lib functions Suite Tests', () => {
+
+    describe('Name format validation tests', () => {
+      it('Valid Filename', () => {
+        var filename = "Vulnerability 1"
+        var result = utils.validFilename(filename)
+        expect(result).toEqual(true)
+      })
+
+      it('Valid Latin Filename', () => {
+        var filename = "Vulnerabilité 1"
+        var result = utils.validFilename(filename)
+        expect(result).toEqual(true)
+      })
+
+      it('Valid Latvian Filename', () => {
+        var filename = "Pažeidžiamumas 1"
+        var result = utils.validFilename(filename)
+        expect(result).toEqual(true)
+      })
+
+      it('Valid Filename with special chars', () => {
+        var filename = "Vulnerability_1-test"
+        var result = utils.validFilename(filename)
+        expect(result).toEqual(true)
+      })
+
+      it('Invalid Filename', () => {
+        var filename = "<Vulnerability> 1"
+        var result = utils.validFilename(filename)
+        expect(result).toEqual(false)
+      })
+    })
 
     describe('html2ooxml tests', () => {
       it('Simple Paragraph', () => {
@@ -34,8 +67,8 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:b w:val="true"/>`+
-              `<w:bCs w:val="true"/>`+
+              `<w:b/>`+
+              `<w:bCs/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Bold</w:t>`+
           `</w:r>`+
@@ -53,8 +86,8 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:i w:val="true"/>`+
-              `<w:iCs w:val="true"/>`+
+              `<w:i/>`+
+              `<w:iCs/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Italic</w:t>`+
           `</w:r>`+
@@ -90,7 +123,7 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:strike w:val="true"/>`+
+              `<w:strike/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Strike</w:t>`+
           `</w:r>`+
@@ -108,10 +141,10 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:b w:val="true"/>`+
-              `<w:bCs w:val="true"/>`+
-              `<w:i w:val="true"/>`+
-              `<w:iCs w:val="true"/>`+
+              `<w:b/>`+
+              `<w:bCs/>`+
+              `<w:i/>`+
+              `<w:iCs/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Mark</w:t>`+
           `</w:r>`+
@@ -129,12 +162,12 @@ module.exports = function () {
           `</w:r>`+
           `<w:r>`+
             `<w:rPr>`+
-              `<w:b w:val="true"/>`+
-              `<w:bCs w:val="true"/>`+
-              `<w:i w:val="true"/>`+
-              `<w:iCs w:val="true"/>`+
+              `<w:b/>`+
+              `<w:bCs/>`+
+              `<w:i/>`+
+              `<w:iCs/>`+
               `<w:u w:val="single"/>`+
-              `<w:strike w:val="true"/>`+
+              `<w:strike/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Mark</w:t>`+
           `</w:r>`+

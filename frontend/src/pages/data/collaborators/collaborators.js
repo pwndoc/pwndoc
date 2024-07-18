@@ -50,6 +50,7 @@ export default {
                 role: '',
                 email: '',
                 phone: '',
+                password: '',
                 totpEnabled: false
             },
             // Username to identify collab to update

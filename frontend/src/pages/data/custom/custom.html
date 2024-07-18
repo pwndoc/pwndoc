@@ -135,6 +135,16 @@
                         <div class="col-md-6 col-12" v-if="UserService.isAllowed('audit-types:create')">
                             <q-item>
                                 <q-item-section>
+                                    <span class="text-grey-7 text-italic">{{$t('auditPhase')}}</span>
+                                    <div class="row">
+                                        <q-radio class="col-2" v-model="newAuditType.stage" val="default" :label="$t('default')" />
+                                        <q-radio class="col-2" v-model="newAuditType.stage" val="retest" :label="$t('retest')" />
+                                        <q-radio class="col-2" v-model="newAuditType.stage" val="multi" :label="$t('multi')" />
+                                    </div>
+                                </q-item-section>
+                            </q-item>
+                            <q-item>
+                                <q-item-section>
                                     <q-input
                                     ref="validate-auditType-name"
                                     :label="$t('name')"
@@ -205,7 +215,7 @@
                                     </q-select>
                                 </q-item-section>
                             </q-item>
-                            <q-item>
+                            <q-item v-if="newAuditType.stage === 'default'">
                                 <q-item-section>
                                     <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
                                     <q-checkbox v-model="newAuditType.hidden" val="network" :label="$t('networkScan')" />
@@ -229,6 +239,16 @@
                                 <q-item v-for="auditType of auditTypes" :key="auditType.name">
                                     <q-item-section>
                                         <q-expansion-item :label="auditType.name" popup header-class="expansion-header">
+                                            <q-item>
+                                                <q-item-section>
+                                                    <span class="text-grey-7 text-italic">{{$t('auditPhase')}}</span>
+                                                    <div class="row">
+                                                        <q-radio class="col-2" v-model="auditType.stage" disable val="default" :label="$t('default')" />
+                                                        <q-radio class="col-2" v-model="auditType.stage" disable val="retest" :label="$t('retest')" />
+                                                        <q-radio class="col-2" v-model="auditType.stage" disable val="multi" :label="$t('multi')" />
+                                                    </div>
+                                                </q-item-section>
+                                            </q-item>
                                             <q-item>
                                                 <q-item-section>
                                                     <div v-for="(language,idx) of languages" class="q-mb-sm">
@@ -277,7 +297,7 @@
                                                     </q-select>
                                                 </q-item-section>
                                             </q-item>
-                                            <q-item>
+                                            <q-item v-if="auditType.stage === 'default'">
                                                 <q-item-section>
                                                     <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
                                                     <q-checkbox v-model="auditType.hidden" disable val="network" :label="$t('networkScan')" />
@@ -303,6 +323,16 @@
                                             </q-item-section>
                                             <q-item-section>
                                                 <q-expansion-item :label="auditType.name" popup >
+                                                    <q-item>
+                                                        <q-item-section>
+                                                            <span class="text-grey-7 text-italic">{{$t('auditPhase')}}</span>
+                                                            <div class="row">
+                                                                <q-radio class="col-2" v-model="auditType.stage" val="default" :label="$t('default')" />
+                                                                <q-radio class="col-2" v-model="auditType.stage" val="retest" :label="$t('retest')" />
+                                                                <q-radio class="col-2" v-model="auditType.stage" val="multi" :label="$t('multi')" />
+                                                            </div>
+                                                        </q-item-section>
+                                                    </q-item>
                                                     <q-item>
                                                         <q-item-section>
                                                             <q-input
@@ -395,7 +425,7 @@
                                                             </q-select>
                                                         </q-item-section>
                                                     </q-item>
-                                                    <q-item>
+                                                    <q-item v-if="auditType.stage === 'default'">
                                                         <q-item-section>
                                                             <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
                                                             <q-checkbox v-model="auditType.hidden" val="network" :label="$t('networkScan')" />

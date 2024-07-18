@@ -6,7 +6,7 @@
     <div v-if="auditTypes.length === 0" class="col-md-4 offset-md-4 q-mt-md">
         <p>{{$t('noAudit')}}<a href="/data/custom">{{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('auditTypes')}}</a></p>
     </div>
-    <div v-if="languages.length > 0 && auditTypes.length > 0" class="col-md-8 col-12 offset-md-2 q-mt-md">
+    <div v-if="languages.length > 0 && auditTypes.length > 0" class="col-md-10 col-12 offset-md-1 q-mt-md">
         <q-table
             class="sticky-header-table"
             :columns="dtHeaders"
@@ -51,7 +51,7 @@
                     <q-td
                     v-for="col in props.cols"
                     :key="col.name"
-                    style="width:20%"
+                    style="width:17%"
                     >
                         <div v-if="['name', 'users', 'date'].indexOf(col.name) > -1">
                             <q-input 
@@ -62,6 +62,21 @@
                             :autofocus="col.name === 'name'"
                             outlined
                             />
+                        </div>
+                        <div v-else-if="col.name === 'auditType'">
+                            <q-select
+                                dense 
+                                :label="$t('search')"
+                                :options="auditTypes"
+                                v-model="search.auditType"
+                                option-value="name"
+                                option-label="name"
+                                map-options
+                                emit-value
+                                clearable
+                                options-sanitize
+                                outlined
+                                />
                         </div>
                         <div v-else-if="col.name === 'company'">
                             <q-select
@@ -162,6 +177,10 @@
             <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
         </q-bar>
         <q-card-section>
+            <div>
+                <q-radio v-model="currentAudit.type" val="default" :label="$t('default')" />
+                <q-radio v-model="currentAudit.type" val="multi" :label="$t('multi')" />
+            </div>
             <q-input
             :label="$t('name')+' *'"
             :error="!!errors.name"
@@ -172,18 +191,19 @@
             outlined
             />
             <q-select
-            :label="$t('selectAssessment')+' *'"
+            :label="(modalAuditTypes && modalAuditTypes.length > 0) ? $t('selectAssessment')+' *' : $t('msg.noAuditTypeForThisStage')"
             :error="!!errors.auditType"
             :error-message="errors.auditType"
             v-model="currentAudit.auditType"
-            :options="auditTypes"
+            :options="modalAuditTypes"
             option-value="name"
             option-label="name"
             emit-value
             map-options
             options-sanitize
             outlined
-            /> 
+            :readonly="!(modalAuditTypes && modalAuditTypes.length > 0)"
+            />
             <q-select 
             :label="$t('selectLanguage')+' *'"
             :error="!!errors.language"

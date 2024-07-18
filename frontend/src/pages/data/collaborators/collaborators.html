@@ -198,7 +198,7 @@
                 hide-bottom-space
                 @keyup.enter="createCollab()"
                 outlined
-                :rules="strongPassword"
+                :rules="(currentCollab.password) ? strongPassword : ['']"
                 />
             </q-card-section>
     
@@ -297,7 +297,7 @@
                 type="password"
                 @keyup.enter="updateCollab()"
                 outlined
-                :rules="strongPassword"
+                :rules="(currentCollab.password) ? strongPassword : ['']"
                 />
             </q-card-section>
             <q-card-section>

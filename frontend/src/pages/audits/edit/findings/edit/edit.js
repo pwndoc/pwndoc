@@ -27,7 +27,8 @@ export default {
             proofsTabVisited: false,
             detailsTabVisited: false,
             vulnTypes: [],
-            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+            overrideLeaveCheck: false
         }
     },
 
@@ -57,12 +58,26 @@ export default {
 
     beforeRouteLeave (to, from , next) {
         Utils.syncEditors(this.$refs)
+
+        var displayHighlightWarning = this.displayHighlightWarning()
+
         if (this.unsavedChanges()) {
             Dialog.create({
             title: $t('msg.thereAreUnsavedChanges'),
             message: $t('msg.doYouWantToLeave'),
             ok: {label: $t('btn.confirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'}
+            cancel: {label: $t('btn.cancel'), color: 'white'},
+            focus: 'cancel'
+            })
+            .onOk(() => next())
+        }
+        else if (displayHighlightWarning) {
+            Dialog.create({
+                title: $t('msg.highlightWarningTitle'),
+                message: `${displayHighlightWarning}</mark>`,
+                html: true,
+                ok: {label: $t('btn.leave'), color: 'negative'},
+                cancel: {label: $t('btn.stay'), color: 'white'},
             })
             .onOk(() => next())
         }
@@ -73,12 +88,25 @@ export default {
     beforeRouteUpdate (to, from , next) {
         Utils.syncEditors(this.$refs)
 
+        var displayHighlightWarning = this.displayHighlightWarning()
+
         if (this.unsavedChanges()) {
             Dialog.create({
             title: $t('msg.thereAreUnsavedChanges'),
             message: $t('msg.doYouWantToLeave'),
             ok: {label: $t('btn.confirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'}
+            cancel: {label: $t('btn.cancel'), color: 'white'},
+            focus: 'cancel'
+            })
+            .onOk(() => next())
+        }
+        else if (displayHighlightWarning) {
+            Dialog.create({
+                title: $t('msg.highlightWarningTitle'),
+                message: `${displayHighlightWarning}</mark>`,
+                html: true,
+                ok: {label: $t('btn.leave'), color: 'negative'},
+                cancel: {label: $t('btn.stay'), color: 'white'},
             })
             .onOk(() => next())
         }
@@ -161,7 +189,9 @@ export default {
         updateFinding: function() {
             Utils.syncEditors(this.$refs)
             this.$nextTick(() => {
-                if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
+                var customFieldsEmpty = this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()
+                var defaultFieldsEmpty = this.requiredFieldsEmpty()
+                if (customFieldsEmpty || defaultFieldsEmpty) {
                     Notify.create({
                         message: $t('msg.fieldRequired'),
                         color: 'negative',
@@ -209,6 +239,7 @@ export default {
                         position: 'top-right'
                     })
                     this.findingOrig = this.finding
+                    this.overrideLeaveCheck = true
                     var currentIndex = this.$parent.audit.findings.findIndex(e => e._id === this.findingId)
                     if (this.$parent.audit.findings.length === 1)
                         this.$router.push(`/audits/${this.$parent.auditId}/findings/add`)
@@ -267,7 +298,22 @@ export default {
             }
         },
 
+        toggleSplitView: function() {
+            this.$parent.retestSplitView = !this.$parent.retestSplitView
+            if (this.$parent.retestSplitView) {
+                this.$parent.retestSplitRatio = 50
+                this.$parent.retestSplitLimits = [40, 60]
+            }
+            else {
+                this.$parent.retestSplitRatio = 100
+                this.$parent.retestSplitLimits = [100, 100]
+            }
+        },
+
         unsavedChanges: function() {
+            if (this.overrideLeaveCheck)
+                return false
+
             if (this.finding.title !== this.findingOrig.title)
                 return true
             if ((this.finding.vulnType || this.findingOrig.vulnType) && this.finding.vulnType !== this.findingOrig.vulnType)
@@ -297,8 +343,99 @@ export default {
 
             if (this.finding.status !== this.findingOrig.status)
                 return true
+            
+            if ((this.finding.retestStatus || this.findingOrig.retestStatus) && this.finding.retestStatus !== this.findingOrig.retestStatus)
+                return true
+            if ((this.finding.retestDescription || this.findingOrig.retestDescription) && this.finding.retestDescription !== this.findingOrig.retestDescription)
+                return true
 
             return false
+        },
+
+        displayHighlightWarning: function() {
+            if (this.overrideLeaveCheck)
+                return null
+
+            if (!this.$settings.report.enabled || !this.$settings.report.public.highlightWarning)
+                return null
+
+            var matchString = `(<mark data-color="${this.$settings.report.public.highlightWarningColor}".+?>.+?)</mark>`
+            var regex = new RegExp(matchString)
+            var result = ""
+
+            result = regex.exec(this.finding.description)
+            if (result && result[1])
+                return (result[1].length > 119) ? "<b>Description</b><br/>"+result[1].substring(0,119)+'...' : "<b>Description</b><br/>"+result[1]
+            result = regex.exec(this.finding.observation)
+            if (result && result[1])
+                return (result[1].length > 119) ? "<b>Observation</b><br/>"+result[1].substring(0,119)+'...' : "<b>Observation</b><br/>"+result[1]
+            result = regex.exec(this.finding.poc)
+            if (result && result[1])
+                return (result[1].length > 119) ? "<b>Proofs</b><br/>"+result[1].substring(0,119)+'...' : "<b>Proofs</b><br/>"+result[1]
+            result = regex.exec(this.finding.remediation)
+            if (result && result[1])
+                return (result[1].length > 119) ? "<b>Remediation</b><br/>"+result[1].substring(0,119)+'...' : "<b>Remediation</b><br/>"+result[1]
+            
+
+            if (this.finding.customFields && this.finding.customFields.length > 0) {
+                for (let i in this.finding.customFields) {
+                    let field = this.finding.customFields[i]
+                    if (field.customField && field.text && field.customField.fieldType === "text") {
+                        result = regex.exec(field.text)
+                        if (result && result[1])
+                            return (result[1].length > 119) ? `<b>${field.customField.label}</b><br/>`+result[1].substring(0,119)+'...' : `<b>${field.customField.label}</b><br/>`+result[1]
+                    }
+                }
+            }
+            
+            return null
+        },
+
+        requiredFieldsEmpty: function() {
+            var hasErrors = false
+
+            if (this.$refs.titleField) {
+                this.$refs.titleField.validate()
+                hasErrors = hasErrors || this.$refs.titleField.hasError
+            }
+            if (this.$refs.typeField) {
+                this.$refs.typeField.validate()
+                hasErrors = hasErrors || this.$refs.typeField.hasError
+            }
+            if (this.$refs.descriptionField) {
+                this.$refs.descriptionField.validate()
+                hasErrors = hasErrors || this.$refs.descriptionField.hasError
+            }
+            if (this.$refs.observationField) {
+                this.$refs.observationField.validate()
+                hasErrors = hasErrors || this.$refs.observationField.hasError
+            }
+            if (this.$refs.referencesField) {
+                this.$refs.referencesField.validate()
+                hasErrors = hasErrors || this.$refs.referencesField.hasError
+            }
+            if (this.$refs.pocField) {
+                this.$refs.pocField.validate()
+                hasErrors = hasErrors || this.$refs.pocField.hasError
+            }
+            if (this.$refs.affectedField) {
+                this.$refs.affectedField.validate()
+                hasErrors = hasErrors || this.$refs.affectedField.hasError
+            }
+            if (this.$refs.remediationDifficultyField) {
+                this.$refs.remediationDifficultyField.validate()
+                hasErrors = hasErrors || this.$refs.remediationDifficultyField.hasError
+            }
+            if (this.$refs.priorityField) {
+                this.$refs.priorityField.validate()
+                hasErrors = hasErrors || this.$refs.priorityField.hasError
+            }
+            if (this.$refs.remediationField) {
+                this.$refs.remediationField.validate()
+                hasErrors = hasErrors || this.$refs.remediationField.hasError
+            }
+
+            return hasErrors
         }
     }
 }

@@ -30,7 +30,6 @@ export default {
             audit: {
                 creator: {},
                 name: "",
-                location: "",
                 auditType: "",
                 client: {},
                 company: {},
@@ -96,17 +95,31 @@ export default {
 
     beforeRouteLeave (to, from , next) {
         Utils.syncEditors(this.$refs)
-        if (this.$_.isEqual(this.audit, this.auditOrig))
-            next();
-        else {
+        
+        var displayHighlightWarning = this.displayHighlightWarning()
+
+        if (!this.$_.isEqual(this.audit, this.auditOrig)){
             Dialog.create({
                 title: $t('msg.thereAreUnsavedChanges'),
                 message: $t('msg.doYouWantToLeave'),
                 ok: {label: $t('btn.confirm'), color: 'negative'},
-                cancel: {label: $t('btn.cancel'), color: 'white'}
+                cancel: {label: $t('btn.cancel'), color: 'white'},
+                focus: 'cancel'
             })
             .onOk(() => next())
         }
+        else if (displayHighlightWarning) {
+            Dialog.create({
+                title: $t('msg.highlightWarningTitle'),
+                message: `${displayHighlightWarning}</mark>`,
+                html: true,
+                ok: {label: $t('btn.leave'), color: 'negative'},
+                cancel: {label: $t('btn.stay'), color: 'white'},
+            })
+            .onOk(() => next())
+        }
+        else
+            next()
     },
 
     methods: {
@@ -141,7 +154,9 @@ export default {
         updateAuditGeneral: function() {
             Utils.syncEditors(this.$refs)
             this.$nextTick(() => {
-                if (this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()) {
+                var customFieldsEmpty = this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()
+                var defaultFieldsEmpty = this.requiredFieldsEmpty()
+                if (customFieldsEmpty || defaultFieldsEmpty) {
                     Notify.create({
                         message: $t('msg.fieldRequired'),
                         color: 'negative',
@@ -301,6 +316,48 @@ export default {
                 const needle = Utils.normalizeString(val)
                 this.selectCompanies = this.companies.filter(v => Utils.normalizeString(v.name).indexOf(needle) > -1)
             })
+        },
+
+        // return the first match of highlighted text found
+        displayHighlightWarning: function() {
+            if (!this.$settings.report.enabled || !this.$settings.report.public.highlightWarning)
+                return null
+
+            var matchString = `(<mark data-color="${this.$settings.report.public.highlightWarningColor}".+?>.+?)</mark>`
+            var regex = new RegExp(matchString)
+            
+            if (this.audit.customFields && this.audit.customFields.length > 0) {
+                for (let i in this.audit.customFields) {
+                    let field = this.audit.customFields[i]
+                    if (field.customField && field.text && field.customField.fieldType === "text") {
+                        var result = regex.exec(field.text)
+                        if (result && result[1])
+                            return (result[1].length > 119) ? `<b>${field.customField.label}</b><br/>`+result[1].substring(0,119)+'...' : `<b>${field.customField.label}</b><br/>`+result[1]
+                    }
+                }
+            }
+            
+            return null
+        },
+
+        requiredFieldsEmpty: function() {
+            this.$refs.nameField.validate()
+            this.$refs.companyField.validate()
+            this.$refs.clientField.validate()
+            this.$refs.dateStartField.validate()
+            this.$refs.dateEndField.validate()
+            this.$refs.dateReportField.validate()
+            this.$refs.scopeField.validate()
+
+            return (
+                this.$refs.nameField.hasError ||
+                this.$refs.companyField.hasError ||
+                this.$refs.clientField.hasError ||
+                this.$refs.dateStartField.hasError ||
+                this.$refs.dateEndField.hasError ||
+                this.$refs.dateReportField.hasError ||
+                this.$refs.scopeField.hasError
+            )
         }
     }
 }

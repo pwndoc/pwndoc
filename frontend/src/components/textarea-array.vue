@@ -1,13 +1,20 @@
 <template>
     <q-input
-    :label="label"
+    ref="textareaField"
+    label-slot
     stack-label
     v-model="dataString"
     type="textarea"
     @input="updateParent"
-    outlined 
+    outlined
+    :rules="rules"
+    lazy-rules="ondemand"
     :readonly="readonly"
-    />
+    >
+    <template v-slot:label>
+        {{label}} <span v-if="rules && rules[0] !== ''" class="text-red">*</span>
+    </template>
+    </q-input>
 </template>
 
 <script>
@@ -25,11 +32,13 @@ export default {
             type: Boolean,
             default: false
         },
+        rules: Array
     },
 
     data: function() {
         return {
-            dataString: ""
+            dataString: "",
+            hasError: false
         }
     },
 
@@ -53,6 +62,11 @@ export default {
                 this.$emit('input', this.dataString.split('\n').filter(e => e !== ''))
             else
                 this.$emit('input', this.dataString.split('\n'))
+        },
+
+        validate: function() {
+            this.$refs.textareaField.validate()
+            this.hasError = this.$refs.textareaField.hasError
         }
     }
 }

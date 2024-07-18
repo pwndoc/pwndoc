@@ -1,12 +1,11 @@
 var fs = require('fs');
 var Docxtemplater = require('docxtemplater');
-var JSZip = require('jszip');
-var expressions = require('angular-expressions');
+var PizZip = require("pizzip");
+var expressions = require('./report-filters');
 var ImageModule = require('docxtemplater-image-module-pwndoc');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
-var html2ooxml = require('./html2ooxml');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
 var Settings = require('mongoose').model('Settings');
@@ -19,7 +18,7 @@ async function generateDoc(audit) {
     var templatePath = `${__basedir}/../report-templates/${audit.template.name}.${audit.template.ext || 'docx'}`
     var content = fs.readFileSync(templatePath, "binary");
     
-    var zip = new JSZip(content);
+    var zip = new PizZip(content);
     
     translate.setLocale(audit.language)
     $t = translate.translate
@@ -63,7 +62,7 @@ async function generateDoc(audit) {
             }
             return [width,height];
         }
-        return [0,0]
+        return [0,0];
     }
 
     if (settings.report.private.imageBorder && settings.report.private.imageBorderColor)
@@ -107,60 +106,14 @@ async function generateDoc(audit) {
 }
 exports.generateDoc = generateDoc;
 
-// *** Angular parser filters ***
-
-// Convert input date with parameter s (full,short): {input | convertDate: 's'}
-expressions.filters.convertDate = function(input, s) {
-    var date = new Date(input);
-    if (date != "Invalid Date") {
-        var monthsFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        var monthsShort = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
-        var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        var day = date.getUTCDate();
-        var month = date.getUTCMonth();
-        var year = date.getUTCFullYear();
-        if (s === "full") {
-            return days[date.getUTCDay()] + ", " + monthsFull[month] + " " + (day<10 ? '0'+day: day) + ", " + year;
-        }
-        if (s === "short") {
-            return monthsShort[month] + "/" + (day<10 ? '0'+day: day) + "/" + year;
-        }
-    }
-}
-
-// Convert input date with parameter s (full,short): {input | convertDateLocale: 'locale':'style'}
-expressions.filters.convertDateLocale = function(input, locale, style) {
-    var date = new Date(input);
-    if (date != "Invalid Date") {
-        var options = { year: 'numeric', month: '2-digit', day: '2-digit'}
-
-        if (style === "full")
-            options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}
-
-        return date.toLocaleDateString(locale, options)
-       
-    }
-}
-
-// Convert identifier prefix to a user defined prefix: {identifier | changeID: 'PRJ-'}
-expressions.filters.changeID = function (input, prefix) {
-    return input.replace("IDX-", prefix);
-}
-
-// Replace newlines in office XML format: {@input | NewLines}
-expressions.filters.NewLines = function(input) {
-    var pre = '<w:p><w:r><w:t>';
-    var post = '</w:t></w:r></w:p>';
-    var lineBreak = '<w:br/>';
-    var result = '';
-
-    if(!input) return pre + post;
-
-    input = utils.escapeXMLEntities(input);
-    var inputArray = input.split(/\n\n+/g);
-    inputArray.forEach(p => {
-        result += `${pre}${p.replace(/\n/g, lineBreak)}${post}`
+// Filters helper: handles the use of preformated easilly translatable strings.
+// Source: https://www.tutorialstonight.com/javascript-string-format.php
+String.prototype.format = function () {
+    let args = arguments;
+    return this.replace(/{([0-9]+)}/g, function (match, index) {
+        return typeof args[index] == 'undefined' ? match : args[index];
     });
+
     // input = input.replace(/\n/g, lineBreak);
     // return pre + input + post;
     return result;
@@ -436,12 +389,11 @@ async function prepAuditData(data, settings) {
     var result = {}
     result.name = data.name || "undefined"
     result.auditType = $t(data.auditType) || "undefined"
-    result.location = data.location || "undefined"
     result.date = data.date || "undefined"
     result.date_start = data.date_start || "undefined"
     result.date_end = data.date_end || "undefined"
     if (data.customFields) {
-        for (field of data.customFields) {
+        for (var field of data.customFields) {
             var fieldType = field.customField.fieldType
             var label = field.customField.label
 
@@ -485,7 +437,7 @@ async function prepAuditData(data, settings) {
     result.scope = data.scope.toObject() || []
 
     result.findings = []
-    for (finding of data.findings) {
+    for (var finding of data.findings) {
         var tmpCVSS = CVSS31.calculateCVSSFromVector(finding.cvssv3);
         var tmpFinding = {
             title: finding.title || "",
@@ -500,7 +452,9 @@ async function prepAuditData(data, settings) {
             affected: finding.scope || "",
             status: finding.status || "",
             category: $t(finding.category) || $t("No Category"),
-            identifier: "IDX-" + utils.lPad(finding.identifier)
+            identifier: "IDX-" + utils.lPad(finding.identifier),
+            retestStatus: finding.retestStatus || "",
+            retestDescription: await splitHTMLParagraphs(finding.retestDescription)
         }
         // Handle CVSS
         tmpFinding.cvss = {
@@ -512,7 +466,7 @@ async function prepAuditData(data, settings) {
             environmentalMetricScore: tmpCVSS.environmentalMetricScore || "",
             environmentalSeverity: tmpCVSS.environmentalSeverity || ""
         }
-        if (tmpCVSS.baseImpact) 
+        if (tmpCVSS.baseImpact)
             tmpFinding.cvss.baseImpact = CVSS31.roundUp1(tmpCVSS.baseImpact)
         else
             tmpFinding.cvss.baseImpact = ""
@@ -521,7 +475,7 @@ async function prepAuditData(data, settings) {
         else
             tmpFinding.cvss.baseExploitability = ""
 
-        if (tmpCVSS.environmentalModifiedImpact) 
+        if (tmpCVSS.environmentalModifiedImpact)
             tmpFinding.cvss.environmentalModifiedImpact = CVSS31.roundUp1(tmpCVSS.environmentalModifiedImpact)
         else
             tmpFinding.cvss.environmentalModifiedImpact = ""
@@ -552,7 +506,7 @@ async function prepAuditData(data, settings) {
 
         if (finding.customFields) {
             for (field of finding.customFields) {
-                // For retrocompatibility of findings with old customFields 
+                // For retrocompatibility of findings with old customFields
                 // or if custom field has been deleted, last saved custom fields will be available
                 if (field.customField) {
                     var fieldType = field.customField.fieldType
@@ -576,7 +530,7 @@ async function prepAuditData(data, settings) {
         .groupBy("category")
         .map((value,key) => {return {categoryName:key, categoryFindings:value}})
         .value()
-    
+
     result.creator = {}
     if (data.creator) {
         result.creator.username = data.creator.username || "undefined"
@@ -587,7 +541,7 @@ async function prepAuditData(data, settings) {
         result.creator.role = data.creator.role || "undefined"
     }
 
-    for (section of data.sections) {
+    for (var section of data.sections) {
         var formatSection = { 
             name: $t(section.name)
         }
@@ -616,7 +570,7 @@ async function splitHTMLParagraphs(data) {
 
     var splitted = data.split(/(<img.+?src=".*?".+?alt=".*?".*?>)/)
 
-    for (value of splitted){
+    for (var value of splitted){
         if (value.startsWith("<img")) {
             var src = value.match(/<img.+src="(.*?)"/) || ""
             var alt = value.match(/<img.+alt="(.*?)"/) || ""

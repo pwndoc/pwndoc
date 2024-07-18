@@ -103,5 +103,5 @@ module.exports = function(app) {
             res.download(file, `${data.name}.${data.ext}`)
         })
         .catch(err => Response.Internal(res, err))
-    })
+    });
 }

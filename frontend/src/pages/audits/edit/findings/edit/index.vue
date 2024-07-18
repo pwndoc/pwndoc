@@ -12,4 +12,8 @@
     max-width: 600px!important;
     max-height: 600px!important;
 }
+
+.after-class {
+    height: calc(100vh - 132px)!important;
+}
 </style>

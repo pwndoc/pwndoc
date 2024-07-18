@@ -27,6 +27,7 @@ export default {
             // Datatable headers
             dtHeaders: [
                 {name: 'name', label: $t('name'), field: 'name', align: 'left', sortable: true},
+                {name: 'auditType', label: $t('auditType'), field: 'auditType', align: 'left', sortable: true},
                 {name: 'language', label: $t('language'), field: 'language', align: 'left', sortable: true},
                 {name: 'company', label: $t('company'), field: row => (row.company)?row.company.name:'', align: 'left', sortable: true},
                 {name: 'users', label: $t('participants'), align: 'left', sortable: true},
@@ -35,7 +36,7 @@ export default {
                 {name: 'reviews', label: '', align: 'left', sortable: false},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
-            visibleColumns: ['name', 'language', 'company', 'users', 'date', 'action'],
+            visibleColumns: ['name', 'auditType', 'language', 'company', 'users', 'date', 'action'],
             // Datatable pagination
             pagination: {
                 page: 1,
@@ -50,14 +51,14 @@ export default {
                 {label:'All', value:0}
             ],
             // Search filter
-            search: {finding: '', name: '', language: '', company: '', users: '', date: ''},
+            search: {finding: '', auditType: '', name: '', language: '', company: '', users: '', date: ''},
             myAudits: false,
             displayConnected: false,
             displayReadyForReview: false,
             // Errors messages
             errors: {name: '', language: '', auditType: ''},
             // Selected or New Audit
-            currentAudit: {name: '', language: '', auditType: ''}
+            currentAudit: {name: '', language: '', auditType: '', type: 'default'}
         }
     },
 
@@ -78,6 +79,12 @@ export default {
         this.getLanguages();
         this.getAuditTypes();
         this.getCompanies();
+    },
+
+    computed: {
+        modalAuditTypes: function() {
+            return this.auditTypes.filter(type => type.stage === this.currentAudit.type)
+        }
     },
 
     methods: {
@@ -258,6 +265,7 @@ export default {
             this.currentAudit.name = '';
             this.currentAudit.language = '';
             this.currentAudit.auditType = '';
+            this.currentAudit.type = 'default';
         },
 
         // Convert language locale of audit for table display
@@ -279,6 +287,7 @@ export default {
             var username = this.UserService.user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
             var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            var auditTypeTerm = (terms.auditType || "").toLowerCase()
             var languageTerm = (terms.language)? terms.language.toLowerCase(): ""
             var companyTerm = (terms.company)? terms.company.toLowerCase(): ""
             var usersTerm = (terms.users || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -286,12 +295,14 @@ export default {
 
             return rows && rows.filter(row => {
                 var name = (row.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                var auditType = (row.auditType || "").toLowerCase()
                 var language = (row.language)? row.language.toLowerCase(): ""
                 var companyName = (row.company)? row.company.name.toLowerCase(): ""
                 var users = this.convertParticipants(row).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                 var date = (row.createdAt)? row.createdAt.split('T')[0]: "";
 
                 return name.indexOf(nameTerm) > -1 &&
+                    (!auditTypeTerm || auditTypeTerm === auditType) &&
                     language.indexOf(languageTerm) > -1 &&
                     (!companyTerm || companyTerm === companyName) &&
                     users.indexOf(usersTerm) > -1 &&

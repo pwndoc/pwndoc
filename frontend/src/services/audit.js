@@ -2,11 +2,14 @@ import Vue from 'vue'
 
 export default {
   getAudits: function(filters) {
-    var queryParams = "?";
-    if (filters)
+    var params = {}
+    if (filters) {
       if (filters.findingTitle)
-        queryParams += `findingTitle=${filters.findingTitle}`;
-    return Vue.prototype.$axios.get(`audits${queryParams}`)
+        params.findingTitle = filters.findingTitle;
+      if (filters.type)
+        params.type = filters.type
+    }
+    return Vue.prototype.$axios.get('audits', {params: params})
   },
 
   getAudit: function(auditId) {
@@ -83,5 +86,25 @@ export default {
 
   updateReadyForReview: function(auditId, data) {
     return Vue.prototype.$axios.put(`audits/${auditId}/updateReadyForReview`, data);
-  }
+  },
+
+  getRetest: function(auditId) {
+    return Vue.prototype.$axios.get(`audits/${auditId}/retest`);
+  },
+
+  createRetest: function(auditId, data) {
+    return Vue.prototype.$axios.post(`audits/${auditId}/retest`, data);
+  },
+
+  updateAuditParent: function(auditId, parentId) {
+    return Vue.prototype.$axios.put(`audits/${auditId}/updateParent`, {parentId: parentId})
+  },
+
+  deleteAuditParent: function(auditId) {
+    return Vue.prototype.$axios.delete(`audits/${auditId}/deleteParent`)
+  },
+
+  getAuditChildren: function(auditId) {
+    return Vue.prototype.$axios.get(`audits/${auditId}/children`);
+  },
 }

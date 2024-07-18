@@ -138,7 +138,7 @@ UserSchema.statics.updateProfile = function (username, user) {
                 payload.lastname = row.lastname;
                 payload.email = row.email;
                 payload.phone = row.phone;
-                payload.roles = auth.acl.getRoles(payload.role)
+                payload.roles = auth.acl.getRoles(payload.role);
 
                 return row.save();
             }
@@ -374,7 +374,7 @@ UserSchema.methods.getToken = function (userAgent) {
         query.exec()
         .then(function(row) {
             if (row && row.enabled === false) 
-                throw({fn: 'Unauthorized', message: 'Account disabled'});
+                throw({fn: 'Unauthorized', message: 'Authentication Failed.'});
 
             if (row && bcrypt.compareSync(user.password, row.password)) {
                 if (row.totpEnabled && user.totpToken)
@@ -384,8 +384,15 @@ UserSchema.methods.getToken = function (userAgent) {
                 var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
                 return User.updateRefreshToken(refreshToken, userAgent)
             }
-            else
-                throw({fn: 'Unauthorized', message: 'Invalid credentials'});
+            else {
+                if (!row) {
+                    // We compare two random strings to generate delay
+                    var randomHash = "$2b$10$" + [...Array(53)].map(() => Math.random().toString(36)[2]).join('');
+                    bcrypt.compareSync(user.password, randomHash);
+                }
+
+                throw({fn: 'Unauthorized', message: 'Authentication Failed.'});
+            }
         })
         .then(row => {
             resolve({token: row.token, refreshToken: row.refreshToken})

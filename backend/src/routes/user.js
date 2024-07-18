@@ -188,7 +188,7 @@ module.exports = function(app) {
 
         User.create(user)
         .then(msg => Response.Created(res, 'User created successfully'))
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Create First User
@@ -231,7 +231,7 @@ module.exports = function(app) {
             else
                 Response.Forbidden(res, 'Already Initialized');
         })        
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Update my profile
@@ -268,7 +268,7 @@ module.exports = function(app) {
             res.cookie('token', msg.token, {secure: true, httpOnly: true})
             Response.Ok(res, msg)
         })
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Update any user (admin only)
@@ -292,20 +292,6 @@ module.exports = function(app) {
 
         User.updateUser(req.params.id, user)
         .then(msg => Response.Ok(res, msg))
-        .catch(err => Response.Internal(res, err))
+        .catch(err => Response.Internal(res, err));
     });
-
-    // Delete any user (admin only)
-    /** Removed to keep linked references to user, disable user only for now
-    app.delete("/api/users/:id", acl.hasPermission('users:delete'), function(req, res) {
-        User.deleteOne({_id: req.params.id})
-        .then(msg => {
-            if (msg.n === 0)
-                throw ({fn: 'NotFound', message: 'User not found'});
-            else
-                Response.Ok(res, 'User deleted successfully');
-        })
-        .catch(err => Response.Internal(res, err))
-    });
-     */
 }
