@@ -90,6 +90,7 @@
                         </q-btn>
 
                         <q-btn-dropdown flat size="sm" dense split menu-self="top left" menu-anchor="bottom left"
+                        :class="{'is-active-highlight': editor.isActive('highlight')}"
                         @click="editor.chain().focus().toggleHighlight({color: highlightColor}).run()"
                         >
                             <template v-slot:label>
@@ -104,7 +105,7 @@
                                     v-for="color of highlightPalette" :key="color" 
                                     square
                                     :style="{'background-color': color, 'width': '24px', 'height': '24px'}"
-                                    @click="highlightColor = color; editor.chain().focus().toggleHighlight({color: highlightColor}).run()"
+                                    @click="highlightColor = color; editor.chain().focus().setHighlight({color: highlightColor}).run()"
                                     >
                                     </q-btn>
                                 </div>
@@ -315,6 +316,11 @@ export default {
 
         editable (value) {
             this.editor.setEditable(this.editable, false)
+       },
+
+        highlightColor (value) {
+            console.log(this.editor.storage)
+            this.editor.storage.highlight.color = value
        }
     },
 
@@ -584,6 +590,10 @@ export default {
 .is-active {
     color: green;
 }
+.is-active-highlight {
+    background-color: grey;
+}
+
 .editor-toolbar {
     min-height: 32px;
 }
