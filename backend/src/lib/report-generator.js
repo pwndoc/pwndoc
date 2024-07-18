@@ -113,10 +113,6 @@ String.prototype.format = function () {
     return this.replace(/{([0-9]+)}/g, function (match, index) {
         return typeof args[index] == 'undefined' ? match : args[index];
     });
-
-    // input = input.replace(/\n/g, lineBreak);
-    // return pre + input + post;
-    return result;
 }
 
 // Sort array by supplied field: {#findings | sortArrayByField: 'identifier':1}{/}
