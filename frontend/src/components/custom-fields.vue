@@ -94,6 +94,7 @@
                 option-label="value"
                 emit-value
                 clearable
+                @clear="field.text = ''"
                 options-sanitize
                 outlined 
                 :readonly="readonly"
@@ -121,6 +122,7 @@
                 multiple
                 use-chips
                 clearable
+                @clear="field.text = []"
                 options-sanitize
                 outlined 
                 :readonly="readonly"
