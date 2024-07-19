@@ -409,6 +409,7 @@ module.exports = function(app) {
         if (req.body.size) customField.size = req.body.size
         if (req.body.offset) customField.offset = req.body.offset
         if (typeof req.body.required === 'boolean' && req.body.fieldType !== 'space') customField.required = req.body.required
+        if (typeof req.body.inline === 'boolean' && req.body.fieldType !== 'space') customField.required = req.body.inline
         if (req.body.description) customField.description = req.body.description
         if (req.body.text) customField.text = req.body.text
         if (req.body.options) customField.options = req.body.options
@@ -439,6 +440,7 @@ module.exports = function(app) {
             if (typeof e.size === 'number') field.size = e.size
             if (typeof e.offset === 'number') field.offset = e.offset
             if (typeof e.required === 'boolean') field.required = e.required
+            if (typeof e.inline === 'boolean') field.inline = e.inline
             if (!_.isNil(e.description)) field.description = e.description
             if (!_.isNil(e.text)) field.text = e.text
             if (isArray(e.options)) field.options = e.options

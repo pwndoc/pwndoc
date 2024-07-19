@@ -170,6 +170,7 @@
                         v-model="field.text"
                         :options="getOptionsGroup(field.customField.options)"
                         :disable="readonly"
+                        :inline="field.customField.inline"
                         />
                     </template>
                     <template v-slot:label>
@@ -198,6 +199,7 @@
                         v-model="field.text"
                         :options="getOptionsGroup(field.customField.options)"
                         :disable="readonly"
+                        :inline="field.customField.inline"
                         />
                     </template>
                     <template v-slot:label>
