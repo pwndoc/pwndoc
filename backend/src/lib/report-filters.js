@@ -356,4 +356,12 @@ expressions.filters.translate = function(input, locale) {
     return translate.translate(input, locale)
 }
 
+// Pad numbers with 0 if single digit. 1 will become "01"
+// Example: {input | padIndex}
+expressions.filters.padNumber = function(input) {
+    console.log(input)
+    if (!input || typeof input !== 'number') return input
+    return input.toString().padStart(2, "0")
+}
+
 module.exports = expressions
