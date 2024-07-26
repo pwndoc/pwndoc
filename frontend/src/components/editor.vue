@@ -1,6 +1,6 @@
 <template>
 <q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix" class="bg-grey-4" v-if="editable || diff">
+    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix && !diff" class="bg-grey-4" v-if="editable || diff">
             <q-toolbar class="editor-toolbar">
                 <template v-if="editable">
                     <div v-if="toolbar.indexOf('format') !== -1">
