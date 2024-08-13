@@ -11,7 +11,7 @@ export default Highlight.extend({
 
     return {
       color: {
-        default: null,
+        default: "#ffff25",
         parseHTML: element => element.getAttribute('data-color') || element.style.backgroundColor,
         renderHTML: attributes => {
           if (!attributes.color) {
@@ -24,6 +24,18 @@ export default Highlight.extend({
           }
         },
       },
+    }
+  },
+
+  addStorage() {
+    return {
+      color: "#ffff25",
+    }
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      'Mod-Shift-h': () => this.editor.commands.toggleHighlight({color: this.storage.color}),
     }
   }
 })

@@ -94,6 +94,7 @@
                 option-label="value"
                 emit-value
                 clearable
+                @clear="field.text = ''"
                 options-sanitize
                 outlined 
                 :readonly="readonly"
@@ -121,6 +122,7 @@
                 multiple
                 use-chips
                 clearable
+                @clear="field.text = []"
                 options-sanitize
                 outlined 
                 :readonly="readonly"
@@ -168,6 +170,7 @@
                         v-model="field.text"
                         :options="getOptionsGroup(field.customField.options)"
                         :disable="readonly"
+                        :inline="field.customField.inline"
                         />
                     </template>
                     <template v-slot:label>
@@ -196,6 +199,7 @@
                         v-model="field.text"
                         :options="getOptionsGroup(field.customField.options)"
                         :disable="readonly"
+                        :inline="field.customField.inline"
                         />
                     </template>
                     <template v-slot:label>

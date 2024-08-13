@@ -862,6 +862,12 @@
                                         v-model="newCustomField.required"
                                         />
                                     </q-item-section>
+                                    <q-item-section v-if="['radio', 'checkbox'].includes(newCustomField.fieldType)">
+                                        <q-toggle
+                                        :label="$t('horizontal')"
+                                        v-model="newCustomField.inline"
+                                        />
+                                    </q-item-section>
                                 </q-item>
                             </q-item-section>
                             <q-item-section v-if="['select', 'select-multiple', 'checkbox', 'radio'].includes(newCustomField.fieldType)" class="col-md-4" top>
@@ -987,7 +993,15 @@
                                                     outlined dense
                                                     />
                                                 </q-item-section>
+                                                <q-item-section v-if="['radio', 'checkbox'].includes(field.fieldType)">
+                                                    <q-toggle
+                                                    :label="$t('horizontal')"
+                                                    v-model="field.inline"
+                                                    outlined dense
+                                                    />
+                                                </q-item-section>
                                             </q-item>
+                                            
                                             <q-item v-if="['select', 'select-multiple', 'checkbox', 'radio'].includes(field.fieldType)">
                                                 <q-item-section>
                                                     <q-list bordered separator dense>
@@ -1141,6 +1155,7 @@
                                             type="checkbox"
                                             v-model="field.text[getFieldLocaleText(idx)].value"
                                             :options="getOptionsGroup(field.options)"
+                                            :inline="field.inline"
                                             />
                                         </template>
                                         <template v-slot:label>
@@ -1161,6 +1176,7 @@
                                             type="radio"
                                             v-model="field.text[getFieldLocaleText(idx)].value"
                                             :options="getOptionsGroup(field.options)"
+                                            :inline="field.inline"
                                             />
                                             <q-space />
                                             <q-btn flat label="clear" @click="field.text[getFieldLocaleText(idx)].value = ''" />
