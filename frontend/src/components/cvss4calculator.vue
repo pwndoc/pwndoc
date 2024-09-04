@@ -10,16 +10,12 @@
             </span>
             </div>
             <q-space />
-            <div v-if="cvss4.baseImpact && cvss4.baseExploitability" style="margin-right:120px">
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss4.impactSubscore')}}:&nbsp;<span class="text-bold">{{cvss4.baseImpact}}</span></q-chip>
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss4.exploitabilitySubscore')}}:&nbsp;<span class="text-bold">{{cvss4.baseExploitability}}</span></q-chip>
-            </div>
             <div class="scoreRating" :class="cvss4.baseSeverity">
-                <span class="baseSeverity" v-if="!cvss4.baseMetricScore">{{$t('cvss4.infoWhenNoScore')}}</span>
-                <div v-else>
-                    <span class="baseMetricScore">{{cvss4.baseMetricScore}}</span>
+                <div v-if="cvss4.baseScore >= 0">
+                    <span class="baseMetricScore">{{cvss4.baseScore}}</span>
                     <span class="baseSeverity">({{cvss4.baseSeverity}})</span>
                 </div>
+                <span class="baseSeverity" v-else>{{$t('cvss4.infoWhenNoScore')}}</span>
             </div>
         </q-card-section>
         <q-separator />
@@ -398,7 +394,7 @@
             </div>
         </q-card-section>
         <q-expansion-item 
-        :label="$t('cvss4.temporalEnvironmentalTitle')"
+        :label="$t('cvss4.otherMetricsTitle')"
         header-class="bg-blue-grey-5 text-white" 
         expand-icon-class="text-white">
             <q-card-section class="row">
@@ -409,14 +405,6 @@
                     <span :style="tooltip.style">{{$t('cvss4.tooltip.supplementalMetricGroup_Legend')}}</span>
                 </q-tooltip>
                 </span>
-            </div>
-            <q-space />
-            <div class="scoreRating" :class="cvss4.supplementalSeverity">
-                <span class="baseSeverity" v-if="!cvss4.supplementalMetricScore">{{$t('cvss4.infoWhenNoScore')}}</span>
-                <div v-else>
-                    <span class="baseMetricScore">{{cvss4.supplementalMetricScore}}</span>
-                    <span class="baseSeverity">({{cvss4.supplementalSeverity}})</span>
-                </div>
             </div>
             </q-card-section>
             <q-separator />
@@ -653,25 +641,21 @@
                     </span>
                 </div>
                 <q-space />
-                <div v-if="cvss4.baseImpact && cvss4.baseExploitability" style="margin-right:120px">
-                    <q-chip square color="blue-12" text-color="white">{{$t('cvss4.environmentalModifiedImpact')}}:&nbsp;<span class="text-bold">{{cvss4.environmentalModifiedImpact}}</span></q-chip>
-                    <q-chip square color="blue-12" text-color="white">{{$t('cvss4.environmentalModifiedExploitability')}}:&nbsp;<span class="text-bold">{{cvss4.environmentalModifiedExploitability}}</span></q-chip>
-                </div>
                 <div class="scoreRating" :class="cvss4.environmentalSeverity">
-                    <span class="baseSeverity" v-if="!cvss4.environmentalMetricScore">{{$t('cvss4.infoWhenNoScore')}}</span>
-                    <div v-else>
-                        <span class="baseMetricScore">{{cvss4.environmentalMetricScore}}</span>
+                    <div v-if="cvss4.baseScore >= 0">
+                        <span class="baseMetricScore">{{cvss4.environmentalScore}}</span>
                         <span class="baseSeverity">({{cvss4.environmentalSeverity}})</span>
                     </div>
+                    <span class="baseSeverity" v-else>{{$t('cvss4.infoWhenNoScore')}}</span>
                 </div>
             </q-card-section>
             <q-separator />
-            <h6 class="q-mb-none q-mt-md row justify-center">{{$t('cvss4.modifiedExploitabilityMetric')}}</h6>
+            <h6 class="q-mb-none q-mt-md row justify-center">{{$t('cvss4.exploitabilityMetric')}}</h6>
             <q-card-section class="row q-col-gutter-md">
                 <div class="col-12">
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedAttackVector')}}
+                            {{$t('cvss4.attackVector')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MAV_Heading')}}</span>
                             </q-tooltip>
@@ -715,7 +699,7 @@
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedAttackComplexity')}}
+                            {{$t('cvss4.attackComplexity')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MAC_Heading')}}</span>
                             </q-tooltip>
@@ -748,7 +732,7 @@
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedAttackRequirements')}}
+                            {{$t('cvss4.attackRequirements')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MAT_Heading')}}</span>
                             </q-tooltip>
@@ -781,7 +765,7 @@
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedPrivilegesRequired')}}
+                            {{$t('cvss4.privilegesRequired')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MPR_Heading')}}</span>
                             </q-tooltip>
@@ -819,7 +803,7 @@
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedUserInteraction')}}
+                            {{$t('cvss4.userInteraction')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MUI_Heading')}}</span>
                             </q-tooltip>
@@ -857,12 +841,12 @@
                     </q-btn-toggle>
                 </div>
             </q-card-section>
-            <h6 class="q-mb-none q-mt-md row justify-center">{{$t('cvss4.modifiedVulnerableSystemImpact')}}</h6>
+            <h6 class="q-mb-none q-mt-md row justify-center">{{$t('cvss4.vulnerableSystemImpact')}}</h6>
             <q-card-section class="row q-col-gutter-md">
                 <div class="col-12">
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedConfidentialityImpact')}}
+                            {{$t('cvss4.confidentialityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MVC_Heading')}}</span>
                             </q-tooltip>
@@ -900,7 +884,7 @@
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedIntegrityImpact')}}
+                            {{$t('cvss4.integrityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MVI_Heading')}}</span>
                             </q-tooltip>
@@ -938,7 +922,7 @@
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedAvailabilityImpact')}}
+                            {{$t('cvss4.availabilityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MVA_Heading')}}</span>
                             </q-tooltip>
@@ -976,12 +960,12 @@
                     </q-btn-toggle>
                 </div>
             </q-card-section>
-            <h6 class="q-mb-none q-mt-md row justify-center">{{$t('cvss4.modifiedSubsequentSystemImpact')}}</h6>
+            <h6 class="q-mb-none q-mt-md row justify-center">{{$t('cvss4.subsequentSystemImpact')}}</h6>
             <q-card-section class="row q-col-gutter-md">
                 <div class="col-12">
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedConfidentialityImpact')}}
+                            {{$t('cvss4.confidentialityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MSC_Heading')}}</span>
                             </q-tooltip>
@@ -1019,7 +1003,7 @@
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedIntegrityImpact')}}
+                            {{$t('cvss4.integrityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MSI_Heading')}}</span>
                             </q-tooltip>
@@ -1057,7 +1041,7 @@
                     </q-btn-toggle>
                     <div class="q-my-sm text-weight-bold">
                         <span>
-                            {{$t('cvss4.modifiedAvailabilityImpact')}}
+                            {{$t('cvss4.availabilityImpact')}}
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
                                 <span :style="tooltip.style">{{$t('cvss4.tooltip.MSA_Heading')}}</span>
                             </q-tooltip>
@@ -1106,17 +1090,6 @@
                     </span>
                 </div>
                 <q-space />
-                <div v-if="cvss4.baseImpact && cvss4.baseExploitability" style="margin-right:120px">
-                    <q-chip square color="blue-12" text-color="white">{{$t('cvss4.environmentalModifiedImpact')}}:&nbsp;<span class="text-bold">{{cvss4.environmentalModifiedImpact}}</span></q-chip>
-                    <q-chip square color="blue-12" text-color="white">{{$t('cvss4.environmentalModifiedExploitability')}}:&nbsp;<span class="text-bold">{{cvss4.environmentalModifiedExploitability}}</span></q-chip>
-                </div>
-                <div class="scoreRating" :class="cvss4.environmentalSeverity">
-                    <span class="baseSeverity" v-if="!cvss4.environmentalMetricScore">{{$t('cvss4.infoWhenNoScore')}}</span>
-                    <div v-else>
-                        <span class="baseMetricScore">{{cvss4.environmentalMetricScore}}</span>
-                        <span class="baseSeverity">({{cvss4.environmentalSeverity}})</span>
-                    </div>
-                </div>
             </q-card-section>
             <q-separator />
             <q-card-section class="row q-col-gutter-md">
@@ -1248,16 +1221,12 @@
                     </span>
                 </div>
                 <q-space />
-                <div v-if="cvss4.baseImpact && cvss4.baseExploitability" style="margin-right:120px">
-                    <q-chip square color="blue-12" text-color="white">{{$t('cvss4.environmentalModifiedImpact')}}:&nbsp;<span class="text-bold">{{cvss4.environmentalModifiedImpact}}</span></q-chip>
-                    <q-chip square color="blue-12" text-color="white">{{$t('cvss4.environmentalModifiedExploitability')}}:&nbsp;<span class="text-bold">{{cvss4.environmentalModifiedExploitability}}</span></q-chip>
-                </div>
-                <div class="scoreRating" :class="cvss4.environmentalSeverity">
-                    <span class="baseSeverity" v-if="!cvss4.environmentalMetricScore">{{$t('cvss4.infoWhenNoScore')}}</span>
-                    <div v-else>
-                        <span class="baseMetricScore">{{cvss4.environmentalMetricScore}}</span>
-                        <span class="baseSeverity">({{cvss4.environmentalSeverity}})</span>
+                <div class="scoreRating" :class="cvss4.threatSeverity">
+                    <div v-if="cvss4.baseScore >= 0">
+                        <span class="baseMetricScore">{{cvss4.threatScore}}</span>
+                        <span class="baseSeverity">({{cvss4.threatSeverity}})</span>
                     </div>
+                    <span class="baseSeverity" v-else>{{$t('cvss4.infoWhenNoScore')}}</span>
                 </div>
             </q-card-section>
             <q-separator />
@@ -1327,9 +1296,9 @@ export default {
                 VC: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
                 VI: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
                 VA: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
-                SC: [{label: $t("cvss4.negligible"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
-                SI: [{label: $t("cvss4.negligible"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
-                SA: [{label: $t("cvss4.negligible"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                SC: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                SI: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                SA: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
                 
                 S: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.negligible"), value: "N", slot: 'two'}, {label: $t("cvss4.present"), value: "P", slot: 'three'}],
                 AU: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.no"), value: "N", slot: 'two'}, {label: $t("cvss4.yes"), value: "Y", slot: 'three'}],
@@ -1343,27 +1312,29 @@ export default {
                 MAT: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.present"), value: "P", slot: 'three'}],
                 MPR: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
                 MUI: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.passive"), value: "P", slot: 'three'}, {label: $t("cvss4.active"), value: "A", slot: 'three'}],
+                
                 MVC: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'four'}],
                 MVI: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'four'}],
                 MVA: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'four'}],
+                
                 MSC: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.negligible"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
-                MSI: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.negligible"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}, {label: $t("cvss4.safety"), value: "s", slot: 'four'}],
-                MSA: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.negligible"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}, {label: $t("cvss4.safety"), value: "s", slot: 'four'}],
+                MSI: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.negligible"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                MSA: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.negligible"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
 
-                CR: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'four'}],
-                IR: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'four'}],
-                AR: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.none"), value: "N", slot: 'two'}, {label: $t("cvss4.low"), value: "L", slot: 'three'}, {label: $t("cvss4.high"), value: "H", slot: 'four'}],
+                CR: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                IR: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                AR: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
 
                 E: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.attacked"), value: "A", slot: 'two'}, {label: $t("cvss4.poc"), value: "P", slot: 'three'}, {label: $t("cvss4.unreported"), value: "U", slot: 'four'}],
             },
             cvss4Obj: {version:'4.0', AV:'', AC:'', AT: '', PR:'', UI:'', VC:'', VI:'', VA:'', SC:'', SI:'', SA:'', S:'', AU:'', R:'', V:'', RE:'', U:'', MAV:'', MAC:'', MAT:'', MPR:'', MUI:'', MVC:'', MVI:'', MVA:'', MSC:'', MSI:'', MSA:'', CR:'', IR:'', AR:'', E:''},
             cvss4: {
-                baseMetricScore: '',
+                baseScore: '',
                 baseSeverity: '',
-                temporalMetricScore: '',
-                temporalSeverity: '',
-                environmentalMetricScore: '',
-                environmentalSeverity: ''
+                environmentalScore: '',
+                environmentalSeverity: '',
+                threatScore: '',
+                threatSeverity: ''
             },
             tooltip: {
                 anchor: "bottom middle",
@@ -1378,7 +1349,11 @@ export default {
 
     created: function() {
         this.cvss4StrToObject(this.value);
-        this.cvss4 = new Cvss4P0(this.value).calculateScores(true);
+        try {
+            this.cvss4 = new Cvss4P0(this.value).createJsonSchema();
+        } catch {
+            this.cvss4 = {}
+        }
     },
 
     watch: {
@@ -1538,7 +1513,12 @@ export default {
             if (this.cvss4Obj.AR) vectorString += "/AR:"+this.cvss4Obj.AR
             if (this.cvss4Obj.E) vectorString += "/E:"+this.cvss4Obj.E
 
-            this.cvss4 = new Cvss4P0(vectorString);
+            try {
+                this.cvss4 = new Cvss4P0(this.value).createJsonSchema();
+            } catch {
+                this.cvss4 = {}
+            }
+            
             this.$emit('input', vectorString);
         }
     }

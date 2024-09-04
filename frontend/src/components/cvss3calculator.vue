@@ -10,10 +10,6 @@
             </span>
             </div>
             <q-space />
-            <div v-if="cvss.baseImpact && cvss.baseExploitability" style="margin-right:120px">
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss.impactSubscore')}}:&nbsp;<span class="text-bold">{{cvss.baseImpact}}</span></q-chip>
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss.exploitabilitySubscore')}}:&nbsp;<span class="text-bold">{{cvss.baseExploitability}}</span></q-chip>
-            </div>
             <div class="scoreRating" :class="cvss.baseSeverity">
                 <div v-if="cvss.baseScore >= 0">
                     <span class="baseMetricScore">{{cvss.baseScore}}</span>
