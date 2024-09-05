@@ -297,7 +297,7 @@ export default {
         }
     },
     cvss4: {
-        title: 'CVSS v4 Base Score',
+        title: 'CVSS v4 Score',
         infoWhenNoScore: 'Select values for all base metrics to generate score',
         exploitabilityMetric: 'Exploitability Metrics',
         attackVector: 'Attack Vector',
@@ -345,6 +345,7 @@ export default {
         environmentalTitle: 'Environmental (Modified Base Metrics)',
         environmentalSecurityReqTitle: 'Environmental (Security Requirements)',
         confidentialityRequirement: 'Confidentiality Requirements',
+        medium: 'Medium',
         integrityRequirement: 'Integrity Requirements',
         availabilityRequirement: 'Availability Requirements',
         exploitTitle: 'Threat Metrics',
