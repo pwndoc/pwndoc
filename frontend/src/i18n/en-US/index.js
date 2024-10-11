@@ -58,7 +58,14 @@ export default {
         delete: 'Delete',
         download: 'Download',
         retestSplitView: 'Enable split view with original Finding data',
-        addAudit: 'Add Audit'
+        addAudit: 'Add Audit',
+        commentMode: 'Show Comments',
+        editComment: 'Edit Comment',
+        resolveComment: 'Resolve Thread',
+        reopenComment: 'Reopen Thread',
+        deleteComment: 'Delete Comment',
+        editReply: 'Edit Reply',
+        deleteReply: 'Delete Reply'
     },
     msg: {
         auditReviewUpdateOk: 'Audit review status updated successfully',
@@ -530,5 +537,14 @@ export default {
     audit: 'Audit',
     originalAudit: 'Original Audit',
     willBeRemoved: 'will be removed',
-    auditPhase: 'Audit Phase'
+    auditPhase: 'Audit Phase',
+    comments: 'Comments',
+    reply: 'Reply',
+    anotherCommentInProgress: 'Another comment is in progress',
+    startConversation: 'Start a conversation',
+    resolved: 'Resolved',
+    activeOnly: 'Active Only',
+    resolvedOnly: 'Resolved Only',
+    item: 'item',
+    items: 'items'
   }

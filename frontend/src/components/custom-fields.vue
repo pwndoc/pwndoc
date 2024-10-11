@@ -3,13 +3,17 @@
     <component :is="customElement" v-for="(computedField,idx) of computedFields" :key="idx">
         <div class="row q-col-gutter-md">
             <div v-for="(field,idx2) of computedField" :key="idx2" :class="`col-12 col-md-${field.customField.size||12} offset-md-${field.customField.offset||0}`">
-                <q-field 
+                <q-field
+                :id="`field-${field.customField.label}`"
                 :ref="`field-${idx}-${idx2}`"
                 v-if="field.customField.fieldType === 'text'" 
                 label-slot 
                 stack-label 
                 borderless
-                :class="(isTextInCustomFields(field))?'bg-diffbackground':null"
+                :class="{
+                    'bg-diffbackground': isTextInCustomFields(field),
+                    'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode
+                }"
                 class="basic-editor"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -36,14 +40,19 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
+                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                        <q-icon name="add_comment" size="xs" />
+                    </q-badge>
                 </q-field>
 
                 <q-input
                 :ref="`field-${idx}-${idx2}`"
+                :for="`field-${field.customField.label}`"
                 v-if="field.customField.fieldType === 'input'"
                 :label='field.customField.label'
                 stack-label
                 v-model="field.text"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
@@ -55,10 +64,14 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
+                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                        <q-icon name="add_comment" size="xs" />
+                    </q-badge>
                 </q-input>
 
                 <q-input
                 :ref="`field-${idx}-${idx2}`"
+                :for="`field-${field.customField.label}`"
                 v-if="field.customField.fieldType === 'date'"
                 :label='field.customField.label'
                 stack-label
@@ -81,10 +94,14 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
+                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                        <q-icon name="add_comment" size="xs" />
+                    </q-badge>
                 </q-input>
 
                 <q-select
                 :ref="`field-${idx}-${idx2}`"
+                :id="`field-${field.customField.label}`"
                 v-if="field.customField.fieldType === 'select'"
                 :label="field.customField.label"
                 stack-label
@@ -107,10 +124,14 @@
                      <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
+                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                        <q-icon name="add_comment" size="xs" />
+                    </q-badge>
                 </q-select>
 
                 <q-select
                 :ref="`field-${idx}-${idx2}`"
+                :id="`field-${field.customField.label}`"
                 v-if="field.customField.fieldType === 'select-multiple'"
                 :label="field.customField.label"
                 stack-label
@@ -148,9 +169,13 @@
                             {{scope.opt}}
                         </q-chip>
                     </template>
+                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                        <q-icon name="add_comment" size="xs" />
+                    </q-badge>
                 </q-select>
 
                 <q-field
+                :id="`field-${field.customField.label}`"
                 :ref="`field-${idx}-${idx2}`"
                 v-if="field.customField.fieldType === 'checkbox'"
                 :label="field.customField.label"
@@ -176,10 +201,14 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
+                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                        <q-icon name="add_comment" size="xs" />
+                    </q-badge>
                 </q-field>
 
                 
                 <q-field
+                :id="`field-${field.customField.label}`"
                 :ref="`field-${idx}-${idx2}`"
                 v-if="field.customField.fieldType === 'radio'"
                 :label="field.customField.label"
@@ -205,6 +234,9 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
+                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                        <q-icon name="add_comment" size="xs" />
+                    </q-badge>
                 </q-field>
             </div>
         </div>
@@ -238,6 +270,14 @@ export default {
         locale: {
             type: String,
             default: ''
+        },
+        commentMode: {
+            type: Boolean,
+            default: false
+        },
+        fieldHighlighted: {
+            type: String,
+            default: null
         }
     },
 

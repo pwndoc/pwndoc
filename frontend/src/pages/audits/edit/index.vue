@@ -317,7 +317,7 @@
 </template>
 
 <script>
-import { Dialog, Notify, QSpinnerGears } from 'quasar';
+import { Dialog, Notify, QSpinnerGears, LocalStorage } from 'quasar';
 import draggable from 'vuedraggable'
 
 import AuditService from '@/services/audit';
@@ -328,521 +328,547 @@ import Utils from '@/services/utils';
 import { $t } from '@/boot/i18n';
 
 export default {
-		data () {
-			return {
-				auditId: "",
-				findings: [],
-				users: [],
-				audit: {findings: {}},
-				sections: [],
-				splitterRatio: 80,
-				loading: true,
-				vulnCategories: [],
-				customFields: [],
-				auditTypes: [],
-				findingList: [],
-				frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
-				AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
-				auditRetest: "",
-				auditTypesRetest: [],
-				retestSplitView: false,
-				retestSplitRatio: 100,
-				retestSplitLimits: [100, 100],
-				children: []
-			}
-		},
+	data () {
+		return {
+			auditId: "",
+			findings: [],
+			users: [],
+			audit: {findings: {}},
+			sections: [],
+			splitterRatio: 80,
+			loading: true,
+			vulnCategories: [],
+			customFields: [],
+			auditTypes: [],
+			findingList: [],
+			frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
+			AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+			auditRetest: "",
+			auditTypesRetest: [],
+			retestSplitView: false,
+			retestSplitRatio: 100,
+			retestSplitLimits: [100, 100],
+			children: [],
+			commentMode: false,
+			commentSplitRatio: 100,
+			commentSplitLimits: [100, 100],
+			focusedComment: null,
+			editComment: null,
+			editReply: null,
+            commentsFilter: "all" // [all, active, resolved]
+		}
+	},
 
-		components: {
-			draggable
-		},
+	components: {
+		draggable
+	},
 
-		created: function() {
-			this.auditId = this.$route.params.auditId;
-			this.getCustomFields();
-			this.getAuditTypes();
-			this.getAudit(); // Calls getSections
-			this.getRetest();
-			this.getAuditChildren();	
-		},
+	created: function() {
+		this.auditId = this.$route.params.auditId;
+		this.getCustomFields();
+		this.getAuditTypes();
+		this.getAudit(); // Calls getSections
+		this.getRetest();
+		this.getAuditChildren();
+	},
 
-		destroyed: function() {
-			if (!this.loading) {
-				this.$socket.emit('leave', {username: UserService.user.username, room: this.auditId});
-				this.$socket.off()
-			}
-		},
+	destroyed: function() {
+		if (!this.loading) {
+			this.$socket.emit('leave', {username: UserService.user.username, room: this.auditId});
+			this.$socket.off()
+		}
+	},
 
-		watch: {
-			'audit.findings': {
-				handler(newVal, oldVal) {
-					var result = _.chain(this.audit.findings)
-					.groupBy("category")
-					.map((value, key) => {
-						if (key === 'undefined') key = 'No Category'
-						var sortOption = this.audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
-						
-						if (!sortOption) { // no option for category in audit
-							sortOption = this.vulnCategories.find(e => e.name === key) // Get sort option from default in vulnerability category
-							if (sortOption) // found sort option from vuln categories
-								sortOption.category = sortOption.name
-							else // no default option or category don't exist
-								sortOption = {category: key, sortValue: 'cvssScore', sortOrder: 'desc', sortAuto: true} // set a default sort option
-							
-							this.audit.sortFindings.push({
-								category: sortOption.category,
-								sortValue: sortOption.sortValue,
-								sortOrder: sortOption.sortOrder,
-								sortAuto: sortOption.sortAuto
-							})
-						}
-						
-						return {category: key, findings: value, sortOption: sortOption}
-					})
-					.value()
-
-					this.findingList = result
-				},
-				deep: true,
-				immediate: true
-			}
-		},
-
-		computed: {
-			generalUsers: function() {return this.users.filter(user => user.menu === 'general')},
-			networkUsers: function() {return this.users.filter(user => user.menu === 'network')},
-			findingUsers: function() {return this.users.filter(user => user.menu === 'editFinding')},
-			sectionUsers: function() {return this.users.filter(user => user.menu === 'editSection')},
-
-			currentAuditType: function() {
-				return this.auditTypes.find(e => e.name === this.audit.auditType)
-			}
-		},
-
-		methods: {
-			getFindingColor: function(finding) {
-				let severity = this.getFindingSeverity(finding)
-
-				if(this.$settings.report) {
-					const severityColorName = `${severity.toLowerCase()}Color`;
-					const cvssColors = this.$settings.report.public.cvssColors;
-
-					return cvssColors[severityColorName] || cvssColors.noneColor;
-				} else {
-					switch(severity) {
-						case "Low": 
-							return "green";
-						case "Medium":
-							return "orange";
-						case "High":
-							return "red";
-						case "Critical":
-							return "black";
-						default:
-							return "blue";
-					}
-				}
-			},
-
-			getFindingSeverity: function(finding) {
-				let severity = "None"
-				let cvss = CVSS31.calculateCVSSFromVector(finding.cvssv3)
-				if (cvss.success) {
-					severity = cvss.baseSeverity
-
-					let category = finding.category || "No Category"
-					let sortOption = this.audit.sortFindings.find(e => e.category === category)
-
-					if (sortOption) {
-						if (sortOption.sortValue === "cvssEnvironmentalScore")
-							severity = cvss.environmentalSeverity
-						else if (sortOption.sortValue === "cvssTemporalScore")
-							severity = cvss.temporalSeverity
-					}
-				}
-				return severity
-			},
-
-			getMenuSection: function() {
-				if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'general')
-					return {menu: 'general', room: this.auditId}
-				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'network')
-					return {menu: 'network', room: this.auditId}
-				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addFindings')
-					return {menu: 'addFindings', room: this.auditId}
-				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editFinding' && this.$router.currentRoute.params.findingId)
-					return {menu: 'editFinding', finding: this.$router.currentRoute.params.findingId, room: this.auditId}
-				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editSection' && this.$router.currentRoute.params.sectionId)
-					return {menu: 'editSection', section: this.$router.currentRoute.params.sectionId, room: this.auditId}
-				else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addAudits')
-					return {menu: 'addAudits', room: this.auditId}
-				
-				return {menu: 'undefined', room: this.auditId}
-			},
-
-			// Sockets handle
-			handleSocket: function() {
-				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
-				this.$socket.on('roomUsers', (users) => {
-					var userIndex = 0;
-					this.users = users.map((user,index) => {
-						if (user.username === UserService.user.username) {
-							user.color = "#77C84E";
-							user.me = true;
-							userIndex = index;
-						}
-						return user;
-					});
-					this.users.unshift(this.users.splice(userIndex, 1)[0]);
-				})
-				this.$socket.on('updateUsers', () => {
-					this.$socket.emit('updateUsers', {room: this.auditId})
-				})
-				this.$socket.on('updateAudit', () => {
-					this.getAudit();
-					this.getAuditChildren();
-				})
-				this.$socket.on('disconnect', () => {
-					this.$socket.emit('join', {username: UserService.user.username, room: this.auditId})
-					this.$socket.emit('menu', this.getMenuSection())
-				})
-			},
-			// Tells the UI if the user is supposed to be reviewing the audit
-			isUserAReviewer: function() {
-				var isAuthor = this.audit.creator._id === UserService.user.id;
-				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
-				var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
-				var hasReviewAll = UserService.isAllowed('audits:review-all');
-				return !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
-			},
-
-			// Tells the UI if the user is supposed to be editing the audit
-			isUserAnEditor: function() {
-				var isAuthor = this.audit.creator._id === UserService.user.id;
-				var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
-				var hasUpdateAll = UserService.isAllowed('audits:update-all');
-				return (isAuthor || isCollaborator || hasUpdateAll);
-			},
-
-			userHasAlreadyApproved: function() {
-				return this.audit.approvals.some((element) => element._id === UserService.user.id);
-			},
-
-			getUIState: function() {
-				if(!this.$settings.reviews.enabled || this.audit.state === "EDIT") {
-					this.frontEndAuditState = this.isUserAnEditor() ? Utils.AUDIT_VIEW_STATE.EDIT : Utils.AUDIT_VIEW_STATE.EDIT_READONLY;
-				} 
-				else if (this.audit.state === "REVIEW") {
-					if (!this.isUserAReviewer()) {
-						this.frontEndAuditState = this.isUserAnEditor()? Utils.AUDIT_VIEW_STATE.REVIEW_EDITOR : Utils.AUDIT_VIEW_STATE.REVIEW_READONLY;
-						return;
-					}
-					if (this.isUserAnEditor()) {
-						this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN;
-						return;
-					}
-					this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW;
-				} 
-				else if (this.audit.state === "APPROVED") {
-					if (!this.isUserAReviewer()) {
-						this.frontEndAuditState = Utils.AUDIT_VIEW_STATE.APPROVED_READONLY;
-					} else {
-						this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.APPROVED_APPROVED : Utils.AUDIT_VIEW_STATE.APPROVED
-					}
-				}
-			},
-
-			getAudit: function() {
-				DataService.getVulnerabilityCategories() // Vuln Categories must exist before getting audit data for handling default sort options
-				.then(data => {
-					this.vulnCategories = data.data.datas
-					return AuditService.getAudit(this.auditId)
-				})
-				.then((data) => {
-					this.audit = data.data.datas;
-					this.getUIState()
-					this.getSections()
-					if (this.loading)
-						this.handleSocket()
-					this.loading = false
-				})
-				.catch((err) => {
-					if (err.response.status === 403)
-						this.$router.push({name: '403', params: {error: err.response.data.datas}})
-					else if (err.response.status === 404)
-						this.$router.push({name: '404', params: {error: err.response.data.datas}})
-				})
-			},
-
-			getAuditChildren: function() {
-				AuditService.getAuditChildren(this.auditId)
-				.then((data) => {
-					this.children = data.data.datas
-				})
-				.catch((err) => {
-					console.log(err)
-				})
-			},
-
-			getCustomFields: function() {
-				DataService.getCustomFields()
-				.then((data) => {
-					this.customFields = data.data.datas;
-				})
-				.catch((err) => {
-					console.log(err);
-				})
-			},
-
-			getSections: function() {
-				DataService.getSections()
-				.then((data) => {
-					this.sections = data.data.datas;
-				})
-				.catch((err) => {
-					console.log(err);
-				})
-			},
-
-			getSectionIcon: function(section) {
-				var section = this.sections.find(e => e.field === section.field)
-				if (section)
-					return section.icon || 'notes'
-				return 'notes'
-			},
-
-			getAuditTypes: function() {
-				DataService.getAuditTypes()
-				.then((data) => {
-					this.auditTypes = data.data.datas;
-					this.auditTypesRetest = this.auditTypes.filter(e => e.stage == 'retest')
-				})
-				.catch((err) => {
-					console.log(err);
-				})
-			},
-
-			// Convert blob to text
-			BlobReader: function(data) {
-				const fileReader = new FileReader();
-
-				return new Promise((resolve, reject) => {
-					fileReader.onerror = () => {
-						fileReader.abort()
-						reject(new Error('Problem parsing blob'));
-					}
-
-					fileReader.onload = () => {
-						resolve(fileReader.result)
-					}
-
-					fileReader.readAsText(data)
-				})
-			},
-
-			generateReport: function() {
-				const downloadNotif = Notify.create({
-					spinner: QSpinnerGears,
-					message: 'Generating the Report',
-					color: "blue",
-					timeout: 0,
-					group: false
-				})
-				AuditService.generateAuditReport(this.auditId)
-				.then(response => {
-					var blob = new Blob([response.data], {type: "application/octet-stream"});
-					var link = document.createElement('a');
-					link.href = window.URL.createObjectURL(blob);
-					link.download = response.headers['content-disposition'].split('"')[1];
-					document.body.appendChild(link);
-					link.click();
-					link.remove();
+	watch: {
+		'audit.findings': {
+			handler(newVal, oldVal) {
+				var result = _.chain(this.audit.findings)
+				.groupBy("category")
+				.map((value, key) => {
+					if (key === 'undefined') key = 'No Category'
+					var sortOption = this.audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
 					
-					downloadNotif({
-						icon: 'done',
-						spinner: false,
-						message: 'Report successfully generated',
-						color: 'green',
-						timeout: 2500
-					})
-				})
-				.catch( async err => {
-					var message = "Error generating template"
-					if (err.response && err.response.data) {
-						var blob = new Blob([err.response.data], {type: "application/json"})
-						var blobData = await this.BlobReader(blob)
-						message = JSON.parse(blobData).datas
-					}
-					downloadNotif()
-					Notify.create({
-						message: message,
-						type: 'negative',
-						textColor:'white',
-						position: 'top',
-						closeBtn: true,
-						timeout: 0,
-						classes: "text-pre-wrap"
-					})
-				})
-			},
-
-			updateSortFindings: function() {
-				AuditService.updateAuditSortFindings(this.auditId, {sortFindings: this.audit.sortFindings})
-			},
-
-			getSortOptions: function(category) {
-				var options = [
-					{label: $t('cvssScore'), value: 'cvssScore'},
-					{label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
-					{label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
-					{label: $t('priority'), value: 'priority'},
-					{label: $t('remediationDifficulty'), value: 'remediationComplexity'}
-				]
-				var allowedFieldTypes = ['date', 'input', 'radio', 'select']
-				this.customFields.forEach(e => {
-					if (
-						(e.display === 'finding' || e.display === 'vulnerability') && 
-						(!e.displaySub || e.displaySub === category) && 
-						allowedFieldTypes.includes(e.fieldType)
-					) {
-						options.push({label: e.label, value: e.label})
-					}
-				})
-				return options
-			},
-
-			moveFindingPosition: function(event, category) {
-				var index = this.audit.findings.findIndex(e => {
-					if (category === 'No Category')
-						return !e.category
-					else
-						return e.category === category
-				})
-				if (index > -1) {
-					var realOldIndex = event.oldIndex + index
-					var realNewIndex = event.newIndex + index
-
-					AuditService.updateAuditFindingPosition(this.auditId, {oldIndex: realOldIndex, newIndex: realNewIndex})
-					.then(msg => this.getAudit())
-					.catch(err => {
-						console.log(err.response.data.datas)
-						Notify.create({
-							message: err.response.data.datas || err.message,
-							color: 'negative',
-							textColor:'white',
-							position: 'top-right'
+					if (!sortOption) { // no option for category in audit
+						sortOption = this.vulnCategories.find(e => e.name === key) // Get sort option from default in vulnerability category
+						if (sortOption) // found sort option from vuln categories
+							sortOption.category = sortOption.name
+						else // no default option or category don't exist
+							sortOption = {category: key, sortValue: 'cvssScore', sortOrder: 'desc', sortAuto: true} // set a default sort option
+						
+						this.audit.sortFindings.push({
+							category: sortOption.category,
+							sortValue: sortOption.sortValue,
+							sortOrder: sortOption.sortOrder,
+							sortAuto: sortOption.sortAuto
 						})
-						this.getAudit()
-					})
+					}
+					
+					return {category: key, findings: value, sortOption: sortOption}
+				})
+				.value()
+
+				this.findingList = result
+			},
+			deep: true,
+			immediate: true
+		}
+	},
+
+	computed: {
+		generalUsers: function() {return this.users.filter(user => user.menu === 'general')},
+		networkUsers: function() {return this.users.filter(user => user.menu === 'network')},
+		findingUsers: function() {return this.users.filter(user => user.menu === 'editFinding')},
+		sectionUsers: function() {return this.users.filter(user => user.menu === 'editSection')},
+
+		currentAuditType: function() {
+			return this.auditTypes.find(e => e.name === this.audit.auditType)
+		},
+
+		replyingComment: function() {
+            return this.audit.comments.some(comment => !!comment.replyTemp)
+        },
+
+		systemLanguage: function() {
+			return LocalStorage.getItem('system_language') || 'en-US'
+		}
+	},
+
+	methods: {
+		getFindingColor: function(finding) {
+			let severity = this.getFindingSeverity(finding)
+
+			if(this.$settings.report) {
+				const severityColorName = `${severity.toLowerCase()}Color`;
+				const cvssColors = this.$settings.report.public.cvssColors;
+
+				return cvssColors[severityColorName] || cvssColors.noneColor;
+			} else {
+				switch(severity) {
+					case "Low": 
+						return "green";
+					case "Medium":
+						return "orange";
+					case "High":
+						return "red";
+					case "Critical":
+						return "black";
+					default:
+						return "blue";
 				}
-			},
-
-			toggleAskReview: function() {
-				AuditService.updateReadyForReview(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
-				.then(() => {
-					this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
-					this.getUIState();
-					Notify.create({
-						message: $t('msg.auditReviewUpdateOk'),
-						color: 'positive',
-						textColor:'white',
-						position: 'top-right'
-					})
-				})
-				.catch((err) => {     
-					console.log(err)
-					Notify.create({
-						message: err.response.data.datas || err.message,
-						color: 'negative',
-						textColor:'white',
-						position: 'top-right'
-					})
-				});
-			},
-
-			toggleApproval: function() {
-				AuditService.toggleApproval(this.auditId)
-				.then(() => {
-					Notify.create({
-						message: $t('msg.auditApprovalUpdateOk'),
-						color: 'positive',
-						textColor:'white',
-						position: 'top-right'
-					})
-				})
-				.catch((err) => {          
-					console.log(err)
-					Notify.create({
-						message: err.response.data.datas || err.message,
-						color: 'negative',
-						textColor:'white',
-						position: 'top-right'
-					})
-				});
-			},
-
-			goToAudit: function(auditId) {
-				this.$router.push({path: `/audits/${auditId}`, query: {retest: true}})
-			},
-
-			getRetest: function() {
-				AuditService.getRetest(this.auditId)
-				.then((msg) => {
-					if (msg)
-						this.auditRetest = msg.data.datas._id
-				})
-				.catch((err) => {
-					// console.log(err)
-				})
-			},
-
-			createRetest: function(auditType) {
-				AuditService.createRetest(this.auditId, {auditType: auditType.name})
-				.then((msg) => {
-					if (msg.data.datas.audit._id)
-						this.$router.push(`/audits/${msg.data.datas.audit._id}`)
-				})
-				.catch((err) => {
-					console.log(err)
-					Notify.create({
-						message: err.response.data.datas || err.message,
-						color: 'negative',
-						textColor:'white',
-						position: 'top-right'
-					})
-				})
-			},
-
-			deleteParent: function(auditId) {
-				AuditService.deleteAuditParent(auditId)
-				.then(() => {
-					Notify.create({
-						message: 'Audit removed successfully',
-						color: 'positive',
-						textColor:'white',
-						position: 'top-right'
-					})
-				})
-				.catch((err) => {
-					Notify.create({
-						message: err.response.data.datas,
-						color: 'negative',
-						textColor:'white',
-						position: 'top-right'
-					})
-				})
-			},
-
-			confirmDeleteParent: function(audit) {
-				Dialog.create({
-					title: $t('msg.confirmSuppression'),
-					message: `${$t('audit')} «${audit.name}» ${$t('willBeRemoved')}`,
-					ok: {label: $t('btn.confirm'), color: 'negative'},
-					cancel: {label: $t('btn.cancel'), color: 'white'},
-					focus: 'cancel'
-				})
-				.onOk(() => this.deleteParent(audit._id))
-				},
 			}
+		},
+
+		getFindingSeverity: function(finding) {
+			let severity = "None"
+			let cvss = CVSS31.calculateCVSSFromVector(finding.cvssv3)
+			if (cvss.success) {
+				severity = cvss.baseSeverity
+
+				let category = finding.category || "No Category"
+				let sortOption = this.audit.sortFindings.find(e => e.category === category)
+
+				if (sortOption) {
+					if (sortOption.sortValue === "cvssEnvironmentalScore")
+						severity = cvss.environmentalSeverity
+					else if (sortOption.sortValue === "cvssTemporalScore")
+						severity = cvss.temporalSeverity
+				}
+			}
+			return severity
+		},
+
+		getMenuSection: function() {
+			if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'general')
+				return {menu: 'general', room: this.auditId}
+			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'network')
+				return {menu: 'network', room: this.auditId}
+			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addFindings')
+				return {menu: 'addFindings', room: this.auditId}
+			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editFinding' && this.$router.currentRoute.params.findingId)
+				return {menu: 'editFinding', finding: this.$router.currentRoute.params.findingId, room: this.auditId}
+			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editSection' && this.$router.currentRoute.params.sectionId)
+				return {menu: 'editSection', section: this.$router.currentRoute.params.sectionId, room: this.auditId}
+			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addAudits')
+				return {menu: 'addAudits', room: this.auditId}
+			
+			return {menu: 'undefined', room: this.auditId}
+		},
+
+		// Sockets handle
+		handleSocket: function() {
+			this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
+			this.$socket.on('roomUsers', (users) => {
+				var userIndex = 0;
+				this.users = users.map((user,index) => {
+					if (user.username === UserService.user.username) {
+						user.color = "#77C84E";
+						user.me = true;
+						userIndex = index;
+					}
+					return user;
+				});
+				this.users.unshift(this.users.splice(userIndex, 1)[0]);
+			})
+			this.$socket.on('updateUsers', () => {
+				this.$socket.emit('updateUsers', {room: this.auditId})
+			})
+			this.$socket.on('updateAudit', () => {
+				this.getAudit();
+				this.getAuditChildren();
+			})
+			this.$socket.on('disconnect', () => {
+				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId})
+				this.$socket.emit('menu', this.getMenuSection())
+			})
+		},
+		// Tells the UI if the user is supposed to be reviewing the audit
+		isUserAReviewer: function() {
+			var isAuthor = this.audit.creator._id === UserService.user.id;
+			var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
+			var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
+			var hasReviewAll = UserService.isAllowed('audits:review-all');
+			return !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
+		},
+
+		// Tells the UI if the user is supposed to be editing the audit
+		isUserAnEditor: function() {
+			var isAuthor = this.audit.creator._id === UserService.user.id;
+			var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
+			var hasUpdateAll = UserService.isAllowed('audits:update-all');
+			return (isAuthor || isCollaborator || hasUpdateAll);
+		},
+
+		userHasAlreadyApproved: function() {
+			return this.audit.approvals.some((element) => element._id === UserService.user.id);
+		},
+
+		getUIState: function() {
+			if(!this.$settings.reviews.enabled || this.audit.state === "EDIT") {
+				this.frontEndAuditState = this.isUserAnEditor() ? Utils.AUDIT_VIEW_STATE.EDIT : Utils.AUDIT_VIEW_STATE.EDIT_READONLY;
+			} 
+			else if (this.audit.state === "REVIEW") {
+				if (!this.isUserAReviewer()) {
+					this.frontEndAuditState = this.isUserAnEditor()? Utils.AUDIT_VIEW_STATE.REVIEW_EDITOR : Utils.AUDIT_VIEW_STATE.REVIEW_READONLY;
+					return;
+				}
+				if (this.isUserAnEditor()) {
+					this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW_ADMIN;
+					return;
+				}
+				this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.REVIEW_APPROVED : Utils.AUDIT_VIEW_STATE.REVIEW;
+			} 
+			else if (this.audit.state === "APPROVED") {
+				if (!this.isUserAReviewer()) {
+					this.frontEndAuditState = Utils.AUDIT_VIEW_STATE.APPROVED_READONLY;
+				} else {
+					this.frontEndAuditState = this.userHasAlreadyApproved() ? Utils.AUDIT_VIEW_STATE.APPROVED_APPROVED : Utils.AUDIT_VIEW_STATE.APPROVED
+				}
+			}
+		},
+
+		getAudit: function() {
+			DataService.getVulnerabilityCategories() // Vuln Categories must exist before getting audit data for handling default sort options
+			.then(data => {
+				this.vulnCategories = data.data.datas
+				return AuditService.getAudit(this.auditId)
+			})
+			.then((data) => {
+				this.audit = data.data.datas;
+				this.getUIState()
+				this.getSections()
+				if (this.loading)
+					this.handleSocket()
+				this.loading = false
+			})
+			.catch((err) => {
+				if (err.response.status === 403)
+					this.$router.push({name: '403', params: {error: err.response.data.datas}})
+				else if (err.response.status === 404)
+					this.$router.push({name: '404', params: {error: err.response.data.datas}})
+			})
+		},
+
+		getAuditChildren: function() {
+			AuditService.getAuditChildren(this.auditId)
+			.then((data) => {
+				this.children = data.data.datas
+			})
+			.catch((err) => {
+				console.log(err)
+			})
+		},
+
+		getCustomFields: function() {
+			DataService.getCustomFields()
+			.then((data) => {
+				this.customFields = data.data.datas;
+			})
+			.catch((err) => {
+				console.log(err);
+			})
+		},
+
+		getSections: function() {
+			DataService.getSections()
+			.then((data) => {
+				this.sections = data.data.datas;
+			})
+			.catch((err) => {
+				console.log(err);
+			})
+		},
+
+		getSectionIcon: function(section) {
+			var section = this.sections.find(e => e.field === section.field)
+			if (section)
+				return section.icon || 'notes'
+			return 'notes'
+		},
+
+		getAuditTypes: function() {
+			DataService.getAuditTypes()
+			.then((data) => {
+				this.auditTypes = data.data.datas;
+				this.auditTypesRetest = this.auditTypes.filter(e => e.stage == 'retest')
+			})
+			.catch((err) => {
+				console.log(err);
+			})
+		},
+
+		// Convert blob to text
+		BlobReader: function(data) {
+			const fileReader = new FileReader();
+
+			return new Promise((resolve, reject) => {
+				fileReader.onerror = () => {
+					fileReader.abort()
+					reject(new Error('Problem parsing blob'));
+				}
+
+				fileReader.onload = () => {
+					resolve(fileReader.result)
+				}
+
+				fileReader.readAsText(data)
+			})
+		},
+
+		generateReport: function() {
+			const downloadNotif = Notify.create({
+				spinner: QSpinnerGears,
+				message: 'Generating the Report',
+				color: "blue",
+				timeout: 0,
+				group: false
+			})
+			AuditService.generateAuditReport(this.auditId)
+			.then(response => {
+				var blob = new Blob([response.data], {type: "application/octet-stream"});
+				var link = document.createElement('a');
+				link.href = window.URL.createObjectURL(blob);
+				link.download = response.headers['content-disposition'].split('"')[1];
+				document.body.appendChild(link);
+				link.click();
+				link.remove();
+				
+				downloadNotif({
+					icon: 'done',
+					spinner: false,
+					message: 'Report successfully generated',
+					color: 'green',
+					timeout: 2500
+				})
+			})
+			.catch( async err => {
+				var message = "Error generating template"
+				if (err.response && err.response.data) {
+					var blob = new Blob([err.response.data], {type: "application/json"})
+					var blobData = await this.BlobReader(blob)
+					message = JSON.parse(blobData).datas
+				}
+				downloadNotif()
+				Notify.create({
+					message: message,
+					type: 'negative',
+					textColor:'white',
+					position: 'top',
+					closeBtn: true,
+					timeout: 0,
+					classes: "text-pre-wrap"
+				})
+			})
+		},
+
+		updateSortFindings: function() {
+			AuditService.updateAuditSortFindings(this.auditId, {sortFindings: this.audit.sortFindings})
+		},
+
+		getSortOptions: function(category) {
+			var options = [
+				{label: $t('cvssScore'), value: 'cvssScore'},
+				{label: $t('cvssTemporalScore'), value: 'cvssTemporalScore'},
+				{label: $t('cvssEnvironmentalScore'), value: 'cvssEnvironmentalScore'},
+				{label: $t('priority'), value: 'priority'},
+				{label: $t('remediationDifficulty'), value: 'remediationComplexity'}
+			]
+			var allowedFieldTypes = ['date', 'input', 'radio', 'select']
+			this.customFields.forEach(e => {
+				if (
+					(e.display === 'finding' || e.display === 'vulnerability') && 
+					(!e.displaySub || e.displaySub === category) && 
+					allowedFieldTypes.includes(e.fieldType)
+				) {
+					options.push({label: e.label, value: e.label})
+				}
+			})
+			return options
+		},
+
+		moveFindingPosition: function(event, category) {
+			var index = this.audit.findings.findIndex(e => {
+				if (category === 'No Category')
+					return !e.category
+				else
+					return e.category === category
+			})
+			if (index > -1) {
+				var realOldIndex = event.oldIndex + index
+				var realNewIndex = event.newIndex + index
+
+				AuditService.updateAuditFindingPosition(this.auditId, {oldIndex: realOldIndex, newIndex: realNewIndex})
+				.then(msg => this.getAudit())
+				.catch(err => {
+					console.log(err.response.data.datas)
+					Notify.create({
+						message: err.response.data.datas || err.message,
+						color: 'negative',
+						textColor:'white',
+						position: 'top-right'
+					})
+					this.getAudit()
+				})
+			}
+		},
+
+		toggleAskReview: function() {
+			AuditService.updateReadyForReview(this.auditId, { state: this.audit.state === "EDIT" ? "REVIEW" : "EDIT" })
+			.then(() => {
+				this.audit.state = this.audit.state === "EDIT" ? "REVIEW" : "EDIT";
+				this.getUIState();
+				Notify.create({
+					message: $t('msg.auditReviewUpdateOk'),
+					color: 'positive',
+					textColor:'white',
+					position: 'top-right'
+				})
+			})
+			.catch((err) => {     
+				console.log(err)
+				Notify.create({
+					message: err.response.data.datas || err.message,
+					color: 'negative',
+					textColor:'white',
+					position: 'top-right'
+				})
+			});
+		},
+
+		toggleApproval: function() {
+			AuditService.toggleApproval(this.auditId)
+			.then(() => {
+				Notify.create({
+					message: $t('msg.auditApprovalUpdateOk'),
+					color: 'positive',
+					textColor:'white',
+					position: 'top-right'
+				})
+			})
+			.catch((err) => {          
+				console.log(err)
+				Notify.create({
+					message: err.response.data.datas || err.message,
+					color: 'negative',
+					textColor:'white',
+					position: 'top-right'
+				})
+			});
+		},
+
+		goToAudit: function(auditId) {
+			this.$router.push({path: `/audits/${auditId}`, query: {retest: true}})
+		},
+
+		getRetest: function() {
+			AuditService.getRetest(this.auditId)
+			.then((msg) => {
+				if (msg)
+					this.auditRetest = msg.data.datas._id
+			})
+			.catch((err) => {
+				// console.log(err)
+			})
+		},
+
+		createRetest: function(auditType) {
+			AuditService.createRetest(this.auditId, {auditType: auditType.name})
+			.then((msg) => {
+				if (msg.data.datas.audit._id)
+					this.$router.push(`/audits/${msg.data.datas.audit._id}`)
+			})
+			.catch((err) => {
+				console.log(err)
+				Notify.create({
+					message: err.response.data.datas || err.message,
+					color: 'negative',
+					textColor:'white',
+					position: 'top-right'
+				})
+			})
+		},
+
+		deleteParent: function(auditId) {
+			AuditService.deleteAuditParent(auditId)
+			.then(() => {
+				Notify.create({
+					message: 'Audit removed successfully',
+					color: 'positive',
+					textColor:'white',
+					position: 'top-right'
+				})
+			})
+			.catch((err) => {
+				Notify.create({
+					message: err.response.data.datas,
+					color: 'negative',
+					textColor:'white',
+					position: 'top-right'
+				})
+			})
+		},
+
+		confirmDeleteParent: function(audit) {
+			Dialog.create({
+				title: $t('msg.confirmSuppression'),
+				message: `${$t('audit')} «${audit.name}» ${$t('willBeRemoved')}`,
+				ok: {label: $t('btn.confirm'), color: 'negative'},
+				cancel: {label: $t('btn.cancel'), color: 'white'},
+				focus: 'cancel'
+			})
+			.onOk(() => this.deleteParent(audit._id))
+		},
+
+		getAuditComments: function() {
+			AuditService.getAuditComments(this.auditId)
+			.then((msg) => {
+				if (msg)
+					this.comments = msg.data.datas
+			})
+			.catch((err) => {
+				// console.log(err)
+			})
+		},
+	}
 }
 </script>
 

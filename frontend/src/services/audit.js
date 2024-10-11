@@ -107,4 +107,16 @@ export default {
   getAuditChildren: function(auditId) {
     return Vue.prototype.$axios.get(`audits/${auditId}/children`);
   },
+
+  createComment: function(auditId, comment) {
+    return Vue.prototype.$axios.post(`audits/${auditId}/comments`, comment);
+  },
+
+  deleteComment: function(auditId, commentId) {
+    return Vue.prototype.$axios.delete(`audits/${auditId}/comments/${commentId}`)
+  },
+
+  updateComment: function(auditId, comment) {
+    return Vue.prototype.$axios.put(`audits/${auditId}/comments/${comment._id}`, comment)
+  },
 }

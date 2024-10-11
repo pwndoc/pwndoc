@@ -58,6 +58,21 @@ var SortOption = {
     sortAuto:   Boolean
 }
 
+var Reply = new Schema ({
+    author:     {type: Schema.Types.ObjectId, ref: 'User'},
+    text:       {type: String, default: ""}
+}, {timestamps: true})
+
+var Comment = new Schema ({
+    findingId:      {type: Schema.Types.ObjectId, ref: 'Finding', default: null},
+    sectionId:      {type: Schema.Types.ObjectId, ref: 'Section', default: null},
+    fieldName:      {type: String, default: ""},
+    author:         {type: Schema.Types.ObjectId, ref: 'User'},
+    text:           {type: String, default: ""},
+    replies:        [Reply],
+    resolved:       {type: Boolean, default: false}         
+}, {timestamps: true})
+
 var AuditSchema = new Schema({
     name:               {type: String, required: true},
     auditType:          String,
@@ -80,7 +95,8 @@ var AuditSchema = new Schema({
     state:              { type: String, enum: ['EDIT', 'REVIEW', 'APPROVED'], default: 'EDIT'},
     approvals:          [{type: Schema.Types.ObjectId, ref: 'User'}],
     type:               {type: String, enum: ['default', 'multi', 'retest'], default: 'default'},
-    parentId:           {type: Schema.Types.ObjectId, ref: 'Audit'}
+    parentId:           {type: Schema.Types.ObjectId, ref: 'Audit'},
+    comments:           [Comment]
 }, {timestamps: true});
 
 /*
@@ -130,6 +146,8 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
                 select: 'label fieldType text'
             }
         })
+        query.populate('comments.author', 'username firstname lastname')
+        query.populate('comments.replies.author', 'username firstname lastname')
         query.exec()
         .then((row) => {
             if (!row)
@@ -979,6 +997,83 @@ AuditSchema.statics.deleteParent = (isAdmin, auditId, userId) => {
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             
             resolve(row)
+        })
+        .catch((err) => {
+            reject(err)
+        })
+    })
+}
+
+// Create Comment
+AuditSchema.statics.createComment = (isAdmin, auditId, userId, comment) => {
+    return new Promise(async(resolve, reject) => {
+        var query = Audit.findByIdAndUpdate(auditId, {$push: {comments: comment}}, {new: true})
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.exec()
+        .then(row => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+            else
+                resolve(row.comments[row.comments.length - 1]);
+        })
+        .catch((err) => {
+            reject(err);
+        })
+    })
+}
+
+// Delete Comment
+AuditSchema.statics.deleteComment = (isAdmin, auditId, userId, commentId) => {
+    return new Promise((resolve, reject) => { 
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.select('comments')
+        query.exec()
+        .then((row) => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+
+            var comment = row.comments.id(commentId)
+            if (comment === null) reject({fn: 'NotFound', message: 'Comment not found'})
+            else {
+                row.comments.pull(commentId)
+                return row.save()
+            }
+        })
+        .then(() => {
+            resolve("Audit Comment deleted successfully")
+        })
+        .catch((err) => {
+            reject(err)
+        })
+    })
+}
+
+// Update comment of audit
+AuditSchema.statics.updateComment = (isAdmin, auditId, userId, commentId, newComment) => {
+    return new Promise((resolve, reject) => { 
+        var query = Audit.findById(auditId)
+        if (!isAdmin)
+            query.or([{creator: userId}, {collaborators: userId}])
+        query.exec()
+        .then((row) => {
+            if (!row)
+                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+
+            var comment = row.comments.id(commentId)
+            if (comment === null)
+                reject({fn: 'NotFound', message: 'Comment not found'})         
+            else {
+                Object.keys(newComment).forEach((key) => {
+                    comment[key] = newComment[key]
+                })
+                return row.save()
+            } 
+        })
+        .then(() => {
+            resolve("Audit Comment updated successfully")
         })
         .catch((err) => {
             reject(err)
