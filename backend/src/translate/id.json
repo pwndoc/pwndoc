@@ -1,7 +1,7 @@
 {
     "Attack Vector": "Vektor Serangan",
-    "Attack Complexity": "pKompleksitas Serangan",
-    "Privileges Required": "PHak Istimewa diperlukan",
+    "Attack Complexity": "Kompleksitas Serangan",
+    "Privileges Required": "Hak Istimewa diperlukan",
     "User Interaction": "Interaksi Pengguna",
     "Scope": "Cakupan",
     "Confidentiality": "Kerahasiaan",
