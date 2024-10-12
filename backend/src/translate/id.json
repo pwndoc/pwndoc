@@ -5,7 +5,7 @@
     "User Interaction": "Interaksi Pengguna",
     "Scope": "Cakupan",
     "Confidentiality": "Kerahasiaan",
-    "Integrity": "Int√ "Integritas",
+    "Integrity": "Integritas",
     "Availability": "Tersedianya",
     "Network": "Jaringan",
     "Adjacent Network": "Jaringan Lokal",
@@ -16,5 +16,5 @@
     "Required": "Diperlukan",
     "Unchanged": "Tidak berubah",
     "Changed": "Berubah",
-    "No Category": "Non s: ;: "Tidak ada kategori"
+    "No Category": "Tidak ada kategori"
 }
