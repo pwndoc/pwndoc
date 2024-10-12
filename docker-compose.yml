@@ -4,7 +4,7 @@ services:
     image: mongo:4.2.15
     container_name: mongo-pwndoc
     volumes:
-      - ./backend/mongo-data:/data/db
+      - mongo-data:/data/db
     restart: always
     ports:
       - 127.0.0.1:27017:27017
