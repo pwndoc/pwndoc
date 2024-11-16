@@ -225,6 +225,7 @@ import CustomImage from './editor-image'
 import Caption from './editor-caption'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
+import CodeBlock from './editor-codeblock'
 
 const Diff = require('diff')
 
@@ -269,7 +270,8 @@ export default {
                     StarterKit.configure({
                         heading: {
                             levels: [1, 2, 3, 4, 5, 6]
-                        }
+                        },
+                        codeBlock: false
                     }),
                     Underline,
                     CustomImage,
@@ -280,7 +282,8 @@ export default {
                     TrailingNode.configure({
                         node: 'paragraph', 
                         notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']
-                    })
+                    }),
+                    CodeBlock,
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
