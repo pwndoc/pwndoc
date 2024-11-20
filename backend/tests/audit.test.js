@@ -3,13 +3,14 @@
   1 Audit: {name: "Audit 1", language: "en", auditType: "Web"}
 */
 
+const fs = require('fs');
 module.exports = function(request, app) {
   describe('Audit Suite Tests', () => {
     var userToken = '';
 
     var audit1Id = ""
     var audit2Id = ""
-
+    var documentId = ""
     beforeAll(async () => {
       var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'})
       userToken = response.body.datas.token
@@ -122,6 +123,43 @@ module.exports = function(request, app) {
         expect(response.body.datas.scope[0]).toBe('Scope Item 1');
         expect(response.body.datas.scope[1]).toBe('Scope Item 2');
       })
+
+      it('Upload document', async () => {
+        var audit = {};
+        audit.attachments = [{
+            name: "Tux.png",
+            value: fs.readFileSync('/app/resources/Tux.png',{encoding: 'base64'})
+        }]
+        var response = await request(app).put(`/api/audits/${audit1Id}/general`)
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+        .send(audit)
+        expect(response.status).toBe(200)
+      })
+
+      it('Get document metadata', async () => {
+        var response  = await request(app).get(`/api/audits/${audit1Id}`)
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+        .send()
+        documentId = response.body.datas.attachments[0]._id
+        expect(response.status).toBe(200)
+        expect(response.body.datas.attachments[0].filename).toEqual('Tux.png')
+        expect(response.body.datas.attachments[0]._id).toBeDefined()
+      })
+
+      it('Download document', async () => {
+        var response = await request(app).get(`/api/audits/${audit1Id}/attachments/${documentId}`)
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+        .send()
+        expect(response.status).toBe(200)
+        expect(response.body.datas.name).toEqual('Tux.png')
+        expect(response.body.datas.value).toContain('iVBORw0KGgoAAAANSUhEUgAAAo')
+    })
     })
   })
 }

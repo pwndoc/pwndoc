@@ -6,6 +6,9 @@
             "name": "pwndoc",
             "server": "mongo-pwndoc-dev",
             "port": "27017"
+        },
+        "login": {
+            "provider": "disabled"
         }
     },
     "prod": {
@@ -15,6 +18,15 @@
             "name": "pwndoc",
             "server": "mongo-pwndoc",
             "port": "27017"
+        },
+        "login": {
+            "provider": "disabled",
+            "issuer": "https://exemple.com",
+            "authorizationURL": "https://exemple.com/as/authorization.oauth2",
+            "tokenURL": "https://exemple.com/as/token.oauth2",
+            "userInfoURL": "https://exemple.com/idp/userinfo.openid",
+            "callbackURL": "https://myserverIP/api/sso",
+            "scope": "openid profile"
         }
     },
     "test": {
@@ -24,6 +36,9 @@
             "name": "pwndoc",
             "server": "127.0.0.1",
             "port": "27017"
+        },
+        "login": {
+            "provider": "disabled"
         }
     }
 }

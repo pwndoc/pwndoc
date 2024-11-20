@@ -17,6 +17,13 @@ services:
     build: ./backend
     image: yeln4ts/pwndoc:backend
     container_name: pwndoc-backend
+    secrets:
+      - clientID
+      - clientSecret
+      - attachmentKey
+      - attachmentIV
+      - key
+      - salt
     volumes:
       - ./backend/report-templates:/app/report-templates
       - ./backend/src/config:/app/src/config
@@ -46,3 +53,17 @@ volumes:
 networks:
   backend:
       driver: bridge
+
+secrets:
+  clientID:
+    file: resources/clientid.txt
+  clientSecret:
+    file: resources/clientsecret.txt
+  attachmentKey:
+    file: resources/attachmentKey
+  attachmentIV:
+    file: resources/attachmentIV
+  key:
+    file: resources/key
+  salt:
+    file: resources/salt

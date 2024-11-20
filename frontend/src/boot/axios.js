@@ -1,6 +1,7 @@
 import axios from 'axios'
 import User from '@/services/user'
 import Router from '../router'
+import {isSSO} from '../config/config.json'
 
 const axiosInstance = axios.create({
   baseURL: `${window.location.origin}/api`
@@ -8,6 +9,19 @@ const axiosInstance = axios.create({
 
 var refreshPending = false
 var requestsQueue = []
+
+var route1 = "";
+var route2 = "";
+
+
+if (isSSO) {
+  route1 = '/sso';
+  route2 = '/sso';
+}
+else {
+  route1 = '/users/refreshtoken'
+  route2 = '/login'
+}
 
 // Redirect to login if response is 401 (Unauthenticated)
 axiosInstance.interceptors.response.use(
@@ -51,13 +65,13 @@ axiosInstance.interceptors.response.use(
     if (error.response.status === 401) {
       if (!refreshPending) {
         refreshPending = true
-        axiosInstance.get('/users/refreshtoken')
+        axiosInstance.get(route1)
         .then(() => {
           requestsQueue.forEach(e => e())
           requestsQueue = []
         })
         .catch(err => {
-          Router.push('/login')          
+          Router.push(route2)          
         })
         .finally(() => {
           refreshPending = false

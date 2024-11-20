@@ -1,4 +1,4 @@
-import { Notify, Dialog } from 'quasar';
+import { Notify, Dialog, QSpinnerGears} from 'quasar';
 
 import Breadcrumb from 'components/breadcrumb';
 import TextareaArray from 'components/textarea-array'
@@ -12,6 +12,7 @@ import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
+import AttachmentService from '@/services/attachment';
 
 import { $t } from '@/boot/i18n'
 
@@ -42,7 +43,8 @@ export default {
                 language: "",
                 template: "",
                 customFields: [],
-                approvals: []
+                approvals: [],
+                attachments: [],
             },
             auditOrig: {},
             // List of existing clients
@@ -63,6 +65,8 @@ export default {
             languages: [],
             // List of existing audit types
             auditTypes: [],
+            // List of Attachments
+            attachments: [],
             // List of CustomFields
             customFields: [],
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
@@ -136,7 +140,7 @@ export default {
             DataService.getCustomFields()
             .then((data) => {
                 this.customFields = data.data.datas
-                return AuditService.getAuditGeneral(this.auditId)
+                return AuditService.getAudit(this.auditId)
             })
             .then((data) => {
                 this.audit = data.data.datas;
@@ -174,6 +178,7 @@ export default {
                         textColor:'white',
                         position: 'top-right'
                     })
+                    this.getAuditGeneral()
                 })
                 .catch((err) => {
                     Notify.create({
@@ -358,6 +363,113 @@ export default {
                 this.$refs.dateReportField.hasError ||
                 this.$refs.scopeField.hasError
             )
+        },
+
+        updateFiles (newFiles) {
+            this.files = newFiles
+            const promises = this.files.map((file) => {
+                return new Promise((resolve, reject) => {
+                    const downloadNotif = Notify.create({
+                        spinner: QSpinnerGears,
+                        message: 'Uploading '+file.name ,
+                        color: "blue",
+                        timeout: 0,
+                        group: false
+                    })
+                    let attachment = {}
+                    attachment.name = file.name 
+                    let fileReader = new FileReader();
+                    fileReader.readAsDataURL(file);
+                    fileReader.onloadend = (e) => {
+                        attachment.value = fileReader.result.split(',')[1]
+                        resolve({attachment, downloadNotif})
+                    };
+                    fileReader.onerror = (e) => {
+                        reject(e)
+                    };
+                })
+            })
+            Promise.all(promises).then((results) => {
+                results.forEach(({ attachment, downloadNotif }) => {
+                    this.audit.attachments.push(attachment)
+                    downloadNotif({
+                        icon: 'done',
+                        spinner: false,
+                        message: attachment.name + ' successfully uploaded',
+                        color: 'green',
+                        timeout: 3000
+                    })
+                })
+                this.updateAuditGeneral()
+            }).catch((err) => {
+                console.log(err)
+            })
+            this.files = null
+        },
+
+        deleteDocument(index){
+            //var removed = this.finding.externalAttachement.splice(index,1)
+            AuditService.getAudit(this.auditId)
+            .then(data => {
+                AttachmentService.deleteAttachment(this.auditId, data.data.datas.attachments[index]._id)
+                .then((data) => {
+                 this.audit.attachments.splice(index,1)
+                     this.updateAuditGeneral()
+                     this.printPositiveMessage('Attachment successfully deleted')
+                 })
+                 .catch((err) => {
+                     console.log(err)
+                 })
+            })
+            .catch(err => {
+                console.log(err)
+                this.printNegativeMessage(err.response.data.datas)
+            })
+           
+
+        },
+        downloadDocument(index) {
+            AuditService.getAudit(this.auditId)
+            .then(async data => {  
+                AttachmentService.getAttachment(this.auditId, data.data.datas.attachments[index]._id)
+                .then((data) => {
+                    var file = data.data.datas
+                    var blob = new Blob([Buffer.from(file.value, 'base64')], {type: "application/octet-stream"});
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = file.name
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    this.printPositiveMessage('Attachment successfully downloaded')
+                })
+                .catch(err =>{
+                    this.printNegativeMessage(err.response.data.datas)
+                })
+            })
+            .catch(err =>{
+                this.printNegativeMessage(err.response.data.datas)
+            })
+        },
+        printPositiveMessage: function (message) {
+            Notify.create({
+                message: $t(message),
+                type: "positive",
+                position: 'top-right',
+                iconSize: "64px",
+                iconColor: "white",
+                timeout: "5000"
+            })
+        },
+        printNegativeMessage: function (message) {
+            Notify.create({
+                message: $t(message),
+                type: "negative",
+                position: 'top-right',
+                iconSize: "100px",
+                iconColor: "white",
+                timeout: "7000"
+            })
         }
     }
 }

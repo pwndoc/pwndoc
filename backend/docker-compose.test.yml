@@ -16,10 +16,18 @@ services:
       context: .
       dockerfile:  Dockerfile.test
     container_name: pwndoc-backend-test
+    secrets:
+      - clientID
+      - clientSecret
+      - attachmentKey
+      - attachmentIV
+      - key
+      - salt
     volumes:
       - ./tests:/app/tests
       - ./src:/app/src
       - ./jest.config.js:/app/jest.config.js
+      - ./resources/:/app/resources
     environment:
       API_URL: https://localhost:4242
     depends_on:
@@ -28,3 +36,17 @@ services:
 
 volumes:
   mongo-data-test:
+
+secrets:
+  clientID:
+    file: resources/clientid.txt
+  clientSecret:
+    file: resources/clientsecret.txt
+  attachmentKey:
+    file: resources/attachmentKey
+  attachmentIV:
+    file: resources/attachmentIV
+  key:
+    file: resources/key
+  salt:
+    file: resources/salt

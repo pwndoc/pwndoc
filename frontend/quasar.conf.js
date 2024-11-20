@@ -87,6 +87,7 @@ module.exports = function (ctx) {
         'QEditor',
         'QExpansionItem',
         'QField',
+        'QFile',
         'QFooter',
         'QHeader',
         'QIcon',

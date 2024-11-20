@@ -20,6 +20,9 @@ services:
       dockerfile:  Dockerfile.dev
     image: yeln4ts/pwndoc:backend-dev
     container_name: pwndoc-backend-dev
+    secrets:
+      - clientID
+      - clientSecret
     volumes:
       - ./src:/app/src
       - ./ssl:/app/ssl
@@ -40,3 +43,9 @@ volumes:
 networks:
   backend:
     driver: bridge
+
+secrets:
+  clientID:
+    file: resources/clientid.txt
+  clientSecret:
+    file: resources/clientsecret.txt

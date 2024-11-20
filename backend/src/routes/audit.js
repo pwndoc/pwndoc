@@ -235,6 +235,7 @@ module.exports = function(app, io) {
         if (req.body.template) update.template = req.body.template;
         if (req.body.customFields) update.customFields = req.body.customFields;
         if (settings.reviews.enabled && settings.reviews.private.removeApprovalsUponUpdate) update.approvals = [];
+        if (req.body.attachments) update.attachments = req.body.attachments;
 
         Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
@@ -349,6 +350,8 @@ module.exports = function(app, io) {
         if (req.body.customFields) finding.customFields = req.body.customFields
         if (req.body.retestDescription) finding.retestDescription = req.body.retestDescription
         if (req.body.retestStatus) finding.retestStatus = req.body.retestStatus
+        if (req.body.attachments) finding.attachments = req.body.attachments
+
 
         if (settings.reviews.enabled && settings.reviews.private.removeApprovalsUponUpdate) {
             Audit.updateGeneral(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, { approvals: [] });

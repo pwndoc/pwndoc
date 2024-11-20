@@ -9,6 +9,7 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 - [Vulnerabilities](vulnerabilities.md)
 - [Audits](audits.md)
 - [Templating](docxtemplate.md)
+- [SSO](sso.md)
 
 
 # Features
@@ -23,3 +24,6 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 - Multi-User reporting
 - Docx Report Generation
 - Docx Template customization
+- Single Sign On (SSO)
+- Documents upload
+- Database encryption

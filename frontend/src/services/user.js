@@ -50,7 +50,7 @@ export default {
         Vue.prototype.$axios.delete('users/refreshtoken')
         .then(() => {
             User.clear()
-            Router.push('/login');
+            document.location.href = 'https://exemple.com/idp/startSLO.ping'
         })
         .catch(err => {
             console.log(err)

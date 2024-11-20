@@ -10,6 +10,10 @@ var _ = require('lodash')
 var QRCode = require('qrcode');
 var OTPAuth = require('otpauth');
 
+var env = process.env.NODE_ENV || 'dev'
+var config = require('../config/config.json');
+const isSSO = config[env]?.login?.provider != "disabled";
+
 var UserSchema = new Schema({
     username:       {type: String, unique: true, required: true},
     password:       {type: String, required: true},
@@ -362,46 +366,123 @@ UserSchema.statics.cancelTotp = function (token, username){
     })
 }
 
-/*
-*** Methods ***
-*/
+if (isSSO) {
+    const { query } = require('express');
+    const fs = require('fs');
 
-// Authenticate user with username and password, return JWT token
-UserSchema.methods.getToken = function (userAgent) {
-    return new Promise((resolve, reject) => {
-        var user = this;
-        var query = User.findOne({username: user.username});
-        query.exec()
-        .then(function(row) {
-            if (row && row.enabled === false) 
-                throw({fn: 'Unauthorized', message: 'Authentication Failed.'});
+    //Read ClientID and secrets
+    const clientID = fs.readFileSync('/run/secrets/clientID').toString().replace(/\n$/, '');
+    const clientSecret = fs.readFileSync('/run/secrets/clientSecret').toString().replace(/\n$/, '');
 
-            if (row && bcrypt.compareSync(user.password, row.password)) {
-                if (row.totpEnabled && user.totpToken)
-                    checkTotpToken(user.totpToken, row.totpSecret)
-                else if (row.totpEnabled)
-                    throw({fn: 'BadParameters', message: 'Missing TOTP token'})
-                var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
-                return User.updateRefreshToken(refreshToken, userAgent)
-            }
-            else {
-                if (!row) {
-                    // We compare two random strings to generate delay
-                    var randomHash = "$2b$10$" + [...Array(53)].map(() => Math.random().toString(36)[2]).join('');
-                    bcrypt.compareSync(user.password, randomHash);
+    //Passport
+    const passport = require('passport');
+    const OpenIDConnectStrategy = require('passport-openidconnect');
+
+    //initialize passport
+    passport.serializeUser(function (user, done) {
+        done(null, JSON.stringify(user));
+    });
+
+    passport.deserializeUser(function (user, done) {
+        //User.findOne(email, function (err, user) {
+        done(null, JSON.stringify(user));
+        //});
+    });
+
+
+    // Passport lib to register and be redirected on SSO login page
+    passport.use(new OpenIDConnectStrategy({
+        issuer: config[env].login.issuer,
+        authorizationURL: config[env].login.authorizationURL,
+        tokenURL: config[env].login.tokenURL,
+        userInfoURL: config[env].login.userInfoURL,
+        clientID: clientID,
+        clientSecret: clientSecret,
+        callbackURL: config[env].login.callbackURL,
+        scope: config[env].login.scope,
+    },
+
+        // When authenticated with SSO do :
+        function verify(url, idEmail, timestamp, id_token, access_token, _, profile, cb) {
+            //Get the username of SSO user which encapsulated in the accessToken
+            var tok = jwt.decode(access_token);
+	        if (tok) {
+            	const filter = {username: tok.SamAccountName};
+            	const update = {username: tok.SamAccountName, email: tok.Email, firstname: tok.First_Name, lastname: tok.Last_Name};
+            	//Check if there is an account on pwndoc database with the username as the SSO account. If not, creat it on pwnodc database
+            	var query = User.findOneAndUpdate(filter, update, {upsert: true});
+            	query.exec()
+                .then(function(user) {
+                    cb(null, profile)
+                });
+ 	        }
+	        else {
+		        cb(null, false, {message: 'Unauthorized.'});
+	        } 
+        }
+    ));
+
+    // Authenticate user on pwndoc with SSO username, return JWT token
+    UserSchema.methods.getToken = function(user, userAgent) {
+        return new Promise((resolve, reject) => {
+            var jwtdecomposed = jwt.decode(JSON.parse(user).access_token);
+            var query = User.findOne({username: jwtdecomposed.SamAccountName});
+            query.exec()
+                .then(function(row) {
+                    var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
+                    return User.updateRefreshToken(refreshToken, userAgent)
+                })
+                .then(row => {
+                    resolve({token: row.token, refreshToken: row.refreshToken})
+                })
+                .catch(function(err) {
+                    reject(err);
+                })
+        })
+    }
+}
+else {
+    /*
+   *** Methods ***
+   */
+
+    // Authenticate user with username and password, return JWT token
+    UserSchema.methods.getToken = function (userAgent) {
+        return new Promise((resolve, reject) => {
+            var user = this;
+            var query = User.findOne({username: user.username});
+            query.exec()
+            .then(function(row) {
+                if (row && row.enabled === false) 
+                    throw({fn: 'Unauthorized', message: 'Authentication Failed.'});
+    
+                if (row && bcrypt.compareSync(user.password, row.password)) {
+                    if (row.totpEnabled && user.totpToken)
+                        checkTotpToken(user.totpToken, row.totpSecret)
+                    else if (row.totpEnabled)
+                        throw({fn: 'BadParameters', message: 'Missing TOTP token'})
+                    var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
+                    return User.updateRefreshToken(refreshToken, userAgent)
                 }
-
-                throw({fn: 'Unauthorized', message: 'Authentication Failed.'});
-            }
+                else {
+                    if (!row) {
+                        // We compare two random strings to generate delay
+                        var randomHash = "$2b$10$" + [...Array(53)].map(() => Math.random().toString(36)[2]).join('');
+                        bcrypt.compareSync(user.password, randomHash);
+                    }
+    
+                    throw({fn: 'Unauthorized', message: 'Authentication Failed.'});
+                }
+            })
+            .then(row => {
+                resolve({token: row.token, refreshToken: row.refreshToken})
+            })
+            .catch(function(err) {
+                reject(err);
+            })
         })
-        .then(row => {
-            resolve({token: row.token, refreshToken: row.refreshToken})
-        })
-        .catch(function(err) {
-            reject(err);
-        })
-    })
+    }
 }
 
 var User = mongoose.model('User', UserSchema);
-module.exports = User;
+module.exports = { User, isSSO };

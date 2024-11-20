@@ -251,6 +251,38 @@ buttons
                 :rules="($settings.report.public.requiredFields.scope) ? [val => !!val || $t('fieldIsRequired')] : ['']"
                 :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
             </q-card-section>
+            <q-card-section>
+                <q-file label="Upload additional documents" outlined v-model="files" clearable multiple append @input="updateFiles">
+                    <template v-slot:file="{ index, file }">
+                        <q-chip
+                        class="full-width q-my-xs"
+                        square
+                        >
+                      <q-icon name="attach_file" />
+                      <div class="ellipsis relative-position">
+                        {{ file.name }}
+                      </div>
+                      <q-tooltip>
+                        {{ file.name }}
+                      </q-tooltip>
+                    </q-chip>
+                    </template>
+                </q-file>
+            </q-card-section>
+            <q-card-section>
+                <div class="col-md-12" v-for="(attach, index) in audit.attachments">   
+                   {{attach.filename}}
+                    <q-tooltip anchor="top right" self="center right" :delay="500" content-class="text-bold large-tooltip"> {{attach}}</q-tooltip>
+                    <q-btn flat color="info" @click="downloadDocument(index)">
+                        <q-tooltip self="center right" :delay="500" content-class="text-bold">{{$t('tooltip.downloadAttachement')}}</q-tooltip> 
+                            <i class="fa fa-download fa-lg"></i>
+                    </q-btn>
+                    <q-btn flat color="info" @click="deleteDocument(index)" size="25px">
+                        <q-tooltip self="center right" :delay="500" content-class="text-bold"> {{$t('tooltip.deleteAttachement')}}</q-tooltip> 
+                            <i class="material-icons">delete</i>
+                    </q-btn> 
+                </div>
+            </q-card-section>   
             <q-expansion-item 
             :label="$t('customFields')"
             v-if="audit.customFields && audit.customFields.length > 0"

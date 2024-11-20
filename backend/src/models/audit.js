@@ -1,4 +1,8 @@
 var mongoose = require('mongoose');//.set('debug', true);
+const mongooseFieldEncryption = require("mongoose-field-encryption").fieldEncryption;
+const fs = require('fs');
+var key = fs.readFileSync('/run/secrets/key', 'utf8').trim()
+var salt = fs.readFileSync('/run/secrets/salt', 'utf8').trim()
 const CVSS31 = require('../lib/cvsscalc31');
 var Schema = mongoose.Schema;
 
@@ -32,7 +36,8 @@ var Finding = {
     category:               String,
     customFields:           [customField],
     retestStatus:           {type: String, enum: ['ok', 'ko', 'unknown', 'partial']},
-    retestDescription:      String
+    retestDescription:      String,
+    attachments:            [{type: Schema.Types.ObjectId, ref: 'Attachment'}]
 }
 
 var Service = {
@@ -96,8 +101,18 @@ var AuditSchema = new Schema({
     approvals:          [{type: Schema.Types.ObjectId, ref: 'User'}],
     type:               {type: String, enum: ['default', 'multi', 'retest'], default: 'default'},
     parentId:           {type: Schema.Types.ObjectId, ref: 'Audit'},
-    comments:           [Comment]
+    comments:           [Comment],
+    attachments:        [{type: Schema.Types.ObjectId, ref: 'Attachment'}]
 }, {timestamps: true});
+
+//Database encryption for Finding fields
+AuditSchema.plugin(mongooseFieldEncryption, { 
+    fields: ["findings"], 
+    secret: key,
+    saltGenerator: function (secret) {
+        return salt; 
+    },
+});
 
 /*
 *** Statics ***
@@ -149,10 +164,16 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
         query.populate('comments.author', 'username firstname lastname')
         query.populate('comments.replies.author', 'username firstname lastname')
         query.exec()
-        .then((row) => {
+        .then(async(row) => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
-            resolve(row)
+            else{
+                var Attachment = mongoose.model('Attachment')
+                let attachments =  await Attachment.getMetadata(row.attachments);
+                let auditWithAttachments = row.toObject();
+                auditWithAttachments.attachments = attachments;
+                resolve(auditWithAttachments)
+            }
         })
         .catch((err) => {
             if (err.name === "CastError")
@@ -461,6 +482,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
         query.populate('collaborators', 'username firstname lastname')
         query.populate('reviewers', 'username firstname lastname')
         query.populate('company')
+        query.populate('attachments', 'name')
         query.select('name auditType date date_start date_end client collaborators language scope.name template customFields')
         query.lean().exec()
         .then((row) => {
@@ -490,6 +512,30 @@ AuditSchema.statics.updateGeneral = (isAdmin, auditId, userId, update) => {
                 console.log(error)
                 delete update.company
             }
+        }
+        if(update.attachments) {
+            var Attachment = mongoose.model("Attachment");
+            var newAttachments = [];
+            for (const attachment of update.attachments) {
+                if(!attachment._id) {
+                    try {
+                        const file = await Attachment.create(attachment);
+                        if (file) {
+                            newAttachments.push(file);
+                        } else {
+                            console.error('Failed to create attachment: ', attachment);
+                            return reject('Failed to create attachment')
+                        }
+                    } catch (err) {
+                        console.error("Failed to create attachment", err);
+                        return reject('Failed to create attachment')
+                    }
+
+                } else {
+                    newAttachments.push(attachment);
+                }
+            }
+            update.attachments = newAttachments;
         }
         var query = Audit.findByIdAndUpdate(auditId, update)
         if (!isAdmin)
@@ -552,30 +598,35 @@ AuditSchema.statics.createFinding = (isAdmin, auditId, userId, finding) => {
         Audit.getLastFindingIdentifier(auditId)
         .then(identifier => {
             finding.identifier = ++identifier
-            
-            var query = Audit.findByIdAndUpdate(auditId, {$push: {findings: finding}})
-            if (!isAdmin)
-                query.or([{creator: userId}, {collaborators: userId}])
-            return query.exec()
-        .then(row => {
-            if (!row)
-                throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
-            else {
-                var sortOption = row.sortFindings.find(e => e.category === (finding.category || 'No Category'))
-                if ((sortOption && sortOption.sortAuto) || !sortOption) // if sort is set to automatic or undefined then we sort (default sort will be applied to undefined sortOption)
-                    return Audit.updateSortFindings(isAdmin, auditId, userId, null)
+            var query = Audit.findById(auditId)
+            query.exec()
+            .then((row) => {
+                if (!row)
+                    throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+                row.findings.push(finding)
+                if (!isAdmin)
+                    query.or([{creator: userId}, {collaborators: userId}])
+                return row.save()
+            })
+            .then(row => {
+                if (!row)
+                    throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+                else {
+                    var sortOption = row.sortFindings.find(e => e.category === (finding.category ))
+                    if ((sortOption && sortOption.sortAuto) || !sortOption) // if sort is set to automatic or undefined then we sort (default sort will be applied to undefined sortOption)
+                        return Audit.updateSortFindings(isAdmin, auditId, userId, null)
                 else // if manual sorting then we do not sort
                     resolve("Audit Finding created succesfully")
-            }
-        })
-        .then(() => {
-            resolve("Audit Finding created successfully")
-        })
-        .catch((err) => {
-            reject(err)
+                }
+            })
+            .then(() => {
+                resolve("Audit Finding created successfully")
+            })
+            .catch((err) => {
+                return reject(err)
+            })
         })
     })
-})
 }
 
 AuditSchema.statics.getLastFindingIdentifier = (auditId) => {
@@ -604,20 +655,26 @@ AuditSchema.statics.getFinding = (isAdmin, auditId, userId, findingId) => {
         var query = Audit.findById(auditId)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}, {reviewers: userId}])
-        query.select('findings')
         query.exec()
-        .then((row) => {
+        .then(async (row) => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             var finding = row.findings.id(findingId)
+            if (!finding) return reject("Invalid finding ID");
+
+            var Attachment = mongoose.model('Attachment')
+            let attachments =  await Attachment.getMetadata(finding.attachments);
+            finding = finding.toObject();
+            finding.attachments = attachments;
             if (finding === null) 
                 throw({fn: 'NotFound', message: 'Finding not found'})
-            else 
+            else {
                 resolve(finding)
+            }
         })
         .catch((err) => {
-            reject(err)
+            return reject(err)
         })
     })
 }
@@ -631,21 +688,38 @@ AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFin
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
         query.exec()
-        .then((row) => {
+        .then(async (row) => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
 
             var finding = row.findings.id(findingId)
+            if (newFinding.attachments) {
+                var Attachment = mongoose.model("Attachment");
+                for (const attachment of newFinding.attachments) {
+                    if(!attachment._id) {
+                        try {
+                            const file = await Attachment.create(attachment);
+                            if (file) {
+                                finding.attachments.push(file);
+                            } else {
+                                console.error('Failed to create attachment:', attachment);
+                            }
+                        } catch (err) {
+                            console.error("Error", err);
+                        }
+                    }
+                }
+            }
             if (finding === null)
                 reject({fn: 'NotFound', message: 'Finding not found'})         
             else {
                 var sortOption = row.sortFindings.find(e => e.category === (newFinding.category || 'No Category'))
                 if (sortOption && !sortOption.sortAuto)
                     sortAuto = false
-
                 Object.keys(newFinding).forEach((key) => {
                     finding[key] = newFinding[key]
                 })
+                row.markModified("findings")
                 return row.save({ validateBeforeSave: false }) // Disable schema validation since scope changed from Array to String
             } 
         })

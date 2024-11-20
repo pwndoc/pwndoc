@@ -1,11 +1,11 @@
-import { Notify, Dialog } from 'quasar';
+import { Notify, Dialog, QSpinnerGears } from 'quasar';
 
 import BasicEditor from 'components/editor';
 import Breadcrumb from 'components/breadcrumb';
 import CvssCalculator from 'components/cvsscalculator'
 import TextareaArray from 'components/textarea-array'
 import CustomFields from 'components/custom-fields'
-
+import AttachmentService from '@/services/attachment'
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import UserService from '@/services/user';
@@ -42,7 +42,8 @@ export default {
                 day: '2-digit',
                 hour: 'numeric',
                 minute: '2-digit',
-            }
+            },
+            attachments: []
         }
     },
 
@@ -228,6 +229,7 @@ export default {
                         textColor:'white',
                         position: 'top-right'
                     })
+                    this.getFinding()
                 })
                 .catch((err) => {
                     Notify.create({
@@ -643,6 +645,110 @@ export default {
             }
 
             return hasErrors
+        },
+
+        updateFiles(newFiles) {
+            this.files = newFiles;
+            const promises = this.files.map((file) => {
+                return new Promise((resolve, reject) => {
+                    const downloadNotif = Notify.create({
+                        spinner: QSpinnerGears,
+                        message: 'Uploading ' + file.name,
+                        color: "blue",
+                        timeout: 0,
+                        group: false
+                    });
+                    let attachment = {};
+                    attachment.name = file.name;
+                    let fileReader = new FileReader();
+                    fileReader.readAsDataURL(file);
+                    fileReader.onloadend = (e) => {
+                        attachment.value = fileReader.result.split(',')[1];
+                        resolve({ attachment, downloadNotif });
+                    };
+                    fileReader.onerror = (e) => {
+                        reject(e);
+                    };
+                });
+            });
+        
+            Promise.all(promises).then((results) => {
+                results.forEach(({ attachment, downloadNotif }) => {
+                    this.finding.attachments.push(attachment);
+                    downloadNotif({
+                        icon: 'done',
+                        spinner: false,
+                        message: attachment.name + ' successfully uploaded',
+                        color: 'green',
+                        timeout: 3000
+                    });
+                });
+                this.updateFinding();
+            }).catch((error) => {
+                console.error('Error during file upload:', error);
+            });
+        
+            this.files = null;
+        },
+        deleteAttachement(index){
+            AttachmentService.deleteAttachment(this.auditId, this.finding.attachments[index]._id)
+            .then(msg => {
+                this.finding.attachments.splice(index, 1)
+                this.updateFinding()
+                this.printPositiveMessage("Attachment succesfully deleted")
+            })
+            
+        },
+        downloadAttachement (index) {
+            const downloadNotif = Notify.create({
+                spinner: QSpinnerGears,
+                message: 'Generating the Report',
+                color: "blue",
+                timeout: 0,
+                group: false
+            })
+            AttachmentService.getAttachment(this.auditId, this.finding.attachments[index]._id)
+            .then((data) => {
+                var file = data.data.datas
+                var blob = new Blob([Buffer.from(file.value, 'base64')], {type: "application/octet-stream"});
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = file.name
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                downloadNotif({
+                    icon: 'done',
+                    spinner: false,
+                    message: 'Attachment successfully downloaded',
+                    color: 'green',
+                    timeout: 2500
+                })
+            })
+            .catch((err) => {
+                console.log(err);
+                this.printNegativeMessage('Error occured')
+            })
+        },    
+        printPositiveMessage: function (message) {
+            Notify.create({
+                message: $t(message),
+                type: "positive",
+                position: 'top-right',
+                iconSize: "64px",
+                iconColor: "white",
+                timeout: "1000"
+            })
+        },
+        printNegativeMessage: function (message) {
+            Notify.create({
+                message: $t(message),
+                type: "negative",
+                position: 'top-right',
+                iconSize: "100px",
+                iconColor: "white",
+                timeout: "5000"
+            })
         }
     }
 }

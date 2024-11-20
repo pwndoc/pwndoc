@@ -1,4 +1,9 @@
 import UserService from '@/services/user'
+import sso from '../config/config.json'
+
+var isSSO = sso.isSSO;
+
+const rootlogin = isSSO ? '/api/sso' : '/login'
 
 export default [
   {path: '/', component: () => import('layouts/home'), meta: {breadcrumb: 'Home'}, children: [
@@ -31,5 +36,5 @@ export default [
     {path: '404', name: '404', component: () => import('pages/404')}
   ]},
   {path: '/login', component: () => import('pages/login')},
-  {path: '*', redirect: '/'}
+  {path: '*', redirect: rootlogin}
 ]

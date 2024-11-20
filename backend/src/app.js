@@ -24,6 +24,9 @@ var io = require('socket.io')(https, {
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
 var utils = require('./lib/utils');
+var passport = require('passport');
+var session = require('express-session');
+var random = require('crypto').randomBytes(32).toString('hex');
 
 // Get configuration
 var env = process.env.NODE_ENV || 'dev';
@@ -55,6 +58,20 @@ require('./models/custom-section');
 require('./models/custom-field');
 require('./models/image');
 require('./models/settings');
+require('./models/attachment');
+
+var isSSO = require('./models/user').isSSO;
+if (isSSO) {
+  // Authentication configuration
+  app.use(session({
+    resave: false,
+    saveUninitialized: true,
+    secret: random
+  }));
+  // Middleware for SSO
+  app.use(passport.initialize());
+  app.use(passport.session());
+}
 
 // Socket IO configuration
 io.on('connection', (socket) => {
@@ -111,7 +128,7 @@ app.use(function(req, res, next) {
 
 app.use(bodyParser.json({limit: '100mb'}));
 app.use(bodyParser.urlencoded({
-  limit: '10mb',
+  limit: '100mb',
   extended: false // do not need to take care about images, videos -> false: only strings
 }));
 
@@ -128,6 +145,8 @@ require('./routes/vulnerability')(app);
 require('./routes/data')(app);
 require('./routes/image')(app);
 require('./routes/settings')(app);
+require('./routes/sso')(app);
+require('./routes/attachment')(app);
 
 app.get("*", function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});

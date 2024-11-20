@@ -104,3 +104,36 @@ To restore :
 - Stop containers
 - Replace the current `backend/mongo-data` folder with the backed up one
 - Start containers
+
+# Secrets generation for database encryption
+
+Prior the first build, you should set the Salt and the Key used for database encryption. It encrypts only Findings inside Audits. 
+## Finding
+
+To generate the 32 chars key :
+
+```
+$ openssl rand -hex 32 > resources/key
+```
+
+To generate the 16 digits salt :
+
+```
+$ tr -dc '0-9' < /dev/urandom | fold -w 16 | head -n 1 > resources/salt
+```
+
+### Attachment
+
+Attachments Key and IV are base64 encoded.
+
+To generate the attachment Key :
+
+```
+$ openssl rand -base64 32 > resources/attachmentKey
+```
+
+To generate the attachment IV :
+
+```
+$ openssl rand -base64 16 > resources/attachmentIV
+```
