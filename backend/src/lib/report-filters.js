@@ -46,9 +46,17 @@ expressions.filters.bookmarkLink = function(input, identifier) {
 // - Identifiers longer than 40 chars are truncated (MS-Word limitation).
 expressions.filters.bookmarkRef = function(input) {
     return '<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">'
-        + ' REF ' + input.replace(/[^a-zA-Z0-9_]/g, '_').substring(0,40) + ' \\h </w:instrText></w:r>'
-        + '<w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>'
-        + input + '</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
+         + ' REF ' + input.replace(/[^a-zA-Z0-9_]/g, '_').substring(0,40) + ' \\h </w:instrText></w:r>'
+         + '<w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>'
+         + input + '</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
+}
+
+expressions.filters.bookmarkRefCustom = function(input) {
+    // return '<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve">'
+    //     + ' REF ' + input.replace(/[^a-zA-Z0-9_]/g, '_').substring(0,40) + ' \\h </w:instrText></w:r>'
+    //     + '<w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>'
+    //     + input + '</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
+    return '<w:r><w:t>' + input + '</w:t></w:r>';
 }
 
 // Capitalizes input first letter: {input | capfirst}
