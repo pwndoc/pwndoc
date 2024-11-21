@@ -8,8 +8,21 @@ export default {
 
     DOMPurify.setConfig({
       // colwidth is required for tiptap table extension; resizing
-      ALLOWED_ATTR: ['colwidth']
+      ALLOWED_ATTR: ['colwidth', 'alt', 'label']
     });
+
+    // Hook to enable image sources not having a valid URL.
+    DOMPurify.addHook('uponSanitizeAttribute', function (node, data) {
+      // Ensure the tag is an <img> and the attribute being sanitized is `src`
+      if (node.tagName === 'IMG' && data.attrName === 'src') {
+          // Check if the `src` consists of exactly 24 hexadecimal characters
+          const pattern = /^[a-fA-F0-9]{24}$/;
+          if (pattern.test(data.attrValue)) {
+            data.forceKeepAttr = true; // Allow this `src` attribute
+          }
+        }
+    });
+
     const result = DOMPurify.sanitize(html);
     return result
   },
