@@ -157,7 +157,7 @@
                         <q-icon name="redo" />
                     </q-btn>
 
-                    <<<<<<< Updated upstream=======<q-separator vertical class="q-mx-sm"
+                    <q-separator vertical class="q-mx-sm"
                         v-if="toolbar.indexOf('table') !== -1" />
 
                     <q-btn flat color="primary" dense>
@@ -257,7 +257,6 @@
                         <q-tooltip :delay="500" content-class="text-bold">Footnote</q-tooltip>
                         <q-icon name="superscript" />
                     </q-btn>
-                    >>>>>>> Stashed changes
                 </template>
                 <div v-if="diff !== undefined && (diff || value) && value !== diff">
                     <q-btn flat size="sm" dense :class="{ 'is-active': toggleDiff }" label="toggle diff"
