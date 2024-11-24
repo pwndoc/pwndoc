@@ -7,8 +7,11 @@ export default {
     if(typeof(html) !== "string")  return "";
 
     DOMPurify.setConfig({
-      // colwidth is required for tiptap table extension; resizing
-      ALLOWED_ATTR: ['colwidth', 'alt', 'label']
+      ALLOWED_ATTR: [
+        'colwidth', // colwidth is required for tiptap table extension; resizing
+        'alt',      // alt for images
+        'label',    // label for legend
+        'title']    // title for footnote
     });
 
     // Hook to enable image sources not having a valid URL.
