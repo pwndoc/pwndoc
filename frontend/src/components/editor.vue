@@ -349,7 +349,6 @@ export default {
                         notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']
                     }),
                     CodeBlock,
-                    }),
                     Table.configure({
                         resizable: true,
                     }),
