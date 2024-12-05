@@ -1,6 +1,7 @@
 var docx = require("docx")
 var xml = require("xml")
 var htmlparser = require("htmlparser2")
+const convertHTMLTableWord = require('./htmltable2ooxml');
 
 function html2ooxml(html, style = '') {
     if (html === '')
@@ -14,10 +15,26 @@ function html2ooxml(html, style = '') {
     var cParagraphProperties = {}
     var list_state = []
     var inCodeBlock = false
+    let capturing = false; // Track when inside a table
+    let tableHTML = '';    // Accumulate the HTML content
     var parser = new htmlparser.Parser(
     {
         onopentag(tag, attribs) {
-            if (tag === "h1") {
+            if (tag === 'table') {
+                capturing = true;
+                tableHTML += `<${tag}`; // Start capturing the opening tag
+                for (const [key, value] of Object.entries(attribs)) {
+                    tableHTML += ` ${key}="${value}"`; // Include attributes
+                }
+                tableHTML += '>';
+                } else if (capturing) {
+                tableHTML += `<${tag}`; // Capture opening tags inside the table
+                for (const [key, value] of Object.entries(attribs)) {
+                    tableHTML += ` ${key}="${value}"`;
+                }
+                tableHTML += '>';
+            }
+            else if (tag === "h1") {
                 cParagraph = new docx.Paragraph({heading: 'Heading1'})
             }
             else if (tag === "h2") {
@@ -100,14 +117,26 @@ function html2ooxml(html, style = '') {
         },
 
         ontext(text) {
-            if (text && cParagraph) {
+            if (capturing) {
+                tableHTML += text; // Capture text inside the table
+            }
+            else if (text && cParagraph) {
                 cRunProperties.text = text
                 cParagraph.addChildElement(new docx.TextRun(cRunProperties))
             }
         },
 
         onclosetag(tag) {
-            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'img', 'legend'].includes(tag)) {
+            if (capturing) {
+                tableHTML += `</${tag}>`; // Capture closing tags
+                if (tag === 'table') {
+                  capturing = false;
+                  cParagraph = convertHTMLTableWord(tableHTML)
+                  paragraphs.push(cParagraph)                  
+                  tableHTML = ''; // Reset for the next table
+                }
+            }
+            else if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'img', 'legend'].includes(tag)) {
                 paragraphs.push(cParagraph)
                 cParagraph = null
                 cParagraphProperties = {}
@@ -153,7 +182,8 @@ function html2ooxml(html, style = '') {
     parser.end()
 
     var prepXml = doc.documentWrapper.document.body.prepForXml({})
-    var filteredXml = prepXml["w:body"].filter(e => {return Object.keys(e)[0] === "w:p"})
+    var filteredXml = prepXml
+    // var filteredXml = prepXml["w:body"].filter(e => {return Object.keys(e)[0] === "w:p"})
     var dataXml = xml(filteredXml)
     dataXml = dataXml.replace(/w:numId w:val="{2-0}"/g, 'w:numId w:val="2"') // Replace numbering to have correct value
 
