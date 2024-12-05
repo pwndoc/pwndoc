@@ -141,6 +141,24 @@ function parser(tag) {
             }
         }
     }
+
+    if (tag === "$removeLineBreak") {
+        return {
+            get(scope, context) {
+                const totalLength = context.scopePathLength[context.scopePathLength.length - 1];
+                const index = context.scopePathItem[context.scopePathItem.length - 1];
+                const isLast = index === totalLength - 1;
+
+                // Do not add any break if it's not the last item
+                if (!isLast) {
+                    return '';  // No additional line break or paragraph
+                }
+            }
+        };
+    }
+
+
+
     // We use the angularParser as the default fallback
     // If you don't wish to use the angularParser,
     // you can use the default parser as documented here:

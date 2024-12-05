@@ -257,6 +257,7 @@
                         <q-tooltip :delay="500" content-class="text-bold">Footnote</q-tooltip>
                         <q-icon name="superscript" />
                     </q-btn>
+
                 </template>
                 <div v-if="diff !== undefined && (diff || value) && value !== diff">
                     <q-btn flat size="sm" dense :class="{ 'is-active': toggleDiff }" label="toggle diff"
@@ -307,8 +308,8 @@ export default {
         },
         toolbar: {
             type: Array,
-            default: function () {
-                return ['format', 'marks', 'list', 'code', 'image', 'caption']
+            default: function() {
+                return ['format', 'marks', 'list', 'code', 'image', 'caption', 'table']
             }
         },
         noAffix: {
