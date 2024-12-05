@@ -1,112 +1,89 @@
 <template>
-<q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix && !diff" class="bg-grey-4" v-if="editable || diff">
+    <q-card flat bordered class="editor full-width" :class="affixRelativeElement"
+        :style="(editable) ? '' : 'border: 1px dashed lightgrey'">
+        <affix :relative-element-selector="'.' + affixRelativeElement" :enabled="!noAffix && !diff" class="bg-grey-4"
+            v-if="editable || diff">
             <q-toolbar class="editor-toolbar">
                 <template v-if="editable">
                     <div v-if="toolbar.indexOf('format') !== -1">
                         <q-tooltip :delay="500" content-class="text-bold">Text Format (Ctrl+Alt+[0-6])</q-tooltip>
-                        <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel" style="width:42px" class="text-bold">
+                        <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel"
+                            style="width:42px" class="text-bold">
                             <q-list dense>
-                                <q-item 
-                                clickable 
-                                :class="{ 'is-active': editor.isActive('paragraph') }" 
-                                @click="editor.chain().focus().setParagraph().run()">
+                                <q-item clickable :class="{ 'is-active': editor.isActive('paragraph') }"
+                                    @click="editor.chain().focus().setParagraph().run()">
                                     <q-item-section>
                                         <q-icon name="fa fa-paragraph" />
                                     </q-item-section>
                                 </q-item>
-                                <q-item 
-                                clickable 
-                                :class="{ 'is-active': editor.isActive('heading', {level: 1}) }" 
-                                @click="editor.chain().focus().setHeading({level: 1}).run()">
+                                <q-item clickable :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+                                    @click="editor.chain().focus().setHeading({ level: 1 }).run()">
                                     <q-item-section>H1</q-item-section>
                                 </q-item>
-                                <q-item 
-                                clickable
-                                :class="{ 'is-active': editor.isActive('heading', {level: 2}) }"
-                                @click="editor.chain().focus().setHeading({level: 2}).run()">
+                                <q-item clickable :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+                                    @click="editor.chain().focus().setHeading({ level: 2 }).run()">
                                     <q-item-section>H2</q-item-section>
                                 </q-item>
-                                <q-item 
-                                clickable
-                                :class="{ 'is-active': editor.isActive('heading', {level: 3}) }"
-                                @click="editor.chain().focus().setHeading({level: 3}).run()">
+                                <q-item clickable :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+                                    @click="editor.chain().focus().setHeading({ level: 3 }).run()">
                                     <q-item-section>H3</q-item-section>
                                 </q-item>
-                                <q-item 
-                                clickable
-                                :class="{ 'is-active': editor.isActive('heading', {level: 4}) }"
-                                @click="editor.chain().focus().setHeading({level: 4}).run()">
+                                <q-item clickable :class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
+                                    @click="editor.chain().focus().setHeading({ level: 4 }).run()">
                                     <q-item-section>H4</q-item-section>
                                 </q-item>
-                                <q-item 
-                                clickable
-                                :class="{ 'is-active': editor.isActive('heading', {level: 5}) }"
-                                @click="editor.chain().focus().setHeading({level: 5}).run()">
+                                <q-item clickable :class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
+                                    @click="editor.chain().focus().setHeading({ level: 5 }).run()">
                                     <q-item-section>H5</q-item-section>
                                 </q-item>
-                                <q-item 
-                                clickable
-                                :class="{ 'is-active': editor.isActive('heading', {level: 6}) }"
-                                @click="editor.chain().focus().setHeading({level: 6}).run()">
+                                <q-item clickable :class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
+                                    @click="editor.chain().focus().setHeading({ level: 6 }).run()">
                                     <q-item-section>H6</q-item-section>
                                 </q-item>
                             </q-list>
                         </q-btn-dropdown>
                     </div>
                     <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('format') !== -1" />
-                    
+
                     <div v-if="toolbar.indexOf('marks') !== -1">
-                        <q-btn flat size="sm" dense
-                        :class="{ 'is-active': editor.isActive('bold') }"
-                        @click="editor.chain().focus().toggleBold().run()"
-                        >
+                        <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('bold') }"
+                            @click="editor.chain().focus().toggleBold().run()">
                             <q-tooltip :delay="500" content-class="text-bold">Bold (Ctrl+B)</q-tooltip>
                             <q-icon name="format_bold" />
                         </q-btn>
 
-                        <q-btn flat size="sm" dense
-                        :class="{ 'is-active': editor.isActive('italic') }"
-                        @click="editor.chain().focus().toggleItalic().run()"
-                        >
+                        <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('italic') }"
+                            @click="editor.chain().focus().toggleItalic().run()">
                             <q-tooltip :delay="500" content-class="text-bold">Italic (Ctrl+I)</q-tooltip>
                             <q-icon name="format_italic" />
                         </q-btn>
 
-                        <q-btn flat size="sm" dense
-                        :class="{ 'is-active': editor.isActive('underline') }"
-                        @click="editor.chain().focus().toggleUnderline().run()"
-                        >
+                        <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('underline') }"
+                            @click="editor.chain().focus().toggleUnderline().run()">
                             <q-tooltip :delay="500" content-class="text-bold">Underline (Ctrl+U)</q-tooltip>
                             <q-icon name="format_underline" />
                         </q-btn>
 
-                        <q-btn flat size="sm" dense
-                        :class="{ 'is-active': editor.isActive('strike') }"
-                        @click="editor.chain().focus().toggleStrike().run()"
-                        >
+                        <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('strike') }"
+                            @click="editor.chain().focus().toggleStrike().run()">
                             <q-tooltip :delay="500" content-class="text-bold">Strikethrough (Ctrl+Shift+S)</q-tooltip>
                             <q-icon name="format_strikethrough" />
                         </q-btn>
 
                         <q-btn-dropdown flat size="sm" dense split menu-self="top left" menu-anchor="bottom left"
-                        :class="{'is-active-highlight': editor.isActive('highlight')}"
-                        @click="editor.chain().focus().toggleHighlight({color: highlightColor}).run()"
-                        >
+                            :class="{ 'is-active-highlight': editor.isActive('highlight') }"
+                            @click="editor.chain().focus().toggleHighlight({ color: highlightColor }).run()">
                             <template v-slot:label>
                                 <q-tooltip :delay="500" content-class="text-bold">Highlight (Ctrl+Shift+H)</q-tooltip>
-                                <i class="material-symbols-outlined q-icon" :style="{ 'color': highlightColor }">format_ink_highlighter</i>
+                                <i class="material-symbols-outlined q-icon"
+                                    :style="{ 'color': highlightColor }">format_ink_highlighter</i>
                             </template>
 
                             <div class="row q-pa-xs" style="width: 144px; overflow: hidden">
                                 <div class="q-gutter-xs">
-                                    <q-btn 
-                                    v-close-popup
-                                    v-for="color of highlightPalette" :key="color" 
-                                    square
-                                    :style="{'background-color': color, 'width': '24px', 'height': '24px'}"
-                                    @click="highlightColor = color; editor.chain().focus().setHighlight({color: highlightColor}).run()"
-                                    >
+                                    <q-btn v-close-popup v-for="color of highlightPalette" :key="color" square
+                                        :style="{ 'background-color': color, 'width': '24px', 'height': '24px' }"
+                                        @click="highlightColor = color; editor.chain().focus().setHighlight({ color: highlightColor }).run()">
                                     </q-btn>
                                 </div>
                             </div>
@@ -115,18 +92,14 @@
                     <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('marks') !== -1" />
 
                     <div v-if="toolbar.indexOf('list') !== -1">
-                        <q-btn flat size="sm" dense
-                        :class="{ 'is-active': editor.isActive('bulletList') }"
-                        @click="editor.chain().focus().toggleBulletList().run()"
-                        >
+                        <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('bulletList') }"
+                            @click="editor.chain().focus().toggleBulletList().run()">
                             <q-tooltip :delay="500" content-class="text-bold">Bullets (Ctrl+Shift+8)</q-tooltip>
                             <q-icon name="format_list_bulleted" />
                         </q-btn>
 
-                        <q-btn flat size="sm" dense
-                        :class="{ 'is-active': editor.isActive('orderedList') }"
-                        @click="editor.chain().focus().toggleOrderedList().run()"
-                        >
+                        <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('orderedList') }"
+                            @click="editor.chain().focus().toggleOrderedList().run()">
                             <q-tooltip :delay="500" content-class="text-bold">Numbering (Ctrl+Shift+7)</q-tooltip>
                             <q-icon name="format_list_numbered" />
                         </q-btn>
@@ -134,35 +107,26 @@
                     <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('list') !== -1" />
 
                     <div v-if="toolbar.indexOf('code') !== -1">
-                        <q-btn flat size="sm" dense
-                        :class="{ 'is-active': editor.isActive('code') }"
-                        @click="editor.chain().focus().toggleCode().run()"
-                        >
+                        <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('code') }"
+                            @click="editor.chain().focus().toggleCode().run()">
                             <q-tooltip :delay="500" content-class="text-bold">Code (Ctrl+E)</q-tooltip>
                             <q-icon name="code" />
                         </q-btn>
 
-                        <q-btn flat size="sm" dense
-                        :class="{ 'is-active': editor.isActive('codeBlock') }"
-                        @click="editor.chain().focus().toggleCodeBlock().run()"
-                        >
+                        <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('codeBlock') }"
+                            @click="editor.chain().focus().toggleCodeBlock().run()">
                             <q-tooltip :delay="500" content-class="text-bold">Code Block (Ctrl+Alt+C)</q-tooltip>
                             <q-icon name="mdi-console" />
                         </q-btn>
                     </div>
                     <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
-                        
+
                     <div v-if="toolbar.indexOf('image') !== -1">
                         <q-tooltip :delay="500" content-class="text-bold">Insert Image</q-tooltip>
                         <q-btn flat size="sm" dense>
                             <label class="cursor-pointer">
-                                <input
-                                type="file"
-                                accept="image/*"
-                                class="hidden"
-                                @change="importImage($event.target.files)"
-                                :disabled="!editable"
-                                />
+                                <input type="file" accept="image/*" class="hidden"
+                                    @change="importImage($event.target.files)" :disabled="!editable" />
                                 <q-icon name="image" />
                             </label>
                         </q-btn>
@@ -173,138 +137,141 @@
                         <q-tooltip :delay="500" content-class="text-bold">Insert Caption</q-tooltip>
                         <q-btn-dropdown flat size="sm" dense icon="subtitles">
                             <q-list dense>
-                                <q-item v-for="caption of $settings.report.public.captions" :key="caption" clickable v-close-popup @click="editor.chain().focus().setCaption({label: caption, alt: ''}).run()">
-                                    <q-item-section>{{caption}}</q-item-section>
+                                <q-item v-for="caption of $settings.report.public.captions" :key="caption" clickable
+                                    v-close-popup
+                                    @click="editor.chain().focus().setCaption({ label: caption, alt: '' }).run()">
+                                    <q-item-section>{{ caption }}</q-item-section>
                                 </q-item>
                             </q-list>
                         </q-btn-dropdown>
                     </div>
                     <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
 
-                    <q-btn flat size="sm" dense
-                    @click="editor.commands.undo"
-                    >
+                    <q-btn flat size="sm" dense @click="editor.commands.undo">
                         <q-tooltip :delay="500" content-class="text-bold">Undo (Ctrl+Z)</q-tooltip>
                         <q-icon name="undo" />
                     </q-btn>
 
-                    <q-btn flat size="sm" dense
-                    @click="editor.commands.redo"
-                    >
+                    <q-btn flat size="sm" dense @click="editor.commands.redo">
                         <q-tooltip :delay="500" content-class="text-bold">Redo (Ctrl+Shift+Z)</q-tooltip>
                         <q-icon name="redo" />
                     </q-btn>
 
-                    <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('table') !== -1" />
-                    
+                    <q-separator vertical class="q-mx-sm"
+                        v-if="toolbar.indexOf('table') !== -1" />
+
                     <q-btn flat color="primary" dense>
-                    <q-icon name="fa fa-table" />
-                    <q-menu>
-                        <q-list dense>
-                            <q-item clickable @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-plus" />
-                                </q-item-section>
-                                <q-item-section>Insert table</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().addColumnBefore().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-arrow-left" />
-                                </q-item-section>
-                                <q-item-section>Add column before</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().addColumnAfter().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-arrow-right" />
-                                </q-item-section>
-                                <q-item-section>Add column after</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().deleteColumn().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-trash" />
-                                </q-item-section>
-                                <q-item-section>Delete column</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().addRowBefore().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-arrow-up" />
-                                </q-item-section>
-                                <q-item-section>Add row before</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().addRowAfter().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-arrow-down" />
-                                </q-item-section>
-                                <q-item-section>Add row after</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().deleteRow().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-trash" />
-                                </q-item-section>
-                                <q-item-section>Delete row</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().deleteTable().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-minus" />
-                                </q-item-section>
-                                <q-item-section>Delete table</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().mergeCells().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-code-merge" />
-                                </q-item-section>
-                                <q-item-section>Merge cells</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().splitCell().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-arrows-split-up-and-left" />
-                                </q-item-section>
-                                <q-item-section>Split cell</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().toggleHeaderColumn().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-heading" />
-                                </q-item-section>
-                                <q-item-section>Toggle header column</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().toggleHeaderRow().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-heading" />
-                                </q-item-section>
-                                <q-item-section>Toggle header row</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().toggleHeaderCell().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-heading" />
-                                </q-item-section>
-                                <q-item-section>Toggle header cell</q-item-section>
-                            </q-item>
-                            <q-item clickable @click="editor.chain().focus().fixTables().run()">
-                                <q-item-section avatar>
-                                    <q-icon name="fa fa-wrench" />
-                                </q-item-section>
-                                <q-item-section>Fix tables</q-item-section>
-                            </q-item>
-                        </q-list>
-                    </q-menu>
-                </q-btn>
+                        <q-icon name="fa fa-table" />
+                        <q-menu>
+                            <q-list dense>
+                                <q-item clickable
+                                    @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-plus" />
+                                    </q-item-section>
+                                    <q-item-section>Insert table</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().addColumnBefore().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-arrow-left" />
+                                    </q-item-section>
+                                    <q-item-section>Add column before</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().addColumnAfter().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-arrow-right" />
+                                    </q-item-section>
+                                    <q-item-section>Add column after</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().deleteColumn().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-trash" />
+                                    </q-item-section>
+                                    <q-item-section>Delete column</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().addRowBefore().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-arrow-up" />
+                                    </q-item-section>
+                                    <q-item-section>Add row before</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().addRowAfter().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-arrow-down" />
+                                    </q-item-section>
+                                    <q-item-section>Add row after</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().deleteRow().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-trash" />
+                                    </q-item-section>
+                                    <q-item-section>Delete row</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().deleteTable().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-minus" />
+                                    </q-item-section>
+                                    <q-item-section>Delete table</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().mergeCells().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-code-merge" />
+                                    </q-item-section>
+                                    <q-item-section>Merge cells</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().splitCell().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-arrows-split-up-and-left" />
+                                    </q-item-section>
+                                    <q-item-section>Split cell</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().toggleHeaderColumn().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-heading" />
+                                    </q-item-section>
+                                    <q-item-section>Toggle header column</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().toggleHeaderRow().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-heading" />
+                                    </q-item-section>
+                                    <q-item-section>Toggle header row</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().toggleHeaderCell().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-heading" />
+                                    </q-item-section>
+                                    <q-item-section>Toggle header cell</q-item-section>
+                                </q-item>
+                                <q-item clickable @click="editor.chain().focus().fixTables().run()">
+                                    <q-item-section avatar>
+                                        <q-icon name="fa fa-wrench" />
+                                    </q-item-section>
+                                    <q-item-section>Fix tables</q-item-section>
+                                </q-item>
+                            </q-list>
+                        </q-menu>
+                    </q-btn>
+                    <q-btn flat size="sm" dense :class="{ 'is-active': editor.isActive('footnote') }"
+                        @click="addFootnote()">
+                        <q-tooltip :delay="500" content-class="text-bold">Footnote</q-tooltip>
+                        <q-icon name="superscript" />
+                    </q-btn>
                 </template>
                 <div v-if="diff !== undefined && (diff || value) && value !== diff">
-                    <q-btn flat size="sm" dense
-                    :class="{'is-active': toggleDiff}"
-                    label="toggle diff"
-                    @click="toggleDiff = !toggleDiff"
-                    />
+                    <q-btn flat size="sm" dense :class="{ 'is-active': toggleDiff }" label="toggle diff"
+                        @click="toggleDiff = !toggleDiff" />
                 </div>
 
             </q-toolbar>
-    </affix>
-    <q-separator />
-    <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor"/>
-    <div v-else class="editor__content q-pa-sm">
-        <div class="ProseMirror" v-html="diffContent"></div>
-    </div>
-</q-card>
+        </affix>
+        <q-separator />
+        <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm"
+            :editor="editor" />
+        <div v-else class="editor__content q-pa-sm">
+            <div class="ProseMirror" v-html="diffContent"></div>
+        </div>
+    </q-card>
 </template>
 
 <script>
@@ -319,6 +286,7 @@ import Caption from './editor-caption'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 import CodeBlock from './editor-codeblock'
+import Footnote from './editor-footnote'
 import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
@@ -339,8 +307,8 @@ export default {
         },
         toolbar: {
             type: Array,
-            default: function() {
-                return ['format', 'marks', 'list', 'code', 'image', 'caption', 'table']
+            default: function () {
+                return ['format', 'marks', 'list', 'code', 'image', 'caption']
             }
         },
         noAffix: {
@@ -377,7 +345,7 @@ export default {
                         multicolor: true,
                     }),
                     TrailingNode.configure({
-                        node: 'paragraph', 
+                        node: 'paragraph',
                         notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']
                     }),
                     CodeBlock,
@@ -388,6 +356,7 @@ export default {
                     TableRow,
                     TableHeader,
                     TableCell,
+                    Footnote,
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -413,26 +382,26 @@ export default {
     },
 
     watch: {
-        value (value) {
+        value(value) {
             if (value === this.editor.getHTML()) {
                 return;
             }
             var content = this.htmlEncode(this.value)
             this.editor.commands.setContent(content);
-       },
+        },
 
-        editable (value) {
+        editable(value) {
             this.editor.setEditable(this.editable, false)
-       },
+        },
 
-        highlightColor (value) {
+        highlightColor(value) {
             console.log(this.editor.storage)
             this.editor.storage.highlight.color = value
-       }
+        }
     },
 
-    mounted: function() {
-        this.affixRelativeElement += '-'+Math.floor((Math.random()*1000000) + 1)
+    mounted: function () {
+        this.affixRelativeElement += '-' + Math.floor((Math.random() * 1000000) + 1)
         this.editor.setEditable(this.editable, false)
 
         if (typeof this.value === "undefined" || this.value === this.editor.getHTML()) {
@@ -448,26 +417,26 @@ export default {
 
     computed: {
         formatIcon: function () {
-            if (this.editor.isActive('paragraph')) 
+            if (this.editor.isActive('paragraph'))
                 return 'fa fa-paragraph'
             else
                 return null
         },
 
-        formatLabel: function() {
-            if (this.editor.isActive('heading', {level: 1})) return 'H1'
-            else if (this.editor.isActive('heading', {level: 2})) return 'H2'
-            else if (this.editor.isActive('heading', {level: 3})) return 'H3'
-            else if (this.editor.isActive('heading', {level: 4})) return 'H4'
-            else if (this.editor.isActive('heading', {level: 5})) return 'H5'
-            else if (this.editor.isActive('heading', {level: 6})) return 'H6'
+        formatLabel: function () {
+            if (this.editor.isActive('heading', { level: 1 })) return 'H1'
+            else if (this.editor.isActive('heading', { level: 2 })) return 'H2'
+            else if (this.editor.isActive('heading', { level: 3 })) return 'H3'
+            else if (this.editor.isActive('heading', { level: 4 })) return 'H4'
+            else if (this.editor.isActive('heading', { level: 5 })) return 'H5'
+            else if (this.editor.isActive('heading', { level: 6 })) return 'H6'
         },
 
-        diffContent: function() {
+        diffContent: function () {
             var content = ''
             if (typeof this.diff !== "undefined") {
                 var HtmlDiff = new Diff.Diff(true)
-                HtmlDiff.tokenize = function(value) {
+                HtmlDiff.tokenize = function (value) {
                     return value.split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
                 }
                 var value = this.value || ""
@@ -477,11 +446,11 @@ export default {
                     var value = part.value.replace(/<p><\/p>/g, '<p><br></p>')
                     if (part.added || part.removed) {
                         value = value
-                        .replace(/(<p>)(.+?)(<\/p>|$)/g, `$1<span class="${diffclass}">$2</span>$3`) // Insert span diffclass in paragraphs
-                        .replace(/(<pre><code>)(.+?)(<\/code><\/pre>|$)/g, `$1<span class="${diffclass}">$2</span>$3`) // Insert span diffclass in codeblocks
-                        .replace(/(^[^<].*?)(<|$)/g, `<span class="${diffclass}">$1</span>$2`) // Insert span diffclass if text only
+                            .replace(/(<p>)(.+?)(<\/p>|$)/g, `$1<span class="${diffclass}">$2</span>$3`) // Insert span diffclass in paragraphs
+                            .replace(/(<pre><code>)(.+?)(<\/code><\/pre>|$)/g, `$1<span class="${diffclass}">$2</span>$3`) // Insert span diffclass in codeblocks
+                            .replace(/(^[^<].*?)(<|$)/g, `<span class="${diffclass}">$1</span>$2`) // Insert span diffclass if text only
                     }
-                        content += value
+                    content += value
                 })
             }
             return content
@@ -494,19 +463,19 @@ export default {
             var fileReader = new FileReader();
 
             var auditId = null
-              var path = window.location.pathname.split('/')
-              if (path && path.length > 3 && path[1] === 'audits')
+            var path = window.location.pathname.split('/')
+            if (path && path.length > 3 && path[1] === 'audits')
                 auditId = path[2]
 
             fileReader.onloadend = (e) => {
                 Utils.resizeImg(fileReader.result)
-                .then(data => {
-                    return ImageService.createImage({value: data, name: file.name, auditId: auditId})
-                })
-                .then((data) => {
-                    this.editor.chain().focus().setImage({src: data.data.datas._id, alt: file.name }).run()
-                })
-                .catch(err => console.log(err))
+                    .then(data => {
+                        return ImageService.createImage({ value: data, name: file.name, auditId: auditId })
+                    })
+                    .then((data) => {
+                        this.editor.chain().focus().setImage({ src: data.data.datas._id, alt: file.name }).run()
+                    })
+                    .catch(err => console.log(err))
             }
 
             fileReader.readAsDataURL(file);
@@ -519,7 +488,14 @@ export default {
                 this.html = ""
             }
             this.$emit('input', this.html)
-        }
+        },
+
+        addFootnote() {
+            const content = prompt('Enter footnote content (link):');
+            if (content) {
+                this.editor.chain().focus().addFootnote(content).run();
+            }
+        },
     }
 }
 </script>
@@ -552,151 +528,160 @@ export default {
 
     .affix {
         width: auto;
-        border-bottom: 1px solid rgba(0,0,0,0.12);
-        border-right: 1px solid rgba(0,0,0,0.12);
-        top: 50px!important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        border-right: 1px solid rgba(0, 0, 0, 0.12);
+        top: 50px !important;
         z-index: 1000;
         position: fixed;
     }
 
     .affix-top {
-        top: unset!important;
+        top: unset !important;
     }
 }
 
 .editor {
-  &__content {
+    &__content {
 
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    word-break: break-word;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-word;
 
-    .ProseMirror {
-        min-height: 200px;
-        cursor: auto;
-    }
-
-    h1 {
-        font-size: 4.25rem;
-    }
-
-    pre {
-      padding: 0.7rem 1rem;
-      border-radius: 5px;
-      background: black;
-      color: white;
-      font-size: 0.8rem;
-      overflow-x: auto;
-      white-space: pre-wrap;
-
-      code {
-        display: block;
-      }
-    }
-
-    p code {
-      padding: 0.2rem 0.4rem;
-      border-radius: 5px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      background: rgba(black, 0.1);
-      color: rgba(black, 0.8);
-    }
-
-    ul,
-    ol {
-      padding-left: 1rem;
-    }
-
-    li > p,
-    li > ol,
-    li > ul {
-      margin: 0;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    blockquote {
-      border-left: 3px solid rgba(black, 0.1);
-      color: rgba(black, 0.8);
-      padding-left: 0.8rem;
-      font-style: italic;
-
-      p {
-        margin: 0;
-      }
-    }
-
-    img {
-      max-width: 100%;
-      border-radius: 3px;
-    }
-
-    .selected {
-        outline-style: solid;
-        outline-color: $blue-4;
-    }
-
-    table {
-      border-collapse: collapse;
-      table-layout: fixed;
-      width: 100%;
-      margin: 0;
-      overflow: hidden;
-
-      td, th {
-        min-width: 1em;
-        border: 2px solid grey;
-        padding: 3px 5px;
-        vertical-align: top;
-        box-sizing: border-box;
-        position: relative;
-        > * {
-          margin-bottom: 0;
+        .ProseMirror {
+            min-height: 200px;
+            cursor: auto;
         }
-      }
 
-      th {
-        font-weight: bold;
-        text-align: left;
-      }
+        h1 {
+            font-size: 4.25rem;
+        }
 
-      .selectedCell:after {
-        z-index: 2;
-        position: absolute;
-        content: "";
-        left: 0; right: 0; top: 0; bottom: 0;
-        background: rgba(200, 200, 255, 0.4);
-        pointer-events: none;
-      }
+        pre {
+            padding: 0.7rem 1rem;
+            border-radius: 5px;
+            background: black;
+            color: white;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
 
-      .column-resize-handle {
-        position: absolute;
-        right: -2px; top: 0; bottom: 0;
-        width: 4px;
-        z-index: 20;
-        background-color: #adf;
-        pointer-events: none;
-      }
+            code {
+                display: block;
+            }
+        }
+
+        p code {
+            padding: 0.2rem 0.4rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: rgba(black, 0.1);
+            color: rgba(black, 0.8);
+        }
+
+        ul,
+        ol {
+            padding-left: 1rem;
+        }
+
+        li>p,
+        li>ol,
+        li>ul {
+            margin: 0;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        blockquote {
+            border-left: 3px solid rgba(black, 0.1);
+            color: rgba(black, 0.8);
+            padding-left: 0.8rem;
+            font-style: italic;
+
+            p {
+                margin: 0;
+            }
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 3px;
+        }
+
+        .selected {
+            outline-style: solid;
+            outline-color: $blue-4;
+        }
+
+        table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+            margin: 0;
+            overflow: hidden;
+
+            td,
+            th {
+                min-width: 1em;
+                border: 2px solid grey;
+                padding: 3px 5px;
+                vertical-align: top;
+                box-sizing: border-box;
+                position: relative;
+
+                >* {
+                    margin-bottom: 0;
+                }
+            }
+
+            th {
+                font-weight: bold;
+                text-align: left;
+            }
+
+            .selectedCell:after {
+                z-index: 2;
+                position: absolute;
+                content: "";
+                left: 0;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                background: rgba(200, 200, 255, 0.4);
+                pointer-events: none;
+            }
+
+            .column-resize-handle {
+                position: absolute;
+                right: -2px;
+                top: 0;
+                bottom: 0;
+                width: 4px;
+                z-index: 20;
+                background-color: #adf;
+                pointer-events: none;
+            }
+        }
+
+        .tableWrapper {
+            margin: 1em 0;
+            overflow-x: auto;
+        }
+
+        .resize-cursor {
+            cursor: ew-resize;
+            cursor: col-resize;
+        }
+
     }
-
-    .tableWrapper {
-      margin: 1em 0;
-      overflow-x: auto;
-    }
-
-    .resize-cursor {
-      cursor: ew-resize;
-      cursor: col-resize;
-    }
-
-  }
 }
+
 .is-active {
     color: green;
 }
+
 .is-active-highlight {
     background-color: grey;
 }
@@ -708,6 +693,7 @@ export default {
 .diffrem {
     background-color: #fdb8c0;
 }
+
 pre .diffrem {
     background-color: $red-6;
 }
@@ -715,12 +701,12 @@ pre .diffrem {
 .diffadd {
     background-color: #acf2bd;
 }
+
 pre .diffadd {
     background-color: $green-6;
 }
 
 .text-negative .editor:not(.q-dark) {
-    color:var(--q-color-primary)!important;
+    color: var(--q-color-primary) !important;
 }
-
 </style>
