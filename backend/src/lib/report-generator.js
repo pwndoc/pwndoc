@@ -4,6 +4,7 @@ var PizZip = require("pizzip");
 var expressions = require('./report-filters');
 let expressionParser = require('docxtemplater/expressions.js')
 var ImageModule = require('docxtemplater-image-module-pwndoc');
+var FootnoteModule = require('./docxtemplater-footnote-module.js');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
 var utils = require('./utils');
@@ -71,12 +72,17 @@ async function generateDoc(audit) {
 
     try {
         var imageModule = new ImageModule(opts);
+        var footnoteModule = new FootnoteModule();
     }
     catch(err) {
         console.log(err)
     }
     expressionParser.filters = {...expressions, ...customGenerator.expressions}
-    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: parser, paragraphLoop: true});
+        var doc = new Docxtemplater(zip, {
+        parser: parser,
+        modules: [imageModule, footnoteModule],
+        paragraphLoop: true
+    });
     customGenerator.apply(preppedAudit);
     doc.setData(preppedAudit);
     try {

@@ -113,6 +113,12 @@ function html2ooxml(html, style = '') {
                 cParagraph.addChildElement(new docx.TextRun(`${label} `))
                 cParagraph.addChildElement(new docx.SimpleField(`SEQ ${label}`, '1'))
                 cParagraph.addChildElement(new docx.TextRun(` - ${attribs.alt}`))
+            // FIXME: If original template has >= 1336 footnotes, this might be an issue!
+            } else if (tag === "sup") {
+                // 1337 will be replaced by correct order number while inserting into template
+                cParagraph.addChildElement(new docx.FootnoteReferenceRun(1337))
+                // This is used to store the title, will be removed later
+                cParagraph.addChildElement(new docx.TextRun(attribs.title))
             }
         },
 
