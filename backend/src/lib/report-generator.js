@@ -76,11 +76,14 @@ async function generateDoc(audit) {
         console.log(err)
     }
     expressionParser.filters = {...expressions, ...customGenerator.expressions}
-    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: parser, paragraphLoop: true});
+    var doc = new Docxtemplater(zip, {
+        parser: parser,
+        paragraphLoop: true,
+        modules: [imageModule],
+    });
     customGenerator.apply(preppedAudit);
-    doc.setData(preppedAudit);
     try {
-        doc.render();
+        doc.render(preppedAudit);
     }
     catch (error) {
         if (error.properties.id === 'multi_error') {
