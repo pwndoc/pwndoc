@@ -256,7 +256,15 @@ expressions.filters.s = function(input) {
 
 // Looks up an attribute from a sequence of objects, doted notation is supported: {findings | select: 'cvss.environmentalSeverity'}
 expressions.filters.select = function(input, attr) {
-    return input.map(function(item) { return _.get(item, attr) });
+    return input.map(
+        function(item) {
+            if (_.has(item, attr)) {
+                return _.get(item, attr)
+            } else {
+                return null
+            }
+        }
+    );
 }
 
 // Sorts the input array according an optional given attribute, dotted notation is supported: {#findings | sort 'cvss.environmentalSeverity'}{name}{/findings | sort 'cvss.environmentalSeverity'}

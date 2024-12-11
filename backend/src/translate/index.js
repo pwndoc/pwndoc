@@ -9,7 +9,11 @@ exports.setLocale = setLocale
 function translate(message, locale = gLocale) {
     try {
         let dictionary = JSON.parse(fs.readFileSync(`${__dirname}/${locale}.json`))
-        return dictionary[message] || message
+        if (dictionary.hasOwnProperty(message)) {
+            return dictionary[message] || message
+        } else {
+            return message
+        }
     }
     catch (error) {
         return message
