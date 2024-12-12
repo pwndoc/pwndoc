@@ -622,4 +622,60 @@ module.exports = function(app, io) {
         })
         .catch(err => Response.Internal(res, err))
     });
+
+    // ### COMMENTS ###
+
+    // Add comment to audit
+    app.post("/api/audits/:auditId/comments", acl.hasPermission('audits:update'), function(req, res) {
+        if ((!req.body.findingId && !req.body.sectionId) || (req.body.findingId && req.body.sectionId)) {
+            Response.BadParameters(res, 'Only set one of "findingId" or "sectionId"');
+            return;
+        }
+
+        if (!req.body.fieldName || !req.body.authorId || !req.body.text) {
+            Response.BadParameters(res, 'Missing some required parameters: fieldName, authorId, text');
+            return;
+        }
+
+        var comment = {};
+        // Required parameters
+        if (req.body.findingId) comment.findingId = req.body.findingId;
+        if (req.body.sectionId) comment.sectionId = req.body.sectionId;
+        comment.fieldName = req.body.fieldName;
+        comment.author = req.body.authorId;
+        comment.text = req.body.text
+
+        Audit.createComment(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, comment)
+        .then(msg => {
+            io.to(req.params.auditId).emit('updateAudit');
+            Response.Created(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Delete comment of audit
+    app.delete("/api/audits/:auditId/comments/:commentId", acl.hasPermission('audits:update'), async function(req, res) {
+        Audit.deleteComment(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.commentId)
+        .then(msg => {
+            io.to(req.params.auditId).emit('updateAudit');            
+            Response.Ok(res, msg);
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
+    // Update comment of audit
+    app.put("/api/audits/:auditId/comments/:commentId", acl.hasPermission('audits:update'), async function(req, res) {
+        var comment = {};
+        // Optional parameters
+        if (req.body.text) comment.text = req.body.text;
+        if (req.body.replies) comment.replies = req.body.replies;
+        if (typeof(req.body.resolved) === 'boolean') comment.resolved = req.body.resolved
+
+        Audit.updateComment(acl.isAllowed(req.decodedToken.role, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.commentId, comment)
+        .then(msg => {
+            io.to(req.params.auditId).emit('updateAudit');            
+            Response.Ok(res, msg)
+        })
+        .catch(err => Response.Internal(res, err))
+    });
 }

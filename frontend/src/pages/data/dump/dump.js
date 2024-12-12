@@ -83,7 +83,7 @@ export default {
                         var ext = file.name.split('.').pop();
                         if (ext === "yml") {
                             try {
-                                vulnFile = YAML.safeLoad(fileReader.result);
+                                vulnFile = YAML.load(fileReader.result);
                                 if (typeof vulnFile === 'object') {
                                     if (Array.isArray(vulnFile)) {
                                         vulnFile.forEach(vuln => {
@@ -219,7 +219,7 @@ export default {
         },
 
         downloadVulnerabilities: function() {
-            var data = YAML.safeDump(this.vulnerabilities);
+            var data = YAML.dump(this.vulnerabilities);
             var blob = new Blob([data], {type: 'application/yaml'});
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');

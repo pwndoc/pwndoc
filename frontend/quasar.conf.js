@@ -20,6 +20,7 @@ module.exports = function (ctx) {
     ],
     extras: [
       'material-icons',
+      'material-icons-outlined',
       'material-symbols-outlined',
       'fontawesome-v6',
       'mdi-v7',
@@ -137,6 +138,7 @@ module.exports = function (ctx) {
         'Cookies',
         'Dialog',
         'Loading',
+        'LocalStorage',
         'Notify'
       ]
       // iconSet: ctx.theme.mat ? 'material-icons' : 'ionicons'

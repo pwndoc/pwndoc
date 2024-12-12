@@ -57,6 +57,7 @@ export default {
                 size: 12,
                 offset: 0,
                 required: false,
+                inline: false,
                 description: '',
                 text: [],
                 options: []

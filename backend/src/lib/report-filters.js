@@ -256,7 +256,15 @@ expressions.filters.s = function(input) {
 
 // Looks up an attribute from a sequence of objects, doted notation is supported: {findings | select: 'cvss.environmentalSeverity'}
 expressions.filters.select = function(input, attr) {
-    return input.map(function(item) { return _.get(item, attr) });
+    return input.map(
+        function(item) {
+            if (_.has(item, attr)) {
+                return _.get(item, attr)
+            } else {
+                return null
+            }
+        }
+    );
 }
 
 // Sorts the input array according an optional given attribute, dotted notation is supported: {#findings | sort 'cvss.environmentalSeverity'}{name}{/findings | sort 'cvss.environmentalSeverity'}
@@ -320,13 +328,27 @@ expressions.filters.convertHTML = function(input, style) {
 
 // Count vulnerability by severity
 // Example: {findings | count: 'Critical'}
-expressions.filters.count = function(input, severity) {
+// Example: {findings | count: 'Critical':'base'}
+// Example: {findings | count: 'High':'temporal'}
+// Example: {findings | count: 'Medium':'environmental'}
+expressions.filters.count = function(input, severity, scoreType) {
     if(!input) return input;
     var count = 0;
-
+    var scoreAttribute;
+    switch(scoreType){
+        case "base":
+            scoreAttribute = "baseSeverity";
+            break;
+        case "temporal":
+            scoreAttribute = "temporalSeverity";
+            break;
+        case "environmental":
+        default:  // Set default to environmental score
+            scoreAttribute = "environmentalSeverity";            
+    }
     for(var i = 0; i < input.length; i++){
 
-        if(input[i].cvss.baseSeverity === severity){
+        if(input[i].cvss[scoreAttribute] === severity){
             count += 1;
         }
     }
@@ -340,6 +362,14 @@ expressions.filters.translate = function(input, locale) {
     translate.setLocale(locale)
     if (!input) return input
     return translate.translate(input, locale)
+}
+
+// Pad numbers with 0 if single digit. 1 will become "01"
+// Example: {input | padIndex}
+expressions.filters.padNumber = function(input) {
+    console.log(input)
+    if (!input || typeof input !== 'number') return input
+    return input.toString().padStart(2, "0")
 }
 
 module.exports = expressions

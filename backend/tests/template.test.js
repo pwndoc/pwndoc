@@ -122,6 +122,44 @@ module.exports = function(request, app) {
         expect(response.status).toBe(404)
       })
 
+      it('Update template with invalid filename (Avoid security regression)', async () => {
+        var template = { name: "Template Updated../../../../src/config/config.json" }
+
+        var response = await request(app).put(`/api/templates/${template1Id}`)
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(template)
+        expect(response.status).toBe(422)
+      })
+
+      it('Update template with invalid file extension (Avoid security regression)', async () => {
+        var template = {
+          name: "Template Updated",
+          ext: "../src/config/config.json"
+        }
+
+        var response = await request(app).put(`/api/templates/${template1Id}`)
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(template)
+        expect(response.status).toBe(422)
+      })
+
+      it('Update template with invalid file extension - No file name (Avoid security regression)', async () => {
+        var template = {
+          ext: "../src/config/config.json"
+        }
+
+        var response = await request(app).put(`/api/templates/${template1Id}`)
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(template)
+        expect(response.status).toBe(422)
+      })
+
       it('Delete template', async () => {
         var response = await request(app).delete(`/api/templates/${template2Id}`)
           .set('Cookie', [

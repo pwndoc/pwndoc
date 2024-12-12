@@ -6,6 +6,7 @@ export default {
     if(typeof(html) !== "string")  return "";
     
     var result = html
+    .replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '') // Non printable characters except NewLine
     .replace(/</g, 'ΩΠг')
     .replace(/>/g, 'ΏΠг')
     .replace(/ΩΠгimg.+?src="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<img src="$1" alt="$2">')

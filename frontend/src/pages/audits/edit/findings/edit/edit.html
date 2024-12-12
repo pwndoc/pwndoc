@@ -7,7 +7,19 @@ buttons
 :path="($parent.audit.parentId) ? `/audits/${$parent.audit.parentId}` : ''"
 :path-name="($parent.audit.type === 'retest') ? $t('originalAudit') : ($parent.audit.type === 'default') ? $t('multi') : ''"
 >
-    <div slot="buttons">
+    <template slot="buttons">
+        <q-btn
+        color="primary" 
+        :flat="!$parent.commentMode" 
+        :outline="$parent.commentMode"
+        :class="{'bg-grey-3': $parent.commentMode}"
+        icon="o_mode_comment"
+        :ripple="false"
+        @click="toggleCommentView()" 
+        class="q-mr-sm">
+            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.commentMode')}}</q-tooltip> 
+        </q-btn>
+        <q-separator vertical inset class="q-mr-sm" />
         <q-btn
         v-if="$parent.audit.type === 'default'"
         color="orange"
@@ -28,7 +40,7 @@ buttons
             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.retestSplitView')}}</q-tooltip> 
         </q-btn>
         <q-btn color="positive" :label="$t('btn.save')+'(ctrl+s)'" no-caps @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
-    </div>
+    </template>
 </breadcrumb>
 
 <div class="row" v-if="$parent.audit.type === 'default'">
@@ -43,110 +55,151 @@ buttons
         <q-space />
     </q-tabs>
 
-    <q-tab-panels v-model="selectedTab" animated class="bg-transparent col-md-8 col-12 offset-md-2 q-mt-md" @before-transition="syncEditors" @transition="updateOrig" >
-        <q-tab-panel name="definition">
-            <q-card>
-                <q-card-section class="row q-col-gutter-md q-pt-none">
-                    <q-input
-                    ref="titleField"
-                    class="col-md-8 col-12" 
-                    label-slot
-                    stack-label v-model="finding.title"
-                    outlined
-                    :rules="[val => !!val || $t('fieldIsRequired')]"
-                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    >
-                    <template v-slot:label>
-                        {{$t('title')}} <span class="text-red">*</span>
-                    </template>
-                    </q-input>
-                    <q-select
-                    ref="typeField"
-                    class="col-md-4 col-12"
-                    label-slot
-                    v-model="finding.vulnType" 
-                    :options="vulnTypesLang" 
-                    option-value="name" 
-                    option-label="name" 
-                    emit-value 
-                    map-options
-                    options-sanitize
-                    outlined
-                    :rules="($settings.report.public.requiredFields.findingType) ? [val => !!val || $t('fieldIsRequired')] : ['']"
-                    lazy-rules="ondemand"
-                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    >
-                        <template v-slot:label>
-                            {{$t('type')}} <span v-if="$settings.report.public.requiredFields.findingType" class="text-red">*</span>
-                        </template>
-                    </q-select>
-                    <q-field
-                    ref="descriptionField"
-                    class="col-md-12 basic-editor q-pt-none"
-                    label-slot
-                    borderless
-                    stack-label
-                    :rules="($settings.report.public.requiredFields.findingDescription) ? [val => !!finding.description || $t('fieldIsRequired')] : ['']"
-                    lazy-rules="ondemand"
-                    >
-                        <template v-slot="control">
-                            <basic-editor ref="basiceditor_description" noSync v-model="finding.description" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                        </template>
-                        <template v-slot:label>
-                            {{$t('description')}} <span v-if="$settings.report.public.requiredFields.findingDescription" class="text-red">*</span>
-                        </template>
-                    </q-field>
-                    <q-field
-                    ref="observationField"
-                    class="col-md-12 basic-editor q-pt-none"
-                    borderless
-                    label-slot
-                    stack-label
-                    :rules="($settings.report.public.requiredFields.findingObservation) ? [val => !!finding.observation || $t('fieldIsRequired')] : ['']"
-                    lazy-rules="ondemand"
-                    >
-                        <template v-slot="control">
-                            <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                        </template>
-                        <template v-slot:label>
-                            {{$t('observation')}} <span v-if="$settings.report.public.requiredFields.findingObservation" class="text-red">*</span>
-                        </template>
-                    </q-field>
-                    <textarea-array
-                    ref="referencesField"
-                    class="col-12 q-pt-none"
-                    :label="$t('references')+' '+$t('one_per_line')"
-                    v-model="finding.references"
-                    :rules="($settings.report.public.requiredFields.findingReferences) ? [val => !!val || $t('fieldIsRequired')] : ['']"
-                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"/>
-                </q-card-section>
+    <div class="row full-width q-mt-md q-pr-md">
+        <q-tab-panels v-model="selectedTab" animated class="bg-transparent" :class="($parent.commentMode)?'col-md-8 col-12':'col-md-8 col-12 offset-md-2'" @before-transition="syncEditors" @transition="updateOrig" >            
+            <q-tab-panel name="definition" class="q-pt-none">
+                <q-card>
+                    <component :is="($parent.commentMode)?'q-scroll-area':'div'" :class="{'scrollarea': $parent.commentMode}">
+                        <q-card-section class="row q-col-gutter-md">
+                            <q-input
+                            ref="titleField"
+                            for="titleField"
+                            class="col-md-8 col-12"
+                            :class="{'highlighted-border': fieldHighlighted == 'titleField' && $parent.commentMode}"
+                            label-slot
+                            stack-label v-model="finding.title"
+                            outlined
+                            :rules="[val => !!val || $t('fieldIsRequired')]"
+                            :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                            >
+                            <template v-slot:label>
+                                {{$t('title')}} <span class="text-red">*</span>
+                            </template>
+                            <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('titleField')">
+                                <q-icon name="add_comment" size="xs" />
+                            </q-badge>
+                            </q-input>
+                            <q-select
+                            ref="typeField"
+                            id="typeField"
+                            class="col-md-4 col-12"
+                            :class="{'highlighted-border': fieldHighlighted == 'typeField' && $parent.commentMode}"
+                            label-slot
+                            v-model="finding.vulnType" 
+                            :options="vulnTypesLang" 
+                            option-value="name" 
+                            option-label="name" 
+                            emit-value 
+                            map-options
+                            options-sanitize
+                            outlined
+                            :rules="($settings.report.public.requiredFields.findingType) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                            lazy-rules="ondemand"
+                            :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                            >
+                                <template v-slot:label>
+                                    {{$t('type')}} <span v-if="$settings.report.public.requiredFields.findingType" class="text-red">*</span>
+                                </template>
+                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('typeField')">
+                                    <q-icon name="add_comment" size="xs" />
+                                </q-badge>
+                            </q-select>
+                            <q-field
+                            ref="descriptionField"
+                            for="descriptionField"
+                            class="col-md-12 basic-editor q-pt-none"
+                            :class="{'highlighted-border': fieldHighlighted == 'descriptionField' && $parent.commentMode}"
+                            label-slot
+                            borderless
+                            stack-label
+                            :rules="($settings.report.public.requiredFields.findingDescription) ? [val => !!finding.description || $t('fieldIsRequired')] : ['']"
+                            lazy-rules="ondemand"
+                            >
+                                <template v-slot="control">
+                                    <basic-editor ref="basiceditor_description" noSync v-model="finding.description" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('descriptionField')">
+                                        <q-icon name="add_comment" size="xs" />
+                                    </q-badge>
+                                </template>
+                                <template v-slot:label>
+                                    <div id="descriptionField">
+                                        {{$t('description')}} <span v-if="$settings.report.public.requiredFields.findingDescription" class="text-red">*</span>
+                                    </div>
+                                </template>
+                            </q-field>
+                            <q-field
+                            ref="observationField"
+                            for="observationField"
+                            class="col-md-12 basic-editor q-pt-none"
+                            :class="{'highlighted-border': fieldHighlighted == 'observationField' && $parent.commentMode}"
+                            borderless
+                            label-slot
+                            stack-label
+                            :rules="($settings.report.public.requiredFields.findingObservation) ? [val => !!finding.observation || $t('fieldIsRequired')] : ['']"
+                            lazy-rules="ondemand"
+                            >
+                                <template v-slot="control">
+                                    <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('observationField')">
+                                        <q-icon name="add_comment" size="xs" />
+                                    </q-badge>
+                                </template>
+                                <template v-slot:label>
+                                    <div id="observationField">
+                                        {{$t('observation')}} <span v-if="$settings.report.public.requiredFields.findingObservation" class="text-red">*</span>
+                                    </div>
+                                </template>
+                            </q-field>
+                            <q-field 
+                            class="col-12 q-pt-none" 
+                            bg-color="transparent" 
+                            borderless 
+                            :class="{'highlighted-border': fieldHighlighted == 'referencesField' && $parent.commentMode}"
+                            >
+                                <textarea-array
+                                ref="referencesField"
+                                id="referencesField"
+                                class="col-12 q-pt-none"
+                                :label="$t('references')+' '+$t('one_per_line')"
+                                v-model="finding.references"
+                                :rules="($settings.report.public.requiredFields.findingReferences) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT" />
+                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('referencesField')">
+                                    <q-icon name="add_comment" size="xs" />
+                                </q-badge>
+                            </q-field>
+                        </q-card-section>
 
-                <q-expansion-item 
-                :label="$t('customFields')"
-                v-if="finding.customFields && finding.customFields.length > 0"
-                default-opened
-                header-class="bg-blue-grey-5 text-white" 
-                expand-icon-class="text-white">
-                    <custom-fields 
-                    ref="customfields" 
-                    v-model="finding.customFields" 
-                    custom-element="QCardSection" 
-                    no-sync-editor
-                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    :locale="$parent.audit.language"
-                    />
-                </q-expansion-item>
-
-            </q-card>
-        </q-tab-panel>
-        <q-tab-panel name="proofs">
-            <div class="q-col-gutter-md row">
-                <div class="col-12">
-                    <q-card>
+                        <q-expansion-item 
+                        :label="$t('customFields')"
+                        v-if="finding.customFields && finding.customFields.length > 0"
+                        default-opened
+                        header-class="bg-blue-grey-5 text-white" 
+                        expand-icon-class="text-white">
+                            <custom-fields 
+                            ref="customfields" 
+                            v-model="finding.customFields" 
+                            custom-element="QCardSection" 
+                            no-sync-editor
+                            :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                            :locale="$parent.audit.language"
+                            :comment-mode="$parent.commentMode"
+                            :field-highlighted="fieldHighlighted"
+                            @create-comment="createComment"
+                            />
+                        </q-expansion-item>
+                    </component>
+                </q-card>
+            </q-tab-panel>
+            <q-tab-panel name="proofs" class="q-pt-none">
+                <q-card>
+                    <component :is="($parent.commentMode)?'q-scroll-area':'div'" :class="{'scrollarea': $parent.commentMode}">
                         <q-card-section>
                             <q-field
                             ref="pocField"
+                            for="pocField"
                             class="col-md-12 basic-editor q-pt-none"
+                            :class="{'highlighted-border': fieldHighlighted == 'pocField' && $parent.commentMode}"
                             borderless
                             label-slot
                             stack-label
@@ -155,119 +208,316 @@ buttons
                             >
                                 <template v-slot="control">
                                     <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('pocField')">
+                                        <q-icon name="add_comment" size="xs" />
+                                    </q-badge>
                                 </template>
                                 <template v-slot:label>
                                     {{$t('proofs')}} <span v-if="$settings.report.public.requiredFields.findingProofs" class="text-red">*</span>
                                 </template>
                             </q-field>
                         </q-card-section>
-                    </q-card>
-                </div>
-            </div>
-        </q-tab-panel>
-        <q-tab-panel name="details">
-            <q-card>
-                <q-card-section>
-                    <q-field 
-                    ref="affectedField"
-                    class="col-md-12 basic-editor q-pt-none"
-                    borderless
-                    label-slot
-                    stack-label
-                    :rules="($settings.report.public.requiredFields.findingAffected) ? [val => !!finding.scope || $t('fieldIsRequired')] : ['']"
-                    lazy-rules="ondemand"
-                    >
-                        <template v-slot="control">
-                            <basic-editor v-model="finding.scope" :toolbar="['format', 'marks', 'list']" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                        </template>
-                        <template v-slot:label>
-                            {{$t('affectedAssets')}} <span v-if="$settings.report.public.requiredFields.findingAffected" class="text-red">*</span>
-                        </template>
-                    </q-field>
-                </q-card-section>
-            </q-card>
-            <q-card v-if="$settings.report.public.scoringMethods.CVSS3" class="q-mt-md bg-grey-1">
-                <div class="col-12">
-                    <cvss3-calculator 
-                        v-model="finding.cvssv3"
-                        :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    />
-                </div>
-            </q-card>
-            <q-card v-if="$settings.report.public.scoringMethods.CVSS4" class="q-mt-md bg-grey-1">
-                <div class="col-12">
-                    <cvss4-calculator 
-                        v-model="finding.cvssv4"
-                        :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                    />
-                </div>
-            </q-card>
-            <q-card class="q-mt-md">
-                <q-card-section>{{$t('courseOfActions')}}</q-card-section>
-                <q-separator />
-                <q-card-section>
-                    <div class="q-col-gutter-md row">
-                        <q-select
-                        ref="remediationDifficultyField"
-                        label-slot
-                        stack-label
-                        class="col-md-6 col-12"
-                        v-model="finding.remediationComplexity"
-                        :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
-                        map-options
-                        emit-value
-                        options-sanitize
-                        outlined
-                        :rules="($settings.report.public.requiredFields.findingRemediationDifficulty) ? [val => !!val || $t('fieldIsRequired')] : ['']"
-                        lazy-rules="ondemand"
-                        :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                    </component>
+                </q-card>
+            </q-tab-panel>
+            <q-tab-panel name="details" class="q-pt-none">
+                <q-card class="bg-transparent" flat>
+                    <component :is="($parent.commentMode)?'q-scroll-area':'div'" :class="{'scrollarea': $parent.commentMode}">
+                        <q-card>
+                            <q-card-section>
+                                <q-field 
+                                ref="affectedField"
+                                for="affectedField"
+                                class="col-md-12 basic-editor q-pt-none"
+                                :class="{'highlighted-border': fieldHighlighted == 'affectedField' && $parent.commentMode}"
+                                borderless
+                                label-slot
+                                stack-label
+                                :rules="($settings.report.public.requiredFields.findingAffected) ? [val => !!finding.scope || $t('fieldIsRequired')] : ['']"
+                                lazy-rules="ondemand"
+                                >
+                                    <template v-slot="control">
+                                        <basic-editor v-model="finding.scope" :toolbar="['format', 'marks', 'list']" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                                        <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('affectedField')">
+                                            <q-icon name="add_comment" size="xs" />
+                                        </q-badge>
+                                    </template>
+                                    <template v-slot:label>
+                                        {{$t('affectedAssets')}} <span v-if="$settings.report.public.requiredFields.findingAffected" class="text-red">*</span>
+                                    </template>
+                                </q-field>
+                            </q-card-section>
+                        </q-card>
+                        <q-card 
+                        id="cvssField"
+                        class="q-mt-md bg-grey-1"
+                        :class="{'highlighted-border': fieldHighlighted == 'cvssField' && $parent.commentMode}"
                         >
-                            <template v-slot:label>
-                                {{$t('remediationDifficulty')}} <span v-if="$settings.report.public.requiredFields.findingRemediationDifficulty" class="text-red">*</span>
-                            </template>
-                        </q-select>
-                        <q-select
-                        ref="priorityField"
-                        label-slot
-                        stack-label
-                        class="col-md-6 col-12"
-                        v-model="finding.priority"
-                        :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
-                        map-options
-                        emit-value
-                        options-sanitize
-                        outlined
-                        :rules="($settings.report.public.requiredFields.findingPriority) ? [val => !!val || $t('fieldIsRequired')] : ['']"
-                        lazy-rules="ondemand"
-                        :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                        >
-                            <template v-slot:label>
-                                {{$t('priority')}} <span v-if="$settings.report.public.requiredFields.findingPriority" class="text-red">*</span>
-                            </template>
-                        </q-select>
+                            <div class="col-12">
+                                <cvss3-calculator 
+                                v-model="finding.cvssv3"
+                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                />
+                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
+                                    <q-icon name="add_comment" size="xs" />
+                                </q-badge>
+                            </div>
+                            <div class="col-12">
+                                <cvss4-calculator 
+                                v-model="finding.cvssv4"
+                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                />
+                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
+                                    <q-icon name="add_comment" size="xs" />
+                                </q-badge>
+                            </div>
+                        </q-card>
+                        <q-card class="q-mt-md">
+                            <q-card-section>{{$t('courseOfActions')}}</q-card-section>
+                            <q-separator />
+                            <q-card-section>
+                                <div class="q-col-gutter-md row">
+                                    <q-select
+                                    ref="remediationDifficultyField"
+                                    id="remediationDifficultyField"
+                                    label-slot
+                                    stack-label
+                                    class="col-md-6 col-12"
+                                    :class="{'highlighted-border': fieldHighlighted == 'remediationDifficultyField' && $parent.commentMode}"
+                                    v-model="finding.remediationComplexity"
+                                    :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
+                                    map-options
+                                    emit-value
+                                    options-sanitize
+                                    outlined
+                                    :rules="($settings.report.public.requiredFields.findingRemediationDifficulty) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                                    lazy-rules="ondemand"
+                                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                    >
+                                        <template v-slot:label>
+                                            {{$t('remediationDifficulty')}} <span v-if="$settings.report.public.requiredFields.findingRemediationDifficulty" class="text-red">*</span>
+                                        </template>
+                                        <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('remediationDifficultyField')">
+                                            <q-icon name="add_comment" size="xs" />
+                                        </q-badge>
+                                    </q-select>
+                                    <q-select
+                                    ref="priorityField"
+                                    id="priorityField"
+                                    label-slot
+                                    stack-label
+                                    class="col-md-6 col-12"
+                                    :class="{'highlighted-border': fieldHighlighted == 'priorityField' && $parent.commentMode}"
+                                    v-model="finding.priority"
+                                    :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
+                                    map-options
+                                    emit-value
+                                    options-sanitize
+                                    outlined
+                                    :rules="($settings.report.public.requiredFields.findingPriority) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                                    lazy-rules="ondemand"
+                                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                    >
+                                        <template v-slot:label>
+                                            {{$t('priority')}} <span v-if="$settings.report.public.requiredFields.findingPriority" class="text-red">*</span>
+                                        </template>
+                                        <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('priorityField')">
+                                            <q-icon name="add_comment" size="xs" />
+                                        </q-badge>
+                                    </q-select>
+                                </div>
+                            </q-card-section>
+                            <q-card-section class="q-pt-none">
+                                <q-field
+                                ref="remediationField"
+                                for="remediationField"
+                                class="col-md-12 basic-editor"
+                                :class="{'highlighted-border': fieldHighlighted == 'remediationField' && $parent.commentMode}"
+                                borderless
+                                label-slot
+                                stack-label
+                                :rules="($settings.report.public.requiredFields.findingRemediation) ? [val => !!finding.remediation || $t('fieldIsRequired')] : ['']"
+                                lazy-rules="ondemand"
+                                >
+                                    <template v-slot="control">
+                                        <basic-editor ref="basiceditor_remediation" noSync v-model="finding.remediation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                                        <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('remediationField')">
+                                            <q-icon name="add_comment" size="xs" />
+                                        </q-badge>
+                                    </template>
+                                    <template v-slot:label>
+                                        {{$t('remediation')}} <span v-if="$settings.report.public.requiredFields.findingRemediation" class="text-red">*</span>
+                                    </template>
+                                </q-field>
+                            </q-card-section>
+                        </q-card>
+                    </component>
+                </q-card>
+            </q-tab-panel>
+        </q-tab-panels>
+        <q-card v-if="$parent.commentMode" class="col-md-3 col-12 offset-md-1 bg-grey-11 q-mb-md">
+            <q-item>
+                <q-item-section>
+                    <span class="text-h6">{{$t('comments')}}</span>
+                </q-item-section>
+                <q-item-section>
+                    <span>{{numberOfFilteredComments()}}</span>
+                </q-item-section>
+                <q-item-section side>
+                    <q-btn outline icon="o_filter_alt">
+                        <q-menu anchor="bottom end" self="top end">
+                            <q-list>
+                                <q-item clickable @click="($parent.commentsFilter === 'active')?$parent.commentsFilter = 'all':$parent.commentsFilter = 'active'">
+                                    <q-item-section :class="{'invisible': $parent.commentsFilter !== 'active'}" side class="q-pr-sm">
+                                        <q-icon size="xs" name="done" />
+                                    </q-item-section>
+                                    <q-item-section>
+                                        <span>{{$t('activeOnly')}}</span>
+                                    </q-item-section>
+                                </q-item>
+                                <q-item clickable @click="($parent.commentsFilter === 'resolved')?$parent.commentsFilter = 'all':$parent.commentsFilter = 'resolved'">
+                                    <q-item-section :class="{'invisible': $parent.commentsFilter !== 'resolved'}" side class="q-pr-sm">
+                                        <q-icon size="xs" name="done" />
+                                    </q-item-section>
+                                    <q-item-section>
+                                        <span>{{$t('resolvedOnly')}}</span>
+                                    </q-item-section>
+                                </q-item>
+                            </q-list>
+                        </q-menu>
+                    </q-btn>
+                </q-item-section>
+            </q-item>
+            <q-scroll-area class="comment-panel-height">
+                <q-list class="bg-grey-11">
+                    <div v-for="comment in $parent.audit.comments" :key="comment._id">
+                        <q-item v-if="displayComment(comment)">
+                            <q-item-section @click="focusComment(comment)">
+                                <q-card :class="{'highlighted-border': $parent.focusedComment === comment._id, 'bg-blue-grey-1': comment.resolved, 'text-grey-8': comment.resolved}">
+                                    <!-- Resolved Header -->
+                                    <q-item v-if="comment.resolved">
+                                        <q-item-section>
+                                            <div>
+                                                <q-icon class="q-mr-sm" name="done" color="green" />
+                                                <span class="text-bold">{{$t('resolved')}}</span>
+                                            </div>
+                                        </q-item-section>
+                                        <q-item-section side>
+                                            <div v-if="!$parent.editComment && !$parent.replyingComment && !$parent.editReply">
+                                                <q-btn size="sm" dense flat color="primary" icon="undo" @click="comment.resolved = false; updateComment(comment)">
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+                                                        {{(comment.resolved)?$t('tooltip.reopenComment'):$t('tooltip.resolveComment')}}
+                                                    </q-tooltip> 
+                                                </q-btn>
+                                                <q-btn size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
+                                                </q-btn>
+                                            </div>
+                                        </q-item-section>
+                                    </q-item>
+                                    <q-separator v-if="comment.resolved" />
+                                    <!-- Header -->
+                                    <q-item class="q-pb-none">
+                                        <q-item-section>
+                                            <span class="text-bold">
+                                            {{(comment.author && comment.author.firstname)?comment.author.firstname:''}}
+                                            {{(comment.author && comment.author.lastname)?comment.author.lastname:''}}
+                                            </span>
+                                        </q-item-section>
+                                        <q-item-section side v-if="!comment.resolved">
+                                            <div v-if="!$parent.editComment && !$parent.replyingComment && !$parent.editReply" class="q-gutter-xs">
+                                                <q-btn v-if="!comment.resolved" size="sm" dense flat color="primary" icon="edit" @click="$parent.editComment = comment._id; comment.textTemp = comment.text; focusComment(comment)">
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editComment')}}</q-tooltip> 
+                                                </q-btn>
+                                                <q-btn size="sm" dense flat color="green" icon="done" @click="comment.resolved = true; updateComment(comment)">
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+                                                        {{(comment.resolved)?$t('tooltip.reopenComment'):$t('tooltip.resolveComment')}}
+                                                    </q-tooltip> 
+                                                </q-btn>
+                                                <q-btn size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
+                                                </q-btn>
+                                            </div>
+                                        </q-item-section>
+                                    </q-item>
+                                    <!-- Comment -->
+                                    <q-item class="q-pt-none">
+                                        <q-item-section>
+                                            <div v-if="$parent.editComment === comment._id" class="q-gutter-sm">
+                                                <q-input
+                                                v-model="comment.textTemp"
+                                                autogrow
+                                                outlined
+                                                dense
+                                                autofocus
+                                                :placeholder="$t('startConversation')"
+                                                />
+                                                <q-btn class="float-right" outline color="primary" icon="close" @click="cancelEditComment(comment)"></q-btn>
+                                                <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="updateComment(comment)"></q-btn>
+                                            </div>
+                                            <span v-else style="white-space: pre-line">{{comment.text}}</span>
+                                            <span v-if="$parent.focusedComment === comment._id && $parent.editComment !== comment._id" class="text-caption">{{new Date(comment.createdAt).toLocaleDateString($parent.systemLanguage, commentDateOptions)}}</span>
+                                        </q-item-section>
+                                    </q-item>
+                                    <!-- Replies -->
+                                    <q-item v-for="reply of comment.replies" :key="reply._id" class="q-ml-md" @mouseover="hoverReply = reply._id" @mouseleave="hoverReply = null">
+                                        <q-item-section>
+                                            <span class="text-bold">
+                                                {{(reply.author && reply.author.firstname)?reply.author.firstname:''}}
+                                                {{(reply.author && reply.author.lastname)?reply.author.lastname:''}}
+                                            </span>
+                                            <div v-if="$parent.editReply === reply._id" class="q-gutter-sm">
+                                                <q-input 
+                                                v-model="reply.textTemp"
+                                                autogrow
+                                                outlined
+                                                dense
+                                                />
+                                                <q-btn class="float-right" outline color="primary" icon="close" @click="$parent.editReply = null"></q-btn>
+                                                <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="reply.text = reply.textTemp; updateComment(comment)"></q-btn>
+                                            </div>
+                                            <span v-else style="white-space: pre-line">{{reply.text}}</span>
+                                            <span v-if="$parent.focusedComment === comment._id && $parent.editReply !== reply._id" class="text-caption">{{new Date(reply.createdAt).toLocaleDateString($parent.systemLanguage, commentDateOptions)}}</span>
+                                        </q-item-section>
+                                        <q-item-section side top v-show="hoverReply === reply._id && !$parent.editReply && !comment.resolved && comment._id === $parent.focusedComment">
+                                            <div v-if="!$parent.editComment && !$parent.replyingComment" class="q-gutter-xs">
+                                                <q-btn size="sm" dense flat color="primary" icon="edit" @click="$parent.editReply = reply._id; reply.textTemp = reply.text">
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editReply')}}</q-tooltip> 
+                                                </q-btn>
+                                                <q-btn size="sm" dense flat color="negative" icon="delete" @click="removeReplyFromComment(reply, comment)">
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteReply')}}</q-tooltip> 
+                                                </q-btn>
+                                            </div>
+                                        </q-item-section>
+                                    </q-item>
+                                    <!-- Reply input -->
+                                    <q-item v-if="$parent.editComment !== comment._id && !comment.resolved">
+                                        <q-item-section>
+                                            <div class="q-gutter-sm">
+                                                <q-input
+                                                v-model="comment.replyTemp"
+                                                autogrow
+                                                outlined
+                                                dense
+                                                :placeholder="($parent.editComment || $parent.replyingComment || $parent.editReply)?$t('anotherCommentInProgress'):$t('reply')"
+                                                :disable="!!$parent.editComment || !!$parent.editReply || ($parent.replyingComment && !comment.replyTemp)"
+                                                />
+                                                <template v-if="comment.replyTemp">
+                                                    <q-btn class="float-right" outline color="primary" icon="close" @click="comment.replyTemp = null" />
+                                                    <q-btn class="float-right" unelevated color="blue-10" icon="send" @click="updateComment(comment)"/>
+                                                </template>
+                                            </div>
+                                        </q-item-section>
+                                    </q-item>
+                                </q-card>
+                            </q-item-section>
+                        </q-item>
                     </div>
-                </q-card-section>
-                <q-card-section class="q-pt-none">
-                    <q-field
-                    ref="remediationField"
-                    class="col-md-12 basic-editor"
-                    borderless
-                    label-slot
-                    stack-label
-                    :rules="($settings.report.public.requiredFields.findingRemediation) ? [val => !!finding.remediation || $t('fieldIsRequired')] : ['']"
-                    lazy-rules="ondemand"
-                    >
-                        <template v-slot="control">
-                            <basic-editor ref="basiceditor_remediation" noSync v-model="finding.remediation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                        </template>
-                        <template v-slot:label>
-                            {{$t('remediation')}} <span v-if="$settings.report.public.requiredFields.findingRemediation" class="text-red">*</span>
-                        </template>
-                    </q-field>
-                </q-card-section>
-            </q-card>
-        </q-tab-panel>
-    </q-tab-panels>
+                </q-list>
+            <!-- </q-card> -->
+            </q-scroll-area>
+        </q-card>
+    </div>
 </div>
 
 <!-- RETEST VIEW -->
