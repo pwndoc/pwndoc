@@ -152,7 +152,7 @@ function html2ooxml(html, style = '') {
     parser.write(html)
     parser.end()
 
-    var prepXml = doc.documentWrapper.document.body.prepForXml({})
+    var prepXml = doc.documentWrapper.document.body.prepForXml({ stack: [] })
     var filteredXml = prepXml["w:body"].filter(e => {return Object.keys(e)[0] === "w:p"})
     var dataXml = xml(filteredXml)
     dataXml = dataXml.replace(/w:numId w:val="{2-0}"/g, 'w:numId w:val="2"') // Replace numbering to have correct value

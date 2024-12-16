@@ -62,6 +62,13 @@ export default {
         addAudit: 'Add Audit',
         restoreRevert: 'Restore at the state of the backup. All data not present in the backup will be deleted',
         restoreUpsert: 'Restore data from the backup and update existing data. If data already exists, it will be updated, if not, it will be created',
+        commentMode: 'Show Comments',
+        editComment: 'Edit Comment',
+        resolveComment: 'Resolve Thread',
+        reopenComment: 'Reopen Thread',
+        deleteComment: 'Delete Comment',
+        editReply: 'Edit Reply',
+        deleteReply: 'Delete Reply'
     },
     msg: {
         auditReviewUpdateOk: 'Audit review status updated successfully',
@@ -581,4 +588,14 @@ export default {
     restore_error: 'Last restore operation generated an error',
     // Init restore message
     restoreFromBackup: 'Or restore from Backup File',
+    // Comments
+    comments: 'Comments',
+    reply: 'Reply',
+    anotherCommentInProgress: 'Another comment is in progress',
+    startConversation: 'Start a conversation',
+    resolved: 'Resolved',
+    activeOnly: 'Active Only',
+    resolvedOnly: 'Resolved Only',
+    item: 'item',
+    items: 'items'
   }

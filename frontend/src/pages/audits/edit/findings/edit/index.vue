@@ -16,4 +16,17 @@
 .after-class {
     height: calc(100vh - 132px)!important;
 }
+
+.highlighted-border {
+    border: 2px solid darkslateblue;
+}
+
+.scrollarea {
+    height: calc(100vh - 182px)!important;
+}
+
+.comment-panel-height {
+    height: calc(100vh - 248px)!important;
+}
+
 </style>

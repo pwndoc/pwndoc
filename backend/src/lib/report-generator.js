@@ -2,6 +2,7 @@ var fs = require('fs');
 var Docxtemplater = require('docxtemplater');
 var PizZip = require("pizzip");
 var expressions = require('./report-filters');
+let expressionParser = require('docxtemplater/expressions.js')
 var ImageModule = require('docxtemplater-image-module-pwndoc');
 var sizeOf = require('image-size');
 var customGenerator = require('./custom-generator');
@@ -74,11 +75,15 @@ async function generateDoc(audit) {
     catch(err) {
         console.log(err)
     }
-    var doc = new Docxtemplater().attachModule(imageModule).loadZip(zip).setOptions({parser: parser, paragraphLoop: true});
+    expressionParser.filters = {...expressions, ...customGenerator.expressions}
+    var doc = new Docxtemplater(zip, {
+        parser: parser,
+        paragraphLoop: true,
+        modules: [imageModule],
+    });
     customGenerator.apply(preppedAudit);
-    doc.setData(preppedAudit);
     try {
-        doc.render();
+        doc.render(preppedAudit);
     }
     catch (error) {
         if (error.properties.id === 'multi_error') {
@@ -115,29 +120,6 @@ String.prototype.format = function () {
     });
 };
 
-// Compile all angular expressions
-var angularParser = function(tag) {
-    expressions = {...expressions, ...customGenerator.expressions};
-    if (tag === '.') {
-        return {
-            get: function(s){ return s;}
-        };
-    }
-    const expr = expressions.compile(
-        tag.replace(/(’|‘)/g, "'").replace(/(“|”)/g, '"')
-    );
-    return {
-        get: function(scope, context) {
-            let obj = {};
-            const scopeList = context.scopeList;
-            const num = context.num;
-            for (let i = 0, len = num + 1; i < len; i++) {
-                obj = _.merge(obj, scopeList[i]);
-            }
-            return expr(scope, obj);
-        }
-    };
-}
 
 function parser(tag) {
     // We write an exception to handle the tag "$pageBreakExceptLast"
@@ -160,7 +142,7 @@ function parser(tag) {
     // If you don't wish to use the angularParser,
     // you can use the default parser as documented here:
     // https://docxtemplater.readthedocs.io/en/latest/configuration.html#default-parser
-    return angularParser(tag);
+    return expressionParser(tag);
 }
 function cvssStrToObject(cvss) {
     var initialState = 'Not Defined'

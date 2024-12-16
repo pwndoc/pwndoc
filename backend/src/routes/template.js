@@ -46,6 +46,12 @@ module.exports = function(app) {
             return;
         }
 
+        // Fix for GHSA-2mqc-gg7h-76p6
+        if (req.body.ext && !utils.validFilename(req.body.ext)) {
+            Response.BadParameters(res, 'Bad name format');
+            return;
+        }
+
         var template = {};
         // Optional parameters
         if (req.body.name) template.name = req.body.name;

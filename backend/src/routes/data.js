@@ -57,7 +57,7 @@ module.exports = function(app) {
     });
     
     // Delete Language
-    app.delete("/api/data/languages/:locale(*)", acl.hasPermission('languages:delete'), function(req, res) {
+    app.delete("/api/data/languages/:locale", acl.hasPermission('languages:delete'), function(req, res) {
         Language.delete(req.params.locale)
         .then(msg => {
             Response.Ok(res, 'Language deleted successfully')
@@ -131,7 +131,7 @@ module.exports = function(app) {
     });
     
     // Delete audit type
-    app.delete("/api/data/audit-types/:name(*)", acl.hasPermission('audit-types:delete'), function(req, res) {
+    app.delete("/api/data/audit-types/:name", acl.hasPermission('audit-types:delete'), function(req, res) {
         AuditType.delete(req.params.name)
         .then(msg => {
             Response.Ok(res, 'Audit type deleted successfully')
@@ -208,7 +208,7 @@ module.exports = function(app) {
     });
     
     // Delete vulnerability type
-    app.delete("/api/data/vulnerability-types/:name(*)", acl.hasPermission('vulnerability-types:delete'), function(req, res) {
+    app.delete("/api/data/vulnerability-types/:name", acl.hasPermission('vulnerability-types:delete'), function(req, res) {
         VulnerabilityType.delete(req.params.name)
         .then(msg => {
             Response.Ok(res, 'Vulnerability type deleted successfully')
@@ -307,7 +307,7 @@ module.exports = function(app) {
     });
     
     // Delete vulnerability category
-    app.delete("/api/data/vulnerability-categories/:name(*)", acl.hasPermission('vulnerability-categories:delete'), function(req, res) {
+    app.delete("/api/data/vulnerability-categories/:name", acl.hasPermission('vulnerability-categories:delete'), function(req, res) {
         VulnerabilityCategory.delete(req.params.name)
         .then(msg => {
             Response.Ok(res, 'Vulnerability category deleted successfully')
@@ -349,7 +349,7 @@ module.exports = function(app) {
     });
     
     // Delete section
-    app.delete("/api/data/sections/:field/:locale(*)", acl.hasPermission('sections:delete'), function(req, res) {
+    app.delete("/api/data/sections/:field/:locale", acl.hasPermission('sections:delete'), function(req, res) {
         CustomSection.delete(req.params.field, req.params.locale)
         .then(msg => {
             Response.Ok(res, 'Section deleted successfully')
@@ -409,6 +409,7 @@ module.exports = function(app) {
         if (req.body.size) customField.size = req.body.size
         if (req.body.offset) customField.offset = req.body.offset
         if (typeof req.body.required === 'boolean' && req.body.fieldType !== 'space') customField.required = req.body.required
+        if (typeof req.body.inline === 'boolean' && req.body.fieldType !== 'space') customField.required = req.body.inline
         if (req.body.description) customField.description = req.body.description
         if (req.body.text) customField.text = req.body.text
         if (req.body.options) customField.options = req.body.options
@@ -439,6 +440,7 @@ module.exports = function(app) {
             if (typeof e.size === 'number') field.size = e.size
             if (typeof e.offset === 'number') field.offset = e.offset
             if (typeof e.required === 'boolean') field.required = e.required
+            if (typeof e.inline === 'boolean') field.inline = e.inline
             if (!_.isNil(e.description)) field.description = e.description
             if (!_.isNil(e.text)) field.text = e.text
             if (isArray(e.options)) field.options = e.options

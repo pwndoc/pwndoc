@@ -304,7 +304,7 @@ export default {
             if (index > -1)
                 done(this.companies[index], 'add-unique')
             else
-                done(val, 'add-unique')
+                done({name: val}, 'add-unique')
         },
 
         filterSelectCompany (val, update) {

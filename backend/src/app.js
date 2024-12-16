@@ -130,8 +130,14 @@ require('./routes/image')(app);
 require('./routes/settings')(app);
 require('./routes/backup')(app);
 
-app.get("*", function(req, res) {
+app.all(/(.*)/, function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});
+})
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack)
+  res.status(500).send('Something went wrong. Please contact your administrator.')
 })
 
 // Start server

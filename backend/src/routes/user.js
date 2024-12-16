@@ -242,12 +242,12 @@ module.exports = function(app) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
         }
-        if (passwordpolicy.strongPassword(req.body.newPassword)!==true){
-            Response.BadParameters(res, 'New Password does not match the password policy');
-            return;
-        }
         if (req.body.newPassword !== req.body.confirmPassword) {
             Response.BadParameters(res, 'New password validation failed');
+            return;
+        }
+        if (req.body.newPassword && passwordpolicy.strongPassword(req.body.newPassword)!==true){
+            Response.BadParameters(res, 'New Password does not match the password policy');
             return;
         }
 

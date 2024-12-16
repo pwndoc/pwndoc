@@ -2,4 +2,12 @@
 
 <script src='./sections.js'></script>
 
-<style></style>
+<style scoped>
+.scrollarea {
+    height: calc(100vh - 132px)!important;
+}
+
+.comment-panel-height {
+    height: calc(100vh - 198px)!important;
+}
+</style>
