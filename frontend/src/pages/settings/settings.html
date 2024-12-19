@@ -628,6 +628,11 @@
                         <q-card-section>
                             <span v-if="currentBackup.type == 'full'" class="text-subtitle1">{{$t('fullBackup')}}</span>
                             <span v-else class="text-subtitle1">{{$t('partialBackup')}}</span>
+                            <br />
+                            <span>
+                                {{new Date(currentBackup.date).toLocaleDateString(undefined, {weekday: 'long', month: 'long', day: '2-digit', year: 'numeric'})}}
+                                - {{new Date(currentBackup.date).toLocaleTimeString()}}
+                            </span>
                         </q-card-section>
                         <q-card-section>
                             <span class="text-bold">{{$t('restoreMode')}}</span>

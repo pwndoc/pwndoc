@@ -247,5 +247,13 @@ export default {
 
     const years = Math.floor(diff / 31536000000);
     return `${years} years ago`;
+  },
+
+  bytesToHumanReadable: function(bytes) {
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    if (bytes === 0) return "0 B";
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    const size = bytes / Math.pow(1024, i);
+    return `${size.toFixed(2)} ${sizes[i]}`;
   }
 }

@@ -71,6 +71,8 @@ module.exports = function(app) {
 
     function readBackupInfo(file) {
         return new Promise((resolve, reject) => {
+            const fileStats = fs.statSync(`${backupPath}/${file}`)
+
             const readStream = fs.createReadStream(`${backupPath}/${file}`)
             const extract = tar.extract()
 
@@ -88,6 +90,7 @@ module.exports = function(app) {
                             const keys = ['name', 'date', 'slug', 'type', 'protected', 'data']
                             if (keys.every(e => Object.keys(jsonData).includes(e))) {
                                 jsonData.filename = file
+                                jsonData.size = fileStats.size
                                 resolve(jsonData)
                             }
                             else
@@ -157,12 +160,14 @@ module.exports = function(app) {
         })
     }
 
-    app.get("/api/backups", async function(req, res) {
+    // Get Backups list
+    app.get("/api/backups", acl.hasPermission('backups:read'), async function(req, res) {
         const msg = await getBackupList()
         Response.Ok(res, msg)
     });
 
-    app.get("/api/backups/status", function(req, res) {
+    // Get Backups status - return backup state
+    app.get("/api/backups/status", acl.hasPermission('backups:read'), function(req, res) {
         const state = getBackupState()
         let response = {operation: 'idle', state: state.state, message: state.message}
         if ([
@@ -271,7 +276,8 @@ module.exports = function(app) {
         })
     });
 
-    app.delete("/api/backups/:slug", async function(req, res) {
+    // Delete Backup
+    app.delete("/api/backups/:slug", acl.hasPermission('backups:delete'), async function(req, res) {
         const filenames = fs.readdirSync(backupPath)
         let deleted = false
         const filename = await getBackupFilename(req.params.slug)
@@ -287,7 +293,8 @@ module.exports = function(app) {
             Response.NotFound(res, 'Backup not found')
     });
 
-    app.post("/api/backups", function(req, res) {
+    // Create Backup
+    app.post("/api/backups", acl.hasPermission('backups:create'), function(req, res) {
         if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
             Response.Processing(res, 'Operation already in progress')
             return
@@ -630,7 +637,8 @@ module.exports = function(app) {
         
     }
 
-    app.post("/api/backups/:slug/restore", async function(req, res) {
+    // Restore Backup
+    app.post("/api/backups/:slug/restore", acl.hasPermission('backups:update'), async function(req, res) {
         if (![STATE_IDLE, STATE_BACKUP_ERROR, STATE_RESTORE_ERROR].includes(getBackupState().state)) {
             Response.Processing(res, 'Operation already in progress')
             return

@@ -28,8 +28,8 @@ export default {
             // Datatable headers
             dtBackupHeaders: [
                 {name: 'name', label: '', field: 'name', align: 'left', sortable: true},
+                {name: 'size', label: '', field: row => Utils.bytesToHumanReadable(row.size), align: 'left', sortable: true},
                 {name: 'date', label: '', field: row => Utils.getRelativeDate(row.date), align: 'left', sortable: true},
-                {name: 'date2', label: '', field: 'date', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -494,7 +494,7 @@ export default {
                 textColor: 'white',
                 position: 'top-right'
             })
-          }
+        }
         
     }
 }

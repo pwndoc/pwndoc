@@ -1081,6 +1081,7 @@ AuditSchema.statics.updateComment = (isAdmin, auditId, userId, commentId, newCom
     })
 }
 
+// Get images from audit ID list (mainly for backup purposes)
 AuditSchema.statics.getAuditsImages = (auditsIds = []) => {
     return new Promise((resolve, reject) => {
         var imgRegex = new RegExp(/img src=["']([0-9a-f]{24})["']/)
@@ -1255,7 +1256,7 @@ AuditSchema.statics.restore = (path, mode = "upsert") => {
 
                 jsonStream.on('data', (document) => {
                     documents.push(document)
-                    if (documents.length === 100) {
+                    if (documents.length === 10) {
                         jsonStream.pause()
                         Audit.bulkWrite(documents.map(document => {
                             return {
@@ -1319,7 +1320,7 @@ AuditSchema.statics.restore = (path, mode = "upsert") => {
 
                 jsonStream.on('data', (document) => {
                     documents.push(document)
-                    if (documents.length === 100) {
+                    if (documents.length === 10) {
                         jsonStream.pause()
                         Image.bulkWrite(documents.map(document => {
                             return {
