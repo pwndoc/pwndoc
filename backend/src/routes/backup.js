@@ -63,6 +63,8 @@ module.exports = function(app) {
     }
 
     function setBackupState(state, message = null) {
+        if (!fs.existsSync(backupPath))
+            fs.mkdirSync(backupPath)
         if (message)
             fs.writeFileSync(`${backupPath}/.state`, state + '\n' + message)
         else
