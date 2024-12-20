@@ -265,10 +265,10 @@ module.exports = function(request, app) {
 
       it('Get audit types', async () => {
         const expected = [
-          {"hidden": ["network"], "name": "Retest", "sections": [], "templates": [{}], "stage": "retest"},
-          {"hidden": ["network"], "name": "Multi", "sections": [], "templates": [{}], "stage": "multi"},
-          {"hidden": [], "name": "Wifi", "sections": [], "templates": [{}], "stage": "default"},
-          {"hidden": [], "name": "Web", "sections": [], "templates": [{}], "stage": "default"}
+          {_id: expect.anything(), "hidden": ["network"], "name": "Retest", "sections": [], "templates": [{}], "stage": "retest"},
+          {_id: expect.anything(), "hidden": ["network"], "name": "Multi", "sections": [], "templates": [{}], "stage": "multi"},
+          {_id: expect.anything(), "hidden": [], "name": "Wifi", "sections": [], "templates": [{}], "stage": "default"},
+          {_id: expect.anything(), "hidden": [], "name": "Web", "sections": [], "templates": [{}], "stage": "default"}
         ]
         var response = await request(app).get('/api/data/audit-types')
           .set('Cookie', [
@@ -276,7 +276,7 @@ module.exports = function(request, app) {
           ])
       
         expect(response.status).toBe(200)
-        expect(response.body.datas).toEqual(expect.arrayContaining(expected))
+        expect(response.body.datas).toEqual(expected)
       })
 
       it('Delete audit type', async () => {
@@ -461,8 +461,8 @@ module.exports = function(request, app) {
 
       it('Get sections', async () => {
         const expected = [
-          {name: 'Attack Scenario', field: 'attack_scenario'},
-          {name: 'But', field: 'goal'},
+          {_id: expect.anything(), name: 'Attack Scenario', field: 'attack_scenario'},
+          {_id: expect.anything(), name: 'But', field: 'goal'},
         ]
         var response = await request(app).get('/api/data/sections')
           .set('Cookie', [
@@ -470,7 +470,7 @@ module.exports = function(request, app) {
           ])
       
         expect(response.status).toBe(200)
-        expect(response.body.datas).toEqual(expect.arrayContaining(expected))
+        expect(response.body.datas).toEqual(expected)
       })
 
       //it('Should not delete nonexistent section', async () => {
