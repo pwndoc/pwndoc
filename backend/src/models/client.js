@@ -197,7 +197,7 @@ ClientSchema.statics.restore = (path, mode = "upsert") => {
                         Client.bulkWrite(documents.map(document => {
                             return {
                                 replaceOne: {
-                                    filter: {name: document.name},
+                                    filter: {email: document.email},
                                     replacement: document,
                                     upsert: true
                                 }
