@@ -1,0 +1,10 @@
+version: '3'
+services:
+  mongodb:
+    command: --wiredTigerCacheSizeGB 0.5 # 50% of (max RAM - 1GB) - minimum 0.25 (Modify it depending on defined RAM limits)
+    deploy:
+      resources:
+        limits:
+          memory: 2G # Maximum memory to allocate (Modify it depending on host ressources - leave at least 1GB free for host)
+        reservations:
+          memory: 1G # Minimum memory required

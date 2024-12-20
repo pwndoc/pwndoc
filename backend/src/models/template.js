@@ -95,6 +95,133 @@ TemplateSchema.statics.delete = (templateId) => {
     });
 }
 
+TemplateSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportTemplatesPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/templates.json`)
+                writeStream.write('[')
+
+                let templates = Template.find().cursor()
+                let isFirst = true
+
+                templates.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    fs.cpSync(`${__basedir}/../report-templates`, `${path}/report-templates`, {recursive: true})
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportTemplatesPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Template'})
+        }
+            
+    })
+}
+
+TemplateSchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importTemplatesPromise() {
+            let documents = []
+
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/templates.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        Template.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {name: document.name},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
+                })
+                jsonStream.on('end', () => {
+                    if (documents.length > 0) {
+                        Template.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {name: document.name},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await Template.deleteMany()
+            await importTemplatesPromise()
+            fs.cpSync(`${path}/report-templates`, `${__basedir}/../report-templates`, {recursive: true})
+            resolve()
+        }
+        catch (error) {
+            reject({ error: error, model: 'Template' })
+        }
+    })
+}
+
 /*
 *** Methods ***
 */

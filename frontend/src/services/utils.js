@@ -214,5 +214,46 @@ export default {
       return "#000000" //black
     else
       return "#ffffff" //white
+  },
+
+  getRelativeDate: function(date) {
+    const now = new Date();
+    const diff = now - new Date(date);
+
+    const seconds = Math.floor(diff / 1000);
+    if (seconds < 60) {
+      return `${seconds} seconds ago`;
+    }
+
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) {
+      return `${minutes} minutes ago`;
+    }
+
+    const hours = Math.floor(diff / 3600000);
+    if (hours < 24) {
+      return `${hours} hours ago`;
+    }
+
+    const days = Math.floor(diff / 86400000);
+    if (days < 30) {
+      return `${days} days ago`;
+    }
+
+    const months = Math.floor(diff / 2592000000);
+    if (months < 12) {
+      return `${months} months ago`;
+    }
+
+    const years = Math.floor(diff / 31536000000);
+    return `${years} years ago`;
+  },
+
+  bytesToHumanReadable: function(bytes) {
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    if (bytes === 0) return "0 B";
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    const size = bytes / Math.pow(1024, i);
+    return `${size.toFixed(2)} ${sizes[i]}`;
   }
 }

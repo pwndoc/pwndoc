@@ -75,6 +75,131 @@ LanguageSchema.statics.delete = (locale) => {
     });
 }
 
+LanguageSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportLanguagesPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/languages.json`)
+                writeStream.write('[')
+
+                let languages = Language.find().cursor()
+                let isFirst = true
+
+                languages.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportLanguagesPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Languages'})
+        }
+            
+    })
+}
+
+LanguageSchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importLanguagesPromise () {
+            let documents = []
+
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/languages.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        Language.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {language: document.language, locale: document.locale},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
+                })
+                jsonStream.on('end', () => {
+                    if (documents.length > 0) {
+                        Language.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {language: document.language, locale: document.locale},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await Language.deleteMany()
+            await importLanguagesPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Languages'})
+        }
+    })
+}
+
 /*
 *** Methods ***
 */

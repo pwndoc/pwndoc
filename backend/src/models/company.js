@@ -81,6 +81,131 @@ CompanySchema.statics.delete = (companyId) => {
     });
 }
 
+CompanySchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportCompaniesPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/companies.json`)
+                writeStream.write('[')
+
+                let companies = Company.find().cursor()
+                let isFirst = true
+
+                companies.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportCompaniesPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Companies'})
+        }
+            
+    })
+}
+
+CompanySchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importCompaniesPromise () {
+            let documents = []
+
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/companies.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        Company.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {name: document.name},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
+                })
+                jsonStream.on('end', () => {
+                    if (documents.length > 0) {
+                        Company.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {name: document.name},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await Company.deleteMany()
+            await importCompaniesPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Companies'})
+        }
+    })
+}
+
 /*
 *** Methods ***
 */
