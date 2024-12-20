@@ -335,5 +335,31 @@ module.exports = function(request, app) {
         expect(response.status).toBe(401)
       })
     })
+
+    describe('Testing Unauthenticated Backups routes', () => {
+      it('should return 401 Unauthorized', async () => {
+        let response = await request(app).get('/api/backups')
+        expect(response.status).toBe(401)
+
+        response = await request(app).get('/api/backups/status')
+        expect(response.status).toBe(401)
+
+        response = await request(app).get('/api/backups/download/123')
+        expect(response.status).toBe(401)
+
+        response = await request(app).post('/api/backups/upload')
+        expect(response.status).toBe(401)
+
+        response = await request(app).delete('/api/backups/123')
+        expect(response.status).toBe(401)
+
+        response = await request(app).post('/api/backups')
+        expect(response.status).toBe(401)
+
+        response = await request(app).post('/api/backups/123/restore')
+        expect(response.status).toBe(401)
+      })
+    })
+
   })
 }
