@@ -1107,16 +1107,16 @@ AuditSchema.statics.getAuditsImages = (auditsIds = []) => {
         query.unwind({path: '$findings.customFields', preserveNullAndEmptyArrays: true})
         query.addFields({
             imageFields: {
-                $concat: [
-                    {$ifNull: ["$customFields.text", ""]},
-                    {$ifNull: ["$sections.customFields.text", ""]},
-                    {$ifNull: ["$findings.description", ""]},
-                    {$ifNull: ["$findings.observation", ""]},
-                    {$ifNull: ["$findings.poc", ""]},
-                    {$ifNull: ["$findings.remediation", ""]},
-                    {$ifNull: ["$findings.retestDescription", ""]},
-                    {$ifNull: ["$findings.customFields.text", ""]},
-                ],
+            $concat: [
+                {$cond: [{$eq: [{$type: "$customFields.text"}, "string"]}, "$customFields.text", ""]},
+                {$cond: [{$eq: [{$type: "$sections.customFields.text"}, "string"]}, "$sections.customFields.text", ""]},
+                {$cond: [{$eq: [{$type: "$findings.description"}, "string"]}, "$findings.description", ""]},
+                {$cond: [{$eq: [{$type: "$findings.observation"}, "string"]}, "$findings.observation", ""]},
+                {$cond: [{$eq: [{$type: "$findings.poc"}, "string"]}, "$findings.poc", ""]},
+                {$cond: [{$eq: [{$type: "$findings.remediation"}, "string"]}, "$findings.remediation", ""]},
+                {$cond: [{$eq: [{$type: "$findings.retestDescription"}, "string"]}, "$findings.retestDescription", ""]},
+                {$cond: [{$eq: [{$type: "$findings.customFields.text"}, "string"]}, "$findings.customFields.text", ""]},
+            ],
             },
         })
         query.project({
