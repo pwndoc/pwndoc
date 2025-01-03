@@ -108,6 +108,131 @@ CustomFieldSchema.statics.delete = (fieldId) => {
     })
 }
 
+CustomFieldSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportCustomFieldsPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/customFields.json`)
+                writeStream.write('[')
+
+                let customFields = CustomField.find().cursor()
+                let isFirst = true
+
+                customFields.eachAsync(async (document) => {
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportCustomFieldsPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'CustomField'})
+        }
+            
+    })
+}
+
+CustomFieldSchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importCustomFieldsPromise () {
+            let documents = []
+
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/customFields.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        CustomField.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {label: document.label, display: document.display, displaySub: document.displaySub},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
+                })
+                jsonStream.on('end', () => {
+                    if (documents.length > 0) {
+                        CustomField.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {label: document.label, display: document.display, displaySub: document.displaySub},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await CustomField.deleteMany()
+            await importCustomFieldsPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'CustomField'})
+        }
+    })
+}
+
 /*
 *** Methods ***
 */
