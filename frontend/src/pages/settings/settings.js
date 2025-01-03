@@ -1,4 +1,4 @@
-import { Notify, Dialog, exportFile } from 'quasar'
+import { Notify, Dialog } from 'quasar'
 
 import SettingsService from '@/services/settings'
 import UserService from '@/services/user'
