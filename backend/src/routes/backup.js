@@ -1,7 +1,6 @@
-const { resolve } = require('path');
-
 module.exports = function(app) {
     const fs = require('fs')
+    const path = require('path')
     const tar = require('tar-stream')
     const zlib = require('zlib')
     const diskusage = require('diskusage')
@@ -249,8 +248,10 @@ module.exports = function(app) {
             fileFilter: (req, file, cb) => {
                 if (file.mimetype === 'application/x-tar' && file.originalname.endsWith('.tar'))
                     cb(null, true);
+                else if (utils.validFilename(path.basename(file.originalname)))
+                    cb({fn: 'BadParameters', message: 'Invalid characters in filename'})
                 else
-                    cb(new Error('Only .tar archives are allowed'));
+                    cb({fn: 'BadParameters', message:'Only .tar archives are allowed'})
             },
             limits: {
                 fileSize: maxFileSize

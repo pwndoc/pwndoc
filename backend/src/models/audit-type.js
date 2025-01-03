@@ -1,5 +1,4 @@
 var mongoose = require('mongoose');
-const Audit = require('./audit');
 var Schema = mongoose.Schema;
 
 var Template = {
