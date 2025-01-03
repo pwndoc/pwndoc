@@ -12,6 +12,8 @@ module.exports = function(request, app) {
       let backupDownload = ''
       // Variable to store a backup to be used in the restore test
       let backupRestore = ''
+      // Variable to store a backup to be used in the upload test
+      let backupUpload = ''
       // Function to wait for backup or restore to be finished
       const waitForStatusIdle = async (timeout = 30000, interval = 1000) => {
         const startTime = Date.now()
@@ -131,8 +133,9 @@ module.exports = function(request, app) {
         expect(response.body.datas[2].protected).toBe(false)
         expect(response.body.datas[2].data).toEqual(["Audits", "Users"])
 
-        backupDownload = response.body.datas[1]
         backupRestore = response.body.datas[0]
+        backupDownload = response.body.datas[1]
+        backupUpload = response.body.datas[2]
       })
 
       it('Should Download backup', async () => {
@@ -160,9 +163,9 @@ module.exports = function(request, app) {
 
       it('Should be 2 Backups', async () => {
         const response = await request(app).get('/api/backups')
-          .set('Cookie', [
-            `token=JWT ${userToken}`
-          ])
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
       
         expect(response.status).toBe(200)
         expect(response.body.datas).toHaveLength(2)
@@ -175,21 +178,66 @@ module.exports = function(request, app) {
         expect(response.body.datas[1].data).toEqual(["Audits", "Users"])
       })
 
-      // TODO make this test work
-      // it('Should Upload backup', async () => {
-      //   const backupPath = `${__basedir}/../backup`
+      it('Should not upload backup with path traversal filename', async () => {
+        const backupPath = `${__basedir}/../backup`
 
-      //   // Read the backup file
+        const response = await request(app).post('/api/backups/upload')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+        .attach('file', `${backupPath}/${backupUpload.filename}`, {filename: '../../../../etc/passwd'})
 
-      //   const response = await request(app).post('/api/backups/upload')
-      //   .set('Cookie', [
-      //     `token=JWT ${userToken}`
-      //   ])
-      //   .attach('backup-uploaded.tar', `${backupPath}/${backupDownload.filename}`)
+        expect(response.status).toBe(422)
+        expect(response.body.datas).toEqual("Invalid characters in filename")
+      })
 
-      //   // Assert the response
-      //   expect(response.status).toBe(201)
-      // })
+      it('Should not upload backup with wrong extension', async () => {
+        const backupPath = `${__basedir}/../backup`
+
+        const response = await request(app).post('/api/backups/upload')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+        .attach('file', `${backupPath}/${backupUpload.filename}`, {filename: 'backup-uploaded.tar.jpg'})
+        
+        expect(response.status).toBe(422)
+        expect(response.body.datas).toEqual("Only .tar archives are allowed")
+      })
+
+      it('Should Upload backup', async () => {
+        const backupPath = `${__basedir}/../backup`
+
+        // Read the backup file
+
+        const response = await request(app).post('/api/backups/upload')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+        .attach('file', `${backupPath}/${backupUpload.filename}`, {filename: 'backup-uploaded.tar'})
+
+        expect(response.status).toBe(201)
+      })
+
+      it('Should be 3 Backups', async () => {
+        const response = await request(app).get('/api/backups')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+      
+        expect(response.status).toBe(200)
+        expect(response.body.datas).toHaveLength(3)
+        expect(response.body.datas[0].type).toBe("full")
+        expect(response.body.datas[0].protected).toBe(false)
+        expect(response.body.datas[0].data).toHaveLength(13)
+        expect(response.body.datas[1].name).toBe("Partial Backup")
+        expect(response.body.datas[1].type).toBe("partial")
+        expect(response.body.datas[1].protected).toBe(false)
+        expect(response.body.datas[1].data).toEqual(["Audits", "Users"])
+        expect(response.body.datas[2].name).toBe("Partial Backup")
+        expect(response.body.datas[2].type).toBe("partial")
+        expect(response.body.datas[2].protected).toBe(false)
+        expect(response.body.datas[2].data).toEqual(["Audits", "Users"])
+      })
 
       it('Should Restore backup', async () => {
         const mongoose = require('mongoose')
