@@ -17,6 +17,11 @@ function Created(res, data){
 };
 exports.Created = Created;
 
+function Processing(res, data){
+    res.status(202).json({"status": "success", "datas": data});
+};
+exports.Processing = Processing;
+
 function NoContent(res, data){
     res.status(204).json({"status": "success", "datas": data});
 };

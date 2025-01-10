@@ -362,6 +362,133 @@ UserSchema.statics.cancelTotp = function (token, username){
     })
 }
 
+UserSchema.statics.backup = (path) => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function exportUsersPromise() {
+            return new Promise((resolve, reject) => {
+                const writeStream = fs.createWriteStream(`${path}/users.json`)
+                writeStream.write('[')
+
+                let users = User.find().cursor()
+                let isFirst = true
+
+                users.eachAsync(async (document) => {
+                    document = document.toObject()
+                    delete document.refreshTokens // Remove refreshTokens from backup
+                    if (!isFirst) {
+                        writeStream.write(',')
+                    } else {
+                        isFirst = false
+                    }
+                    writeStream.write(JSON.stringify(document, null, 2))
+                    return Promise.resolve()
+                })
+                .then(() => {
+                    writeStream.write(']');
+                    writeStream.end();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+
+                writeStream.on('finish', () => {
+                    resolve('ok');
+                });
+            
+                writeStream.on('error', (error) => {
+                    reject(error);
+                });
+            })
+        }
+
+        try {
+            await exportUsersPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Users'})
+        }
+            
+    })
+}
+
+UserSchema.statics.restore = (path, mode = "upsert") => {
+    return new Promise(async (resolve, reject) => {
+        const fs = require('fs')
+
+        function importUsersPromise () {
+            let documents = []
+
+            return new Promise((resolve, reject) => {
+                const readStream = fs.createReadStream(`${path}/users.json`)
+                const JSONStream = require('JSONStream')
+
+                let jsonStream = JSONStream.parse('*')
+                readStream.pipe(jsonStream)
+
+                readStream.on('error', (error) => {
+                    reject(error)
+                })
+
+                jsonStream.on('data', async (document) => {
+                    documents.push(document)
+                    if (documents.length === 100) {
+                        User.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {_id: document._id},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .catch(err => {
+                            reject(err)
+                        })
+                        documents = []
+                    }
+                })
+                jsonStream.on('end', () => {
+                    if (documents.length > 0) {
+                        User.bulkWrite(documents.map(document => {
+                            return {
+                                replaceOne: {
+                                    filter: {_id: document._id},
+                                    replacement: document,
+                                    upsert: true
+                                }
+                            }
+                        }))
+                        .then(() => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err)
+                        })
+                    }
+                    else
+                        resolve()
+                })
+                jsonStream.on('error', (error) => {
+                    reject(error)
+                })
+            })
+        }
+
+        try {
+            if (mode === "revert") 
+                await User.deleteMany()
+            await importUsersPromise()
+            resolve()
+        }
+        catch (error) {
+            reject({error: error, model: 'Users'})
+        }
+    })
+}
+
 /*
 *** Methods ***
 */
