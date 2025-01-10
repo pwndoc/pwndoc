@@ -844,11 +844,26 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
             findingList.forEach(group => {
                 var order = -1 // desc
                 if (group.sortOption.sortOrder === 'asc') order = 1
+                
+                var Settings = mongoose.model('Settings');
+                var settings = Settings.getAll();
 
                 var tmpFindings = group.findings
                 .sort((a,b) => {
-                    var cvssA = new cvss.Cvss3P1(a.cvssv3)
-                    var cvssB = new cvss.Cvss3P1(b.cvssv3)
+                    var cvssA = null;
+                    var cvssB = null;
+
+                    if (settings.report.public.scoringMethods.CVSS4 && a.cvssv4) {
+                        var cvssA = new cvss.Cvss4P0(a.cvssv4)
+                    } else {
+                        var cvssA = new cvss.Cvss3P1(a.cvssv3)
+                    }
+
+                    if (settings.report.public.scoringMethods.CVSS4 && b.cvssv4) {
+                        var cvssB = new cvss.Cvss4P0(b.cvssv4)
+                    } else {
+                        var cvssB = new cvss.Cvss3P1(b.cvssv3)
+                    }
 
                     // Get built-in value (findings[sortValue])
                     var left = a[group.sortOption.sortValue]
