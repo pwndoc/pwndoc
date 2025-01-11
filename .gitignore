@@ -10,6 +10,9 @@ mongo-data*
 report-templates
 custom-generator.js
 
+# Backups
+backend/backup
+
 # Configuration files
 config.json
 report.json
