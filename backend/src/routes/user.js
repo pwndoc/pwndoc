@@ -20,8 +20,8 @@ module.exports = function(app) {
         
         User.updateRefreshToken(token, userAgent)
         .then(msg => {
-            res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
-            res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+            res.cookie('token', `JWT ${msg.token}`, {sameSite: 'strict', secure: true, httpOnly: true})
+            res.cookie('refreshToken', msg.refreshToken, {sameSite: 'strict', secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
             Response.Ok(res, msg)
         })
         .catch(err => {
@@ -82,8 +82,8 @@ module.exports = function(app) {
 
         user.getToken(req.headers['user-agent'])
         .then(msg => {
-            res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
-            res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+            res.cookie('token', `JWT ${msg.token}`, {sameSite: 'strict', secure: true, httpOnly: true})
+            res.cookie('refreshToken', msg.refreshToken, {sameSite: 'strict', secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err))
@@ -221,8 +221,8 @@ module.exports = function(app) {
 
                     newUser.getToken(req.headers['user-agent'])
                     .then(msg => {
-                        res.cookie('token', `JWT ${msg.token}`, {secure: true, httpOnly: true})
-                        res.cookie('refreshToken', msg.refreshToken, {secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+                        res.cookie('token', `JWT ${msg.token}`, {sameSite: 'strict', secure: true, httpOnly: true})
+                        res.cookie('refreshToken', msg.refreshToken, {sameSite: 'strict', secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
                         Response.Created(res, msg)
                     })
                     .catch(err => Response.Internal(res, err))
@@ -265,7 +265,7 @@ module.exports = function(app) {
 
         User.updateProfile(req.decodedToken.username, user)
         .then(msg => {
-            res.cookie('token', msg.token, {secure: true, httpOnly: true})
+            res.cookie('token', msg.token, {sameSite: 'strict', secure: true, httpOnly: true})
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err));
