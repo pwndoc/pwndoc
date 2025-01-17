@@ -96,6 +96,27 @@ function html2ooxml(html, style = '') {
                 cParagraph.addChildElement(new docx.TextRun(`${label} `))
                 cParagraph.addChildElement(new docx.SimpleField(`SEQ ${label}`, '1'))
                 cParagraph.addChildElement(new docx.TextRun(` - ${attribs.alt}`))
+            } else if (tag === "span" && inCodeBlock) {
+                var hljsClassName = attribs["class"];
+
+                if (hljsClassName === "hljs-keyword") {
+                    cRunProperties.color = "c678dd";
+                } else if (hljsClassName === "hljs-name") {
+                    cRunProperties.color = "e06c75";
+                } else if (hljsClassName === "hljs-number" || hljsClassName === "hljs-attr" || hljsClassName === "hljs-variable") {
+                    cRunProperties.color = "d19a66";
+                } else if (hljsClassName === "hljs-built_in") {
+                    cRunProperties.color = "e6c07b";
+                } else if (hljsClassName === "hljs-string" || hljsClassName === "hljs-attribute") {
+                    cRunProperties.color = "98c379";
+                } else if (hljsClassName === "hljs-symbol" || hljsClassName === "hljs-title" || hljsClassName === "hljs-meta") {
+                    cRunProperties.color = "61aeee";
+                } else if (hljsClassName === "hljs-quote") {
+                    cRunProperties.color = "5c6370";
+                } else if (hljsClassName === "hljs-comment") {
+                    cRunProperties.color = "5c6370";
+                    cRunProperties.italics = true;
+                }
             }
         },
 

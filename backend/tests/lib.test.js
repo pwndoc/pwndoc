@@ -529,27 +529,6 @@ module.exports = function () {
         expect(ooxml).toEqual(expected)
       })
 
-      it('Code', () => {
-        var html = "<p>Paragraph <code>Code</code> Paragraph</p>"
-        var expected =
-        `<w:p>`+
-          `<w:r>`+
-            `<w:t xml:space="preserve">Paragraph </w:t>`+
-          `</w:r>`+
-          `<w:r>`+
-            `<w:rPr>`+
-              `<w:rStyle w:val="CodeChar"/>`+
-            `</w:rPr>`+
-            `<w:t xml:space="preserve">Code</w:t>`+
-          `</w:r>`+
-          `<w:r>`+
-            `<w:t xml:space="preserve"> Paragraph</w:t>`+
-          `</w:r>`+
-        `</w:p>`
-        var ooxml = html2ooxml(html)
-        expect(ooxml).toEqual(expected)
-      })
-
       it('CodeBlock', () => {
         var html = "<pre><code>Code Block</code></pre>"
         var expected =
@@ -568,6 +547,28 @@ module.exports = function () {
         expect(ooxml).toEqual(expected)
       })
 
+    })
+
+    describe('Syntax highlight tests', () => {
+      it('Code', () => {
+        const hljs = require('highlight.js');
+        var html = "<p>Paragraph <pre>" +
+          hljs.highlightAuto(
+            "// Using require\n" +
+            "const hljs = require('highlight.js');" +
+            "\n" +
+            "const highlightedCode = hljs.highlight(" +
+            "  '<span>Hello World!</span>'," +
+            "  { language: 'xml' }" +
+            ").value"
+          ).value +
+          "</pre> Paragraph</p>";
+
+        var expected =
+        `todo`
+        var ooxml = html2ooxml(html)
+        expect(ooxml).toEqual(expected)
+      })
     })
   })
 }

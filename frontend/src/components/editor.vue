@@ -216,20 +216,25 @@
 
 <script>
 // Import the editor
-import { Editor, EditorContent } from '@tiptap/vue-2'
+import { Editor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-2'
 
 // Import Extensions
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
+import CodeBlockComponent from './editor-code-block'
 
 const Diff = require('diff')
 
 import Utils from '@/services/utils'
 import ImageService from '@/services/image'
+
+import { lowlight } from 'lowlight'
+lowlight.registerAlias('xml', ['html'])
 
 export default {
     name: 'BasicEditor',
@@ -280,7 +285,13 @@ export default {
                     TrailingNode.configure({
                         node: 'paragraph', 
                         notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']
+                    }),
+                    CodeBlockLowlight.extend({
+                        addNodeView() {
+                            return VueNodeViewRenderer(CodeBlockComponent)
+                        },
                     })
+                    .configure({ lowlight }),
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -473,29 +484,6 @@ export default {
         font-size: 4.25rem;
     }
 
-    pre {
-      padding: 0.7rem 1rem;
-      border-radius: 5px;
-      background: black;
-      color: white;
-      font-size: 0.8rem;
-      overflow-x: auto;
-      white-space: pre-wrap;
-
-      code {
-        display: block;
-      }
-    }
-
-    p code {
-      padding: 0.2rem 0.4rem;
-      border-radius: 5px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      background: rgba(black, 0.1);
-      color: rgba(black, 0.8);
-    }
-
     ul,
     ol {
       padding-left: 1rem;
@@ -585,6 +573,79 @@ export default {
       cursor: col-resize;
     }
 
+    pre {
+        background: black;
+        border-radius: 0.5rem;
+        color: white;
+        font-family: 'JetBrainsMono', monospace;
+        margin: 1rem 0;
+        padding: 0.75rem 1rem;
+
+        &:last-child {
+            margin-bottom: 1rem;
+        }
+
+        code {
+            background: none;
+            color: inherit;
+            font-size: 0.8rem;
+            padding: 0;
+        }
+
+        /* Code styling */
+        .hljs-comment,
+        .hljs-quote {
+            color: #616161;
+        }
+
+        .hljs-variable,
+        .hljs-template-variable,
+        .hljs-attribute,
+        .hljs-tag,
+        .hljs-name,
+        .hljs-regexp,
+        .hljs-link,
+        .hljs-name,
+        .hljs-selector-id,
+        .hljs-selector-class {
+            color: #f98181;
+        }
+
+        .hljs-number,
+        .hljs-meta,
+        .hljs-built_in,
+        .hljs-builtin-name,
+        .hljs-literal,
+        .hljs-type,
+        .hljs-params {
+            color: #fbbc88;
+        }
+
+        .hljs-string,
+        .hljs-symbol,
+        .hljs-bullet {
+            color: #b9f18d;
+        }
+
+        .hljs-title,
+        .hljs-section {
+            color: #faf594;
+        }
+
+        .hljs-keyword,
+        .hljs-selector-tag {
+            color: #70cff8;
+        }
+
+        .hljs-comment,
+        .hljs-emphasis {
+            font-style: italic;
+        }
+
+        .hljs-strong {
+            font-weight: 700;
+        }
+    }
   }
 }
 .is-active {
