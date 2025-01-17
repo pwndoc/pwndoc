@@ -1,6 +1,9 @@
 var docx = require("docx")
 var xml = require("xml")
 var htmlparser = require("htmlparser2")
+var domutils = require("domutils")
+const render = require('dom-serializer').default
+const hljs = require('highlight.js');
 
 function html2ooxml(html, style = '') {
     if (html === '')
@@ -99,21 +102,21 @@ function html2ooxml(html, style = '') {
             } else if (tag === "span" && inCodeBlock) {
                 var hljsClassName = attribs["class"];
 
-                if (hljsClassName === "hljs-keyword") {
+                if (hljsClassName === "hljs-doctag" || hljsClassName === "hljs-keyword" || hljsClassName === "hljs-formula") {
                     cRunProperties.color = "c678dd";
-                } else if (hljsClassName === "hljs-name") {
+                } else if (hljsClassName === "hljs-section" || hljsClassName === "hljs-name" || hljsClassName === "hljs-selector-tag" || hljsClassName === "hljs-deletion" || hljsClassName === "hljs-subst") {
                     cRunProperties.color = "e06c75";
-                } else if (hljsClassName === "hljs-number" || hljsClassName === "hljs-attr" || hljsClassName === "hljs-variable") {
-                    cRunProperties.color = "d19a66";
-                } else if (hljsClassName === "hljs-built_in") {
-                    cRunProperties.color = "e6c07b";
-                } else if (hljsClassName === "hljs-string" || hljsClassName === "hljs-attribute") {
+                } else if (hljsClassName === "hljs-literal") {
+                    cRunProperties.color = "56b6c2";
+                } else if (hljsClassName === "hljs-string" || hljsClassName === "hljs-regexp" || hljsClassName === "hljs-addition" || hljsClassName === "hljs-attribute") {
                     cRunProperties.color = "98c379";
-                } else if (hljsClassName === "hljs-symbol" || hljsClassName === "hljs-title" || hljsClassName === "hljs-meta") {
+                } else if (hljsClassName === "hljs-attr" || hljsClassName === "hljs-variable" || hljsClassName === "hljs-template-variable" || hljsClassName === "hljs-type" || hljsClassName === "hljs-selector-class" || hljsClassName === "hljs-selector-attr" || hljsClassName === "hljs-selector-pseudo" || hljsClassName === "hljs-number") {
+                    cRunProperties.color = "d19a66";
+                } else if (hljsClassName === "hljs-symbol" || hljsClassName === "hljs-bullet" || hljsClassName === "hljs-link" || hljsClassName === "hljs-meta" || hljsClassName === "hljs-selector-id" || hljsClassName === "hljs-title") {
                     cRunProperties.color = "61aeee";
-                } else if (hljsClassName === "hljs-quote") {
-                    cRunProperties.color = "5c6370";
-                } else if (hljsClassName === "hljs-comment") {
+                } else if (hljsClassName === "hljs-built_in" || hljsClassName === "hljs-class_" || hljsClassName === "hljs-class") {
+                    cRunProperties.color = "e6c07b";
+                } else if (hljsClassName === "hljs-comment" || hljsClassName === "hljs-quote") {
                     cRunProperties.color = "5c6370";
                     cRunProperties.italics = true;
                 }
@@ -158,6 +161,9 @@ function html2ooxml(html, style = '') {
             }
             else if (tag === "code") {
                 delete cRunProperties.style
+            } else if (tag === "span" && inCodeBlock) {
+                delete cRunProperties.color
+                delete cRunProperties.italics
             }
         },
 
@@ -168,8 +174,16 @@ function html2ooxml(html, style = '') {
         }
     }, { decodeEntities: true })
 
+    var htmlObject = htmlparser.parseDocument(html);
+    var codeObjects = domutils.getElementsByTagName('code', htmlObject);
+
+    for (let codeIndex = 0; codeIndex < codeObjects.length; codeIndex++) {
+        codeObjects[codeIndex].children[0] = htmlparser.parseDocument(hljs.highlightAuto(codeObjects[codeIndex].children[0].data).value);
+        console.log(codeObjects[codeIndex].children[0].data);
+    }
+
     // For multiline code blocks
-    html = html.replace(/\n/g, '<br>')
+    html = render(htmlObject).replace(/\n/g, '<br>')
     parser.write(html)
     parser.end()
 

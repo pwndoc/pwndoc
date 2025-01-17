@@ -593,57 +593,79 @@ export default {
         }
 
         /* Code styling */
+        .hljs {
+            color: #abb2bf;
+            background: #282c34;
+        }
+
         .hljs-comment,
         .hljs-quote {
-            color: #616161;
+            color: #5c6370;
+            font-style: italic;
         }
 
-        .hljs-variable,
-        .hljs-template-variable,
-        .hljs-attribute,
-        .hljs-tag,
-        .hljs-name,
-        .hljs-regexp,
-        .hljs-link,
-        .hljs-name,
-        .hljs-selector-id,
-        .hljs-selector-class {
-            color: #f98181;
+        .hljs-doctag,
+        .hljs-keyword,
+        .hljs-formula {
+            color: #c678dd;
         }
 
-        .hljs-number,
-        .hljs-meta,
-        .hljs-built_in,
-        .hljs-builtin-name,
-        .hljs-literal,
-        .hljs-type,
-        .hljs-params {
-            color: #fbbc88;
+        .hljs-section,
+        .hljs-name,
+        .hljs-selector-tag,
+        .hljs-deletion,
+        .hljs-subst {
+            color: #e06c75;
+        }
+
+        .hljs-literal {
+            color: #56b6c2;
         }
 
         .hljs-string,
+        .hljs-regexp,
+        .hljs-addition,
+        .hljs-attribute,
+        .hljs-meta .hljs-string {
+            color: #98c379;
+        }
+
+        .hljs-attr,
+        .hljs-variable,
+        .hljs-template-variable,
+        .hljs-type,
+        .hljs-selector-class,
+        .hljs-selector-attr,
+        .hljs-selector-pseudo,
+        .hljs-number {
+            color: #d19a66;
+        }
+
         .hljs-symbol,
-        .hljs-bullet {
-            color: #b9f18d;
+        .hljs-bullet,
+        .hljs-link,
+        .hljs-meta,
+        .hljs-selector-id,
+        .hljs-title {
+            color: #61aeee;
         }
 
-        .hljs-title,
-        .hljs-section {
-            color: #faf594;
+        .hljs-built_in,
+        .hljs-title.class_,
+        .hljs-class .hljs-title {
+            color: #e6c07b;
         }
 
-        .hljs-keyword,
-        .hljs-selector-tag {
-            color: #70cff8;
-        }
-
-        .hljs-comment,
         .hljs-emphasis {
             font-style: italic;
         }
 
         .hljs-strong {
-            font-weight: 700;
+            font-weight: bold;
+        }
+
+        .hljs-link {
+            text-decoration: underline;
         }
     }
   }
