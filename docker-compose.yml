@@ -11,7 +11,7 @@ services:
         reservations:
           memory: 1G # Minimum memory required
     volumes:
-      - ./backend/mongo-data:/data/db
+      - mongo-data:/data/db
     restart: always
     ports:
       - 127.0.0.1:27017:27017
