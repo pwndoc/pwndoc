@@ -10,8 +10,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_BACKEND: ghcr.io/${{ github.repository_owner }}/${{ github.repository_name }}-backend
-  IMAGE_NAME_FRONTEND: ghcr.io/${{ github.repository_owner }}/${{ github.repository_name }}-frontend
+  IMAGE_NAME_BACKEND: ghcr.io/${{ github.repository }}-backend
+  IMAGE_NAME_FRONTEND: ghcr.io/${{ github.repository }}-frontend
 
 jobs:
   build-and-push-images:
