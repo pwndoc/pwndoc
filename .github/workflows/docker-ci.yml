@@ -6,7 +6,7 @@ on:
       - main
       - registry
     tags:
-      - 'v*'  # Runs on version tags (e.g., v1.0.0)
+      - 'v*.*.*'  # Runs on version tags (e.g., v1.0.0)
 
 env:
   REGISTRY: ghcr.io
@@ -24,6 +24,13 @@ jobs:
       id-token: write
 
     steps:
+      - name: Check if branch is correct
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.ref }}" == refs/heads/registry ]]; then
+            echo "This workflow only runs when both 'main' and a version tag are present."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
