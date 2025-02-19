@@ -21,8 +21,7 @@ services:
       - backend
 
   pwndoc-backend:
-    build: ./backend
-    image: yeln4ts/pwndoc:backend
+    image: ghcr.io/pwndoc/pwndoc-backend:latest
     container_name: pwndoc-backend
     volumes:
       - ./backend/report-templates:/app/report-templates
@@ -39,8 +38,7 @@ services:
       - backend
 
   pwndoc-frontend:
-    build: ./frontend
-    image: yeln4ts/pwndoc:frontend
+    image: ghcr.io/pwndoc/pwndoc-frontend:latest
     container_name: pwndoc-frontend
     restart: always
     ports:
