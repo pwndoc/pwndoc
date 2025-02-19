@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - registry
     tags:
       - 'v*'  # Runs on version tags (e.g., v1.0.0)
 
