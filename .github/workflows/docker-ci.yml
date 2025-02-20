@@ -2,9 +2,6 @@ name: Build & Push Docker Images to GHCR
 
 on:
   push:
-    branches:
-      - main
-      - registry
     tags:
       - 'v*.*.*'  # Runs on version tags (e.g., v1.0.0)
 
@@ -24,11 +21,11 @@ jobs:
       id-token: write
 
     steps:
-      - name: Check if branch is correct
+      - name: Check if branch is main
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.ref }}" == refs/heads/registry ]]; then
-            echo "This workflow only runs when both 'main' and a version tag are present."
-            exit 0
+            echo "This workflow only runs on main branch."
+            exit 1
           fi
 
       - name: Checkout repository
