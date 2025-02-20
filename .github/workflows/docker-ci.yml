@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Check if branch is main
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.ref }}" == refs/heads/registry ]]; then
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "This workflow only runs on main branch."
             exit 1
           fi
