@@ -13,8 +13,6 @@ services:
     volumes:
       - ./backend/mongo-data:/data/db
     restart: always
-    ports:
-      - 127.0.0.1:27017:27017
     environment:
       - MONGO_DB:pwndoc
     networks:
@@ -23,6 +21,9 @@ services:
   pwndoc-backend:
     image: ghcr.io/pwndoc/pwndoc-backend:latest
     container_name: pwndoc-backend
+    environment:
+      - DB_SERVER=mongo-pwndoc
+      - DB_NAME=pwndoc
     volumes:
       - ./backend/report-templates:/app/report-templates
       - ./backend/src/config:/app/src/config
@@ -30,8 +31,6 @@ services:
     depends_on:
       - mongodb
     restart: always
-    ports:
-      - 4242:4242
     links:
       - mongodb
     networks: 
@@ -42,7 +41,7 @@ services:
     container_name: pwndoc-frontend
     restart: always
     ports:
-      - 8443:8443
+      - ${APP_PORT}:8443
     networks:
       - backend
 

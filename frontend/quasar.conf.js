@@ -38,14 +38,7 @@ module.exports = function (ctx) {
           ...cfg.resolve.alias,
           '@': path.resolve(__dirname, '.', 'src')
         }
-      },
-      env: ctx.dev
-        ? { // dev environnment
-          API_PORT: 5252
-        }
-        : { // prod environnment (build)
-          API_PORT: 8443,
-        }
+      }
     },
     devServer: {
       https: {
@@ -56,7 +49,12 @@ module.exports = function (ctx) {
       port: 8081,
       proxy: {
         '/api': {
-          target: 'https://pwndoc-backend:5252',
+          target: `https://pwndoc-backend-dev:4242`,
+          changeOrigin: true,
+          secure: false
+        },
+        '/socket.io': {
+          target: `https://pwndoc-backend-dev:4242`,
           changeOrigin: true,
           secure: false
         }

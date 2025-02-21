@@ -15,18 +15,21 @@ services:
       - ./mongo-data-dev:/data/db
     restart: always
     ports:
-      - 127.0.0.1:27017:27017
+      - 127.0.0.1:${DB_PORT_HOST}:27017
     environment:
       - MONGO_DB:pwndoc
     networks:
       - backend
 
-  pwndoc-backend:
+  pwndoc-backend-dev:
     build: 
       context: .
       dockerfile:  Dockerfile.dev
     image: yeln4ts/pwndoc:backend-dev
     container_name: pwndoc-backend-dev
+    environment:
+      - DB_SERVER=mongo-pwndoc-dev
+      - DB_NAME=pwndoc
     volumes:
       - ./src:/app/src
       - ./ssl:/app/ssl
@@ -35,8 +38,6 @@ services:
     depends_on:
       - mongodb
     restart: always
-    ports:
-      - 5252:5252
     links:
       - mongodb
     networks: 

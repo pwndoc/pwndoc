@@ -1,7 +1,7 @@
 version: '3'
 services:
 
-  pwndoc-frontend:
+  pwndoc-frontend-dev:
     build: 
       context: .
       dockerfile: Dockerfile.dev
@@ -18,11 +18,11 @@ services:
       - ./package-lock.json:/app/package-lock.json
     restart: always
     ports:
-      - 8081:8081
+      - ${APP_PORT}:8081
     networks:
       - backend
 
 networks:
   backend:
-    external:
-      name: backend_backend
+    name: backend_backend
+    external: true

@@ -1,10 +1,7 @@
 const request = require("supertest");
 
-var env = process.env.NODE_ENV || 'dev';
-var config = require('../src/config/config.json')[env];
-
 var mongoose = require('mongoose');
-mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, {});
+mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
 
 /* Clean the DB */
 mongoose.connection.dropDatabase();
