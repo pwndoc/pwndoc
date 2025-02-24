@@ -1,11 +1,11 @@
 var fs = require('fs');
 var Docxtemplater = require('docxtemplater');
 var PizZip = require("pizzip");
-var expressions = require('./report-filters');
+var reportFilters = require('./report-filters');
+var reportFiltersCustom = require('./report-filters-custom.js');
 let expressionParser = require('docxtemplater/expressions.js')
 var ImageModule = require('docxtemplater-image-module-pwndoc');
 var sizeOf = require('image-size');
-var customGenerator = require('./custom-generator');
 var utils = require('./utils');
 var _ = require('lodash');
 var Image = require('mongoose').model('Image');
@@ -75,13 +75,12 @@ async function generateDoc(audit) {
     catch(err) {
         console.log(err)
     }
-    expressionParser.filters = {...expressions, ...customGenerator.expressions}
+    expressionParser.filters = {...reportFilters.expressions, ...reportFiltersCustom.expressions}   
     var doc = new Docxtemplater(zip, {
         parser: parser,
         paragraphLoop: true,
         modules: [imageModule],
     });
-    customGenerator.apply(preppedAudit);
     try {
         doc.render(preppedAudit);
     }
@@ -516,14 +515,31 @@ async function splitHTMLParagraphs(data) {
     return result
 }
 
-function replaceSubTemplating(o, originalData = o){
-    var regexp = /\{_\{([a-zA-Z0-9\[\]\_\.]{1,})\}_\}/gm;
+function replaceSubTemplating(o, originalData = o) {
+    var regexp = /\{_\{([a-zA-Z0-9\[\]\_\.]+)((\s*\|\s*[a-zA-Z0-9\_]+)*)\}_\}/gm;
     if (Array.isArray(o))
         o.forEach(key => replaceSubTemplating(key, originalData))
     else if (typeof o === 'object' && !!o) {
         Object.keys(o).forEach(key => {
-            if (typeof o[key] === 'string') o[key] = o[key].replace(regexp, (match, word) =>  _.get(originalData,word.trim(),''))
-            else replaceSubTemplating(o[key], originalData)
-        })
+            if (typeof o[key] === 'string') {
+                o[key] = o[key].replace(regexp, (match, word, filters) => {
+                    let value = _.get(originalData, word.trim(), '');
+                    if (filters) {
+                        filters = filters.split('|').map(f => f.trim()).filter(f => f);
+                        filters.forEach(filter => {
+                            if (reportFiltersCustom.subTemplatingFilters[filter]) {
+                                value = reportFiltersCustom.subTemplatingFilters[filter](value);
+                            }
+                            else if (reportFilters.subTemplatingFilters[filter]) {
+                                value = reportFilters.subTemplatingFilters[filter](value);
+                            }
+                        });
+                    }
+                    return value;
+                });
+            } else {
+                replaceSubTemplating(o[key], originalData);
+            }
+        });
     }
 }
