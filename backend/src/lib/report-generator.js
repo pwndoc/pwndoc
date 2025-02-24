@@ -2,7 +2,13 @@ var fs = require('fs');
 var Docxtemplater = require('docxtemplater');
 var PizZip = require("pizzip");
 var reportFilters = require('./report-filters');
-var reportFiltersCustom = require('./report-filters-custom.js');
+var reportFiltersCustom;
+// If the custom filters file is not found, fallback to empty filters
+try {
+    reportFiltersCustom = require('./custom/report-filters-custom.js');
+} catch (e) {
+    reportFiltersCustom = { expressions: {}, subTemplatingFilters: {} };
+}
 let expressionParser = require('docxtemplater/expressions.js')
 var ImageModule = require('docxtemplater-image-module-pwndoc');
 var sizeOf = require('image-size');
