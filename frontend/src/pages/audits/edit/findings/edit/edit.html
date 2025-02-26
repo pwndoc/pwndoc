@@ -77,7 +77,7 @@ buttons
                             <template v-slot:label>
                                 {{$t('title')}} <span class="text-red">*</span>
                             </template>
-                            <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('titleField')">
+                            <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('titleField')">
                                 <q-icon name="add_comment" size="xs" />
                             </q-badge>
                             </q-input>
@@ -102,7 +102,7 @@ buttons
                                 <template v-slot:label>
                                     {{$t('type')}} <span v-if="$settings.report.public.requiredFields.findingType" class="text-red">*</span>
                                 </template>
-                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('typeField')">
+                                <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('typeField')">
                                     <q-icon name="add_comment" size="xs" />
                                 </q-badge>
                             </q-select>
@@ -119,7 +119,7 @@ buttons
                             >
                                 <template v-slot="control">
                                     <basic-editor ref="basiceditor_description" noSync v-model="finding.description" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('descriptionField')">
+                                    <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('descriptionField')">
                                         <q-icon name="add_comment" size="xs" />
                                     </q-badge>
                                 </template>
@@ -142,7 +142,7 @@ buttons
                             >
                                 <template v-slot="control">
                                     <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('observationField')">
+                                    <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('observationField')">
                                         <q-icon name="add_comment" size="xs" />
                                     </q-badge>
                                 </template>
@@ -166,12 +166,11 @@ buttons
                                 v-model="finding.references"
                                 :rules="($settings.report.public.requiredFields.findingReferences) ? [val => !!val || $t('fieldIsRequired')] : ['']"
                                 :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT" />
-                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('referencesField')">
+                                <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('referencesField')">
                                     <q-icon name="add_comment" size="xs" />
                                 </q-badge>
                             </q-field>
                         </q-card-section>
-
                         <q-expansion-item 
                         :label="$t('customFields')"
                         v-if="finding.customFields && finding.customFields.length > 0"
@@ -188,6 +187,7 @@ buttons
                             :comment-mode="$parent.commentMode"
                             :field-highlighted="fieldHighlighted"
                             @create-comment="createComment"
+                            :canCreateComment="canCreateComment()"
                             />
                         </q-expansion-item>
                     </component>
@@ -210,7 +210,7 @@ buttons
                             >
                                 <template v-slot="control">
                                     <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('pocField')">
+                                    <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('pocField')">
                                         <q-icon name="add_comment" size="xs" />
                                     </q-badge>
                                 </template>
@@ -240,7 +240,7 @@ buttons
                                 >
                                     <template v-slot="control">
                                         <basic-editor v-model="finding.scope" :toolbar="['format', 'marks', 'list']" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                                        <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('affectedField')">
+                                        <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('affectedField')">
                                             <q-icon name="add_comment" size="xs" />
                                         </q-badge>
                                     </template>
@@ -261,7 +261,7 @@ buttons
                                 :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                                 />
                                 <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
-                                    <q-icon name="add_comment" size="xs" />
+                                    <q-icon name="add_comment && canCreateComment()" size="xs" />
                                 </q-badge>
                             </div>
                         </q-card>
@@ -290,7 +290,7 @@ buttons
                                         <template v-slot:label>
                                             {{$t('remediationDifficulty')}} <span v-if="$settings.report.public.requiredFields.findingRemediationDifficulty" class="text-red">*</span>
                                         </template>
-                                        <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('remediationDifficultyField')">
+                                        <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('remediationDifficultyField')">
                                             <q-icon name="add_comment" size="xs" />
                                         </q-badge>
                                     </q-select>
@@ -314,7 +314,7 @@ buttons
                                         <template v-slot:label>
                                             {{$t('priority')}} <span v-if="$settings.report.public.requiredFields.findingPriority" class="text-red">*</span>
                                         </template>
-                                        <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('priorityField')">
+                                        <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('priorityField')">
                                             <q-icon name="add_comment" size="xs" />
                                         </q-badge>
                                     </q-select>
@@ -334,7 +334,7 @@ buttons
                                 >
                                     <template v-slot="control">
                                         <basic-editor ref="basiceditor_remediation" noSync v-model="finding.remediation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                                        <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('remediationField')">
+                                        <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('remediationField')">
                                             <q-icon name="add_comment" size="xs" />
                                         </q-badge>
                                     </template>
@@ -397,12 +397,12 @@ buttons
                                         </q-item-section>
                                         <q-item-section side>
                                             <div v-if="!$parent.editComment && !$parent.replyingComment && !$parent.editReply">
-                                                <q-btn size="sm" dense flat color="primary" icon="undo" @click="comment.resolved = false; updateComment(comment)">
+                                                <q-btn v-if="canUpdateComment()" size="sm" dense flat color="primary" icon="undo" @click="comment.resolved = false; updateComment(comment)">
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
                                                         {{(comment.resolved)?$t('tooltip.reopenComment'):$t('tooltip.resolveComment')}}
                                                     </q-tooltip> 
                                                 </q-btn>
-                                                <q-btn size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
+                                                <q-btn v-if="canDeleteComment()" size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
                                                 </q-btn>
                                             </div>
@@ -419,15 +419,15 @@ buttons
                                         </q-item-section>
                                         <q-item-section side v-if="!comment.resolved">
                                             <div v-if="!$parent.editComment && !$parent.replyingComment && !$parent.editReply" class="q-gutter-xs">
-                                                <q-btn v-if="!comment.resolved" size="sm" dense flat color="primary" icon="edit" @click="$parent.editComment = comment._id; comment.textTemp = comment.text; focusComment(comment)">
+                                                <q-btn v-if="!comment.resolved && canUpdateComment()" size="sm" dense flat color="primary" icon="edit" @click="$parent.editComment = comment._id; comment.textTemp = comment.text; focusComment(comment)">
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editComment')}}</q-tooltip> 
                                                 </q-btn>
-                                                <q-btn size="sm" dense flat color="green" icon="done" @click="comment.resolved = true; updateComment(comment)">
+                                                <q-btn v-if="canUpdateComment()" size="sm" dense flat color="green" icon="done" @click="comment.resolved = true; updateComment(comment)">
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
                                                         {{(comment.resolved)?$t('tooltip.reopenComment'):$t('tooltip.resolveComment')}}
                                                     </q-tooltip> 
                                                 </q-btn>
-                                                <q-btn size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
+                                                <q-btn v-if="canDeleteComment()" size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
                                                 </q-btn>
                                             </div>
@@ -474,17 +474,17 @@ buttons
                                         </q-item-section>
                                         <q-item-section side top v-show="hoverReply === reply._id && !$parent.editReply && !comment.resolved && comment._id === $parent.focusedComment">
                                             <div v-if="!$parent.editComment && !$parent.replyingComment" class="q-gutter-xs">
-                                                <q-btn size="sm" dense flat color="primary" icon="edit" @click="$parent.editReply = reply._id; reply.textTemp = reply.text">
+                                                <q-btn v-if="canUpdateComment()" size="sm" dense flat color="primary" icon="edit" @click="$parent.editReply = reply._id; reply.textTemp = reply.text">
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editReply')}}</q-tooltip> 
                                                 </q-btn>
-                                                <q-btn size="sm" dense flat color="negative" icon="delete" @click="removeReplyFromComment(reply, comment)">
+                                                <q-btn v-if="canDeleteComment()" size="sm" dense flat color="negative" icon="delete" @click="removeReplyFromComment(reply, comment)">
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteReply')}}</q-tooltip> 
                                                 </q-btn>
                                             </div>
                                         </q-item-section>
                                     </q-item>
                                     <!-- Reply input -->
-                                    <q-item v-if="$parent.editComment !== comment._id && !comment.resolved">
+                                    <q-item v-if="$parent.editComment !== comment._id && !comment.resolved && canUpdateComment()">
                                         <q-item-section>
                                             <div class="q-gutter-sm">
                                                 <q-input

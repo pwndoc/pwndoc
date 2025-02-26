@@ -41,6 +41,7 @@ buttons
                 :comment-mode="$parent.commentMode"
                 :field-highlighted="fieldHighlighted"
                 @create-comment="createComment"
+                :canCreateComment="canCreateComment()"
                 />
             </component>
         </q-card>
@@ -93,13 +94,13 @@ buttons
                                         </div>
                                     </q-item-section>
                                     <q-item-section side>
-                                        <div>
-                                            <q-btn size="sm" dense flat color="primary" icon="undo" @click="comment.resolved = false; updateComment(comment)">
+                                        <div v-if="!$parent.editComment && !$parent.replyingComment && !$parent.editReply">
+                                            <q-btn v-if="canUpdateComment()" size="sm" dense flat color="primary" icon="undo" @click="comment.resolved = false; updateComment(comment)">
                                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
                                                     {{(comment.resolved)?$t('tooltip.reopenComment'):$t('tooltip.resolveComment')}}
                                                 </q-tooltip> 
                                             </q-btn>
-                                            <q-btn size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
+                                            <q-btn v-if="canDeleteComment()" size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
                                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
                                             </q-btn>
                                         </div>
@@ -116,15 +117,15 @@ buttons
                                     </q-item-section>
                                     <q-item-section side v-if="!comment.resolved">
                                         <div v-if="!$parent.editComment && !$parent.replyingComment && !$parent.editReply" class="q-gutter-xs">
-                                            <q-btn v-if="!comment.resolved" size="sm" dense flat color="primary" icon="edit" @click="$parent.editComment = comment._id; comment.textTemp = comment.text">
+                                            <q-btn v-if="!comment.resolved && canUpdateComment()" size="sm" dense flat color="primary" icon="edit" @click="$parent.editComment = comment._id; comment.textTemp = comment.text">
                                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editComment')}}</q-tooltip> 
                                             </q-btn>
-                                            <q-btn size="sm" dense flat color="green" icon="done" @click="comment.resolved = true; updateComment(comment)">
+                                            <q-btn v-if="canUpdateComment()" size="sm" dense flat color="green" icon="done" @click="comment.resolved = true; updateComment(comment)">
                                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
                                                     {{(comment.resolved)?$t('tooltip.reopenComment'):$t('tooltip.resolveComment')}}
                                                 </q-tooltip> 
                                             </q-btn>
-                                            <q-btn size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
+                                            <q-btn v-if="canDeleteComment()" size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
                                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
                                             </q-btn>
                                         </div>
@@ -171,17 +172,17 @@ buttons
                                     </q-item-section>
                                     <q-item-section side top v-show="hoverReply === reply._id && !$parent.editReply && !comment.resolved" @click="focusComment(comment)">
                                         <div v-if="!$parent.editComment && !$parent.replyingComment" class="q-gutter-xs">
-                                            <q-btn size="sm" dense flat color="primary" icon="edit" @click="$parent.editReply = reply._id; reply.textTemp = reply.text">
+                                            <q-btn v-if="canUpdateComment()" size="sm" dense flat color="primary" icon="edit" @click="$parent.editReply = reply._id; reply.textTemp = reply.text">
                                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editReply')}}</q-tooltip> 
                                             </q-btn>
-                                            <q-btn size="sm" dense flat color="negative" icon="delete" @click="removeReplyFromComment(reply, comment)">
+                                            <q-btn v-if="canDeleteComment()" size="sm" dense flat color="negative" icon="delete" @click="removeReplyFromComment(reply, comment)">
                                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteReply')}}</q-tooltip> 
                                             </q-btn>
                                         </div>
                                     </q-item-section>
                                 </q-item>
                                 <!-- Reply input -->
-                                <q-item v-if="$parent.editComment !== comment._id && !comment.resolved">
+                                <q-item v-if="$parent.editComment !== comment._id && !comment.resolved && canUpdateComment()">
                                     <q-item-section>
                                         <div class="q-gutter-sm">
                                             <q-input

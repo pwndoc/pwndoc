@@ -95,7 +95,7 @@ export default {
     },
 
     isAllowed(role) {
-        return (this.user.roles && (this.user.roles.includes(role) || this.user.roles === '*'))
+        return (this.user.roles && (this.user.roles.includes(role) || this.user.roles.includes(`${role}-all`) || this.user.roles === '*'))
     },
 
     getProfile: function() {
