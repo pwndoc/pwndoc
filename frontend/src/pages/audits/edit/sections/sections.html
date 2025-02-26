@@ -18,7 +18,7 @@ buttons
         class="q-mr-sm">
             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.commentMode')}}</q-tooltip> 
         </q-btn>
-        <q-separator vertical inset class="q-mr-sm" />
+        <q-separator v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" vertical inset class="q-mr-sm" />
         <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" :label="$t('btn.save')+' (ctrl+s)'" no-caps @click="updateSection" />
     </template>
 </breadcrumb>

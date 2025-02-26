@@ -8,18 +8,20 @@ buttons
 :path-name="($parent.audit.type === 'retest') ? $t('originalAudit') : ($parent.audit.type === 'default') ? $t('multi') : ''"
 >
     <template slot="buttons">
-        <q-btn
-        color="primary" 
-        :flat="!$parent.commentMode" 
-        :outline="$parent.commentMode"
-        :class="{'bg-grey-3': $parent.commentMode}"
-        icon="o_mode_comment"
-        :ripple="false"
-        @click="toggleCommentView()" 
-        class="q-mr-sm">
-            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.commentMode')}}</q-tooltip> 
-        </q-btn>
-        <q-separator vertical inset class="q-mr-sm" />
+        <template v-if="$parent.audit.type === 'default'">
+            <q-btn
+            color="primary" 
+            :flat="!$parent.commentMode" 
+            :outline="$parent.commentMode"
+            :class="{'bg-grey-3': $parent.commentMode}"
+            icon="o_mode_comment"
+            :ripple="false"
+            @click="toggleCommentView()" 
+            class="q-mr-sm">
+                <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.commentMode')}}</q-tooltip> 
+            </q-btn>
+            <q-separator vertical inset class="q-mr-sm" />
+        </template>
         <q-btn
         v-if="$parent.audit.type === 'default'"
         color="orange"
