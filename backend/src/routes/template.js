@@ -41,32 +41,33 @@ module.exports = function(app) {
 
     // Update template
     app.put("/api/templates/:templateId", acl.hasPermission('templates:update'), function(req, res) {
-        if (req.body.name && !utils.validFilename(req.body.name)) {
+        if (!req.body.name) {
+            Response.BadParameters(res, 'Missing required parameters: name');
+            return;
+        }
+
+        if (!utils.validFilename(req.body.name)) {
             Response.BadParameters(res, 'Bad name format');
             return;
         }
 
         // Fix for GHSA-2mqc-gg7h-76p6
         if (req.body.ext && !utils.validFilename(req.body.ext)) {
-            Response.BadParameters(res, 'Bad name format');
+            Response.BadParameters(res, 'Bad ext format');
             return;
         }
 
         var template = {};
+        // Required parameters
+        template.name = req.body.name;
+        
         // Optional parameters
-        if (req.body.name) template.name = req.body.name;
         if (req.body.file && req.body.ext) template.ext = req.body.ext;
 
         Template.update(req.params.templateId, template)
         .then(data => {
-            // Update file only
-            if (!req.body.name && req.body.file && req.body.ext) {
-                var fileBuffer = Buffer.from(req.body.file, 'base64');
-                try {fs.unlinkSync(`${__basedir}/../report-templates/${data.name}.${data.ext || 'docx'}`)} catch {}
-                fs.writeFileSync(`${__basedir}/../report-templates/${data.name}.${req.body.ext}`, fileBuffer);
-            }
             // Update name only
-            else if (req.body.name && !req.body.file) {
+            if (req.body.name && !req.body.file) {
                 fs.renameSync(`${__basedir}/../report-templates/${data.name}.${data.ext || 'docx'}`, `${__basedir}/../report-templates/${req.body.name}.${data.ext || 'docx'}`);
             }
             // Update both name and file
