@@ -6,6 +6,13 @@ function validFilename(filename) {
 }
 exports.validFilename = validFilename;
 
+function isSafePath(filePath) {
+  const path = require('path')
+  const normalized = path.normalize(filePath)  
+  return !normalized.includes('..')
+}
+exports.isSafePath = isSafePath
+
 // Escape XML special entities when using {@RawXML} in template generation
 function escapeXMLEntities(input) {
     var XML_CHAR_MAP = { '<': '&lt;', '>': '&gt;', '&': '&amp;'};
