@@ -7,9 +7,7 @@ function validFilename(filename) {
 exports.validFilename = validFilename;
 
 function isSafePath(filePath) {
-  const path = require('path')
-  const normalized = path.normalize(filePath)  
-  return !normalized.includes('..')
+  return !filePath.includes('..')
 }
 exports.isSafePath = isSafePath
 

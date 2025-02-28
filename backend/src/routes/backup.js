@@ -508,7 +508,7 @@ module.exports = function(app) {
                 console.log('entry: ', header.name)
                 if (
                     files.includes(header.name) || 
-                    (directories.some(e => header.name.startsWith(e)) && utils.isSafePath(header.name))
+                    (utils.isSafePath(header.name) && directories.some(e => path.normalize(header.name).startsWith(e)))
                 ) {
                     if (header.type === "directory") {
                         try {
