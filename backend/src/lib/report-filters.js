@@ -362,7 +362,6 @@ defaultFilters.count = function(input, severity, scoreType) {
 // Translate using locale from 'translate' folder
 // Example: {input | translate: 'fr'}
 defaultFilters.translate = function(input, locale) {
-    translate.setLocale(locale)
     if (!input) return input
     return translate.translate(input, locale)
 }
