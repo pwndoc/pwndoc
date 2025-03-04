@@ -178,8 +178,10 @@ function html2ooxml(html, style = '') {
     var codeObjects = domutils.getElementsByTagName('code', htmlObject);
 
     for (let codeIndex = 0; codeIndex < codeObjects.length; codeIndex++) {
-        codeObjects[codeIndex].children[0] = htmlparser.parseDocument(hljs.highlightAuto(codeObjects[codeIndex].children[0].data).value);
-        console.log(codeObjects[codeIndex].children[0].data);
+        console.log(hljs.highlight(codeObjects[codeIndex].children[0].data, {language: 'javascript'}).value);
+        // let tmpHtmlObject = htmlparser.parseDocument(codeObjects[codeIndex].children[0].data);
+        codeObjects[codeIndex].children[0] = htmlparser.parseDocument(hljs.highlight(codeObjects[codeIndex].children[0].data, {language: 'javascript'}).value);
+        // console.log(codeObjects[codeIndex].children[0].data);
     }
 
     // For multiline code blocks

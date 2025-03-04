@@ -33,6 +33,7 @@ export default {
     .replace(/ΩΠгstrikeΏΠг/g, '<strike>')
     .replace(/ΩΠг\/strikeΏΠг/g, '</strike>')
     .replace(/ΩΠгbrΏΠг/g, '<br>')
+    .replace(/ΩΠгcode.+?class="language-(.*?)".*?ΏΠг/g, '<code class="language-$1">')
     .replace(/ΩΠгcodeΏΠг/g, '<code>')
     .replace(/ΩΠг\/codeΏΠг/g, '</code>')
     .replace(/ΩΠгulΏΠг/g, '<ul>')
