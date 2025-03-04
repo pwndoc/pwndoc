@@ -26,8 +26,6 @@ var cookieParser = require('cookie-parser')
 var utils = require('./lib/utils');
 
 // Get configuration
-var env = process.env.NODE_ENV || 'dev';
-var config = require('./config/config.json')[env];
 global.__basedir = __dirname;
 
 // Database connection
@@ -37,7 +35,7 @@ mongoose.Promise = global.Promise;
 // Trim all Strings
 mongoose.Schema.Types.String.set('trim', true);
 
-mongoose.connect(`mongodb://${config.database.server}:${config.database.port}/${config.database.name}`, {});
+mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
 
 // Models import
 require('./models/user');
@@ -142,6 +140,6 @@ app.use((err, req, res, next) => {
 
 // Start server
 
-https.listen(config.port, config.host)
+https.listen(4242)
 
 module.exports = app;

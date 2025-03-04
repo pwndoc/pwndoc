@@ -323,7 +323,6 @@ export default {
                 })
             }
             else {
-                
                 AuditService.updateComment(this.auditId, comment)
                 .then(() => {
                     this.$parent.editComment = null
@@ -363,6 +362,30 @@ export default {
                 return `${count} ${$t('item')}`
             else
                 return `${count} ${$t('items')}`
+        },
+
+        canCreateComment: function() {
+            if (UserService.isAllowed('audits:comments:create-all'))
+                return true
+            if (UserService.isAllowed('audits:comments:create') && this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT)
+                return true
+            return false
+        },
+
+        canUpdateComment: function() {
+            if (UserService.isAllowed('audits:comments:update-all'))
+                return true
+            if (UserService.isAllowed('audits:comments:update') && this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT)
+                return true
+            return false
+        },
+
+        canDeleteComment: function() {
+            if (UserService.isAllowed('audits:comments:delete-all'))
+                return true
+            if (UserService.isAllowed('audits:comments:delete') && this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT)
+                return true
+            return false
         },
 
         unsavedChanges: function() {  

@@ -104,7 +104,7 @@ class ACL {
 
         let $role = this.roles[role] || this.roles['user'] // Default to user role in case of inexistant role
         // Check if role is allowed with permission
-        if ($role.allows && ($role.allows === "*" || $role.allows.indexOf(permission) !== -1)) {
+        if ($role.allows && ($role.allows === "*" || $role.allows.indexOf(permission) !== -1 || $role.allows.indexOf(`${permission}-all`) !== -1)) {
             return true
         }
 
