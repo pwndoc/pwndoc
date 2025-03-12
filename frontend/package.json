@@ -35,8 +35,8 @@
     "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
-    "@quasar/app": "^2.0.0",
-    "@quasar/cli": "^1.0.5",
+    "@quasar/app": "^2.4.4",
+    "@quasar/cli": "^1.4.0",
     "devtron": "^1.4.0",
     "electron": "^2.0.0",
     "electron-debug": "^1.5.0",
