@@ -292,7 +292,10 @@ export default {
                             return VueNodeViewRenderer(CodeBlockComponent)
                         },
                     })
-                    .configure({ lowlight }),
+                    .configure({ 
+                        lowlight,
+                        defaultLanguage: 'plaintext'
+                    }),
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -373,7 +376,7 @@ export default {
             if (typeof this.diff !== "undefined") {
                 var HtmlDiff = new Diff.Diff(true)
                 HtmlDiff.tokenize = function(value) {
-                    return value.split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
+                    return value.replace(/<code[^>]*>/g, "<code>").split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
                 }
                 var value = this.value || ""
                 var diff = HtmlDiff.diff(this.diff, value)
@@ -593,7 +596,7 @@ export default {
             padding: 0;
         }
 
-        /* Code styling */
+        /* CodeBlock styling (atom-one-dark) */
         .hljs {
             color: #abb2bf;
             background: #282c34;

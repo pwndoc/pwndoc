@@ -55,6 +55,8 @@ export default {
       background-color: white;
       right: 0.5rem;
       top: 0.5rem;
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
     }
   }
 }

@@ -178,10 +178,9 @@ function html2ooxml(html, style = '') {
     var codeObjects = domutils.getElementsByTagName('code', htmlObject);
 
     for (let codeIndex = 0; codeIndex < codeObjects.length; codeIndex++) {
-        console.log(hljs.highlight(codeObjects[codeIndex].children[0].data, {language: 'javascript'}).value);
-        // let tmpHtmlObject = htmlparser.parseDocument(codeObjects[codeIndex].children[0].data);
-        codeObjects[codeIndex].children[0] = htmlparser.parseDocument(hljs.highlight(codeObjects[codeIndex].children[0].data, {language: 'javascript'}).value);
-        // console.log(codeObjects[codeIndex].children[0].data);
+        let codeClass = codeObjects[codeIndex].attribs.class
+        let codeLanguage = (codeClass && codeClass.split('-')[1]) || 'plaintext'
+        codeObjects[codeIndex].children[0] = htmlparser.parseDocument(hljs.highlight(codeObjects[codeIndex].children[0].data, {language: codeLanguage}).value);
     }
 
     // For multiline code blocks
