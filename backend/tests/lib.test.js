@@ -553,20 +553,193 @@ module.exports = function () {
       it('Code', () => {
         const hljs = require('highlight.js');
         var html = "<p>Paragraph <pre>" +
-          hljs.highlightAuto(
+          hljs.highlight(
             "// Using require\n" +
             "const hljs = require('highlight.js');" +
             "\n" +
             "const highlightedCode = hljs.highlight(" +
             "  '<span>Hello World!</span>'," +
             "  { language: 'xml' }" +
-            ").value"
+            ").value", {language: 'javascript'}
           ).value +
           "</pre> Paragraph</p>";
 
-        var expected =
-        `todo`
+        var expected = 
+        `<w:p>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve">Paragraph </w:t>`+
+          `</w:r>`+
+        `</w:p>`+
+        `<w:p>`+
+          `<w:pPr>`+
+            `<w:pStyle w:val="Code"/>`+
+          `</w:pPr>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:i/>`+
+              `<w:iCs/>`+
+              `<w:color w:val="5c6370"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">// Using require</w:t>`+
+          `</w:r>`+
+        `</w:p>`+
+        `<w:p>`+
+          `<w:pPr>`+
+            `<w:pStyle w:val="Code"/>`+
+          `</w:pPr>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="c678dd"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">const</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve"> hljs = </w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="e6c07b"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">require</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve">(</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&apos;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">highlight.js</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&apos;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve">);</w:t>`+
+          `</w:r>`+
+        `</w:p>`+
+        `<w:p>`+
+          `<w:pPr>`+
+            `<w:pStyle w:val="Code"/>`+
+          `</w:pPr>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="c678dd"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">const</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve"> highlightedCode = hljs.</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve">highlight</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve">(  </w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&apos;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&lt;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">span</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&gt;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">Hello World!</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&lt;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">/span</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&gt;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&apos;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve">,  { </w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="d19a66"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">language</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve">: </w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&apos;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">xml</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:color w:val="98c379"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">&apos;</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve"> }).</w:t>`+
+          `</w:r>`+
+          `<w:r>`+
+            `<w:t xml:space="preserve">value</w:t>`+
+          `</w:r>`+
+        `</w:p>`+
+        `<w:p/>`
         var ooxml = html2ooxml(html)
+        console.log(ooxml)
         expect(ooxml).toEqual(expected)
       })
     })
