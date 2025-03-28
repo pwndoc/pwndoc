@@ -14,6 +14,8 @@ export default {
     .replace(/ΩΠг\/legendΏΠг/g, '</legend>')
     .replace(/ΩΠгmark.+?data-color="(.*?)".+?style="(.*?)".*?ΏΠг/g, '<mark data-color="$1" style="$2">')
     .replace(/ΩΠг\/markΏΠг/g, '</mark>')
+    .replace(/ΩΠгcomment.+?id="(.*?)".*?ΏΠг/g, '<comment id="$1">')
+    .replace(/ΩΠг\/commentΏΠг/g, '</comment>')
     .replace(/ΩΠгpΏΠг/g, '<p>')
     .replace(/ΩΠг\/pΏΠг/g, '</p>')
     .replace(/ΩΠгpreΏΠг/g, '<pre>')

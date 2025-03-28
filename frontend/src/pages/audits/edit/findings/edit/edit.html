@@ -118,10 +118,16 @@ buttons
                             lazy-rules="ondemand"
                             >
                                 <template v-slot="control">
-                                    <basic-editor ref="basiceditor_description" noSync v-model="finding.description" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                                    <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('descriptionField')">
-                                        <q-icon name="add_comment" size="xs" />
-                                    </q-badge>
+                                    <basic-editor
+                                    ref="basiceditor_description"
+                                    noSync
+                                    v-model="finding.description"
+                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    fieldName="descriptionField"
+                                    :commentMode="$parent.commentMode && canCreateComment()"
+                                    :focusedComment="$parent.focusedComment"
+                                    :commentIdList="$parent.commentIdList"
+                                    />
                                 </template>
                                 <template v-slot:label>
                                     <div id="descriptionField">
@@ -141,10 +147,16 @@ buttons
                             lazy-rules="ondemand"
                             >
                                 <template v-slot="control">
-                                    <basic-editor ref="basiceditor_observation" noSync v-model="finding.observation" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
-                                    <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('observationField')">
-                                        <q-icon name="add_comment" size="xs" />
-                                    </q-badge>
+                                    <basic-editor
+                                    ref="basiceditor_observation"
+                                    noSync
+                                    v-model="finding.observation"
+                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    fieldName="observationField"
+                                    :commentMode="$parent.commentMode && canCreateComment()"
+                                    :focusedComment="$parent.focusedComment"
+                                    :commentIdList="$parent.commentIdList"
+                                    />
                                 </template>
                                 <template v-slot:label>
                                     <div id="observationField">
@@ -209,13 +221,23 @@ buttons
                             lazy-rules="ondemand"
                             >
                                 <template v-slot="control">
-                                    <basic-editor ref="basiceditor_poc" noSync v-model="finding.poc" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"/>
+                                    <basic-editor
+                                    ref="basiceditor_poc"
+                                    noSync
+                                    v-model="finding.poc"
+                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    fieldName="pocField"
+                                    :commentMode="$parent.commentMode && canCreateComment()"
+                                    :focusedComment="$parent.focusedComment"
+                                    />
                                     <q-badge v-if="$parent.commentMode && canCreateComment()" color="deep-purple" floating class="cursor-pointer" @click="createComment('pocField')">
                                         <q-icon name="add_comment" size="xs" />
                                     </q-badge>
                                 </template>
                                 <template v-slot:label>
-                                    {{$t('proofs')}} <span v-if="$settings.report.public.requiredFields.findingProofs" class="text-red">*</span>
+                                    <div id="pocField">
+                                        {{$t('proofs')}} <span v-if="$settings.report.public.requiredFields.findingProofs" class="text-red">*</span>
+                                    </div>
                                 </template>
                             </q-field>
                         </q-card-section>
@@ -383,7 +405,7 @@ buttons
             </q-item>
             <q-scroll-area class="comment-panel-height">
                 <q-list class="bg-grey-11">
-                    <div v-for="comment in $parent.audit.comments" :key="comment._id">
+                    <div v-for="comment in $parent.audit.comments" :key="comment._id" :id="`sidebar-${comment._id}`">
                         <q-item v-if="displayComment(comment)">
                             <q-item-section @click="focusComment(comment)">
                                 <q-card :class="{'highlighted-border': $parent.focusedComment === comment._id, 'bg-blue-grey-1': comment.resolved, 'text-grey-8': comment.resolved}">
@@ -445,7 +467,7 @@ buttons
                                                 autofocus
                                                 :placeholder="$t('startConversation')"
                                                 />
-                                                <q-btn class="float-right" outline color="primary" icon="close" @click="cancelEditComment(comment)"></q-btn>
+                                                <q-btn class="float-right" outline color="primary" icon="close" @click="deleteComment(comment)"></q-btn>
                                                 <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="updateComment(comment)"></q-btn>
                                             </div>
                                             <span v-else style="white-space: pre-line">{{comment.text}}</span>

@@ -195,6 +195,16 @@
                         <q-icon name="redo" />
                     </q-btn>
 
+                    <template v-if="commentMode">
+                        <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
+                        <q-btn unelevated size="sm" dense color="deep-purple""
+                        @click="editor.chain().focus().setComment(fieldName).run()"
+                        >
+                            <q-tooltip :delay="500" content-class="text-bold">Add Comment</q-tooltip>
+                            <q-icon name="add_comment" />
+                        </q-btn>
+                    </template>
+
                 </template>
                 <div v-if="diff !== undefined && (diff || value) && value !== diff">
                     <q-btn flat size="sm" dense
@@ -224,6 +234,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
+import Comment from './editor-comment'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 import CodeBlockComponent from './editor-code-block'
@@ -262,6 +273,20 @@ export default {
         noSync: {
             type: Boolean,
             default: false
+        },
+        fieldName: {
+            type: String,
+            default: ''
+        },
+        commentMode: {
+            type: Boolean,
+            default: false
+        },
+        commentIdList: {
+            type: Array,
+            default: function() {
+                return []
+            }
         }
     },
     components: {
@@ -280,6 +305,9 @@ export default {
                     Underline,
                     CustomImage,
                     Caption,
+                    Comment.configure({
+                        commentMode: this.commentMode
+                    }),
                     CustomHighlight.configure({
                         multicolor: true,
                     }),
@@ -334,12 +362,14 @@ export default {
        },
 
         highlightColor (value) {
-            console.log(this.editor.storage)
             this.editor.storage.highlight.color = value
        }
     },
 
     mounted: function() {
+        document.addEventListener('comment-deleted', this.handleDeleteComment)
+        document.addEventListener('comment-focused', this.handleFocusComment)
+
         this.affixRelativeElement += '-'+Math.floor((Math.random()*1000000) + 1)
         this.editor.setEditable(this.editable, false)
 
@@ -348,9 +378,13 @@ export default {
         }
         var content = this.htmlEncode(this.value)
         this.editor.commands.setContent(content)
+
+        this.cleanOrphanComments()
     },
 
     beforeDestroy() {
+        document.removeEventListener('comment-deleted', this.handleDeleteComment)
+        document.removeEventListener('comment-focused', this.handleFocusComment)
         this.editor.destroy()
     },
 
@@ -427,6 +461,58 @@ export default {
                 this.html = ""
             }
             this.$emit('input', this.html)
+        },
+
+        handleDeleteComment(event) {
+            const commentId = event.detail.id
+            const { state } = this.editor
+
+            state.doc.descendants((node, pos) => {
+                if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
+                    this.editor.chain().focus().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    this.editor.commands.unsetComment()
+                }
+            })   
+        },
+
+        handleFocusComment(event) {
+            const commentId = event.detail.id
+            const { state } = this.editor
+
+            let startPos = 0
+            let endPos = 0
+
+            state.doc.descendants((node, pos) => {
+                if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
+                    startPos = pos
+                    endPos = pos + node.nodeSize
+                    this.editor.chain().setTextSelection({from: startPos, to: endPos}).run()
+                    this.editor.commands.updateAttributes('comment', {focused: true})
+                }
+                else if (node.marks.some(mark => mark.type.name === 'comment')) {
+                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    this.editor.commands.updateAttributes('comment', {focused: false})
+                }
+            })   
+            
+            console.log(startPos, endPos)
+            if (startPos > 0 && endPos > 0) {
+                this.editor.chain().focus().setTextSelection(startPos).run()
+            }
+        },
+
+        // Handle comments deleted without having editor rendered (e.g. from another tab or section)
+        cleanOrphanComments() {
+            const { state } = this.editor
+
+            state.doc.descendants((node, pos) => {
+                for (const mark of node.marks) {
+                    if (mark.type.name === 'comment' && !this.commentIdList.includes(mark.attrs.id)) {
+                        this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                        this.editor.commands.unsetComment()
+                    }
+                }
+            })   
         }
     }
 }
@@ -702,5 +788,18 @@ pre .diffadd {
 .text-negative .editor:not(.q-dark) {
     color:var(--q-color-primary)!important;
 }
+
+comment.enabled{
+    background-color: lightblue;
+}
+
+comment.enabled.focused{
+    background-color: #e5c5e1;
+}
+//comment.enabled::before, comment.enabled::after {
+//    content: '|';
+//    color: #731a7e;
+//    font-weight: bold;
+//}
 
 </style>

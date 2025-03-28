@@ -630,8 +630,8 @@ module.exports = function(app, io) {
             return;
         }
 
-        if (!req.body.fieldName || !req.body.authorId || !req.body.text) {
-            Response.BadParameters(res, 'Missing some required parameters: fieldName, authorId, text');
+        if (!req.body.fieldName || !req.body.authorId) {
+            Response.BadParameters(res, 'Missing some required parameters: fieldName, authorId');
             return;
         }
 
@@ -641,7 +641,10 @@ module.exports = function(app, io) {
         if (req.body.sectionId) comment.sectionId = req.body.sectionId;
         comment.fieldName = req.body.fieldName;
         comment.author = req.body.authorId;
-        comment.text = req.body.text
+        comment.text = (req.body.text) ? req.body.text : '';
+
+        // Optional parameters
+        if (req.body.commentId) comment._id = req.body.commentId
 
         Audit.createComment(acl.isAllowed(req.decodedToken.role, 'audits:comments:create-all'), req.params.auditId, req.decodedToken.id, comment)
         .then(msg => {

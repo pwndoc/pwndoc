@@ -430,7 +430,11 @@ export default {
 
 		systemLanguage: function() {
 			return LocalStorage.getItem('system_language') || 'en-US'
-		}
+		},
+
+		commentIdList: function() {
+            return this.audit.comments.map(e => e._id)
+        }
 	},
 
 	methods: {

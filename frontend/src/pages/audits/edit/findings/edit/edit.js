@@ -13,6 +13,7 @@ import VulnService from '@/services/vulnerability';
 import Utils from '@/services/utils';
 
 import { $t } from '@/boot/i18n'
+import editorComment from '../../../../../components/editor-comment';
 
 export default {
     props: {
@@ -64,6 +65,9 @@ export default {
 
         // save on ctrl+s
         document.addEventListener('keydown', this._listener, false);
+        // listen for comments added in the editor
+        document.addEventListener('comment-added', this.editorCommentAdded)
+        document.addEventListener('comment-clicked', this.editorCommentClicked)
 
         this.$parent.focusedComment = null
         if (this.$route.params.comment)
@@ -72,6 +76,8 @@ export default {
 
     destroyed: function() {
         document.removeEventListener('keydown', this._listener, false);
+        document.removeEventListener('comment-added', this.editorCommentAdded)
+        document.removeEventListener('comment-clicked', this.editorCommentClicked)
     },
 
     beforeRouteLeave (to, from , next) {
@@ -346,13 +352,16 @@ export default {
         },
 
         focusComment: function(comment) {
+            let commentId = comment._id || comment.commentId
+            // If another comment is in progress or if comment already focused, then do nothing
             if (
-                (!!this.$parent.editComment && this.$parent.editComment !== comment._id) || 
+                (!!this.$parent.editComment && this.$parent.editComment !== commentId) || 
                 (this.$parent.replyingComment && !comment.replyTemp) || 
-                (this.$parent.focusedComment === comment._id)
+                (this.$parent.focusedComment === commentId)
             )
                 return
 
+            // If comment is in another finding, then redirect to it
             if (comment.findingId && this.findingId !== comment.findingId) {
                 this.$router.replace({name: 'editFinding', params: {
                     auditId: this.auditId, 
@@ -362,6 +371,7 @@ export default {
                 return
             }
 
+            // If comment is in another section, then redirect to it
             if (comment.sectionId && this.sectionId !== comment.sectionId) {
                 this.$router.replace({name: 'editSection', params: {
                     auditId: this.auditId, 
@@ -391,6 +401,7 @@ export default {
                     clearInterval(intervalId)
                     this.$nextTick(() => {
                         document.getElementById(comment.fieldName).scrollIntoView({block: "center"})
+                        document.dispatchEvent(new CustomEvent('comment-focused', { detail: { id: commentId, fieldName: comment.fieldName } }))
                     })
                 }
                 else if (checkCount >= 10) {
@@ -403,9 +414,28 @@ export default {
 
         },
 
-        createComment: function(fieldName) {
+        editorCommentAdded: function(event) {
+            console.log(event)
+            if (event.detail.fieldName && event.detail.id) {
+                // this.$parent.editComment = event.detail.id
+                this.createComment(event.detail.fieldName, event.detail.id)
+            }
+        },
+
+        editorCommentClicked: function(event) {
+            if (event.detail.id) {
+                let comment = this.$parent.audit.comments.find(e => e._id === event.detail.id)
+                if (comment) {
+                    document.getElementById(`sidebar-${comment._id}`).scrollIntoView({block: "center"})
+                    this.fieldHighlighted = comment.fieldName
+                    this.$parent.focusedComment = comment._id
+                    document.dispatchEvent(new CustomEvent('comment-focused', { detail: { id: comment._id, fieldName: comment.fieldName } }))
+                }
+            }
+        },
+
+        createComment: function(fieldName, commentId) {
             let comment = {
-                _id: 42,
                 findingId: this.findingId,
                 fieldName: fieldName,
                 authorId: UserService.user.id,
@@ -415,14 +445,34 @@ export default {
                 },
                 text: "" 
             }
-            if (this.$parent.editComment === 42){
-                this.$parent.focusedComment = null
-                this.$parent.audit.comments.pop()
-            }
-            this.fieldHighlighted = fieldName
-            this.$parent.audit.comments.push(comment)
-            this.$parent.editComment = 42
-            this.focusComment(comment)
+            if (commentId) comment.commentId = commentId
+
+            AuditService.createComment(this.auditId, comment)
+            .then((res) => {
+                let newComment = res.data.datas
+                this.$parent.focusedComment = newComment._id
+                this.$parent.editComment = newComment._id
+                this.fieldHighlighted = fieldName
+                this.focusComment(comment)
+                this.updateFinding()
+            })
+            .catch((err) => {
+                Notify.create({
+                    message: err.response.data.datas,
+                    color: 'negative',
+                    textColor:'white',
+                    position: 'top-right'
+                })
+            })
+
+            // if (this.$parent.editComment === 42){
+            //     this.$parent.focusedComment = null
+            //     this.$parent.audit.comments.pop()
+            // }
+            // this.fieldHighlighted = fieldName
+            // this.$parent.audit.comments.push(comment)
+            // this.$parent.editComment = 42
+            // this.focusComment(comment)
         },
 
         cancelEditComment: function(comment) {
@@ -434,10 +484,13 @@ export default {
         },
 
         deleteComment: function(comment) {
-            AuditService.deleteComment(this.auditId, comment._id)
+            let commentId = comment._id || comment.commentId
+            AuditService.deleteComment(this.auditId, commentId)
             .then(() => {
-                if (this.$parent.focusedComment === comment._id)
+                if (this.$parent.focusedComment === commentId)
                     this.fieldHighlighted = ""
+                document.dispatchEvent(new CustomEvent('comment-deleted', { detail: { id: commentId } }))
+                this.updateFinding()
             })
             .catch((err) => {
                 Notify.create({
