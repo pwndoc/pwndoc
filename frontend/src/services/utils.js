@@ -1,62 +1,36 @@
 var _ = require('lodash')
 import { $t } from 'boot/i18n'
+import DOMPurify from 'dompurify';
 
 export default {
   htmlEncode(html) {
     if(typeof(html) !== "string")  return "";
     
-    var result = html
-    .replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '') // Non printable characters except NewLine
-    .replace(/</g, 'ΩΠг')
-    .replace(/>/g, 'ΏΠг')
-    .replace(/ΩΠгimg.+?src="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<img src="$1" alt="$2">')
-    .replace(/ΩΠгlegend.+?label="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<legend label="$1" alt="$2">')
-    .replace(/ΩΠг\/legendΏΠг/g, '</legend>')
-    .replace(/ΩΠгmark.+?data-color="(.*?)".+?style="(.*?)".*?ΏΠг/g, '<mark data-color="$1" style="$2">')
-    .replace(/ΩΠг\/markΏΠг/g, '</mark>')
-    .replace(/ΩΠгpΏΠг/g, '<p>')
-    .replace(/ΩΠг\/pΏΠг/g, '</p>')
-    .replace(/ΩΠгpreΏΠг/g, '<pre>')
-    .replace(/ΩΠг\/preΏΠг/g, '</pre>')
-    .replace(/ΩΠгbΏΠг/g, '<b>')
-    .replace(/ΩΠг\/bΏΠг/g, '</b>')
-    .replace(/ΩΠгstrongΏΠг/g, '<strong>')
-    .replace(/ΩΠг\/strongΏΠг/g, '</strong>')
-    .replace(/ΩΠгiΏΠг/g, '<i>')
-    .replace(/ΩΠг\/iΏΠг/g, '</i>')
-    .replace(/ΩΠгemΏΠг/g, '<em>')
-    .replace(/ΩΠг\/emΏΠг/g, '</em>')
-    .replace(/ΩΠгuΏΠг/g, '<u>')
-    .replace(/ΩΠг\/uΏΠг/g, '</u>')
-    .replace(/ΩΠгsΏΠг/g, '<s>')
-    .replace(/ΩΠг\/sΏΠг/g, '</s>')
-    .replace(/ΩΠгstrikeΏΠг/g, '<strike>')
-    .replace(/ΩΠг\/strikeΏΠг/g, '</strike>')
-    .replace(/ΩΠгbrΏΠг/g, '<br>')
-    .replace(/ΩΠгcode.+?class="language-(.*?)".*?ΏΠг/g, '<code class="language-$1">')
-    .replace(/ΩΠгcodeΏΠг/g, '<code>')
-    .replace(/ΩΠг\/codeΏΠг/g, '</code>')
-    .replace(/ΩΠгulΏΠг/g, '<ul>')
-    .replace(/ΩΠг\/ulΏΠг/g, '</ul>')
-    .replace(/ΩΠгolΏΠг/g, '<ol>')
-    .replace(/ΩΠг\/olΏΠг/g, '</ol>')
-    .replace(/ΩΠгliΏΠг/g, '<li>')
-    .replace(/ΩΠг\/liΏΠг/g, '</li>')
-    .replace(/ΩΠгh1ΏΠг/g, '<h1>')
-    .replace(/ΩΠг\/h1ΏΠг/g, '</h1>')
-    .replace(/ΩΠгh2ΏΠг/g, '<h2>')
-    .replace(/ΩΠг\/h2ΏΠг/g, '</h2>')
-    .replace(/ΩΠгh3ΏΠг/g, '<h3>')
-    .replace(/ΩΠг\/h3ΏΠг/g, '</h3>')
-    .replace(/ΩΠгh4ΏΠг/g, '<h4>')
-    .replace(/ΩΠг\/h4ΏΠг/g, '</h4>')
-    .replace(/ΩΠгh5ΏΠг/g, '<h5>')
-    .replace(/ΩΠг\/h5ΏΠг/g, '</h5>')
-    .replace(/ΩΠгh6ΏΠг/g, '<h6>')
-    .replace(/ΩΠг\/h6ΏΠг/g, '</h6>')
-    .replace(/ΩΠг/g, '&lt;')
-    .replace(/ΏΠг/g, '&gt;')
+    DOMPurify.setConfig({
+      ALLOWED_ATTR: [
+        'alt',      // alt for images
+        'label',    // label for legend
+        'title'     // title for footnote
+      ]
+    });
 
+    // Hook to enable image sources not having a valid URL.
+    DOMPurify.addHook('uponSanitizeAttribute', function (node, data) {
+      if (node.tagName === 'IMG' && data.attrName === 'src') { // Ensure the tag is an <img> and the attribute being sanitized is `src`
+        // Check if the `src` consists of exactly 24 hexadecimal characters
+        const pattern = /^[a-fA-F0-9]{24}$/;
+        if (pattern.test(data.attrValue)) {
+          data.forceKeepAttr = true; // Allow this `src` attribute
+        }
+      } else if (node.tagName === 'CODE' && data.attrName === 'class') { // Ensure the tag is a <code> snippet and the attribute being sanitized is the highlight.js class name
+        const pattern = /^language-[a-zA-Z0-9\-]{1,}$/;
+        if (pattern.test(data.attrValue)) {
+          data.forceKeepAttr = true; // Allow this `class` attribute
+        }
+      }
+    });
+
+    const result = DOMPurify.sanitize(html);
     return result
   },
 
