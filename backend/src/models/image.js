@@ -55,9 +55,7 @@ ImageSchema.statics.getOne = (isAdmin, userId, imageId) => {
 ImageSchema.statics.create = (isAdmin, userId, image) => {
     return new Promise((resolve, reject) => {
         Audit.getAudit(isAdmin, image.auditId, userId)
-            .then((audit) => {
-                console.log(audit);
-                
+            .then((_) => {
                 var query = Image.findOne({value: image.value});
                 query.exec()
                     .then(row => {
