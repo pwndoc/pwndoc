@@ -739,7 +739,6 @@ module.exports = function () {
         `</w:p>`+
         `<w:p/>`
         var ooxml = html2ooxml(html)
-        console.log(ooxml)
         expect(ooxml).toEqual(expected)
       })
     })
