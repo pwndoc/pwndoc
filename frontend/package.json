@@ -20,7 +20,7 @@
     "@tiptap/pm": "^2.4.0",
     "@tiptap/starter-kit": "^2.4.0",
     "@tiptap/vue-2": "^2.4.0",
-    "axios": "^0.18.1",
+    "axios": "^0.30.0",
     "lowlight": "^2.7.0",
     "highlight.js": "^11.10.0",
     "core-js": "^3.37.1",
