@@ -216,20 +216,25 @@
 
 <script>
 // Import the editor
-import { Editor, EditorContent } from '@tiptap/vue-2'
+import { Editor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-2'
 
 // Import Extensions
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
+import CodeBlockComponent from './editor-code-block'
 
 const Diff = require('diff')
 
 import Utils from '@/services/utils'
 import ImageService from '@/services/image'
+
+import { lowlight } from 'lowlight'
+lowlight.registerAlias('xml', ['html'])
 
 export default {
     name: 'BasicEditor',
@@ -269,7 +274,8 @@ export default {
                     StarterKit.configure({
                         heading: {
                             levels: [1, 2, 3, 4, 5, 6]
-                        }
+                        },
+                        codeBlock: false
                     }),
                     Underline,
                     CustomImage,
@@ -280,7 +286,16 @@ export default {
                     TrailingNode.configure({
                         node: 'paragraph', 
                         notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']
+                    }),
+                    CodeBlockLowlight.extend({
+                        addNodeView() {
+                            return VueNodeViewRenderer(CodeBlockComponent)
+                        },
                     })
+                    .configure({ 
+                        lowlight,
+                        defaultLanguage: 'plaintext'
+                    }),
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -361,7 +376,7 @@ export default {
             if (typeof this.diff !== "undefined") {
                 var HtmlDiff = new Diff.Diff(true)
                 HtmlDiff.tokenize = function(value) {
-                    return value.split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
+                    return value.replace(/<code[^>]*>/g, "<code>").split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
                 }
                 var value = this.value || ""
                 var diff = HtmlDiff.diff(this.diff, value)
@@ -473,29 +488,6 @@ export default {
         font-size: 4.25rem;
     }
 
-    pre {
-      padding: 0.7rem 1rem;
-      border-radius: 5px;
-      background: black;
-      color: white;
-      font-size: 0.8rem;
-      overflow-x: auto;
-      white-space: pre-wrap;
-
-      code {
-        display: block;
-      }
-    }
-
-    p code {
-      padding: 0.2rem 0.4rem;
-      border-radius: 5px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      background: rgba(black, 0.1);
-      color: rgba(black, 0.8);
-    }
-
     ul,
     ol {
       padding-left: 1rem;
@@ -585,6 +577,101 @@ export default {
       cursor: col-resize;
     }
 
+    pre {
+        background: black;
+        border-radius: 0.5rem;
+        color: white;
+        font-family: 'JetBrainsMono', monospace;
+        margin: 1rem 0;
+        padding: 0.75rem 1rem;
+
+        &:last-child {
+            margin-bottom: 1rem;
+        }
+
+        code {
+            background: none;
+            color: inherit;
+            font-size: 0.8rem;
+            padding: 0;
+        }
+
+        /* CodeBlock styling (atom-one-dark) */
+        .hljs {
+            color: #abb2bf;
+            background: #282c34;
+        }
+
+        .hljs-comment,
+        .hljs-quote {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        .hljs-doctag,
+        .hljs-keyword,
+        .hljs-formula {
+            color: #c678dd;
+        }
+
+        .hljs-section,
+        .hljs-name,
+        .hljs-selector-tag,
+        .hljs-deletion,
+        .hljs-subst {
+            color: #e06c75;
+        }
+
+        .hljs-literal {
+            color: #56b6c2;
+        }
+
+        .hljs-string,
+        .hljs-regexp,
+        .hljs-addition,
+        .hljs-attribute,
+        .hljs-meta .hljs-string {
+            color: #98c379;
+        }
+
+        .hljs-attr,
+        .hljs-variable,
+        .hljs-template-variable,
+        .hljs-type,
+        .hljs-selector-class,
+        .hljs-selector-attr,
+        .hljs-selector-pseudo,
+        .hljs-number {
+            color: #d19a66;
+        }
+
+        .hljs-symbol,
+        .hljs-bullet,
+        .hljs-link,
+        .hljs-meta,
+        .hljs-selector-id,
+        .hljs-title {
+            color: #61aeee;
+        }
+
+        .hljs-built_in,
+        .hljs-title.class_,
+        .hljs-class .hljs-title {
+            color: #e6c07b;
+        }
+
+        .hljs-emphasis {
+            font-style: italic;
+        }
+
+        .hljs-strong {
+            font-weight: bold;
+        }
+
+        .hljs-link {
+            text-decoration: underline;
+        }
+    }
   }
 }
 .is-active {
