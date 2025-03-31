@@ -87,7 +87,7 @@ export default {
             .catch((err) => {
                 console.log(err)
                 Notify.create({
-                    message: (typeof err === "String") ? err : err.message,
+                    message: (typeof err === "string") ? err : err.message,
                     color: 'negative',
                     textColor: 'white',
                     position: 'top-right'
