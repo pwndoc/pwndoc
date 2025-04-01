@@ -6,7 +6,7 @@ module.exports = function(app) {
 
     // Get image
     app.get("/api/images/:imageId", acl.hasPermission('images:read'), function(req, res) {
-        Image.getOne(req.params.imageId)
+        Image.getOne(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.decodedToken.id, req.params.imageId)
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     })
@@ -32,14 +32,14 @@ module.exports = function(app) {
         if (req.body.name) image.name = req.body.name
         if (req.body.auditId) image.auditId = req.body.auditId
 
-        Image.create(image)
+        Image.create(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.decodedToken.id, image)
         .then(data => Response.Created(res, data))
         .catch(err => Response.Internal(res, err))
     })
 
     // Delete image
     app.delete("/api/images/:imageId", acl.hasPermission('images:delete'), function(req, res) {
-        Image.delete(req.params.imageId)
+        Image.delete(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.decodedToken.id, req.params.imageId)
         .then(data => {
             Response.Ok(res, 'Image deleted successfully')
         })
@@ -50,7 +50,7 @@ module.exports = function(app) {
 
     // Download image file
     app.get("/api/images/download/:imageId", acl.hasPermission('images:read'), function(req, res) {
-        Image.getOne(req.params.imageId)
+        Image.getOne(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.decodedToken.id, req.params.imageId)
         .then(data => {
             var imgBase64 = data.value.split(",")[1]
             var img = Buffer.from(imgBase64, 'base64')
