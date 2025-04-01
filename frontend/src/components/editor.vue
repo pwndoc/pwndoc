@@ -287,6 +287,10 @@ export default {
             default: function() {
                 return []
             }
+        },
+        focusedComment: {
+            type: String,
+            default: ''
         }
     },
     components: {
@@ -303,10 +307,11 @@ export default {
                         codeBlock: false
                     }),
                     Underline,
-                    CustomImage,
+                    CustomImage.configure({inline: true}),
                     Caption,
                     Comment.configure({
-                        commentMode: this.commentMode
+                        commentMode: this.commentMode,
+                        commentIdList: this.commentIdList
                     }),
                     CustomHighlight.configure({
                         multicolor: true,
@@ -363,7 +368,18 @@ export default {
 
         highlightColor (value) {
             this.editor.storage.highlight.color = value
-       }
+       },
+
+        focusedComment (value) {
+            if (value && this.commentMode)
+                setTimeout(() => { 
+                    this.handleFocusComment({detail: {id: value}})
+                }, 200)
+        },
+
+        commentIdList (value) {
+            this.editor.storage.comment.commentIdList = value
+        }
     },
 
     mounted: function() {
@@ -378,8 +394,6 @@ export default {
         }
         var content = this.htmlEncode(this.value)
         this.editor.commands.setContent(content)
-
-        this.cleanOrphanComments()
     },
 
     beforeDestroy() {
@@ -481,6 +495,7 @@ export default {
 
             let startPos = 0
             let endPos = 0
+            let nodeType = "text" // or node to handle selection on focus
 
             state.doc.descendants((node, pos) => {
                 if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
@@ -495,9 +510,12 @@ export default {
                 }
             })   
             
-            console.log(startPos, endPos)
             if (startPos > 0 && endPos > 0) {
-                this.editor.chain().focus().setTextSelection(startPos).run()
+                console.log(startPos, endPos)
+                if (nodeType === "text")
+                    this.editor.chain().setTextSelection(startPos).run()
+                else
+                    this.editor.chain().setNodeSelection(startPos).run()
             }
         },
 
@@ -789,12 +807,14 @@ pre .diffadd {
     color:var(--q-color-primary)!important;
 }
 
-comment.enabled{
+comment.enabled {
     background-color: lightblue;
+    opacity: 0.9;
 }
 
 comment.enabled.focused{
     background-color: #e5c5e1;
+    z-index: 1000;
 }
 //comment.enabled::before, comment.enabled::after {
 //    content: '|';

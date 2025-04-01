@@ -13,7 +13,6 @@ import VulnService from '@/services/vulnerability';
 import Utils from '@/services/utils';
 
 import { $t } from '@/boot/i18n'
-import editorComment from '../../../../../components/editor-comment';
 
 export default {
     props: {
@@ -55,7 +54,7 @@ export default {
         CustomFields
     },
 
-    mounted: function() {
+    mounted: async function() {
         this.auditId = this.$route.params.auditId;
         this.findingId = this.$route.params.findingId;
         this.getFinding();
@@ -70,6 +69,8 @@ export default {
         document.addEventListener('comment-clicked', this.editorCommentClicked)
 
         this.$parent.focusedComment = null
+
+        await this.$nextTick()
         if (this.$route.params.comment)
             this.focusComment(this.$route.params.comment)
     },
@@ -395,14 +396,19 @@ export default {
                 this.selectedTab = "details"
             }
             let checkCount = 0
+            let elementField = null
+            let elementCommentEditor = null
             const intervalId = setInterval(() => {
                 checkCount++
-                if (document.getElementById(comment.fieldName)) {
+                elementField = document.getElementById(comment.fieldName)
+                elementCommentEditor = document.getElementById(comment._id)
+                if (elementField || elementCommentEditor) {
                     clearInterval(intervalId)
-                    this.$nextTick(() => {
-                        document.getElementById(comment.fieldName).scrollIntoView({block: "center"})
-                        document.dispatchEvent(new CustomEvent('comment-focused', { detail: { id: commentId, fieldName: comment.fieldName } }))
-                    })
+                    if (elementCommentEditor) {
+                        elementCommentEditor.scrollIntoView({block: "center"})
+                    }
+                    else
+                        elementField.scrollIntoView({block: "center"})
                 }
                 else if (checkCount >= 10) {
                     clearInterval(intervalId)
@@ -484,6 +490,7 @@ export default {
         },
 
         deleteComment: function(comment) {
+            this.$parent.editComment = null
             let commentId = comment._id || comment.commentId
             AuditService.deleteComment(this.auditId, commentId)
             .then(() => {
