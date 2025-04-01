@@ -5,27 +5,71 @@ import DOMPurify from 'dompurify';
 export default {
   htmlEncode(html) {
     if(typeof(html) !== "string")  return "";
+
+    const ALLOWED_TAGS = [
+      'p',
+      'br',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'b',
+      'strong',
+      'i',
+      'em',
+      'u',
+      's',
+      'strike',
+      'mark',
+      'ul',
+      'ol',
+      'li',
+      'code',
+      'pre',
+      'img',
+      'legend',
+    ]
     
     DOMPurify.setConfig({
-      ALLOWED_ATTR: [
-        'alt',      // alt for images
-        'label',    // label for legend
-        'title'     // title for footnote
-      ]
-    });
+      ALLOWED_TAGS: ALLOWED_TAGS,
+    }
+  );
 
     // Hook to enable image sources not having a valid URL.
-    DOMPurify.addHook('uponSanitizeAttribute', function (node, data) {
-      if (node.tagName === 'IMG' && data.attrName === 'src') { // Ensure the tag is an <img> and the attribute being sanitized is `src`
-        // Check if the `src` consists of exactly 24 hexadecimal characters
-        const pattern = /^[a-fA-F0-9]{24}$/;
-        if (pattern.test(data.attrValue)) {
-          data.forceKeepAttr = true; // Allow this `src` attribute
+    DOMPurify.addHook('uponSanitizeAttribute', function (node, data, config) {
+      data.keepAttr = false // default to remove any attribute
+
+      // Filter authorized attributes for <img> tags (<img src="..." alt="...">)
+      if (node.tagName === 'IMG') { 
+        if (data.attrName === 'src') {
+          const pattern = /^[a-fA-F0-9]{24}$/; // Check if the `src` consists of exactly 24 hexadecimal characters
+          const pattern_b64 = /^data:image\/.+base64,.+$/; // Check if the `src` is a base64 image (retrocompatibility)
+          if (pattern.test(data.attrValue) || pattern_b64.test(data.attrValue))
+            data.forceKeepAttr = true;
         }
-      } else if (node.tagName === 'CODE' && data.attrName === 'class') { // Ensure the tag is a <code> snippet and the attribute being sanitized is the highlight.js class name
-        const pattern = /^language-[a-zA-Z0-9\-]{1,}$/;
-        if (pattern.test(data.attrValue)) {
-          data.forceKeepAttr = true; // Allow this `class` attribute
+        else if (data.attrName === 'alt') {
+          data.forceKeepAttr = true; 
+        }
+      }
+      // Filter authorized attributes for <legend> tags (<legend label="..." alt="...">)
+      else if (node.tagName === 'LEGEND') {
+        if (data.attrName === 'label' || data.attrName === 'alt')
+          data.forceKeepAttr = true;
+      }
+      // Filter authorized attributes for <mark> tags (<mark data-color="..." style="...">)
+      else if (node.tagName === 'MARK') {
+        if (data.attrName === 'data-color' || data.attrName === 'style')
+          data.forceKeepAttr = true;
+      }
+      // Filter authorized attributes for <code> tags (<code class="...")
+      else if (node.tagName === 'CODE') {
+        if (data.attrName === 'class') {
+          const pattern = /^language-[a-zA-Z0-9\-]{1,}$/; // Check for highlight language value
+          if (pattern.test(data.attrValue)) {
+            data.forceKeepAttr = true;
+          }
         }
       }
     });
