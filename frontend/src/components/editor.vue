@@ -230,6 +230,7 @@ import { Editor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-2'
 
 // Import Extensions
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Code from '@tiptap/extension-code'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
@@ -238,7 +239,6 @@ import Comment from './editor-comment'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 import CodeBlockComponent from './editor-code-block'
-import CustomCode from './editor-code'
 
 const Diff = require('diff')
 
@@ -308,7 +308,6 @@ export default {
                         codeBlock: false,
                         code: false
                     }),
-                    CustomCode,
                     Underline,
                     CustomImage.configure({inline: true}),
                     Caption,
@@ -327,11 +326,15 @@ export default {
                         addNodeView() {
                             return VueNodeViewRenderer(CodeBlockComponent)
                         },
+                        marks: "comment"
                     })
                     .configure({ 
                         lowlight,
-                        defaultLanguage: 'plaintext'
+                        defaultLanguage: 'plaintext',
                     }),
+                    Code.extend({
+                        excludes: "bold italic strike underline"
+                    })
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -684,6 +687,15 @@ export default {
     .resize-cursor {
       cursor: ew-resize;
       cursor: col-resize;
+    }
+
+    p code {
+      padding: 0.2rem 0.4rem;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      background: rgba(black, 0.1);
+      color: rgba(black, 0.8);
     }
 
     pre {
