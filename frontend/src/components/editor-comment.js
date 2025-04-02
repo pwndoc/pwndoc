@@ -63,12 +63,15 @@ export default Mark.create({
       setComment: (fieldName) => ({ commands, state, tr, dispatch }) => {
         const {from, to} = state.selection
         const newId = generateObjectId()
+        console.log("canSetMark", this.editor.can().setMark(this.name))
         if (this.editor.can().setMark(this.name)) {
           document.dispatchEvent(new CustomEvent('comment-added', { detail: { id: newId, fieldName: fieldName } }))
           return commands.setMark(this.name, { id: newId, focused: true })
         }
         else {
+          console.log(tr)
           const selectedContent = state.doc.slice(from, to) // Get selected content
+          console.log(selectedContent)
           const contentFragment = selectedContent.content
           console.log(contentFragment.toJSON())
 

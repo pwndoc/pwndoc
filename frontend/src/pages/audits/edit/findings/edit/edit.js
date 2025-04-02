@@ -407,8 +407,9 @@ export default {
                     if (elementCommentEditor) {
                         elementCommentEditor.scrollIntoView({block: "center"})
                     }
-                    else
+                    else {
                         elementField.scrollIntoView({block: "center"})
+                    }
                 }
                 else if (checkCount >= 10) {
                     clearInterval(intervalId)

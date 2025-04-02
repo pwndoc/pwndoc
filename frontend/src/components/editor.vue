@@ -238,6 +238,7 @@ import Comment from './editor-comment'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 import CodeBlockComponent from './editor-code-block'
+import CustomCode from './editor-code'
 
 const Diff = require('diff')
 
@@ -304,8 +305,10 @@ export default {
                         heading: {
                             levels: [1, 2, 3, 4, 5, 6]
                         },
-                        codeBlock: false
+                        codeBlock: false,
+                        code: false
                     }),
+                    CustomCode,
                     Underline,
                     CustomImage.configure({inline: true}),
                     Caption,
@@ -501,6 +504,8 @@ export default {
                 if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
                     startPos = pos
                     endPos = pos + node.nodeSize
+                    if (node.type.name === 'image')
+                        nodeType = "node"
                     this.editor.chain().setTextSelection({from: startPos, to: endPos}).run()
                     this.editor.commands.updateAttributes('comment', {focused: true})
                 }
@@ -511,7 +516,7 @@ export default {
             })   
             
             if (startPos > 0 && endPos > 0) {
-                console.log(startPos, endPos)
+                console.log(nodeType, startPos, endPos)
                 if (nodeType === "text")
                     this.editor.chain().setTextSelection(startPos).run()
                 else
