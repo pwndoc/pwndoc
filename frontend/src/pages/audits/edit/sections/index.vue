@@ -3,11 +3,11 @@
 <script src='./sections.js'></script>
 
 <style scoped>
-.scrollarea {
-    height: calc(100vh - 132px)!important;
+.scrollarea-comments {
+    height: calc(100vh - 104px)!important;
 }
 
-.comment-panel-height {
-    height: calc(100vh - 198px)!important;
+.content {
+    margin-top: 50px;
 }
 </style>

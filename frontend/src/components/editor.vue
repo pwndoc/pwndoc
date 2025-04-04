@@ -1,6 +1,6 @@
 <template>
 <q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix && !diff" class="bg-grey-4" v-if="editable || diff">
+    <affix :relative-element-selector="'.'+affixRelativeElement" :offset="affixOffset" :enabled="!noAffix && !diff" class="bg-grey-4 editor-toolbar" v-if="editable || diff">
             <q-toolbar class="editor-toolbar">
                 <template v-if="editable">
                     <div v-if="toolbar.indexOf('format') !== -1">
@@ -196,7 +196,7 @@
                     </q-btn>
 
                     <template v-if="commentMode">
-                        <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
+                        <q-separator vertical class="q-mx-sm" />
                         <q-btn unelevated size="sm" dense color="deep-purple""
                         @click="editor.chain().focus().setComment(fieldName).run()"
                         >
@@ -311,10 +311,7 @@ export default {
                     Underline,
                     CustomImage.configure({inline: true}),
                     Caption,
-                    Comment.configure({
-                        commentMode: this.commentMode,
-                        commentIdList: this.commentIdList
-                    }),
+                    Comment,
                     CustomHighlight.configure({
                         multicolor: true,
                     }),
@@ -366,6 +363,11 @@ export default {
             }
             var content = this.htmlEncode(this.value)
             this.editor.commands.setContent(content);
+
+            if (this.commentMode)
+                setTimeout(() => { 
+                    this.handleFocusComment({detail: {id: this.focusedComment}})
+                }, 200)
        },
 
         editable (value) {
@@ -383,15 +385,14 @@ export default {
                 }, 200)
         },
 
-        commentIdList (value) {
-            this.editor.storage.comment.commentIdList = value
+        commentMode (value) {
+            this.handleFocusComment({detail: {id: this.focusedComment}})
         }
     },
 
-    mounted: function() {
+    mounted: async function() {
         document.addEventListener('comment-deleted', this.handleDeleteComment)
-        document.addEventListener('comment-focused', this.handleFocusComment)
-
+        
         this.affixRelativeElement += '-'+Math.floor((Math.random()*1000000) + 1)
         this.editor.setEditable(this.editable, false)
 
@@ -400,15 +401,53 @@ export default {
         }
         var content = this.htmlEncode(this.value)
         this.editor.commands.setContent(content)
+
+        // Handle editor toolbar affix width and top position
+        await this.$nextTick()
+        // Width
+        let editorElement = document.querySelector('.editor')
+        if (editorElement) {
+            const resizeObserver = new ResizeObserver((entries) => {
+                for (let entry of entries) {
+                    if (entry.target === editorElement && entry.contentRect.width !== 0) {
+                        document.documentElement.style.setProperty("--affix-element-width", entry.contentRect.width+"px")
+                    }
+                }
+            })
+            resizeObserver.observe(editorElement)
+        }
+        // Top position
+        if (this.$route.name === "editFinding") {
+            document.documentElement.style.setProperty("--affix-top", "148px");
+        }
+        else if (this.$route.name === "editSection") {
+            document.documentElement.style.setProperty("--affix-top", "98px");
+        }
+        else {
+            document.documentElement.style.setProperty("--affix-top", "48px");
+        }
+        
+        // Handle comments styling when initialized
+        this.handleFocusComment({detail: {id: this.focusedComment}})
     },
 
     beforeDestroy() {
         document.removeEventListener('comment-deleted', this.handleDeleteComment)
-        document.removeEventListener('comment-focused', this.handleFocusComment)
         this.editor.destroy()
     },
 
     computed: {
+        affixOffset: function() {
+            if (this.$route.name === "editFinding") {
+                return {top: 150, bottom: 40}
+            }
+            else if (this.$route.name === "editSection") {
+                return {top: 100, bottom: 40}
+            }
+            else {
+                return {top: 50, bottom: 40}
+            }
+        },
         formatIcon: function () {
             if (this.editor.isActive('paragraph')) 
                 return 'fa fa-paragraph'
@@ -504,47 +543,40 @@ export default {
             let nodeType = "text" // or node to handle selection on focus
 
             state.doc.descendants((node, pos) => {
-                if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
+                if (!this.commentMode) {
+                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    this.editor.commands.updateAttributes('comment', {enabled: false, focused: false})
+                }
+                else if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
                     startPos = pos
                     endPos = pos + node.nodeSize
                     if (node.type.name === 'image')
                         nodeType = "node"
                     this.editor.chain().setTextSelection({from: startPos, to: endPos}).run()
-                    this.editor.commands.updateAttributes('comment', {focused: true})
+                    this.editor.commands.updateAttributes('comment', {enabled: true, focused: true})
                 }
-                else if (node.marks.some(mark => mark.type.name === 'comment')) {
+                else if (node.marks.some(mark => mark.type.name === 'comment' && this.commentIdList.includes(mark.attrs.id))) {
                     this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
-                    this.editor.commands.updateAttributes('comment', {focused: false})
+                    this.editor.commands.updateAttributes('comment', {enabled: true, focused: false})
+                }
+                else {
+                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    this.editor.commands.updateAttributes('comment', {enabled: false, focused: false})
                 }
             })   
             
             if (startPos > 0 && endPos > 0) {
-                console.log(nodeType, startPos, endPos)
                 if (nodeType === "text")
                     this.editor.chain().setTextSelection(startPos).run()
                 else
                     this.editor.chain().setNodeSelection(startPos).run()
             }
-        },
-
-        // Handle comments deleted without having editor rendered (e.g. from another tab or section)
-        cleanOrphanComments() {
-            const { state } = this.editor
-
-            state.doc.descendants((node, pos) => {
-                for (const mark of node.marks) {
-                    if (mark.type.name === 'comment' && !this.commentIdList.includes(mark.attrs.id)) {
-                        this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
-                        this.editor.commands.unsetComment()
-                    }
-                }
-            })   
         }
     }
 }
 </script>
 
-<style lang="scss">
+<style lang="styl">
 .editor {
     :focus {
         outline: none;
@@ -571,10 +603,10 @@ export default {
     }
 
     .affix {
-        width: auto;
+        width: var(--affix-element-width, "auto");
         border-bottom: 1px solid rgba(0,0,0,0.12);
         border-right: 1px solid rgba(0,0,0,0.12);
-        top: 50px!important;
+        top: var(--affix-top, 100px)!important;
         z-index: 1000;
         position: fixed;
     }
@@ -691,7 +723,7 @@ export default {
 
     p code {
       padding: 0.2rem 0.4rem;
-      border-radius: 5px;
+      /* border-radius: 5px; */
       font-size: 0.8rem;
       font-weight: bold;
       background: rgba(black, 0.1);
@@ -824,19 +856,38 @@ pre .diffadd {
     color:var(--q-color-primary)!important;
 }
 
-comment.enabled {
-    background-color: lightblue;
-    opacity: 0.9;
+comment[enabled=true][focused=false] {
+    background-color: $bg-comment-enabled;
+    color: $text-comment-enabled;
+    opacity: 0.8;
+
+    figure {
+        outline-style: solid;
+        outline-width: 10px;
+        outline-color: $bg-comment-enabled;
+    }
+
+    figure .selected {
+        outline-style: unset;
+        outline-color: unset;
+    }
 }
 
-comment.enabled.focused{
-    background-color: #e5c5e1;
-    z-index: 1000;
+comment[enabled=true][focused=true]{
+    background-color: $bg-comment-focused!important;
+    color: $text-comment-focused!important;
+
+    figure {
+        outline-style: solid;
+        outline-width: 10px;
+        outline-color: $bg-comment-focused;
+        /* box-shadow: 0 0 5px 7px $bg-comment-focused; */
+    }
+
+    figure .selected {
+        outline-style: unset;
+        outline-color: unset;
+    }
 }
-//comment.enabled::before, comment.enabled::after {
-//    content: '|';
-//    color: #731a7e;
-//    font-weight: bold;
-//}
 
 </style>

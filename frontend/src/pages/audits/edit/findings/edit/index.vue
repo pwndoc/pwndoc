@@ -2,7 +2,7 @@
 
 <script src='./edit.js'></script>
 
-<style>
+<style scoped>
 .sortable-drag img {
     position: relative;
     max-width: 600px!important;
@@ -17,16 +17,17 @@
     height: calc(100vh - 132px)!important;
 }
 
-.highlighted-border {
-    border: 2px solid darkslateblue;
+.top-fixed {
+    position: fixed;
+    top: 100px;
+    z-index: 1000;
 }
 
-.scrollarea {
-    height: calc(100vh - 182px)!important;
+.scrollarea-comments {
+    height: calc(100vh - 152px)!important;
 }
 
-.comment-panel-height {
-    height: calc(100vh - 248px)!important;
+.content {
+    margin-top: 100px;
 }
-
 </style>

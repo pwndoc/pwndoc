@@ -40,27 +40,32 @@ export default {
 
 </script>
 
-<style lang="stylus">
+<style lang="scss">
 .card-breadcrumb {
-    height: 50px
-    padding-right: 20px
-    font-size: 14px
+    height: 50px;
+    padding-right: 20px;
+    font-size: 14px;
+    position: fixed;
+    top: 50px;
+    right: 0;
+    left:400px;
+    z-index: 1000;
 }
 
 .card-breadcrumb .q-btn {
-    font-size: 14px
+    font-size: 14px;
 }
 
 .breadcrumb-title {
-    margin-top: 11px
+    margin-top: 11px;
 }
 
 .breadcrumb-buttons {
-    margin-top: 7px
+    margin-top: 7px;
 }
 
 .card-breadcrumb>.q-breadcrumbs {
-    margin-top: 17px
+    margin-top: 17px;
 }
 
 .approvedMark {
