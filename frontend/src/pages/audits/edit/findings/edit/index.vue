@@ -27,7 +27,15 @@
     height: calc(100vh - 152px)!important;
 }
 
+.scrollarea-comments-retest {
+    height: calc(100vh - 104px)!important;
+}
+
 .content {
     margin-top: 100px;
+}
+
+.content-retest {
+    margin-top: 50px;
 }
 </style>

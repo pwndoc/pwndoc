@@ -95,6 +95,8 @@
                                         dense
                                         autofocus
                                         :placeholder="$t('startConversation')"
+                                        @keyup.ctrl.enter="updateComment(comment)"
+                                        @keyup.esc="cancelEditComment(comment)"
                                         />
                                         <q-btn class="float-right" outline color="primary" icon="close" @click="cancelEditComment(comment)"></q-btn>
                                         <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="updateComment(comment)"></q-btn>
@@ -116,8 +118,10 @@
                                         autogrow
                                         outlined
                                         dense
+                                        @keyup.ctrl.enter="reply.text = reply.textTemp; updateComment(comment)"
+                                        @keyup.esc="$emit('update:editReply', null)"
                                         />
-                                        <q-btn class="float-right" outline color="primary" icon="close" @click="editReply = null"></q-btn>
+                                        <q-btn class="float-right" outline color="primary" icon="close" @click="$emit('update:editReply', null)"></q-btn>
                                         <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="reply.text = reply.textTemp; updateComment(comment)"></q-btn>
                                     </div>
                                     <span v-else style="white-space: pre-line">{{reply.text}}</span>
@@ -125,7 +129,7 @@
                                 </q-item-section>
                                 <q-item-section side top v-show="hoverReply === reply._id && !editReply && !comment.resolved && comment._id === focusedComment">
                                     <div v-if="!editComment && !replyingComment" class="q-gutter-xs">
-                                        <q-btn v-if="canUpdateComment" size="sm" dense flat color="primary" icon="edit" @click="editReply = reply._id; reply.textTemp = reply.text">
+                                        <q-btn v-if="canUpdateComment" size="sm" dense flat color="primary" icon="edit" @click="$emit('update:editReply', reply._id); reply.textTemp = reply.text">
                                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editReply')}}</q-tooltip> 
                                         </q-btn>
                                         <q-btn v-if="canDeleteComment" size="sm" dense flat color="negative" icon="delete" @click="removeReplyFromComment(reply, comment)">
@@ -145,6 +149,8 @@
                                         dense
                                         :placeholder="(editComment || replyingComment || editReply)?$t('anotherCommentInProgress'):$t('reply')"
                                         :disable="!!editComment || !!editReply || (replyingComment && !comment.replyTemp)"
+                                        @keyup.ctrl.enter="updateComment(comment)"
+                                        @keyup.esc="comment.replyTemp = null"
                                         />
                                         <template v-if="comment.replyTemp">
                                             <q-btn class="float-right" outline color="primary" icon="close" @click="comment.replyTemp = null" />

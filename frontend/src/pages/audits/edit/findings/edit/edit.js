@@ -348,6 +348,8 @@ export default {
                 this.$parent.retestSplitRatio = 100
                 this.$parent.retestSplitLimits = [100, 100]
             }
+            if (this.$parent.retestSplitView && this.$parent.commentMode)
+                this.toggleCommentView()
         },
 
         // *** Comments Handling ***
@@ -355,6 +357,8 @@ export default {
         toggleCommentView: function() {
             Utils.syncEditors(this.$refs)
             this.$parent.commentMode = !this.$parent.commentMode
+            if (this.$parent.commentMode && this.$parent.retestSplitView)
+                this.toggleSplitView()
         },
 
         focusComment: function(comment) {
@@ -551,7 +555,6 @@ export default {
                 return true
             if (!this.$_.isEqual(this.finding.customFields, this.findingOrig.customFields))
                 return true
-
             if ((this.finding.poc || this.findingOrig.poc) && this.finding.poc !== this.findingOrig.poc)
                 return true
             
