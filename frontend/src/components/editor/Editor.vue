@@ -871,6 +871,10 @@ comment[enabled=true][focused=false] {
         outline-style: unset;
         outline-color: unset;
     }
+
+    .editor-caption {
+        background-color: $bg-comment-enabled;
+    }
 }
 
 comment[enabled=true][focused=true]{
@@ -887,6 +891,10 @@ comment[enabled=true][focused=true]{
     figure .selected {
         outline-style: unset;
         outline-color: unset;
+    }
+
+    .editor-caption {
+        background-color: $bg-comment-focused;
     }
 }
 

@@ -598,5 +598,8 @@ export default {
     activeOnly: 'Active Only',
     resolvedOnly: 'Resolved Only',
     item: 'item',
-    items: 'items'
+    items: 'items',
+    warning: 'Warning',
+    commentNoSelectedText: 'No text was selected. The comment will be linked to the entire field instead.',
+    commentCannotSetMark: 'Unable to apply comment to the selected text. The comment will be linked to the entire field instead.'
   }

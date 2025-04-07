@@ -5,7 +5,8 @@ import Component from './editor-caption-template.vue'
 export default Node.create({
   name: "caption",
 
-  group: 'block',
+  group: 'inline',
+  inline: true,
   draggable: true,
 
   addAttributes() {

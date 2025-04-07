@@ -383,7 +383,7 @@ buttons
                 <comments-list 
                 height="calc(100vh - 214px)"
                 :comments="$parent.audit.comments"
-                :editComment="$parent.editComment"
+                :editComment.sync="$parent.editComment"
                 :focusedComment="$parent.focusedComment"
                 :editReply="$parent.editReply"
                 :focusComment="focusComment"

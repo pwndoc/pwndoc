@@ -25,8 +25,8 @@ buttons
     </template>
 </breadcrumb>
 
-<div class="row full-width content">
-    <q-card class="q-ma-md" :class="($parent.commentMode)?'col-8':'col-xl-8 offset-xl-2 col-12'">
+<div class="row content q-pa-md">
+    <q-card :class="($parent.commentMode)?'col-8':'col-xl-8 offset-xl-2 col-12'">
         <!-- For retrocompatibility, test if section.text exists -->
         <q-card-section v-if="section.text"> 
             <basic-editor ref="basiceditor_section" noSync v-model="section.text" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
@@ -51,7 +51,7 @@ buttons
             <comments-list 
             height="calc(100vh - 166px)"
             :comments="$parent.audit.comments"
-            :editComment="$parent.editComment"
+            :editComment.sync="$parent.editComment"
             :focusedComment="$parent.focusedComment"
             :editReply="$parent.editReply"
             :focusComment="focusComment"

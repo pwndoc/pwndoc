@@ -246,7 +246,7 @@
 </template>
 
 <script>
-import BasicEditor from 'components/editor';
+import BasicEditor from 'components/editor/Editor.vue';
 
 export default {
     name: 'custom-fields',

@@ -70,7 +70,7 @@
                                 </q-item-section>
                                 <q-item-section side v-if="!comment.resolved">
                                     <div v-if="!editComment && !replyingComment && !editReply" class="q-gutter-xs">
-                                        <q-btn v-if="!comment.resolved && canUpdateComment" size="sm" dense flat color="primary" icon="edit" @click="editComment = comment._id; comment.textTemp = comment.text; focusComment(comment)">
+                                        <q-btn v-if="!comment.resolved && canUpdateComment" size="sm" dense flat color="primary" icon="edit" @click="editCommentClicked(comment)">
                                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editComment')}}</q-tooltip> 
                                         </q-btn>
                                         <q-btn v-if="canUpdateComment" size="sm" dense flat color="green" icon="done" @click="comment.resolved = true; updateComment(comment)">
@@ -96,7 +96,7 @@
                                         autofocus
                                         :placeholder="$t('startConversation')"
                                         />
-                                        <q-btn class="float-right" outline color="primary" icon="close" @click="deleteComment(comment)"></q-btn>
+                                        <q-btn class="float-right" outline color="primary" icon="close" @click="cancelEditComment(comment)"></q-btn>
                                         <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="updateComment(comment)"></q-btn>
                                     </div>
                                     <span v-else style="white-space: pre-line">{{comment.text}}</span>
@@ -279,6 +279,17 @@ export default {
             if ((this.commentsFilter === 'active' && comment.resolved)|| (this.commentsFilter === 'resolved' && !comment.resolved))
                 response = false
             return response
+        },
+
+        editCommentClicked: function(comment) {
+            this.$emit('update:editComment', comment._id)
+            comment.textTemp = comment.text
+            this.focusComment(comment)
+        },
+
+        cancelEditComment: function(comment) {
+            this.$emit('update:editComment', null)
+            delete comment.textTemp
         }
     }
 }

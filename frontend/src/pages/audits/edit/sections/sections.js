@@ -1,6 +1,6 @@
 import { Notify, Dialog } from 'quasar';
 
-import BasicEditor from 'components/editor';
+import BasicEditor from 'components/editor/Editor.vue';
 import Breadcrumb from 'components/breadcrumb';
 import CustomFields from 'components/custom-fields';
 import CommentsList from 'components/comments-list';
@@ -277,7 +277,22 @@ export default {
         },
 
         editorCommentAdded: function(event) {
-            if (event.detail.fieldName && event.detail.id) {
+            if (!event.detail || !event.detail.fieldName || !event.detail.id)
+                return
+
+            if (event.detail.warning) {
+                Dialog.create({
+                    title: $t('Warning'),
+                    message: $t(event.detail.warning),
+                    ok: {label: $t('btn.confirm'), color: 'warning'},
+                    cancel: {label: $t('btn.cancel'), color: 'white'}
+                })
+                .onOk(() => {
+                    if (event.detail.fieldName && event.detail.id)
+                    this.createComment(event.detail.fieldName, event.detail.id)
+                })
+            }
+            else {
                 this.createComment(event.detail.fieldName, event.detail.id)
             }
         },

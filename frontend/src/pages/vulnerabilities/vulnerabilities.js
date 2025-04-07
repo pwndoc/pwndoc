@@ -1,6 +1,6 @@
 import { Dialog, Notify } from 'quasar';
 
-import BasicEditor from 'components/editor';
+import BasicEditor from 'components/editor/Editor.vue';
 import Breadcrumb from 'components/breadcrumb'
 import CvssCalculator from 'components/cvsscalculator'
 import TextareaArray from 'components/textarea-array'
