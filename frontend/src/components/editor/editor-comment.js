@@ -1,4 +1,4 @@
-import { Mark, mergeAttributes } from "@tiptap/core"
+import { Mark } from "@tiptap/core"
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from 'prosemirror-view'
 
