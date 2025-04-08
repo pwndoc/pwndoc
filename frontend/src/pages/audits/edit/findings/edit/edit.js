@@ -77,7 +77,6 @@ export default {
             this.focusComment(this.$route.params.comment)
             // Focus comment on the sidebar
             let commentElementSidebar = document.getElementById(`sidebar-${this.$route.params.comment._id}`)
-            console.log(commentElementSidebar)
             if (commentElementSidebar)
                 commentElementSidebar.scrollIntoView({block: "center"})
         }
@@ -105,7 +104,7 @@ export default {
             })
             .onOk(() => next())
         }
-        else if (displayHighlightWarning) {
+        else if (!this.$parent.commentMode && displayHighlightWarning) {
             Dialog.create({
                 title: $t('msg.highlightWarningTitle'),
                 message: `${displayHighlightWarning}</mark>`,
@@ -134,7 +133,7 @@ export default {
             })
             .onOk(() => next())
         }
-        else if (displayHighlightWarning) {
+        else if (!this.$parent.commentMode && displayHighlightWarning) {
             Dialog.create({
                 title: $t('msg.highlightWarningTitle'),
                 message: `${displayHighlightWarning}</mark>`,
@@ -423,7 +422,7 @@ export default {
                 else if (checkCount >= 10) {
                     clearInterval(intervalId)
                 }
-            }, 100)
+            }, 200)
 
             this.$parent.fieldHighlighted = comment.fieldName
             this.$parent.focusedComment = comment._id

@@ -102,7 +102,7 @@ export default {
             })
             .onOk(() => next())
         }
-        else if (displayHighlightWarning) {
+        else if (!this.$parent.commentMode && displayHighlightWarning) {
             Dialog.create({
                 title: $t('msg.highlightWarningTitle'),
                 message: `${displayHighlightWarning}</mark>`,
@@ -131,7 +131,7 @@ export default {
             })
             .onOk(() => next())
         }
-        else if (displayHighlightWarning) {
+        else if (!this.$parent.commentMode && displayHighlightWarning) {
             Dialog.create({
                 title: $t('msg.highlightWarningTitle'),
                 message: `${displayHighlightWarning}</mark>`,
