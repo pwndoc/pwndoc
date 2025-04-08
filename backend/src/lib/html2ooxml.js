@@ -10,6 +10,7 @@ function html2ooxml(html, style = '') {
         return html
     if (!html.match(/^<.+>/))
         html = `<p>${html}</p>`
+    html = html.replace(/<comment.*?>/g, '').replace(/<\/comment>/g, '') // Clean comment tags
     var doc = new docx.Document({sections:[]});
     var paragraphs = []
     var cParagraph = null

@@ -1,6 +1,6 @@
 <template>
 <q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <affix :relative-element-selector="'.'+affixRelativeElement" :enabled="!noAffix && !diff" class="bg-grey-4" v-if="editable || diff">
+    <affix :relative-element-selector="'.'+affixRelativeElement" :offset="affixOffset" :enabled="!noAffix && !diff" class="bg-grey-4 editor-toolbar" v-if="editable || diff">
             <q-toolbar class="editor-toolbar">
                 <template v-if="editable">
                     <div v-if="toolbar.indexOf('format') !== -1">
@@ -195,6 +195,16 @@
                         <q-icon name="redo" />
                     </q-btn>
 
+                    <template v-if="commentMode">
+                        <q-separator vertical class="q-mx-sm" />
+                        <q-btn unelevated size="sm" dense color="deep-purple""
+                        @click="editor.chain().focus().setComment(fieldName).run()"
+                        >
+                            <q-tooltip :delay="500" content-class="text-bold">Add Comment</q-tooltip>
+                            <q-icon name="add_comment" />
+                        </q-btn>
+                    </template>
+
                 </template>
                 <div v-if="diff !== undefined && (diff || value) && value !== diff">
                     <q-btn flat size="sm" dense
@@ -220,10 +230,12 @@ import { Editor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-2'
 
 // Import Extensions
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Code from '@tiptap/extension-code'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
+import Comment from './editor-comment'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 import CodeBlockComponent from './editor-code-block'
@@ -262,6 +274,24 @@ export default {
         noSync: {
             type: Boolean,
             default: false
+        },
+        fieldName: {
+            type: String,
+            default: ''
+        },
+        commentMode: {
+            type: Boolean,
+            default: false
+        },
+        commentIdList: {
+            type: Array,
+            default: function() {
+                return []
+            }
+        },
+        focusedComment: {
+            type: String,
+            default: ''
         }
     },
     components: {
@@ -275,11 +305,13 @@ export default {
                         heading: {
                             levels: [1, 2, 3, 4, 5, 6]
                         },
-                        codeBlock: false
+                        codeBlock: false,
+                        code: false
                     }),
                     Underline,
-                    CustomImage,
+                    CustomImage.configure({inline: true}),
                     Caption,
+                    Comment,
                     CustomHighlight.configure({
                         multicolor: true,
                     }),
@@ -291,11 +323,15 @@ export default {
                         addNodeView() {
                             return VueNodeViewRenderer(CodeBlockComponent)
                         },
+                        marks: "comment"
                     })
                     .configure({ 
                         lowlight,
-                        defaultLanguage: 'plaintext'
+                        defaultLanguage: 'plaintext',
                     }),
+                    Code.extend({
+                        excludes: "bold italic strike underline"
+                    })
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -327,6 +363,11 @@ export default {
             }
             var content = this.htmlEncode(this.value)
             this.editor.commands.setContent(content);
+
+            if (this.commentMode)
+                setTimeout(() => { 
+                    this.handleFocusComment({detail: {id: this.focusedComment}})
+                }, 200)
        },
 
         editable (value) {
@@ -334,12 +375,24 @@ export default {
        },
 
         highlightColor (value) {
-            console.log(this.editor.storage)
             this.editor.storage.highlight.color = value
-       }
+       },
+
+        focusedComment (value) {
+            if (value && this.commentMode)
+                setTimeout(() => { 
+                    this.handleFocusComment({detail: {id: value}})
+                }, 200)
+        },
+
+        commentMode (value) {
+            this.handleFocusComment({detail: {id: this.focusedComment}})
+        }
     },
 
-    mounted: function() {
+    mounted: async function() {
+        document.addEventListener('comment-deleted', this.handleDeleteComment)
+        
         this.affixRelativeElement += '-'+Math.floor((Math.random()*1000000) + 1)
         this.editor.setEditable(this.editable, false)
 
@@ -348,13 +401,53 @@ export default {
         }
         var content = this.htmlEncode(this.value)
         this.editor.commands.setContent(content)
+
+        // Handle editor toolbar affix width and top position
+        await this.$nextTick()
+        // Width
+        let editorElement = document.querySelector('.editor')
+        if (editorElement) {
+            const resizeObserver = new ResizeObserver((entries) => {
+                for (let entry of entries) {
+                    if (entry.target === editorElement && entry.contentRect.width !== 0) {
+                        document.documentElement.style.setProperty("--affix-element-width", entry.contentRect.width+"px")
+                    }
+                }
+            })
+            resizeObserver.observe(editorElement)
+        }
+        // Top position
+        if (this.$route.name === "editFinding") {
+            document.documentElement.style.setProperty("--affix-top", "148px");
+        }
+        else if (this.$route.name === "editSection") {
+            document.documentElement.style.setProperty("--affix-top", "98px");
+        }
+        else {
+            document.documentElement.style.setProperty("--affix-top", "48px");
+        }
+        
+        // Handle comments styling when initialized
+        this.handleFocusComment({detail: {id: this.focusedComment}})
     },
 
     beforeDestroy() {
+        document.removeEventListener('comment-deleted', this.handleDeleteComment)
         this.editor.destroy()
     },
 
     computed: {
+        affixOffset: function() {
+            if (this.$route.name === "editFinding") {
+                return {top: 150, bottom: 40}
+            }
+            else if (this.$route.name === "editSection") {
+                return {top: 100, bottom: 40}
+            }
+            else {
+                return {top: 50, bottom: 40}
+            }
+        },
         formatIcon: function () {
             if (this.editor.isActive('paragraph')) 
                 return 'fa fa-paragraph'
@@ -427,12 +520,63 @@ export default {
                 this.html = ""
             }
             this.$emit('input', this.html)
+        },
+
+        handleDeleteComment(event) {
+            const commentId = event.detail.id
+            const { state } = this.editor
+
+            state.doc.descendants((node, pos) => {
+                if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
+                    this.editor.chain().focus().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    this.editor.commands.unsetComment()
+                }
+            })   
+        },
+
+        handleFocusComment(event) {
+            const commentId = event.detail.id
+            const { state } = this.editor
+
+            let startPos = 0
+            let endPos = 0
+            let nodeType = "text" // or node to handle selection on focus
+
+            state.doc.descendants((node, pos) => {
+                if (!this.commentMode) {
+                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    this.editor.commands.updateAttributes('comment', {enabled: false, focused: false})
+                }
+                else if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
+                    startPos = pos
+                    endPos = pos + node.nodeSize
+                    if (node.type.name === 'image')
+                        nodeType = "node"
+                    this.editor.chain().setTextSelection({from: startPos, to: endPos}).run()
+                    this.editor.commands.updateAttributes('comment', {enabled: true, focused: true})
+                }
+                else if (node.marks.some(mark => mark.type.name === 'comment' && this.commentIdList.includes(mark.attrs.id))) {
+                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    this.editor.commands.updateAttributes('comment', {enabled: true, focused: false})
+                }
+                else {
+                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    this.editor.commands.updateAttributes('comment', {enabled: false, focused: false})
+                }
+            })   
+            
+            if (startPos > 0 && endPos > 0) {
+                if (nodeType === "text")
+                    this.editor.chain().setTextSelection(startPos).run()
+                else
+                    this.editor.chain().setNodeSelection(startPos).run()
+            }
         }
     }
 }
 </script>
 
-<style lang="scss">
+<style lang="styl">
 .editor {
     :focus {
         outline: none;
@@ -459,10 +603,10 @@ export default {
     }
 
     .affix {
-        width: auto;
+        width: var(--affix-element-width, "auto");
         border-bottom: 1px solid rgba(0,0,0,0.12);
         border-right: 1px solid rgba(0,0,0,0.12);
-        top: 50px!important;
+        top: var(--affix-top, 100px)!important;
         z-index: 1000;
         position: fixed;
     }
@@ -575,6 +719,15 @@ export default {
     .resize-cursor {
       cursor: ew-resize;
       cursor: col-resize;
+    }
+
+    p code {
+      padding: 0.2rem 0.4rem;
+      /* border-radius: 5px; */
+      font-size: 0.8rem;
+      font-weight: bold;
+      background: rgba(black, 0.1);
+      color: rgba(black, 0.8);
     }
 
     pre {
@@ -701,6 +854,25 @@ pre .diffadd {
 
 .text-negative .editor:not(.q-dark) {
     color:var(--q-color-primary)!important;
+}
+
+comment .comment-enabled {
+    background-color: $bg-comment-enabled;
+    color: $text-comment-enabled;
+    opacity: 0.8;
+
+    .editor-caption {
+        background-color: $bg-comment-enabled;
+    }
+}
+
+comment .comment-enabled.comment-focused{
+    background-color: $bg-comment-focused!important;
+    color: $text-comment-focused!important;
+
+    .editor-caption {
+        background-color: $bg-comment-focused;
+    }
 }
 
 </style>

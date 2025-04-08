@@ -1,6 +1,6 @@
 <template>
   <node-view-wrapper>
-    <div style="margin: 0px auto 16px auto; display: table">
+    <div class="editor-caption" style="margin: 0px auto 16px auto; display: table">
         <div style="max-width:600px" class="cursor-pointer">
           <span>{{label}} - </span>
           <span v-if="alt" class="text-italic">{{alt}}</span>

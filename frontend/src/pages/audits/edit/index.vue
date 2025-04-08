@@ -313,12 +313,13 @@
 		</q-splitter>
 	</q-drawer>
 	<router-view :key="$route.fullPath" :frontEndAuditState="frontEndAuditState" :parentState="audit.state" :parentApprovals="audit.approvals" />
-	</div>
+</div>
 </template>
 
 <script>
 import { Dialog, Notify, QSpinnerGears, LocalStorage } from 'quasar';
 import draggable from 'vuedraggable'
+import CommentsList from 'components/comments-list'
 
 import AuditService from '@/services/audit';
 import UserService from '@/services/user';
@@ -333,7 +334,7 @@ export default {
 			auditId: "",
 			findings: [],
 			users: [],
-			audit: {findings: {}},
+			audit: {findings: {}, comments: []},
 			sections: [],
 			splitterRatio: 80,
 			loading: true,
@@ -350,17 +351,17 @@ export default {
 			retestSplitLimits: [100, 100],
 			children: [],
 			commentMode: false,
-			commentSplitRatio: 100,
-			commentSplitLimits: [100, 100],
 			focusedComment: null,
 			editComment: null,
 			editReply: null,
+            fieldHighlighted: "",
             commentsFilter: "all" // [all, active, resolved]
 		}
 	},
 
 	components: {
-		draggable
+		draggable,
+		CommentsList
 	},
 
 	created: function() {
@@ -430,7 +431,11 @@ export default {
 
 		systemLanguage: function() {
 			return LocalStorage.getItem('system_language') || 'en-US'
-		}
+		},
+
+		commentIdList: function() {
+            return this.audit.comments.map(e => e._id)
+        }
 	},
 
 	methods: {
@@ -874,22 +879,20 @@ export default {
 
 <style lang="stylus">
 .edit-container {
-		margin-top: 50px;
-		/*margin-left: 0px; Cancel q-col-gutter-md for left*/
-		/*margin-right: 16px; Cancel q-col-gutter-md for right*/
+	margin-top: 50px;
 }
 
 .edit-breadcrumb {
-		position: fixed;
-		top: 50px;
-		right: 0;
-		left: 300px;
-		z-index: 1;
+	position: fixed;
+	top: 50px;
+	right: 0;
+	left: 300px;
+	z-index: 1;
 }
 
 .q-menu > .q-item--active {
-		color: white;
-		background-color: $blue-14;
+	color: white;
+	background-color: $blue-14;
 }
 
 .card-screenshots {
@@ -903,7 +906,7 @@ export default {
 }
 
 .caption-text input {
-		text-align: center;
+	text-align: center;
 }
 
 .multi-colors-bar {
@@ -911,20 +914,22 @@ export default {
 }
 
 .drawer-footer {
-	// left: 0!important;
-	// height: 30%;
 	background-color: white;
 	color: black;
 	font-size: 12px;
 }
 
-.edit-drawer {
-	// height: 70%;
-
-}
-
 .topButtonSection {
     padding-left: 0px!important;
 	padding-right: 0px!important;
+}
+
+.highlighted-border {
+    border: 2px solid $deep-purple;
+}
+
+.sidebar-comments {
+    position: fixed;
+    right: 8px;
 }
 </style>
