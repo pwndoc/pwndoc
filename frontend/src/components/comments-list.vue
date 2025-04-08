@@ -94,10 +94,15 @@
                                         outlined
                                         dense
                                         autofocus
+                                        bottom-slots
                                         :placeholder="$t('startConversation')"
                                         @keyup.ctrl.enter="updateComment(comment)"
                                         @keyup.esc="cancelEditComment(comment)"
-                                        />
+                                        >
+                                            <template v-slot:hint>
+                                                <span v-html="$t('hintInputComment')"></span>
+                                            </template>
+                                        </q-input>
                                         <q-btn class="float-right" outline color="primary" icon="close" @click="cancelEditComment(comment)"></q-btn>
                                         <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="updateComment(comment)"></q-btn>
                                     </div>
@@ -118,9 +123,15 @@
                                         autogrow
                                         outlined
                                         dense
+                                        autofocus
+                                        bottom-slots
                                         @keyup.ctrl.enter="reply.text = reply.textTemp; updateComment(comment)"
                                         @keyup.esc="$emit('update:editReply', null)"
-                                        />
+                                        >
+                                            <template v-slot:hint>
+                                                <span v-html="$t('hintInputComment')"></span>
+                                            </template>
+                                        </q-input>
                                         <q-btn class="float-right" outline color="primary" icon="close" @click="$emit('update:editReply', null)"></q-btn>
                                         <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="reply.text = reply.textTemp; updateComment(comment)"></q-btn>
                                     </div>
@@ -147,11 +158,17 @@
                                         autogrow
                                         outlined
                                         dense
+                                        bottom-slots
+                                        hide-bottom-space
                                         :placeholder="(editComment || replyingComment || editReply)?$t('anotherCommentInProgress'):$t('reply')"
                                         :disable="!!editComment || !!editReply || (replyingComment && !comment.replyTemp)"
                                         @keyup.ctrl.enter="updateComment(comment)"
                                         @keyup.esc="comment.replyTemp = null"
-                                        />
+                                        >
+                                            <template v-if="comment.replyTemp" v-slot:hint>
+                                                <span v-html="$t('hintInputComment')"></span>
+                                            </template>
+                                        </q-input>
                                         <template v-if="comment.replyTemp">
                                             <q-btn class="float-right" outline color="primary" icon="close" @click="comment.replyTemp = null" />
                                             <q-btn class="float-right" unelevated color="blue-10" icon="send" @click="updateComment(comment)"/>

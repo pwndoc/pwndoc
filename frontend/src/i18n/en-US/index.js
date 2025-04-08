@@ -601,5 +601,6 @@ export default {
     items: 'items',
     warning: 'Warning',
     commentNoSelectedText: 'No text was selected. The comment will be linked to the entire field instead.',
-    commentCannotSetMark: 'Unable to apply comment to the selected text. The comment will be linked to the entire field instead.'
-  }
+    commentCannotSetMark: 'Unable to apply comment to the selected text. The comment will be linked to the entire field instead.',
+    hintInputComment: 'Tip: Press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to post.'
+}
