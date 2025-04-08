@@ -856,42 +856,19 @@ pre .diffadd {
     color:var(--q-color-primary)!important;
 }
 
-comment[enabled=true][focused=false] {
+comment .comment-enabled {
     background-color: $bg-comment-enabled;
     color: $text-comment-enabled;
     opacity: 0.8;
-
-    figure {
-        outline-style: solid;
-        outline-width: 10px;
-        outline-color: $bg-comment-enabled;
-    }
-
-    figure .selected {
-        outline-style: unset;
-        outline-color: unset;
-    }
 
     .editor-caption {
         background-color: $bg-comment-enabled;
     }
 }
 
-comment[enabled=true][focused=true]{
+comment .comment-enabled.comment-focused{
     background-color: $bg-comment-focused!important;
     color: $text-comment-focused!important;
-
-    figure {
-        outline-style: solid;
-        outline-width: 10px;
-        outline-color: $bg-comment-focused;
-        /* box-shadow: 0 0 5px 7px $bg-comment-focused; */
-    }
-
-    figure .selected {
-        outline-style: unset;
-        outline-color: unset;
-    }
 
     .editor-caption {
         background-color: $bg-comment-focused;

@@ -350,7 +350,7 @@ export default {
 			retestSplitRatio: 100,
 			retestSplitLimits: [100, 100],
 			children: [],
-			commentMode: true,
+			commentMode: false,
 			focusedComment: null,
 			editComment: null,
 			editReply: null,

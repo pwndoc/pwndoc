@@ -1,5 +1,6 @@
 import { Mark, mergeAttributes } from "@tiptap/core"
 import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Decoration, DecorationSet } from 'prosemirror-view'
 
 function generateObjectId() {
   // 1. Generate a 4-byte timestamp (seconds since Unix epoch)
@@ -26,10 +27,12 @@ export default Mark.create({
         default: ""
       },
       enabled: {
-        default: false
+        default: false,
+        rendered: false
       },
       focused: {
-        default: false
+        default: false,
+        rendered: false
       }
     }
   },
@@ -45,8 +48,8 @@ export default Mark.create({
     ]
   },
 
-  renderHTML({ HTMLAttributes, node }) {
-    return ['comment', mergeAttributes(HTMLAttributes)]
+  renderHTML({ HTMLAttributes }) {
+    return ['comment', HTMLAttributes]
   },
 
   addCommands() {
@@ -54,14 +57,13 @@ export default Mark.create({
       setComment: (fieldName) => ({ commands, state, tr, dispatch }) => {
         const {from, to} = state.selection
         const newId = generateObjectId()
-        console.log("canSetMark", this.editor.can().setMark(this.name))
         if (from === to) {
           document.dispatchEvent(new CustomEvent('comment-added', { detail: { id: newId, fieldName: fieldName, warning: "commentNoSelectedText" } }))
           return false
         }
         else if (this.editor.can().setMark(this.name)) {
           document.dispatchEvent(new CustomEvent('comment-added', { detail: { id: newId, fieldName: fieldName } }))
-          return commands.setMark(this.name, { id: newId, focused: true })
+          return commands.setMark(this.name, { id: newId, enabled: true, focused: true })
         }
         else {
           document.dispatchEvent(new CustomEvent('comment-added', { detail: { id: newId, fieldName: fieldName, warning: "commentCannotSetMark" } }))
@@ -91,6 +93,26 @@ export default Mark.create({
                 }
               }
             }
+          },
+
+          decorations(state) {
+            const { doc } = state
+            let decorations = []
+
+            state.doc.descendants((node, pos) => {
+              node.marks.forEach((mark) => {
+                  let decoClass = ""
+                  if (mark.attrs.enabled && mark.attrs.focused)
+                    decoClass = 'comment-enabled comment-focused'
+                  else if (mark.attrs.enabled)
+                    decoClass = 'comment-enabled'
+
+                  if (decoClass)
+                    decorations.push(Decoration.inline(pos, pos + node.nodeSize, {class: decoClass}))
+                })
+            })
+
+            return DecorationSet.create(doc, decorations)
           }
         }
       })
