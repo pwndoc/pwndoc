@@ -545,6 +545,7 @@ export default {
     willBeRemoved: 'will be removed',
     auditPhase: 'Audit Phase',
     upload: 'Upload',
+    horizontal: 'Horizontal',
     // Settings Backups
     backup: 'Backup',
     backups: 'Backups',
