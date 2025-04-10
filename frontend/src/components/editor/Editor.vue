@@ -386,7 +386,8 @@ export default {
         },
 
         commentMode (value) {
-            this.handleFocusComment({detail: {id: this.focusedComment}})
+            if (this.commentMode)
+                this.handleFocusComment({detail: {id: this.focusedComment}})
         }
     },
 
@@ -428,7 +429,8 @@ export default {
         }
         
         // Handle comments styling when initialized
-        this.handleFocusComment({detail: {id: this.focusedComment}})
+        if (this.commentMode)
+            this.handleFocusComment({detail: {id: this.focusedComment}})
     },
 
     beforeDestroy() {
