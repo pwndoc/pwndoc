@@ -146,12 +146,13 @@ export default {
             })
         },
 
-        updateSettings: function() {
+        doUpdateSettings: function() {
             var min = 1;
             var max = 99;
             if(this.settings.reviews.public.minReviewers < min || this.settings.reviews.public.minReviewers > max) {
                 this.settings.reviews.public.minReviewers = this.settings.reviews.public.minReviewers < min ? min: max;
             }
+
             SettingsService.updateSettings(this.settings)
             .then((data) => {
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
@@ -171,6 +172,22 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        updateSettings: function() {
+            if (this.settings.report.private.defaultDataRetentionDays > 0) {
+                Dialog.create({
+                    title: $t('msg.updateDataRetention'),
+                    message: $t('msg.updateDataRetentionConfirm'),
+                    ok: {label: $t('btn.confirm'), color: 'negative'},
+                    cancel: {label: $t('btn.cancel'), color: 'white'}
+                })
+                .onOk(async () => {
+                    this.doUpdateSettings();
+                })
+            } else {
+                this.doUpdateSettings();
+            }
         },
 
         revertToDefaults: function() {
