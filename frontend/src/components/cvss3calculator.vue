@@ -880,7 +880,7 @@ import { Cvss3P1 } from 'ae-cvss-calculator'
 
 export default {
     name: 'cvss3-calculator',
-    props: ['value', 'readonly'],
+    props: ['modelValue', 'readonly'],
 
     data: function() {
         return {
@@ -921,16 +921,16 @@ export default {
     },
 
     created: function() {
-        this.cvssStrToObject(this.value);
+        this.cvssStrToObject(this.modelValue);
         try {
-            this.cvss = new Cvss3P1(this.value).createJsonSchema();
+            this.cvss = new Cvss3P1(this.modelValue).createJsonSchema();
         } catch {
             this.cvss = {}
         }
     },
 
     watch: {
-        value: function(val) {
+        modelValue: function(val) {
             this.cvssStrToObject(val);
         },
         cvssObj: {
@@ -1049,11 +1049,11 @@ export default {
             if (this.cvssObj.MA) vectorString += "/MA:"+this.cvssObj.MA
 
             try {
-                this.cvss = new Cvss3P1(this.value).createJsonSchema();
+                this.cvss = new Cvss3P1(this.modelValue).createJsonSchema();
             } catch {
                 this.cvss = {}
             }
-            this.$emit('input', vectorString);
+            this.$emit('update:modelValue', vectorString);
         }
     }
 }

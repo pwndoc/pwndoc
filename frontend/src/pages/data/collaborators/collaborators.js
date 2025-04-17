@@ -2,16 +2,18 @@ import { Dialog, Notify } from 'quasar';
 import Vue from 'vue'
 
 import CollabService from '@/services/collaborator'
-import UserService from '@/services/user'
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
+import { useUserStore } from 'src/stores/user'
 
 import { $t } from '@/boot/i18n'
+
+const userStore = useUserStore()
 
 export default {
     data: () => {
         return {
-            UserService: UserService,
+            userStore: userStore,
             // Collaborators list
             collabs: [],
             // Loading state
@@ -180,7 +182,7 @@ export default {
         },
 
         dblClick: function(evt, row) {
-            if (this.UserService.isAllowed('users:updates')) {
+            if (userStore.isAllowed('users:updates')) {
                 this.clone(row)
                 this.$refs.editModal.show()  
             }     

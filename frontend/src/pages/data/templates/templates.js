@@ -3,15 +3,17 @@ import { Dialog, Notify, exportFile } from 'quasar';
 import Breadcrumb from 'components/breadcrumb'
 
 import TemplateService from '@/services/template'
-import UserService from '@/services/user'
+import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
 
 import { $t } from '@/boot/i18n'
 
+const userStore = useUserStore()
+
 export default {
     data: () => {
         return {
-            UserService: UserService,
+            useUserStore: useUserStore,
             // Templates list
             templates: [],
             // Loading state
@@ -217,7 +219,7 @@ export default {
         },
 
         dblClick: function(evt, row) {
-            if (this.UserService.isAllowed('templates:update')) {
+            if (userStore.isAllowed('templates:update')) {
                 this.clone(row)
                 this.$refs.editModal.show()
             }     

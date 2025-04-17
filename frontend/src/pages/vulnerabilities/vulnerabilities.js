@@ -9,15 +9,17 @@ import CustomFields from 'components/custom-fields'
 
 import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
-import UserService from '@/services/user'
+import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
 
 import { $t } from 'boot/i18n'
 
+const userStore = useUserStore()
+
 export default {
     data: () => {
         return {
-            UserService: UserService,
+            userStore: userStore,
             // Vulnerabilities list
             vulnerabilities: [],
             // Loading state
@@ -315,7 +317,7 @@ export default {
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;
-            if (this.UserService.isAllowed('vulnerabilities:update'))
+            if (userStore.isAllowed('vulnerabilities:update'))
                 this.getVulnUpdates(this.vulnerabilityId);
         },
 
@@ -494,7 +496,7 @@ export default {
 
         dblClick: function(row) {
             this.clone(row)
-            if (this.UserService.isAllowed('vulnerabilities:update') && row.status === 2)
+            if (userStore.isAllowed('vulnerabilities:update') && row.status === 2)
                 this.$refs.updatesModal.show()
             else
                 this.$refs.editModal.show()

@@ -1,18 +1,20 @@
 import { Notify, Dialog } from 'quasar'
 
 import SettingsService from '@/services/settings'
-import UserService from '@/services/user'
+import { useUserStore } from 'src/stores/user'
 import BackupService from '@/services/backup'
 import Utils from '@/services/utils'
 
 import { $t } from 'boot/i18n'
 import LanguageSelector from '@/components/language-selector';
 
+const userStore = useUserStore()
+
 export default {
     data: () => {
         return {
             loading: true,
-            UserService: UserService,
+            userStore: userStore,
             settings: {},
             settingsOrig : {},
             canEdit: false,
@@ -104,12 +106,12 @@ export default {
     },
 
     mounted: function() {
-        if (UserService.isAllowed('settings:read')) {
+        if (userStore.isAllowed('settings:read')) {
             this.getSettings()
             this.getBackupStatus()
             setInterval(() => {this.getBackupStatus()}, 10000); // 10 seconds
             this.getBackups()
-            this.canEdit = this.UserService.isAllowed('settings:update');
+            this.canEdit = userStore.isAllowed('settings:update');
             document.addEventListener('keydown', this._listener, false)
         }
         else {
@@ -117,7 +119,7 @@ export default {
         }
     },
 
-    destroyed: function() {
+    unmounted: function() {
         document.removeEventListener('keydown', this._listener, false)
     },
 

@@ -7,10 +7,10 @@
         <q-table
             class="sticky-header-table"
             :columns="dtHeaders"
-            :data="computedVulnerabilities"
+            :rows="computedVulnerabilities"
             :filter="search"
             :filter-method="customFilter"
-            :pagination.sync="pagination"
+            v-model:pagination="pagination"
             :sort-method="customSort"
             separator="none"
             row-key="_id"
@@ -34,7 +34,7 @@
                 <q-toggle :label="$t('btn.new')" color="light-blue" v-model="search.new" :true-value=1 />
                 <q-toggle :label="$t('btn.updates')" color="orange" v-model="search.updates" :true-value=2 />
                 <q-btn 
-                v-if="UserService.isAllowed('vulnerabilities:update')"
+                v-if="userStore.isAllowed('vulnerabilities:update')"
                 class="q-ml-md"
                 :label="$t('mergeVulnerabilities')"
                 outline
@@ -44,7 +44,7 @@
                 />
                 <q-space />
                 <q-btn-dropdown 
-                v-if="UserService.isAllowed('vulnerabilities:create')"
+                v-if="userStore.isAllowed('vulnerabilities:create')"
                 unelevated
                 color="secondary"
                 no-caps
@@ -116,17 +116,17 @@
                         {{getDtType(props.row)}}
                     </q-td>
                     <q-td key="action" :props="props" style="width:1px">
-                        <q-btn v-if="UserService.isAllowed('vulnerabilities:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>                                                    
+                        <q-btn v-if="userStore.isAllowed('vulnerabilities:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>                                                    
                         </q-btn>
                         <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); $refs.editModal.show()">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.view')}}</q-tooltip>                            
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.view')}}</q-tooltip>                            
                         </q-btn>
                         <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.findAudits')}}</q-tooltip>                            
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.findAudits')}}</q-tooltip>                            
                         </q-btn>
-                        <q-btn v-if="UserService.isAllowed('vulnerabilities:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>                            
+                        <q-btn v-if="userStore.isAllowed('vulnerabilities:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>                            
                         </q-btn>
                     </q-td>
                 </q-tr>
@@ -299,7 +299,7 @@
     </q-card>
 </q-dialog>
 
-<q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="UserService.isAllowed('vulnerabilities:update')" @hide="cleanCurrentVulnerability()">
+<q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="userStore.isAllowed('vulnerabilities:update')" @hide="cleanCurrentVulnerability()">
     <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
         <q-bar class="bg-fixed-primary text-white">
             <div class="q-toolbar-title">
@@ -460,7 +460,7 @@
 
         <q-separator />
 
-        <q-card-actions align="right" v-if="UserService.isAllowed('vulnerabilities:update')">
+        <q-card-actions align="right" v-if="userStore.isAllowed('vulnerabilities:update')">
             <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
             <q-btn v-if="currentVulnerability.status === 1" label="Approve" color="light-blue" unelevated @click="updateVulnerability()" />
             <q-btn v-else color="secondary" unelevated @click="updateVulnerability()">{{$t('btn.update')}}</q-btn>
@@ -775,7 +775,7 @@
                                 :bg-color="!($_.isEqual(currentVulnerability.details[currentDetailsIndex].references, update.references))?'diffbackground':''"
                                 :label="$t('references')"
                                 stack-label
-                                :value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"
+                                :model-value="(update.references && update.references.length > 0) ? update.references.join('\n') : ''"
                                 type="textarea"
                                 readonly
                                 />
@@ -827,7 +827,7 @@
                     option-label="language"
                     map-options
                     emit-value
-                    @input="mergeVulnLeft = ''"
+                    @update:model-value="mergeVulnLeft = ''"
                     options-sanitize
                     outlined
                     />
@@ -858,7 +858,7 @@
                     option-label="language"
                     map-options
                     emit-value
-                    @input="mergeVulnRight = ''"
+                    @update:model-value="mergeVulnRight = ''"
                     options-sanitize
                     outlined
                     />

@@ -1,6 +1,5 @@
 <template>
-<div>
-	<q-drawer side="left" :value="true" :width="400">
+	<q-drawer side="left" :model-value="true" :width="400">
 		<q-splitter horizontal v-model="splitterRatio" :limits="[50, 80]" style="height: 100%">
 			<template v-slot:before>
 				<q-list class="home-drawer">
@@ -28,7 +27,7 @@
 								no-caps
 								@click="goToAudit(auditRetest)"
 								>
-									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.navigateRetest')}}</q-tooltip> 
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.navigateRetest')}}</q-tooltip> 
 								</q-btn>
 								<q-btn
 								v-else
@@ -41,8 +40,8 @@
 								no-caps
 								@click="(auditTypesRetest && auditTypesRetest.length === 1) ? createRetest(auditTypesRetest[0]) : ''"
 								>
-									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.createRetest')}}</q-tooltip> 
-									<q-menu content-style="width: 300px" >
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.createRetest')}}</q-tooltip> 
+									<q-menu style="width: 300px" >
 										<q-item clickable v-for="retest of auditTypesRetest" :key="retest.name">
 											<q-item-section @click="createRetest(retest)">
 												{{ retest.name }}
@@ -55,28 +54,28 @@
 						<template v-if="$settings.reviews.enabled">
 							<q-item-section side class="topButtonSection" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 								<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="secondary" :label="$t('btn.topButtonSection.submitReview')" no-caps @click="toggleAskReview" >
-									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.submitReview')}}</q-tooltip> 
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.submitReview')}}</q-tooltip> 
 								</q-btn>
 							</q-item-section>
 							<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_EDITOR, AUDIT_VIEW_STATE.REVIEW_ADMIN, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED].includes(frontEndAuditState)">
 								<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="amber-9" :label="$t('btn.topButtonSection.cancelReview')" no-caps @click="toggleAskReview" >
-									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.cancelReview')}}</q-tooltip> 
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.cancelReview')}}</q-tooltip> 
 								</q-btn>
 							</q-item-section>
 							<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW, AUDIT_VIEW_STATE.REVIEW_ADMIN].includes(frontEndAuditState)">
 								<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="green" :label="$t('btn.topButtonSection.approve')" no-caps @click="toggleApproval" >
-									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.approve')}}</q-tooltip> 
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.approve')}}</q-tooltip> 
 								</q-btn>
 							</q-item-section>
 							<q-item-section side class="topButtonSection" v-if="[AUDIT_VIEW_STATE.REVIEW_APPROVED, AUDIT_VIEW_STATE.REVIEW_ADMIN_APPROVED, AUDIT_VIEW_STATE.APPROVED_APPROVED].includes(frontEndAuditState)">
 								<q-btn class="q-mx-xs q-px-xs" size="11px" unelevated dense color="warning" :label="$t('btn.topButtonSection.removeApproval')" no-caps @click="toggleApproval" >
-									<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.topButtonSection.removeApproval')}}</q-tooltip> 
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.removeApproval')}}</q-tooltip> 
 								</q-btn>
 							</q-item-section>
 						</template>
 						<q-item-section side class="topButtonSection">
 							<q-btn flat color="info" @click="generateReport">
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.downloadReport')}}</q-tooltip> 
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.downloadReport')}}</q-tooltip> 
 								<i class="fa fa-download fa-lg"></i>
 							</q-btn>
 						</q-item-section>
@@ -153,7 +152,7 @@
 											flat
 											color="negative"
 											@click="confirmDeleteParent(audit)" icon="fa fa-minus-circle">
-												<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.removeAudit')}}</q-tooltip> 
+												<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.removeAudit')}}</q-tooltip> 
 											</q-btn>
 										</q-item-section>
 									</q-item>
@@ -168,14 +167,14 @@
 									</q-item-section>
 									<q-item-section avatar>
 										<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-											<q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
-											<q-menu content-style="width: 300px" anchor="bottom middle" self="top left">
+											<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
+											<q-menu style="width: 300px" anchor="bottom middle" self="top left">
 												<q-item>
 													<q-item-section>
 														<q-toggle 
 														v-model="categoryFindings.sortOption.sortAuto" 
 														:label="$t('automaticSorting')"
-														@input="updateSortFindings"
+														@update:model-value="updateSortFindings"
 														/>
 													</q-item-section>
 												</q-item>
@@ -192,7 +191,7 @@
 														:options="getSortOptions(categoryFindings.sortOption.category)"
 														type="radio"
 														:disable="!categoryFindings.sortOption.sortAuto"
-														@input="updateSortFindings"
+														@update:model-value="updateSortFindings"
 														/>
 													</q-item-section>
 												</q-item>
@@ -232,8 +231,15 @@
 									</q-item-section>
 								</q-item>
 								<q-list no-border>
-									<draggable :list="categoryFindings.findings" @end="moveFindingPosition($event, categoryFindings.category)" handle=".handle" ghost-class="drag-ghost">
-										<div v-for="finding of categoryFindings.findings" :key="finding._id">
+									<draggable
+										:list="categoryFindings.findings"
+										@end="moveFindingPosition($event, categoryFindings.category)"
+										handle=".handle"
+										ghost-class="drag-ghost"
+										item-key="_id"
+									>
+										<template #item="{element: finding}">
+											<div>
 											<q-item
 											dense
 											class="cursor-pointer"
@@ -262,9 +268,12 @@
 												</q-item-section>
 											</q-item>
 											<div class="row">
-												<div v-for="(user,idx) in findingUsers" :key="idx" v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
+												<template v-for="(user,idx) in findingUsers" :key="idx">
+													<div v-if="user.finding === finding._id" class="col multi-colors-bar" :style="{background:user.color}" />
+												</template>
 											</div>
 										</div>
+										</template>
 									</draggable>
 								</q-list>
 							</div>
@@ -282,7 +291,9 @@
 							</q-item-section>
 						</q-item>
 						<div class="row">
-							<div v-for="(user,idx) in sectionUsers" :key="idx" v-if="user.section === section._id" class="col multi-colors-bar" :style="{background:user.color}" />
+							<template v-for="(user,idx) in sectionUsers" :key="idx">
+								<div v-if="user.section === section._id" class="col multi-colors-bar" :style="{background:user.color}" />
+							</template>
 						</div>
 					</q-list>
 				</q-list>
@@ -312,17 +323,17 @@
 			
 		</q-splitter>
 	</q-drawer>
-	<router-view :key="$route.fullPath" :frontEndAuditState="frontEndAuditState" :parentState="audit.state" :parentApprovals="audit.approvals" />
-</div>
+	<router-view :key="$route.fullPath"/>
 </template>
 
 <script>
 import { Dialog, Notify, QSpinnerGears, LocalStorage } from 'quasar';
+import { computed, ref } from 'vue';
 import draggable from 'vuedraggable'
 import CommentsList from 'components/comments-list'
 
 import AuditService from '@/services/audit';
-import UserService from '@/services/user';
+import { useUserStore } from 'src/stores/user'
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
 
@@ -331,13 +342,26 @@ import { $t } from '@/boot/i18n';
 import { Cvss4P0 } from 'ae-cvss-calculator'
 import { Cvss3P1 } from 'ae-cvss-calculator'
 
+const userStore = useUserStore()
+
+// 2-way reactive values to provide
+const auditR = ref({findings: {}, comments: []})
+const retestSplitViewR = ref(false)
+const retestSplitRatioR = ref(100)
+const retestSplitLimitsR = ref([100, 100])
+const commentModeR = ref(false)
+const focusedCommentR = ref("")
+const editCommentR = ref(null)
+const editReplyR = ref(null)
+const fieldHighlightedR = ref(null)
+
 export default {
 	data () {
 		return {
 			auditId: "",
 			findings: [],
 			users: [],
-			audit: {findings: {}, comments: []},
+			audit: auditR,
 			sections: [],
 			splitterRatio: 80,
 			loading: true,
@@ -349,16 +373,34 @@ export default {
 			AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
 			auditRetest: "",
 			auditTypesRetest: [],
-			retestSplitView: false,
-			retestSplitRatio: 100,
-			retestSplitLimits: [100, 100],
+			retestSplitView: retestSplitViewR,
+			retestSplitRatio: retestSplitRatioR,
+			retestSplitLimits: retestSplitLimitsR,
 			children: [],
-			commentMode: false,
-			focusedComment: null,
-			editComment: null,
-			editReply: null,
-            fieldHighlighted: "",
+			commentMode: commentModeR,
+			focusedComment: focusedCommentR,
+			editComment: editCommentR,
+			editReply: editReplyR,
+            fieldHighlighted: fieldHighlightedR,
             commentsFilter: "all" // [all, active, resolved]
+		}
+	},
+
+	provide() {
+		return {
+			frontEndAuditState: computed(() => this.frontEndAuditState),
+			auditParent: auditR,
+			retestSplitView: retestSplitViewR,
+			retestSplitRatio: retestSplitRatioR,
+			retestSplitLimits: retestSplitLimitsR,
+			commentMode: commentModeR,
+			focusedComment: focusedCommentR,
+			editComment: editCommentR,
+			editReply: editReplyR,
+			replyingComment: computed(() => this.replyingComment),
+			fieldHighlighted: fieldHighlightedR,
+			commentIdList: computed(() => this.commentIdList),
+			customFields: computed(() => this.customFields),
 		}
 	},
 
@@ -376,11 +418,22 @@ export default {
 		this.getAuditChildren();
 	},
 
-	destroyed: function() {
+	unmounted: function() {
 		if (!this.loading) {
-			this.$socket.emit('leave', {username: UserService.user.username, room: this.auditId});
+			this.$socket.emit('leave', {username: userStore.username, room: this.auditId});
 			this.$socket.off()
 		}
+
+		// Reset reactive values
+		auditR.value = {findings: {}, comments: []}
+		retestSplitViewR.value = false
+		retestSplitRatioR.value = 100
+		retestSplitLimitsR.value = [100, 100]
+		commentModeR.value = false
+		focusedCommentR.value = ""
+		editCommentR.value = null
+		editReplyR.value = null
+		fieldHighlightedR.value = null
 	},
 
 	watch: {
@@ -521,11 +574,11 @@ export default {
 
 		// Sockets handle
 		handleSocket: function() {
-			this.$socket.emit('join', {username: UserService.user.username, room: this.auditId});
+			this.$socket.emit('join', {username: userStore.username, room: this.auditId});
 			this.$socket.on('roomUsers', (users) => {
 				var userIndex = 0;
 				this.users = users.map((user,index) => {
-					if (user.username === UserService.user.username) {
+					if (user.username === userStore.username) {
 						user.color = "#77C84E";
 						user.me = true;
 						userIndex = index;
@@ -542,29 +595,29 @@ export default {
 				this.getAuditChildren();
 			})
 			this.$socket.on('disconnect', () => {
-				this.$socket.emit('join', {username: UserService.user.username, room: this.auditId})
+				this.$socket.emit('join', {username: userStore.username, room: this.auditId})
 				this.$socket.emit('menu', this.getMenuSection())
 			})
 		},
 		// Tells the UI if the user is supposed to be reviewing the audit
 		isUserAReviewer: function() {
-			var isAuthor = this.audit.creator._id === UserService.user.id;
-			var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
-			var isReviewer = this.audit.reviewers.some((element) => element._id === UserService.user.id);
-			var hasReviewAll = UserService.isAllowed('audits:review-all');
+			var isAuthor = this.audit.creator._id === userStore.id;
+			var isCollaborator = this.audit.collaborators.some((element) => element._id === userStore.id);
+			var isReviewer = this.audit.reviewers.some((element) => element._id === userStore.id);
+			var hasReviewAll = userStore.isAllowed('audits:review-all');
 			return !(isAuthor || isCollaborator) && (isReviewer || hasReviewAll);
 		},
 
 		// Tells the UI if the user is supposed to be editing the audit
 		isUserAnEditor: function() {
-			var isAuthor = this.audit.creator._id === UserService.user.id;
-			var isCollaborator = this.audit.collaborators.some((element) => element._id === UserService.user.id);
-			var hasUpdateAll = UserService.isAllowed('audits:update-all');
+			var isAuthor = this.audit.creator._id === userStore.id;
+			var isCollaborator = this.audit.collaborators.some((element) => element._id === userStore.id);
+			var hasUpdateAll = userStore.isAllowed('audits:update-all');
 			return (isAuthor || isCollaborator || hasUpdateAll);
 		},
 
 		userHasAlreadyApproved: function() {
-			return this.audit.approvals.some((element) => element._id === UserService.user.id);
+			return this.audit.approvals.some((element) => element._id === userStore.id);
 		},
 
 		getUIState: function() {
@@ -606,6 +659,7 @@ export default {
 				this.loading = false
 			})
 			.catch((err) => {
+				console.log(err)
 				if (err.response.status === 403)
 					this.$router.push({name: '403', params: {error: err.response.data.datas}})
 				else if (err.response.status === 404)
@@ -897,7 +951,7 @@ export default {
 }
 </script>
 
-<style lang="stylus">
+<style lang="scss">
 .edit-container {
 	margin-top: 50px;
 }

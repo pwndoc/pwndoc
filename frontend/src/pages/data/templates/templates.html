@@ -4,10 +4,10 @@
         <q-table
             class="sticky-header-table"
             :columns="dtHeaders"
-            :data="templates"
+            :rows="templates"
             :filter="search"
             :filter-method="customFilter"
-            :pagination.sync="pagination"
+            v-model:pagination="pagination"
             row-key="name"
             :loading="loading"
             @row-dblclick="dblClick"
@@ -15,7 +15,7 @@
             <template v-slot:top>
                 <q-space />
                 <q-btn 
-                v-if="UserService.isAllowed('templates:create')"
+                v-if="userStore.isAllowed('templates:create')"
                 unelevated
                 :label="$t('createTemplate')"
                 color="secondary" 
@@ -49,14 +49,14 @@
             </template>
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                <q-btn v-if="UserService.isAllowed('templates:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
+                <q-btn v-if="userStore.isAllowed('templates:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                 </q-btn>
                 <q-btn size="sm" flat color="info" icon="fa fa-download" @click="downloadTemplate(props.row)">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.download')}}</q-tooltip>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.download')}}</q-tooltip>
                 </q-btn>
-                <q-btn v-if="UserService.isAllowed('templates:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteTemplate(props.row)">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
+                <q-btn v-if="userStore.isAllowed('templates:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteTemplate(props.row)">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                 </q-btn>
             </q-td>
             

@@ -1,24 +1,17 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import { defineRouter } from '#q-app/wrappers'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+import routes from './routes.js'
 
-import routes from './routes'
+export default defineRouter(() => {
+  const createHistory = process.env.VUE_ROUTER_MODE === 'history'
+    ? createWebHistory
+    : createWebHashHistory
 
-Vue.use(VueRouter)
+  const Router = createRouter({
+    scrollBehavior: () => ({ top: 0 }),
+    routes,
+    history: createHistory(process.env.VUE_ROUTER_BASE)
+  })
 
-const Router = new VueRouter({
-  /*
-   * NOTE! Change Vue Router mode from quasar.conf.js -> build -> vueRouterMode
-   *
-   * When going with "history" mode, please also make sure "build.publicPath"
-   * is set to something other than an empty string.
-   * Example: '/' instead of ''
-   */
-
-  // Leave as is and change from quasar.conf.js instead!
-  mode: process.env.VUE_ROUTER_MODE,
-  base: process.env.VUE_ROUTER_BASE,
-  scrollBehavior: () => ({ y: 0 }),
-  routes
+  return Router
 })
-
-export default Router

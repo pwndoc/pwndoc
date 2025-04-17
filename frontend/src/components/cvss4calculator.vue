@@ -1,5 +1,5 @@
 <template>
-    <q-card class="cvss4calculator">
+    <q-card class="cvsscalculator">
         <q-card-section class="row">
             <div class="col-md-3" style="align-self:center">
             <span>

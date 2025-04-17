@@ -6,14 +6,16 @@ import Breadcrumb from 'components/breadcrumb'
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
 import CompanyService from '@/services/company'
-import UserService from '@/services/user'
+import { useUserStore } from 'src/stores/user'
 
 import { $t } from '@/boot/i18n'
+
+const userStore = useUserStore()
 
 export default {
     data: () => {
         return {
-            UserService: UserService,
+            userStore: userStore,
             // Audits list
             audits: [],
             // Loading state
@@ -70,7 +72,7 @@ export default {
     mounted: function() {
         this.search.finding = this.$route.params.finding;
 
-        if (this.UserService.isAllowed('audits:users-connected'))
+        if (userStore.isAllowed('audits:users-connected'))
             this.visibleColumns.push('connected')
         if (this.$settings.reviews.enabled)
             this.visibleColumns.push('reviews')
@@ -284,7 +286,7 @@ export default {
         },
 
         customFilter: function(rows, terms, cols, getCellValue) {
-            var username = this.UserService.user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            var username = userStore.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
             var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
             var auditTypeTerm = (terms.auditType || "").toLowerCase()

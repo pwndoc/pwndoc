@@ -1,9 +1,25 @@
-import User from '@/services/user';
+import { defineBoot } from '#q-app/wrappers'
+import UserService from '@/services/user';
+import { useUserStore } from '@/stores/user'
 
-export default async ({ urlPath, router, redirect }) => {
+export default defineBoot(async({ router, store, urlPath, redirect }) => {
+  const userStore = useUserStore(store)
+  
+  router.beforeEach((to, from, next) => {
+    if (to.path === '/login') {
+        if (userStore.isLoggedIn)
+          next('/')
+        else
+          next()
+      }
+      else {
+        next()
+      }
+  })
+
   // Launch refresh token countdown 840000=14min if not on login page
   setInterval(() => {
-    User.refreshToken()
+    UserService.refreshToken()
     .then()
     .catch(err => {
       if (!router.currentRoute.path.startsWith('/login'))
@@ -16,7 +32,7 @@ export default async ({ urlPath, router, redirect }) => {
 
   // Call refreshToken when loading app and redirect to login if error
   try {
-    await User.refreshToken()
+    await UserService.refreshToken()
   }
   catch(err) {
     if (!urlPath.startsWith('/login'))
@@ -25,16 +41,4 @@ export default async ({ urlPath, router, redirect }) => {
       else
         redirect('/login')
   }
-
-  router.beforeEach((to, from, next) => {
-    if (to.path === '/login') {
-      if (User.isAuth())
-        next('/')
-      else
-        next()
-    }
-    else {
-      next()
-    }
-  })
-}
+})

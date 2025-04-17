@@ -6,7 +6,7 @@
                 <div class="text-h6">{{$t('nav.vulnerabilities')}}</div>
             </q-card-section>
             <q-separator />
-            <div v-if="UserService.isAllowed('vulnerabilities:create')">
+            <div v-if="userStore.isAllowed('vulnerabilities:create')">
                 <q-card-section>
                     <div class="text-bold">{{$t('importVulnerabilities')}}</div>
                 </q-card-section>
@@ -49,7 +49,7 @@
                     />
                 </q-card-section>
                 <q-separator />
-                <div v-if="UserService.isAllowed('vulnerabilities:delete-all')">
+                <div v-if="userStore.isAllowed('vulnerabilities:delete-all')">
                     <q-card-section>
                         <div class="text-bold">{{$t('deleteAllVulnerabilities')}}</div>
                     </q-card-section>

@@ -2,7 +2,7 @@
   <q-layout ref="layout" view="hHr LpR lFf" :class="$q.dark.isActive ? '' : 'home-background'">
     <q-header>
         <q-toolbar class="bg-fixed-primary">
-            <img src="pwndoc-logo-white.png" style="max-height:50px;" />
+            <img src="/pwndoc-logo-white.png" style="max-height:50px;" />
             
             <q-item to='/audits' active-class="text-green">
             <q-item-section avatar style="min-width:0" class="q-pr-sm">
@@ -33,9 +33,9 @@
               </q-item-section>
               <q-item-section>{{$t('settings')}}</q-item-section>
               </q-item>
-            <q-btn-dropdown auto-close flat icon="fa fa-user-circle" no-caps :label="userService.user.username">
+            <q-btn-dropdown auto-close flat icon="fa fa-user-circle" no-caps :label="userStore.username">
                 <q-list>
-                  <q-item clickable @click="toggleDarkMode()">
+                  <q-item clickable @click="$toggleDarkMode()">
                     <q-item-section side><q-icon size="xs" :name="$q.dark.isActive ? 'fa fa-sun' : 'fa fa-moon'" /></q-item-section>
                     <q-item-section>{{ $q.dark.isActive ? 'Light' : 'Dark'}}-Mode</q-item-section>
                   </q-item>
@@ -59,25 +59,28 @@
 </template>
 
 <script>
+import { useUserStore } from '@/stores/user';
 import UserService from '@/services/user';
+
+const userStore = useUserStore();
 
 export default {
   name: 'LayoutHome',
   data () {
     return {
-      userService: UserService
+      userStore: userStore
     }
   },
 
-    methods: {
-        logout: function() {
-            UserService.destroyToken();
-        }
+  methods: {
+    logout: function() {
+        UserService.destroyToken();
     }
+  }
 }
 </script>
 
-<style lang="stylus" scoped>
+<style scoped>
 .home-background {
     background-color: #e6ecf0;
 }

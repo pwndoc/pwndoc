@@ -4,10 +4,10 @@
         <q-table
             class="sticky-header-table"
             :columns="dtHeaders"
-            :data="clients"
+            :rows="clients"
             :filter="search"
             :filter-method="customFilter"
-            :pagination.sync="pagination"
+            v-model:pagination="pagination"
             row-key="email"
             :loading="loading"
             @row-dblclick="dblClick"
@@ -74,10 +74,10 @@
 
             <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
                 <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                 </q-btn>
                 <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteClient(props.row)">
-                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                 </q-btn>
             </q-td>
 

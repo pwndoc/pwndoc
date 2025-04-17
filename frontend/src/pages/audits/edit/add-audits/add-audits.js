@@ -6,19 +6,15 @@ import Breadcrumb from 'components/breadcrumb'
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
 import CompanyService from '@/services/company'
-import UserService from '@/services/user'
+import { useUserStore } from 'src/stores/user'
 
 import { $t } from '@/boot/i18n'
 
+const userStore = useUserStore()
+
 export default {
-    props: {
-        frontEndAuditState: Number,
-        parentState: String,
-        parentApprovals: Array
-    },
     data: () => {
         return {
-            UserService: UserService,
             // Audits list
             audits: [],
             // Loading state
@@ -64,6 +60,11 @@ export default {
         }
     },
 
+    inject: [
+        'frontEndAuditState',
+        'auditParent'
+    ],
+
     components: {
         AuditStateIcon,
         Breadcrumb
@@ -75,14 +76,14 @@ export default {
         if (this.$settings.reviews.enabled)
             this.visibleColumns.push('reviews')
 
-        this.currentAudit.language = this.$parent.audit.language
+        this.currentAudit.language = this.auditParent.language
 
         this.getAudits();
         this.getLanguages();
         this.getAuditTypes();
         this.getCompanies();
 
-        this.$socket.emit('menu', {menu: 'addAudits', room: this.$parent.auditId});
+        this.$socket.emit('menu', {menu: 'addAudits', room: this.auditParent._id});
     },
 
     methods: {
@@ -142,7 +143,7 @@ export default {
             if (this.errors.name || this.errors.language || this.errors.auditType)
                 return;
 
-            this.currentAudit.parentId = this.$parent.auditId
+            this.currentAudit.parentId = this.auditParent._id
 
             AuditService.createAudit(this.currentAudit)
             .then((response) => {
@@ -161,7 +162,7 @@ export default {
 
         updateAuditParent: function(audit) {
             if (audit && audit._id) {
-                AuditService.updateAuditParent(audit._id, this.$parent.auditId)
+                AuditService.updateAuditParent(audit._id, this.auditParent._id)
                 .then(() => {
                     this.audits = this.audits.filter(e => e._id !== audit._id)
                     Notify.create({
@@ -191,7 +192,7 @@ export default {
         cleanCurrentAudit: function() {
             this.cleanErrors();
             this.currentAudit.name = '';
-            this.currentAudit.language = this.$parent.audit.language;
+            this.currentAudit.language = this.auditParent.language;
             this.currentAudit.auditType = '';
             this.currentAudit.type = 'default';
         },
@@ -212,7 +213,7 @@ export default {
         },
 
         customFilter: function(rows, terms, cols, getCellValue) {
-            var username = this.UserService.user.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            var username = userStore.username.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
             var nameTerm = (terms.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
             var languageTerm = (terms.language)? terms.language.toLowerCase(): ""

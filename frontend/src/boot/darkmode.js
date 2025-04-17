@@ -1,14 +1,5 @@
-import Vue from "vue";
+import { defineBoot } from '#q-app/wrappers';
 import { Dark } from "quasar";
-
-const DarkModeSwitcher = {
-    install: function(Vue) {
-        Vue.prototype.toggleDarkMode = function() {
-            updateDarkMode(!Dark.isActive);
-        }
-    }
-};
-Vue.use(DarkModeSwitcher);
 
 function updateDarkMode(dark = null) {
     // using !! to convert it to a boolean is ok in this case,
@@ -27,4 +18,10 @@ function updateDarkMode(dark = null) {
     }
 }
 
-updateDarkMode();
+export default defineBoot(({ app }) => {
+    updateDarkMode(); // initial check
+
+    app.config.globalProperties.$toggleDarkMode = () => {
+        updateDarkMode(!Dark.isActive);
+    }
+})

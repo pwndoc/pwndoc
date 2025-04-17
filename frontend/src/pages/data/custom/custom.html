@@ -19,7 +19,7 @@
                         <div class="text-grey-8">{{$t('languageUsedInAuditsAndVuls')}}</div>
                     </q-card-section>
                     <q-card-section class="row">
-                        <div class="col-md-6 col-12" v-if="UserService.isAllowed('languages:create')">
+                        <div class="col-md-6 col-12" v-if="userStore.isAllowed('languages:create')">
                             <q-item>
                                 <q-item-section>
                                     <q-input
@@ -56,8 +56,8 @@
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('listOfLanguages')}}</div>
                                     <q-space />
-                                    <q-btn v-if="UserService.isAllowed('languages:update')" flat color="primary" icon="fa fa-edit" @click="editLanguage = true; editLanguages = $_.cloneDeep(languages)">
-                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip> 
+                                    <q-btn v-if="userStore.isAllowed('languages:update')" flat color="primary" icon="fa fa-edit" @click="editLanguage = true; editLanguages = $_.cloneDeep(languages)">
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip> 
                                     </q-btn>
                                 </q-toolbar>
                                 <q-separator />
@@ -132,7 +132,7 @@
                         <div class="text-grey-8">{{$t('auditTypesUsedInAudits')}}</div>
                     </q-card-section>
                     <q-card-section v-if="languages.length > 0" class="row">
-                        <div class="col-md-6 col-12" v-if="UserService.isAllowed('audit-types:create')">
+                        <div class="col-md-6 col-12" v-if="userStore.isAllowed('audit-types:create')">
                             <q-item>
                                 <q-item-section>
                                     <span class="text-grey-7 text-italic">{{$t('auditPhase')}}</span>
@@ -231,8 +231,8 @@
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('listOfAuditTypes')}}</div>
                                     <q-space />
-                                    <q-btn v-if="UserService.isAllowed('audit-types:update')" flat color="primary" icon="fa fa-edit" @click="editAuditType = true; editAuditTypes = $_.cloneDeep(auditTypes)">
-                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip> 
+                                    <q-btn v-if="userStore.isAllowed('audit-types:update')" flat color="primary" icon="fa fa-edit" @click="editAuditType = true; editAuditTypes = $_.cloneDeep(auditTypes)">
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip> 
                                     </q-btn>
                                 </q-toolbar>
                                 <q-separator />
@@ -460,7 +460,7 @@
                         <div class="text-grey-8">{{$t('createVulnerabilityTypes')}}</div>
                     </q-card-section>
                     <q-card-section v-if="languages.length > 0" class="row">
-                        <div class="col-md-6 col-12" v-if="UserService.isAllowed('vulnerability-types:create')">
+                        <div class="col-md-6 col-12" v-if="userStore.isAllowed('vulnerability-types:create')">
                             <q-item class="row">
                                 <q-item-section class="col-md-4 col-12">
                                     <q-select 
@@ -499,8 +499,8 @@
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('vulnerabilityTypesList')}}</div>
                                     <q-space />
-                                    <q-btn v-if="UserService.isAllowed('vulnerability-types:update')" flat color="primary" icon="fa fa-edit" @click="editVulnType = true; editVulnTypes = $_.cloneDeep(vulnTypes)">
-                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip> 
+                                    <q-btn v-if="userStore.isAllowed('vulnerability-types:update')" flat color="primary" icon="fa fa-edit" @click="editVulnType = true; editVulnTypes = $_.cloneDeep(vulnTypes)">
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip> 
                                     </q-btn>
                             </q-toolbar>
                             <q-separator />
@@ -561,7 +561,7 @@
                         <div class="text-grey-8">{{$t('createVulnerabilityCategories')}}</div>
                     </q-card-section>
                     <q-card-section class="row">
-                        <div class="col-md-6 col-12" v-if="UserService.isAllowed('vulnerability-categories:create')">
+                        <div class="col-md-6 col-12" v-if="userStore.isAllowed('vulnerability-categories:create')">
                             <q-item>
                                 <q-item-section>
                                     <q-input
@@ -617,8 +617,8 @@
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('listOfCategories')}}</div>
                                     <q-space />
-                                    <q-btn v-if="UserService.isAllowed('vulnerability-categories:update')" flat color="primary" icon="fa fa-edit" @click="editCategory = true; editCategories = $_.cloneDeep(vulnCategories)">
-                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.edit')}}</q-tooltip> 
+                                    <q-btn v-if="userStore.isAllowed('vulnerability-categories:update')" flat color="primary" icon="fa fa-edit" @click="editCategory = true; editCategories = $_.cloneDeep(vulnCategories)">
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip> 
                                     </q-btn>
                                 </q-toolbar>
                                 <q-separator />
@@ -737,7 +737,7 @@
                                 :options="cfDisplayOptions"
                                 emit-value
                                 map-options
-                                @input="newCustomField.displaySub = ''"
+                                @update:model-value="newCustomField.displaySub = ''"
                                 outlined dense
                                 />
                             </q-item-section>
@@ -772,7 +772,7 @@
                                 />
                             </q-item-section>
                         </q-item>
-                        <q-item v-if="UserService.isAllowed('custom-fields:create')" class="q-pl-none">
+                        <q-item v-if="userStore.isAllowed('custom-fields:create')" class="q-pl-none">
                             <q-item-section class="col-md-3" top>
                                 <q-item>
                                     <q-item-section>
@@ -916,7 +916,7 @@
                             </q-item-section>
                         </q-item>
                     </q-card-section>
-                    <q-card-section v-if="UserService.isAllowed('custom-fields:create')">
+                    <q-card-section v-if="userStore.isAllowed('custom-fields:create')">
                         <q-btn color="secondary" class="q-ml-md" unelevated no-caps style="width:100px" label="Add" @click="createCustomField" />
                     </q-card-section>
                 </q-card>
@@ -941,10 +941,10 @@
                     <q-card-section>
                         <draggable v-model="customFields" group="cfields" handle=".handle" ghost-class="drag-ghost" direction="horizontal" class="row">
                             <q-item v-for="(field,idx) of customFields" :key="idx" :class="`col-md-${field.size||12} col-12 offset-md-${field.offset||0}`" v-if="canDisplayCustomField(field)">
-                                <q-item-section avatar v-if="UserService.isAllowed('custom-fields:update')">
+                                <q-item-section avatar v-if="userStore.isAllowed('custom-fields:update')">
                                     <q-btn flat color="grey" icon="mdi-arrow-split-horizontal" class="handle" dense size="sm" />
                                     <q-btn flat color="primary" icon="mdi-pencil" dense size="sm">
-                                        <q-menu content-style="width: 300px" anchor="top left" self="top end">
+                                        <q-menu style="width: 300px" anchor="top left" self="top end">
                                             
                                             <q-item v-if="field.fieldType !== 'space'">
                                                 <q-item-section>
@@ -1080,7 +1080,7 @@
                                         <template v-slot:append>
                                             <q-icon name="event" class="cursor-pointer">
                                             <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text[getFieldLocaleText(idx)].value" @input="$refs.qDateProxy.forEach(e => e.hide())" />
+                                                <q-date first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text[getFieldLocaleText(idx)].value" @update:model-value="$refs.qDateProxy.forEach(e => e.hide())" />
                                             </q-popup-proxy>
                                             </q-icon>
                                         </template>
@@ -1190,7 +1190,7 @@
                             </q-item>
                         </draggable>
                     </q-card-section>
-                    <q-card-section v-if="UserService.isAllowed('custom-fields:update')">
+                    <q-card-section v-if="userStore.isAllowed('custom-fields:update')">
                         <q-btn :label="$t('btn.save')" class="q-ml-md" color="secondary" unelevated no-caps style="width:100px" @click="updateCustomFields" />
                     </q-card-section>
                 </q-card>
@@ -1203,7 +1203,7 @@
                         <div class="text-grey-8">{{$t('createCustomSections')}}</div>
                     </q-card-section>
                     <q-card-section v-if="languages.length > 0" class="row">
-                        <div class="col-md-6 col-12" v-if="UserService.isAllowed('sections:create')">
+                        <div class="col-md-6 col-12" v-if="userStore.isAllowed('sections:create')">
                             <q-item>
                                 <q-item-section>
                                     <q-input
@@ -1254,8 +1254,8 @@
                                 <q-toolbar>
                                     <div class="text-grey-8">{{$t('listOfSections')}}</div>
                                     <q-space />
-                                    <q-btn v-if="UserService.isAllowed('sections:update')" flat color="primary" icon="fa fa-edit" @click="editSection = true; editSections = $_.cloneDeep(sections)">
-                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip> 
+                                    <q-btn v-if="userStore.isAllowed('sections:update')" flat color="primary" icon="fa fa-edit" @click="editSection = true; editSections = $_.cloneDeep(sections)">
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">Edit</q-tooltip> 
                                     </q-btn>
                                 </q-toolbar>
                                 <q-separator />

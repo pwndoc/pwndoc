@@ -120,7 +120,7 @@
                                 <q-toggle 
                                 v-model="totpEnabled" 
                                 label="Two-factor authentication"
-                                @input="getTotpQrcode" 
+                                @update:model-value="getTotpQrcode" 
                                 />
                             </q-item-section>
                         </q-item>

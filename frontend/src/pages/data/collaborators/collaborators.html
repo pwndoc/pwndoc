@@ -4,10 +4,10 @@
             <q-table
                 class="sticky-header-table"
                 :columns="dtHeaders"
-                :data="collabs"
+                :rows="collabs"
                 :filter="search"
                 :filter-method="customFilter"
-                :pagination.sync="pagination"
+                v-model:pagination="pagination"
                 row-key="username"
                 :loading="loading"
                 @row-dblclick="dblClick"
@@ -19,7 +19,7 @@
                     />
                     <q-space />
                     <q-btn 
-                    v-if="UserService.isAllowed('users:create')"
+                    v-if="userStore.isAllowed('users:create')"
                     unelevated
                     :label="$t('addCollaborator')" 
                     color="secondary"
@@ -81,8 +81,8 @@
                 </template>
 
                 <q-td slot="body-cell-action" slot-scope="props" style="width:1px">
-                    <q-btn v-if="UserService.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">Edit</q-tooltip>
+                    <q-btn v-if="userStore.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">Edit</q-tooltip>
                     </q-btn>
                 </q-td>  
 

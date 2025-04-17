@@ -1,5 +1,5 @@
-import Affix from 'vue-affix';
+// import Affix from 'vue-affix';
 
-export default ({ Vue }) => {
-    Vue.use(Affix);
-}
+// export default ({ Vue }) => {
+//     Vue.use(Affix);
+// }

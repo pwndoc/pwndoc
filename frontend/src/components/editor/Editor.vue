@@ -1,10 +1,10 @@
 <template>
 <q-card flat bordered class="editor full-width" :class="affixRelativeElement" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <affix :relative-element-selector="'.'+affixRelativeElement" :offset="affixOffset" :enabled="!noAffix && !diff" class="bg-grey-4 editor-toolbar" v-if="editable || diff">
+    <!-- <affix :relative-element-selector="'.'+affixRelativeElement" :offset="affixOffset" :enabled="!noAffix && !diff" class="bg-grey-4 editor-toolbar" v-if="editable || diff"> -->
             <q-toolbar class="editor-toolbar">
                 <template v-if="editable">
                     <div v-if="toolbar.indexOf('format') !== -1">
-                        <q-tooltip :delay="500" content-class="text-bold">Text Format (Ctrl+Alt+[0-6])</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Text Format (Ctrl+Alt+[0-6])</q-tooltip>
                         <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel" style="width:42px" class="text-bold">
                             <q-list dense>
                                 <q-item 
@@ -61,7 +61,7 @@
                         :class="{ 'is-active': editor.isActive('bold') }"
                         @click="editor.chain().focus().toggleBold().run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Bold (Ctrl+B)</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Bold (Ctrl+B)</q-tooltip>
                             <q-icon name="format_bold" />
                         </q-btn>
 
@@ -69,7 +69,7 @@
                         :class="{ 'is-active': editor.isActive('italic') }"
                         @click="editor.chain().focus().toggleItalic().run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Italic (Ctrl+I)</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Italic (Ctrl+I)</q-tooltip>
                             <q-icon name="format_italic" />
                         </q-btn>
 
@@ -77,7 +77,7 @@
                         :class="{ 'is-active': editor.isActive('underline') }"
                         @click="editor.chain().focus().toggleUnderline().run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Underline (Ctrl+U)</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Underline (Ctrl+U)</q-tooltip>
                             <q-icon name="format_underline" />
                         </q-btn>
 
@@ -85,7 +85,7 @@
                         :class="{ 'is-active': editor.isActive('strike') }"
                         @click="editor.chain().focus().toggleStrike().run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Strikethrough (Ctrl+Shift+S)</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Strikethrough (Ctrl+Shift+S)</q-tooltip>
                             <q-icon name="format_strikethrough" />
                         </q-btn>
 
@@ -94,7 +94,7 @@
                         @click="editor.chain().focus().toggleHighlight({color: highlightColor}).run()"
                         >
                             <template v-slot:label>
-                                <q-tooltip :delay="500" content-class="text-bold">Highlight (Ctrl+Shift+H)</q-tooltip>
+                                <q-tooltip :delay="500" class="text-bold">Highlight (Ctrl+Shift+H)</q-tooltip>
                                 <i class="material-symbols-outlined q-icon" :style="{ 'color': highlightColor }">format_ink_highlighter</i>
                             </template>
 
@@ -119,7 +119,7 @@
                         :class="{ 'is-active': editor.isActive('bulletList') }"
                         @click="editor.chain().focus().toggleBulletList().run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Bullets (Ctrl+Shift+8)</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Bullets (Ctrl+Shift+8)</q-tooltip>
                             <q-icon name="format_list_bulleted" />
                         </q-btn>
 
@@ -127,7 +127,7 @@
                         :class="{ 'is-active': editor.isActive('orderedList') }"
                         @click="editor.chain().focus().toggleOrderedList().run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Numbering (Ctrl+Shift+7)</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Numbering (Ctrl+Shift+7)</q-tooltip>
                             <q-icon name="format_list_numbered" />
                         </q-btn>
                     </div>
@@ -138,7 +138,7 @@
                         :class="{ 'is-active': editor.isActive('code') }"
                         @click="editor.chain().focus().toggleCode().run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Code (Ctrl+E)</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Code (Ctrl+E)</q-tooltip>
                             <q-icon name="code" />
                         </q-btn>
 
@@ -146,14 +146,14 @@
                         :class="{ 'is-active': editor.isActive('codeBlock') }"
                         @click="editor.chain().focus().toggleCodeBlock().run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Code Block (Ctrl+Alt+C)</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Code Block (Ctrl+Alt+C)</q-tooltip>
                             <q-icon name="mdi-console" />
                         </q-btn>
                     </div>
                     <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
                         
                     <div v-if="toolbar.indexOf('image') !== -1">
-                        <q-tooltip :delay="500" content-class="text-bold">Insert Image</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Insert Image</q-tooltip>
                         <q-btn flat size="sm" dense>
                             <label class="cursor-pointer">
                                 <input
@@ -170,7 +170,7 @@
                     <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('image') !== -1" />
 
                     <div v-if="toolbar.indexOf('caption') !== -1">
-                        <q-tooltip :delay="500" content-class="text-bold">Insert Caption</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Insert Caption</q-tooltip>
                         <q-btn-dropdown flat size="sm" dense icon="subtitles">
                             <q-list dense>
                                 <q-item v-for="caption of $settings.report.public.captions" :key="caption" clickable v-close-popup @click="editor.chain().focus().setCaption({label: caption, alt: ''}).run()">
@@ -184,29 +184,29 @@
                     <q-btn flat size="sm" dense
                     @click="editor.commands.undo"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Undo (Ctrl+Z)</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Undo (Ctrl+Z)</q-tooltip>
                         <q-icon name="undo" />
                     </q-btn>
 
                     <q-btn flat size="sm" dense
                     @click="editor.commands.redo"
                     >
-                        <q-tooltip :delay="500" content-class="text-bold">Redo (Ctrl+Shift+Z)</q-tooltip>
+                        <q-tooltip :delay="500" class="text-bold">Redo (Ctrl+Shift+Z)</q-tooltip>
                         <q-icon name="redo" />
                     </q-btn>
 
                     <template v-if="commentMode">
                         <q-separator vertical class="q-mx-sm" />
-                        <q-btn unelevated size="sm" dense color="deep-purple""
+                        <q-btn unelevated size="sm" dense color="deep-purple"
                         @click="editor.chain().focus().setComment(fieldName).run()"
                         >
-                            <q-tooltip :delay="500" content-class="text-bold">Add Comment</q-tooltip>
+                            <q-tooltip :delay="500" class="text-bold">Add Comment</q-tooltip>
                             <q-icon name="add_comment" />
                         </q-btn>
                     </template>
 
                 </template>
-                <div v-if="diff !== undefined && (diff || value) && value !== diff">
+                <div v-if="diff !== undefined && (diff || valueModel) && valueModel !== diff">
                     <q-btn flat size="sm" dense
                     :class="{'is-active': toggleDiff}"
                     label="toggle diff"
@@ -215,7 +215,7 @@
                 </div>
 
             </q-toolbar>
-    </affix>
+    <!-- </affix> -->
     <q-separator />
     <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor"/>
     <div v-else class="editor__content q-pa-sm">
@@ -226,7 +226,7 @@
 
 <script>
 // Import the editor
-import { Editor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-2'
+import { Editor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-3'
 
 // Import Extensions
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
@@ -252,7 +252,7 @@ lowlight.registerAlias('xml', ['html'])
 export default {
     name: 'BasicEditor',
     props: {
-        value: String,
+        modelValue: String,
         editable: {
             type: Boolean,
             default: true
@@ -359,11 +359,11 @@ export default {
     },
 
     watch: {
-        value (value) {
+        modelValue (value) {
             if (value === this.editor.getHTML()) {
                 return;
             }
-            var content = this.htmlEncode(this.value)
+            var content = this.htmlEncode(this.modelValue)
             this.editor.commands.setContent(content);
 
             if (this.commentMode)
@@ -398,10 +398,10 @@ export default {
         this.affixRelativeElement += '-'+Math.floor((Math.random()*1000000) + 1)
         this.editor.setEditable(this.editable, false)
 
-        if (typeof this.value === "undefined" || this.value === this.editor.getHTML()) {
+        if (typeof this.modelValue === "undefined" || this.modelValue === this.editor.getHTML()) {
             return;
         }
-        var content = this.htmlEncode(this.value)
+        var content = this.htmlEncode(this.modelValue)
         this.editor.commands.setContent(content)
 
         // Handle editor toolbar affix width and top position
@@ -434,7 +434,7 @@ export default {
             this.handleFocusComment({detail: {id: this.focusedComment}})
     },
 
-    beforeDestroy() {
+    beforeUnmount() {
         document.removeEventListener('comment-deleted', this.handleDeleteComment)
         this.editor.destroy()
     },
@@ -474,7 +474,7 @@ export default {
                 HtmlDiff.tokenize = function(value) {
                     return value.replace(/<code[^>]*>/g, "<code>").split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
                 }
-                var value = this.value || ""
+                var value = this.modelValue || ""
                 var diff = HtmlDiff.diff(this.diff, value)
                 diff.forEach(part => {
                     const diffclass = part.added ? 'diffadd' : part.removed ? 'diffrem' : 'diffeq'
@@ -522,7 +522,7 @@ export default {
             if (Array.isArray(this.json.content) && this.json.content.length === 1 && !this.json.content[0].hasOwnProperty("content")) {
                 this.html = ""
             }
-            this.$emit('input', this.html)
+            this.$emit('update:modelValue', this.html)
         },
 
         handleDeleteComment(event) {
@@ -594,7 +594,7 @@ export default {
 }
 </script>
 
-<style lang="styl">
+<style lang="scss">
 .editor {
     :focus {
         outline: none;

@@ -8,11 +8,6 @@ import Utils from '@/services/utils';
 import { $t } from '@/boot/i18n'
 
 export default {
-    props: {
-        frontEndAuditState: Number,
-        parentState: String,
-        parentApprovals: Array
-    },
     data: () => {
         return {
             auditId: null,
@@ -43,6 +38,11 @@ export default {
         }
     },
 
+    inject: [
+        'frontEndAuditState',
+        'auditParent'
+    ],
+
     components: {
         Breadcrumb
     },
@@ -59,7 +59,7 @@ export default {
 
     },
 
-    destroyed: function() {
+    unmounted: function() {
         document.removeEventListener('keydown', this._listener, false)
     },
 
