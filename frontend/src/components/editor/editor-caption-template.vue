@@ -1,6 +1,6 @@
 <template>
-  <node-view-wrapper>
-    <div class="editor-caption" style="margin: 0px auto 16px auto; display: table">
+  <node-view-wrapper :class="{'comment-focused': focused, 'comment-enabled': enabled}">
+    <div data-drag-handle="" class="editor-caption" style="margin: 0px auto 16px auto; display: table">
         <div style="max-width:600px" class="cursor-pointer">
           <span>{{label}} - </span>
           <span v-if="alt" class="text-italic">{{alt}}</span>
@@ -41,7 +41,27 @@ export default {
           alt
         });
       }
-    }  
+    },
+    focused: {
+      get() {
+        return this.node.attrs.focused
+      },
+      set(focused) {
+        this.updateAttributes({
+          focused
+        });
+      }
+    },
+    enabled: {
+      get() {
+        return this.node.attrs.enabled
+      },
+      set(enabled) {
+        this.updateAttributes({
+          enabled
+        });
+      }
+    }
   }
 }
 </script>

@@ -9,7 +9,9 @@ export default {
     .replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '') // Non printable characters except NewLine
     .replace(/</g, 'ΩΠг')
     .replace(/>/g, 'ΏΠг')
+    .replace(/ΩΠгimg.+?src="(.*?)".+?alt="(.*?)".+?commentid="(.*?)".*?ΏΠг/g, '<img src="$1" alt="$2" commentid="$3">')
     .replace(/ΩΠгimg.+?src="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<img src="$1" alt="$2">')
+    .replace(/ΩΠгlegend.+?label="(.*?)".+?alt="(.*?)".+?commentid="(.*?)".*?ΏΠг/g, '<legend label="$1" alt="$2" commentid="$3">')
     .replace(/ΩΠгlegend.+?label="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<legend label="$1" alt="$2">')
     .replace(/ΩΠг\/legendΏΠг/g, '</legend>')
     .replace(/ΩΠгmark.+?data-color="(.*?)".+?style="(.*?)".*?ΏΠг/g, '<mark data-color="$1" style="$2">')

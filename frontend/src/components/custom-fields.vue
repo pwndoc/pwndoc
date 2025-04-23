@@ -77,6 +77,7 @@
                 :label='field.customField.label'
                 stack-label
                 v-model="field.text"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
@@ -116,6 +117,7 @@
                 options-sanitize
                 outlined 
                 :readonly="readonly"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -148,6 +150,7 @@
                 options-sanitize
                 outlined 
                 :readonly="readonly"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -186,6 +189,7 @@
                 hide-bottom-space
                 outlined
                 :readonly="readonly"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -219,6 +223,7 @@
                 hide-bottom-space
                 outlined
                 :readonly="readonly"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"

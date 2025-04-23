@@ -7,15 +7,42 @@ import ImageService from '@/services/image'
 import Utils from '@/services/utils'
 
 export default TipTapImage.extend({
-  parseHTML: [
-    {
-      tag: "img[src]",
-      getAttrs: dom => ({
-        src: dom.getAttribute("src"),
-        alt: dom.getAttribute("alt")
-      })
+  selectable: true,
+
+  addAttributes() {
+    return {
+      src: {
+        default: ""
+      },
+      alt: {
+        default: ""
+      },
+      commentId: {
+        default: null
+      },
+      enabled: {
+        default: false,
+        rendered: false
+      },
+      focused: {
+        default: false,
+        rendered: false
+      }
     }
-  ],
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: "img[src]",
+        getAttrs: dom => ({
+          src: dom.getAttribute("src"),
+          alt: dom.getAttribute("alt"),
+          commentId: dom.getAttribute("commentid"),
+        })
+      }
+    ]
+  },
 
   addProseMirrorPlugins() {
     return [

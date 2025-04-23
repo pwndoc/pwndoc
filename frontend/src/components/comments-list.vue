@@ -97,13 +97,13 @@
                                         bottom-slots
                                         :placeholder="$t('startConversation')"
                                         @keyup.ctrl.enter="updateComment(comment)"
-                                        @keyup.esc="cancelEditComment(comment)"
+                                        @keyup.esc="cancelOrDeleteEditComment(comment)"
                                         >
                                             <template v-slot:hint>
                                                 <span v-html="$t('hintInputComment')"></span>
                                             </template>
                                         </q-input>
-                                        <q-btn class="float-right" outline color="primary" icon="close" @click="cancelEditComment(comment)"></q-btn>
+                                        <q-btn class="float-right" outline color="primary" icon="close" @click="cancelOrDeleteEditComment(comment)"></q-btn>
                                         <q-btn class="float-right" unelevated color="blue-10" icon="done" @click="updateComment(comment)"></q-btn>
                                     </div>
                                     <span v-else style="white-space: pre-line">{{comment.text}}</span>
@@ -310,9 +310,21 @@ export default {
             this.focusComment(comment)
         },
 
-        cancelEditComment: function(comment) {
-            this.$emit('update:editComment', null)
-            delete comment.textTemp
+        cancelOrDeleteEditComment: function(comment) {
+            if (this.commentHasBeenModified(comment)) {
+                this.$emit('update:editComment', null)
+                delete comment.textTemp
+            }
+            else {
+                this.deleteComment(comment)
+            }
+        },
+
+        commentHasBeenModified: function(comment) {
+            if (!comment.updatedAt || !comment.createdAt) {
+                return true // Failsafe to true in case timestamps values are not present
+            }
+            return (comment.updatedAt > comment.createdAt) 
         }
     }
 }

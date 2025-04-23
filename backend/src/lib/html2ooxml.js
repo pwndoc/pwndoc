@@ -132,7 +132,7 @@ function html2ooxml(html, style = '') {
         },
 
         onclosetag(tag) {
-            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'img', 'legend'].includes(tag)) {
+            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'legend'].includes(tag)) {
                 paragraphs.push(cParagraph)
                 cParagraph = null
                 cParagraphProperties = {}
@@ -190,7 +190,7 @@ function html2ooxml(html, style = '') {
     parser.end()
 
     var prepXml = doc.documentWrapper.document.body.prepForXml({ stack: [] })
-    var filteredXml = prepXml["w:body"].filter(e => {return Object.keys(e)[0] === "w:p"})
+    var filteredXml = prepXml["w:body"].filter(e => {return e && Object.keys(e)[0] === "w:p"})
     var dataXml = xml(filteredXml)
     dataXml = dataXml.replace(/w:numId w:val="{2-0}"/g, 'w:numId w:val="2"') // Replace numbering to have correct value
 
