@@ -73,7 +73,7 @@ export default Extension.create({
 
         unsetComment: (commentId) => ({ state, tr, dispatch }) => {
             const schema = state.schema
-            let modified = false
+
             const commentMark = schema.marks.comment
             const before = tr.steps.length
 
