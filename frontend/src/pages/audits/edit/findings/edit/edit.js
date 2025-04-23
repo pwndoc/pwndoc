@@ -451,7 +451,7 @@ export default {
         },
 
         editorCommentClicked: function(event) {
-            if (event.detail.id) {
+            if (this.$parent.commentMode && event.detail.id) {
                 let comment = this.$parent.audit.comments.find(e => e._id === event.detail.id)
                 if (comment) {
                     document.getElementById(`sidebar-${comment._id}`).scrollIntoView({block: "center"})

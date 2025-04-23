@@ -5,9 +5,9 @@ import Component from './editor-caption-template.vue'
 export default Node.create({
   name: "caption",
 
-  group: 'inline',
-  inline: true,
+  group: 'block',
   draggable: true,
+  selectable: true,
 
   addAttributes() {
     return {
@@ -16,6 +16,17 @@ export default Node.create({
       },
       alt: {
         default: ""
+      },
+      commentId: {
+        default: null
+      },
+      enabled: {
+        default: false,
+        rendered: false
+      },
+      focused: {
+        default: false,
+        rendered: false
       }
     }
   },
@@ -26,7 +37,8 @@ export default Node.create({
         tag: "legend[alt]",
         getAttrs: dom => ({
           label: dom.getAttribute("label"),
-          alt: dom.getAttribute("alt")
+          alt: dom.getAttribute("alt"),
+          commentId: dom.getAttribute("commentid")
         })
       }
     ]

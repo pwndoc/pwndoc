@@ -239,6 +239,7 @@ import Comment from './editor-comment'
 import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 import CodeBlockComponent from './editor-code-block'
+import CommentExtension from './editor-comment-extension'
 
 const Diff = require('diff')
 
@@ -309,7 +310,7 @@ export default {
                         code: false
                     }),
                     Underline,
-                    CustomImage.configure({inline: true}),
+                    CustomImage,
                     Caption,
                     Comment,
                     CustomHighlight.configure({
@@ -331,7 +332,8 @@ export default {
                     }),
                     Code.extend({
                         excludes: "bold italic strike underline"
-                    })
+                    }),
+                    CommentExtension,
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -386,8 +388,7 @@ export default {
         },
 
         commentMode (value) {
-            if (this.commentMode)
-                this.handleFocusComment({detail: {id: this.focusedComment}})
+            this.handleFocusComment({detail: {id: this.focusedComment}})
         }
     },
 
@@ -526,14 +527,7 @@ export default {
 
         handleDeleteComment(event) {
             const commentId = event.detail.id
-            const { state } = this.editor
-
-            state.doc.descendants((node, pos) => {
-                if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
-                    this.editor.chain().focus().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
-                    this.editor.commands.unsetComment()
-                }
-            })   
+            this.editor.commands.unsetComment(commentId)
         },
 
         handleFocusComment(event) {
@@ -541,33 +535,55 @@ export default {
             const { state } = this.editor
 
             let startPos = 0
-            let endPos = 0
-            let nodeType = "text" // or node to handle selection on focus
+            let nodeType = "" // or node to handle selection on focus
 
             state.doc.descendants((node, pos) => {
                 if (!this.commentMode) {
-                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
-                    this.editor.commands.updateAttributes('comment', {enabled: false, focused: false})
+                    if (node.marks.some(mark => mark.type.name === 'comment')) {
+                        this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                        this.editor.commands.updateAttributes('comment', {enabled: false, focused: false})
+                    }
+                    else if (node.attrs.commentId) {
+                        this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                        this.editor.commands.updateAttributes(node.type.name, {enabled: false, focused: false})
+                    }
                 }
-                else if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
-                    startPos = pos
-                    endPos = pos + node.nodeSize
-                    if (node.type.name === 'image')
+                else if (node.isText) {
+                    if (node.marks.some(mark => mark.type.name === 'comment' && mark.attrs.id === commentId)) {
+                        nodeType = "text"
+                        if (startPos === 0)
+                            startPos = pos
+                        this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                        this.editor.commands.updateAttributes('comment', {enabled: true, focused: true})
+                    }
+                    else if (node.marks.some(mark => mark.type.name === 'comment' && this.commentIdList.includes(mark.attrs.id))) {
+                        this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                        this.editor.commands.updateAttributes('comment', {enabled: true, focused: false})
+                    }
+                    else if (node.marks.some(mark => mark.type.name === 'comment')) {
+                        this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                        this.editor.commands.updateAttributes('comment', {enabled: false, focused: false})
+                    }
+                }
+                else if (node.attrs.commentId) {
+                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
+                    if (node.attrs.commentId === commentId) {
                         nodeType = "node"
-                    this.editor.chain().setTextSelection({from: startPos, to: endPos}).run()
-                    this.editor.commands.updateAttributes('comment', {enabled: true, focused: true})
-                }
-                else if (node.marks.some(mark => mark.type.name === 'comment' && this.commentIdList.includes(mark.attrs.id))) {
-                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
-                    this.editor.commands.updateAttributes('comment', {enabled: true, focused: false})
-                }
-                else {
-                    this.editor.chain().setTextSelection({from: pos, to: pos + node.nodeSize}).run()
-                    this.editor.commands.updateAttributes('comment', {enabled: false, focused: false})
+                        if (startPos === 0)
+                            startPos = pos
+                        this.editor.commands.updateAttributes(node.type.name, {enabled: true, focused: true})
+                    }
+                    else if (this.commentIdList.includes(node.attrs.commentId)) {
+                        this.editor.commands.updateAttributes(node.type.name, {enabled: true, focused: false})
+                    }
+                    else {
+                        this.editor.commands.updateAttributes(node.type.name, {enabled: false, focused: false})
+                    }
+                    
                 }
             })   
             
-            if (startPos > 0 && endPos > 0) {
+            if (nodeType) {
                 if (nodeType === "text")
                     this.editor.chain().setTextSelection(startPos).run()
                 else
@@ -858,19 +874,21 @@ pre .diffadd {
     color:var(--q-color-primary)!important;
 }
 
-comment .comment-enabled {
+.comment-enabled {
     background-color: $bg-comment-enabled;
     color: $text-comment-enabled;
     opacity: 0.8;
+    cursor: pointer;
 
     .editor-caption {
         background-color: $bg-comment-enabled;
     }
 }
 
-comment .comment-enabled.comment-focused{
+.comment-enabled.comment-focused{
     background-color: $bg-comment-focused!important;
     color: $text-comment-focused!important;
+    cursor: unset;
 
     .editor-caption {
         background-color: $bg-comment-focused;

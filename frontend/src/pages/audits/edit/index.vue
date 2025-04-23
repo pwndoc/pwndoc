@@ -412,6 +412,16 @@ export default {
 			},
 			deep: true,
 			immediate: true
+		},
+		commentMode(value) {
+			// Reset variables if commentMode is disabled
+			if (!value) {
+				this.fieldHighlighted = ""
+				this.focusedComment = null
+				this.editComment = null
+				this.editReply = null
+				this.commentsFilter = "all"
+			}
 		}
 	},
 
