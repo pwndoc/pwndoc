@@ -26,7 +26,7 @@ export default {
         if (this.node.attrs.src.startsWith('data'))
           return this.node.attrs.src
         else
-          return `api/images/download/${this.node.attrs.src}`
+          return `/api/images/download/${this.node.attrs.src}`
       },
       set(src) {
         this.updateAttributes({

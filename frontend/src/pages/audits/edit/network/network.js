@@ -146,7 +146,7 @@ export default {
         },
 
         updateScopeHosts: function(scope) {
-            for (var i=0; i<this.selectedTargets[scope.name].length; i++) {
+            for (var i=0; i<this.selectedTargets[scope.name]?.length; i++) {
                 scope.hosts.push(this.selectedTargets[scope.name][i].host);
             }
         },

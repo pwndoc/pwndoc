@@ -7,7 +7,7 @@
         :path="(auditParent.parentId) ? `/audits/${auditParent.parentId}` : ''"
         :path-name="(auditParent.type === 'retest') ? $t('originalAudit') : (auditParent.type === 'default') ? $t('multi') : ''"
     >
-        <div slot="buttons" v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+        <template v-slot:buttons v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
             <q-btn-dropdown 
             class="q-mr-sm"
             :label="$t('import')"
@@ -46,51 +46,52 @@
                 </q-list>
             </q-btn-dropdown>
             <q-btn color="positive" :label="$t('btn.save')+' (ctrl+s)'" no-caps @click="updateAuditNetwork" />
-        </div>
+        </template>
     </breadcrumb>
 
     <div class="row content q-pa-md">
-        <div class="col-md-6">
+        <div class="col-md-6 q-pr-sm">
             <q-card>
                 <q-card-section>{{$t('hostsAssociateScopes')}}</q-card-section>
                 <q-separator />
                 <q-card-section v-for="scope of audit.scope" :key="scope.name">
-                        <span class="text-h6">{{scope.name}}</span>
-                        <div class="q-col-gutter-md row">
-                                <q-select
-                                class="col-md-12"
-                                multiple
-                                :label="selectHostsLabel"
-                                v-model="selectedTargets[scope.name]"
-                                :options="targetsOptions"
-                                use-chips
-                                clearable
-                                options-sanitize
-                                >
-                                <template v-slot:append>
-                                    <q-btn round dense flat icon="add" @click.close="updateScopeHosts(scope)" />
-                                </template>
-                                </q-select>
-                                <div v-for="(host, index) of scope.hosts">
-                                <q-chip 
-                                :key="host.ip"
-                                color="blue-grey-7"
-                                text-color="white"
-                                dense
-                                square
-                                class="col-md-6 cursor-pointer"
-                                @click.native="currentHost = $_.cloneDeep(host)"
-                                removable
-                                @remove="scope.hosts.splice(index, 1)"
-                                >
+                    <span class="text-h6">{{scope.name}}</span>
+                    <div class="q-col-gutter-md row">
+                        <q-select
+                        class="col-md-12"
+                        multiple
+                        :label="selectHostsLabel"
+                        v-model="selectedTargets[scope.name]"
+                        :options="targetsOptions"
+                        use-chips
+                        clearable
+                        options-sanitize
+                        >
+                            <template v-slot:append>
+                                <q-btn round dense flat icon="add" @click.close="updateScopeHosts(scope)" />
+                            </template>
+                        </q-select>
+                        <div v-for="(host, index) of scope.hosts">
+                            <q-chip 
+                            :key="host.ip"
+                            color="blue-grey-7"
+                            text-color="white"
+                            dense
+                            square
+                            class="col-md-6 cursor-pointer"
+                            clickable
+                            @click="currentHost = $_.cloneDeep(host)"
+                            removable
+                            @remove="scope.hosts.splice(index, 1)"
+                            >
                                 {{host.ip}}
-                                </q-chip>
-                            </div>
+                            </q-chip>
                         </div>
+                    </div>
                 </q-card-section>
             </q-card>
         </div>
-        <div v-if="currentHost !== null" class="col-md-6">
+        <div v-if="currentHost !== null" class="col-md-6 q-pl-sm">
             <q-table
             :title="`${currentHost.ip} (${currentHost.hostname})`"
             :rows="currentHost.services"

@@ -25,29 +25,27 @@
     </template>
 </breadcrumb>
 
-<div class="row content">
-    <!-- <div class="row q-pa-md"> -->
-        <q-card class="q-ma-md" :class="(commentMode)?'col-8':'col-xl-8 offset-xl-2 col-12'">
-            <!-- For retrocompatibility, test if section.text exists -->
-            <q-card-section v-if="section.text"> 
-                <basic-editor ref="basiceditor_section" noSync v-model="section.text" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
-            </q-card-section>
-            <custom-fields v-else 
-            ref="customfields" 
-            v-model="section.customFields" 
-            custom-element="QCardSection" 
-            no-sync-editor
-            :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-            :locale="auditParent.language"
-            :commentMode="commentMode"
-            :focusedComment="focusedComment"
-            :commentIdList="commentIdList"
-            :fieldHighlighted="fieldHighlighted"
-            :createComment="createComment"
-            :canCreateComment="canCreateComment"
-            />
-        </q-card>
-    <!-- </div> -->
+<div class="row content q-ma-md">
+    <q-card class="q-mt-md" :class="(commentMode)?'col-8':'col-xl-8 offset-xl-2 col-12'">
+        <!-- For retrocompatibility, test if section.text exists -->
+        <q-card-section v-if="section.text"> 
+            <basic-editor ref="basiceditor_section" noSync v-model="section.text" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
+        </q-card-section>
+        <custom-fields v-else 
+        ref="customfields" 
+        v-model="section.customFields" 
+        custom-element="QCardSection" 
+        no-sync-editor
+        :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+        :locale="auditParent.language"
+        :commentMode="commentMode"
+        :focusedComment="focusedComment"
+        :commentIdList="commentIdList"
+        :fieldHighlighted="fieldHighlighted"
+        :createComment="createComment"
+        :canCreateComment="canCreateComment"
+        />
+    </q-card>
     <q-card v-if="commentMode" class="col-3 bg-grey-11 sidebar-comments" style="margin-top:2px">
         <q-scroll-area class="scrollarea-comments">
             <comments-list 
