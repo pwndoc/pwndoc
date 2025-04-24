@@ -116,7 +116,7 @@ export default Extension.create({
                   node = nodeAfter
                 if (node && node.isText) {
                   for (let mark of node.marks) {
-                    if (mark.type.name === 'comment') {
+                    if (mark.type.name === 'comment' && mark.attrs.enabled) {
                       document.dispatchEvent(new CustomEvent(
                         'comment-clicked', 
                         { detail: { id: mark.attrs.id } }))
@@ -124,12 +124,13 @@ export default Extension.create({
                     }
                   }
                 }
-                else if (node && nodesWithComment.includes(node.type.name)) {
+                else if (node && node.attrs.enabled && nodesWithComment.includes(node.type.name)) {
                   document.dispatchEvent(new CustomEvent(
                     'comment-clicked', 
                     { detail: { id: node.attrs.commentId } }))
                     return true
                 }
+                return false // Let Prosemirror handle click
               }
             }
           })
