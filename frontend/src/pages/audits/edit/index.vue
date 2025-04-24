@@ -661,9 +661,9 @@ export default {
 			.catch((err) => {
 				console.log(err)
 				if (err.response.status === 403)
-					this.$router.push({name: '403', params: {error: err.response.data.datas}})
+					this.$router.push({name: '403', query: {error: err.response.data.datas}})
 				else if (err.response.status === 404)
-					this.$router.push({name: '404', params: {error: err.response.data.datas}})
+					this.$router.push({name: '404', query: {error: err.response.data.datas}})
 			})
 		},
 

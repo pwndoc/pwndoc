@@ -64,6 +64,11 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
+        if (to.name === '404' || to.name === '403') {
+            next()
+            return
+        }
+        
         if (this.$_.isEqual(this.audit, this.auditOrig))
             next();
         else {

@@ -131,6 +131,20 @@ export default {
             var result = this.vulnTypes.filter(type => type.locale === this.dtLanguage).map(type => {return type.name})
             result.unshift('Undefined')
             return result
+        },
+
+        filteredVulnerabilitiesMergeLeft: function() {
+            return this.vulnerabilities.filter(vuln => 
+                this.getVulnTitleLocale(vuln, this.mergeLanguageRight) === 'undefined' &&
+                this.getVulnTitleLocale(vuln, this.mergeLanguageLeft) !== 'undefined'
+            )
+        },
+
+        filteredVulnerabilitiesMergeRight: function() {
+            return this.vulnerabilities.filter(vuln => 
+                this.getVulnTitleLocale(vuln, this.mergeLanguageLeft) === 'undefined' &&
+                this.getVulnTitleLocale(vuln, this.mergeLanguageRight) !== 'undefined'
+            )
         }
     },
 
@@ -463,7 +477,7 @@ export default {
 
         goToAudits: function(row) {
             var title = this.getDtTitle(row);
-            this.$router.push({name: 'audits', params: {finding: title}});
+            this.$router.push({name: 'audits', query: {findingTitle: title}});
         },
 
         getVulnTitleLocale: function(vuln, locale) {

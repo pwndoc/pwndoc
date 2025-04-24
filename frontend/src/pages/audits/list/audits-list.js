@@ -70,7 +70,7 @@ export default {
     },
 
     mounted: function() {
-        this.search.finding = this.$route.params.finding;
+        this.search.finding = this.$route.query.findingTitle;
 
         if (userStore.isAllowed('audits:users-connected'))
             this.visibleColumns.push('connected')

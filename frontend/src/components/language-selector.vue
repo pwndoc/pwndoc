@@ -17,6 +17,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+const { locale } = useI18n();
 const lang = ref('');
 const langOptions = [
   { value: "en-US", label: "English" },
@@ -37,7 +38,6 @@ onMounted(() => {
 });
 
 watch(lang, (newLang) => {
-  const { locale } = useI18n();
   locale.value = newLang;
   localStorage.setItem("system_language", newLang);
 });

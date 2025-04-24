@@ -104,6 +104,11 @@ export default {
     },
 
     beforeRouteLeave (to, from , next) {
+        if (to.name === '404' || to.name === '403') {
+            next()
+            return
+        }
+        
         Utils.syncEditors(this.$refs)
 
         var displayHighlightWarning = this.displayHighlightWarning()

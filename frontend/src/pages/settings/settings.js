@@ -58,7 +58,11 @@ export default {
             },
             backupType: 'full',
             backupEncrypted: false,
-            backupStatus: 'idle',
+            backupStatus: {
+                state: 'idle',
+                operation: 'idle',
+                message: ''
+            },
             // If following object modified, update handleBackupTicked accordingly
             backupOptions: [
                 {label: $t('audits'), value: 'Audits'},
