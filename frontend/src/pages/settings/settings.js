@@ -38,7 +38,7 @@ export default {
             pagination: {
                 page: 1,
                 rowsPerPage: 10,
-                sortBy: 'date2',
+                sortBy: 'date',
                 descending: true
             },
             rowsPerPageOptions: [

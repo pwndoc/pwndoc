@@ -1,7 +1,6 @@
 <template>
     <div v-if="!loading" class="row">
-        <div class="col-md-8 col-12 offset-md-2 q-mt-md">
-
+        <div class="col-xl-8 col-12 offset-xl-2 q-mt-md">
             <q-card class="q-my-md">
             <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                 <q-item style="padding:0px;">
@@ -319,29 +318,6 @@
                             </q-item-section>
                         </q-item>
                     </q-card-section>
-                    <q-separator />
-                    <q-card-section>
-                        <div class="text-bold">{{$t('scoringTypes')}}</div>
-                        <br/>
-                        <div class="text-grey-8">{{$t('scoringTypesDescription')}}</div>
-                        <br/>
-                        <q-item dense>
-                            <q-item-section class="col-md-2">
-                                <q-item-label>{{$t('cvss3Name')}}</q-item-label>
-                            </q-item-section>
-                            <q-item-section>
-                                <q-toggle v-model="settings.report.public.scoringMethods.CVSS3" />
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense>
-                            <q-item-section class="col-md-2">
-                                <q-item-label>{{$t('cvss4Name')}}</q-item-label>
-                            </q-item-section>
-                            <q-item-section>
-                                <q-toggle v-model="settings.report.public.scoringMethods.CVSS4" />
-                            </q-item-section>
-                        </q-item>
-                    </q-card-section>
                 </div>
             </q-card>
 
@@ -477,12 +453,12 @@
                                 <template v-slot:loading>
                                     <q-spinner-hourglass class="on-left" />
                                     <span v-if="backupStatus.operation !== 'idle'">
-                                        {{$t(backupStatus.operation) + ' - ' + $t(backupStatus.state)}}
+                                        {{$t(`${backupStatus.operation}`) + ' - ' + $t(`${backupStatus.state}`)}}
                                     </span>
                                     <span v-else>
                                         {{$t('backup_uploading')}} - {{uploadProgress}}%
                                     </span>
-                            </template>
+                                </template>
                             </q-btn>
                             <q-btn class="q-ml-md" flat icon="more_vert" :disabled="backupStatus.operation !== 'idle'">
                                 <q-menu auto-close style="width: 300px">
@@ -847,7 +823,7 @@
                 </q-card-section>
             </q-card>
         </div>
-    </div>        
+    </div>      
 </template>
 
 <script src='./settings.js'></script>
