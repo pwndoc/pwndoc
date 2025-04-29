@@ -17,6 +17,11 @@
     background: var(--color);
 }*/
 
+.drag-ghost {
+    opacity: 0.5;
+    background: $grey-4;
+}
+
 .home-drawer .q-router-link--active {
     background-color: $primary;
     opacity: 0.9;

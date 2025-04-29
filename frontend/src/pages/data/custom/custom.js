@@ -119,6 +119,10 @@ export default {
 
         newCustomFieldLangOptions() {
             return this.newCustomField.options.filter(e => e.locale === this.cfLocale)
+        },
+
+        vulnTypesLocale() {
+            return this.vulnTypes.filter(e => e.locale === this.newVulnType.locale)
         }
     },
 

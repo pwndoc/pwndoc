@@ -1,6 +1,4 @@
-import { Dialog, Notify } from 'quasar';
-import Vue from 'vue'
-
+import { Notify } from 'quasar';
 import CollabService from '@/services/collaborator'
 import DataService from '@/services/data'
 import Utils from '@/services/utils'

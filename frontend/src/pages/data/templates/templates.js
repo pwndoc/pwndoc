@@ -1,7 +1,4 @@
 import { Dialog, Notify, exportFile } from 'quasar';
-
-import Breadcrumb from 'components/breadcrumb'
-
 import TemplateService from '@/services/template'
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
@@ -13,7 +10,7 @@ const userStore = useUserStore()
 export default {
     data: () => {
         return {
-            useUserStore: useUserStore,
+            userStore: userStore,
             // Templates list
             templates: [],
             // Loading state
@@ -49,10 +46,6 @@ export default {
             },
             templateId: ''
         }
-    },
-
-    components: {
-        Breadcrumb
     },
 
     mounted: function() {

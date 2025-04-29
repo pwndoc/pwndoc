@@ -51,18 +51,5 @@
 </div>
 </template>
 
-<script>
-import Breadcrumb from 'components/breadcrumb'
-
-export default {
-    data: () => {
-        return {
-        }
-    },
-
-    components: {
-        Breadcrumb
-    }
-}
-</script>
+<script></script>
 
