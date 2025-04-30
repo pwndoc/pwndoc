@@ -25,6 +25,7 @@
     "highlight.js": "^11.10.0",
     "core-js": "^3.37.1",
     "diff": "^4.0.2",
+    "dompurify": "^3.2.4",
     "js-yaml": "^4.1.0",
     "jwt-decode": "^2.2.0",
     "lodash": "^4.17.21",
