@@ -79,12 +79,6 @@ export default {
         }
       }
     });
-
-    const decodeHTMLEntities = (str) => {
-      const textarea = document.createElement('textarea');
-      textarea.innerHTML = str;
-      return textarea.value;
-    }
     
     const normalizeInvisibleCharacters = (str) => {
       return str
@@ -94,7 +88,7 @@ export default {
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
     }
 
-    const cleanHTML = normalizeInvisibleCharacters(decodeHTMLEntities(html))
+    const cleanHTML = normalizeInvisibleCharacters(html)
     const result = DOMPurify.sanitize(cleanHTML);
     return result
   },
