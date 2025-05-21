@@ -797,7 +797,10 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
 
 // Update audit sort options for findings and run the sorting. If update param is null then just run sorting
 AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+        var Settings = mongoose.model('Settings');
+        var settings = await Settings.getAll();
+
         var audit = {} 
         var query = Audit.findById(auditId)
         if (!isAdmin)
@@ -844,9 +847,6 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
             findingList.forEach(group => {
                 var order = -1 // desc
                 if (group.sortOption.sortOrder === 'asc') order = 1
-                
-                var Settings = mongoose.model('Settings');
-                var settings = Settings.getAll();
 
                 var tmpFindings = group.findings
                 .sort((a,b) => {
