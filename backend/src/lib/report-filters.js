@@ -1,6 +1,7 @@
 var expressions = require('angular-expressions');
 var html2ooxml = require('./html2ooxml');
-var translate = require('../translate')
+var translate = require('../translate');
+var utils = require("./utils");
 var _ = require('lodash');
 
 // *** Angular parser filters ***
@@ -181,10 +182,10 @@ defaultFilters.lines = function(input) {
 // Creates a hyperlink: {@input | linkTo: 'https://example.com' | p}
 defaultFilters.linkTo = function(input, url) {
     return '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
-        + '<w:r><w:instrText xml:space="preserve"> HYPERLINK "' + url + '" </w:instrText></w:r>'
+        + '<w:r><w:instrText xml:space="preserve"> HYPERLINK "' + utils.escapeXMLEntities(url) + '" </w:instrText></w:r>'
         + '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
         + '<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>'
-        + '<w:t>' + input + '</w:t>'
+        + '<w:t>' + utils.escapeXMLEntities(input) + '</w:t>'
         + '</w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>';
 }
 
