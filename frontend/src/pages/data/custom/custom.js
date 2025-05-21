@@ -1,6 +1,6 @@
 import { Dialog, Notify } from 'quasar';
 import draggable from 'vuedraggable'
-import BasicEditor from 'components/editor';
+import BasicEditor from 'components/editor/Editor.vue';
 import CustomFields from 'components/custom-fields'
 
 import DataService from '@/services/data'

@@ -507,9 +507,8 @@ module.exports = function(app) {
             extract.on('entry', (header, stream, next) => {
                 console.log('entry: ', header.name)
                 if (
-                    files.length === 0 || 
                     files.includes(header.name) || 
-                    directories.some(e => header.name.startsWith(e))
+                    (utils.isSafePath(header.name) && directories.some(e => path.normalize(header.name).startsWith(e)))
                 ) {
                     if (header.type === "directory") {
                         try {

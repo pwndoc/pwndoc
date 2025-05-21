@@ -1,12 +1,16 @@
 var docx = require("docx")
 var xml = require("xml")
 var htmlparser = require("htmlparser2")
+var domutils = require("domutils")
+const render = require('dom-serializer').default
+const hljs = require('highlight.js');
 
 function html2ooxml(html, style = '') {
     if (html === '')
         return html
     if (!html.match(/^<.+>/))
         html = `<p>${html}</p>`
+    html = html.replace(/<comment.*?>/g, '').replace(/<\/comment>/g, '') // Clean comment tags
     var doc = new docx.Document({sections:[]});
     var paragraphs = []
     var cParagraph = null
@@ -96,6 +100,27 @@ function html2ooxml(html, style = '') {
                 cParagraph.addChildElement(new docx.TextRun(`${label} `))
                 cParagraph.addChildElement(new docx.SimpleField(`SEQ ${label}`, '1'))
                 cParagraph.addChildElement(new docx.TextRun(` - ${attribs.alt}`))
+            } else if (tag === "span" && inCodeBlock) {
+                var hljsClassName = attribs["class"];
+
+                if (hljsClassName === "hljs-doctag" || hljsClassName === "hljs-keyword" || hljsClassName === "hljs-formula") {
+                    cRunProperties.color = "c678dd";
+                } else if (hljsClassName === "hljs-section" || hljsClassName === "hljs-name" || hljsClassName === "hljs-selector-tag" || hljsClassName === "hljs-deletion" || hljsClassName === "hljs-subst") {
+                    cRunProperties.color = "e06c75";
+                } else if (hljsClassName === "hljs-literal") {
+                    cRunProperties.color = "56b6c2";
+                } else if (hljsClassName === "hljs-string" || hljsClassName === "hljs-regexp" || hljsClassName === "hljs-addition" || hljsClassName === "hljs-attribute") {
+                    cRunProperties.color = "98c379";
+                } else if (hljsClassName === "hljs-attr" || hljsClassName === "hljs-variable" || hljsClassName === "hljs-template-variable" || hljsClassName === "hljs-type" || hljsClassName === "hljs-selector-class" || hljsClassName === "hljs-selector-attr" || hljsClassName === "hljs-selector-pseudo" || hljsClassName === "hljs-number") {
+                    cRunProperties.color = "d19a66";
+                } else if (hljsClassName === "hljs-symbol" || hljsClassName === "hljs-bullet" || hljsClassName === "hljs-link" || hljsClassName === "hljs-meta" || hljsClassName === "hljs-selector-id" || hljsClassName === "hljs-title") {
+                    cRunProperties.color = "61aeee";
+                } else if (hljsClassName === "hljs-built_in" || hljsClassName === "hljs-class_" || hljsClassName === "hljs-class") {
+                    cRunProperties.color = "e6c07b";
+                } else if (hljsClassName === "hljs-comment" || hljsClassName === "hljs-quote") {
+                    cRunProperties.color = "5c6370";
+                    cRunProperties.italics = true;
+                }
             }
         },
 
@@ -107,7 +132,7 @@ function html2ooxml(html, style = '') {
         },
 
         onclosetag(tag) {
-            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'img', 'legend'].includes(tag)) {
+            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'legend'].includes(tag)) {
                 paragraphs.push(cParagraph)
                 cParagraph = null
                 cParagraphProperties = {}
@@ -137,6 +162,9 @@ function html2ooxml(html, style = '') {
             }
             else if (tag === "code") {
                 delete cRunProperties.style
+            } else if (tag === "span" && inCodeBlock) {
+                delete cRunProperties.color
+                delete cRunProperties.italics
             }
         },
 
@@ -147,13 +175,22 @@ function html2ooxml(html, style = '') {
         }
     }, { decodeEntities: true })
 
+    var htmlObject = htmlparser.parseDocument(html);
+    var codeObjects = domutils.getElementsByTagName('code', htmlObject);
+
+    for (let codeIndex = 0; codeIndex < codeObjects.length; codeIndex++) {
+        let codeClass = codeObjects[codeIndex].attribs.class
+        let codeLanguage = (codeClass && codeClass.split('-')[1]) || 'plaintext'
+        codeObjects[codeIndex].children[0] = htmlparser.parseDocument(hljs.highlight(codeObjects[codeIndex].children[0].data, {language: codeLanguage}).value);
+    }
+
     // For multiline code blocks
-    html = html.replace(/\n/g, '<br>')
+    html = render(htmlObject).replace(/\n/g, '<br>')
     parser.write(html)
     parser.end()
 
     var prepXml = doc.documentWrapper.document.body.prepForXml({ stack: [] })
-    var filteredXml = prepXml["w:body"].filter(e => {return Object.keys(e)[0] === "w:p"})
+    var filteredXml = prepXml["w:body"].filter(e => {return e && Object.keys(e)[0] === "w:p"})
     var dataXml = xml(filteredXml)
     dataXml = dataXml.replace(/w:numId w:val="{2-0}"/g, 'w:numId w:val="2"') // Replace numbering to have correct value
 

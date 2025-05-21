@@ -8,3 +8,12 @@ services:
           memory: 2G # Maximum memory to allocate (Modify it depending on host ressources - leave at least 1GB free for host)
         reservations:
           memory: 1G # Minimum memory required
+
+  # Override to build images locally
+  pwndoc-backend:
+    build: ./backend
+    image: yeln4ts/pwndoc:backend
+
+  pwndoc-frontend:
+    build: ./frontend
+    image: yeln4ts/pwndoc:frontend

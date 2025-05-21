@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper>
+  <node-view-wrapper :class="{'comment-focused': focused, 'comment-enabled': enabled}">
     <figure style="margin: auto; display: table; width:600px" data-drag-handle>
       <q-img :src="src" :class="{'selected': selected}" style="max-width:600px;margin-bottom:4px" />
       <div>
@@ -41,6 +41,26 @@ export default {
       set(alt) {
         this.updateAttributes({
           alt
+        });
+      }
+    },
+    focused: {
+      get() {
+        return this.node.attrs.focused
+      },
+      set(focused) {
+        this.updateAttributes({
+          focused
+        });
+      }
+    },
+    enabled: {
+      get() {
+        return this.node.attrs.enabled
+      },
+      set(enabled) {
+        this.updateAttributes({
+          enabled
         });
       }
     }

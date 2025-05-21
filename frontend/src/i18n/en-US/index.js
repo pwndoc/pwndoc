@@ -62,7 +62,8 @@ export default {
         addAudit: 'Add Audit',
         restoreRevert: 'Restore at the state of the backup. All data not present in the backup will be deleted',
         restoreUpsert: 'Restore data from the backup and update existing data. If data already exists, it will be updated, if not, it will be created',
-        commentMode: 'Show Comments',
+        showComments: 'Show Comments',
+        hideComments: 'Hide Comments',
         editComment: 'Edit Comment',
         resolveComment: 'Resolve Thread',
         reopenComment: 'Reopen Thread',
@@ -606,6 +607,7 @@ export default {
     willBeRemoved: 'will be removed',
     auditPhase: 'Audit Phase',
     upload: 'Upload',
+    horizontal: 'Horizontal',
     // Settings Backups
     backup: 'Backup',
     backups: 'Backups',
@@ -659,5 +661,9 @@ export default {
     activeOnly: 'Active Only',
     resolvedOnly: 'Resolved Only',
     item: 'item',
-    items: 'items'
-  }
+    items: 'items',
+    warning: 'Warning',
+    commentNoSelectedText: 'No text was selected. The comment will be linked to the entire field instead.',
+    commentCannotSetMark: 'Unable to apply comment to the selected text. The comment will be linked to the entire field instead.',
+    hintInputComment: 'Tip: Press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to post.'
+}

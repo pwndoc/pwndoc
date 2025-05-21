@@ -1,61 +1,95 @@
 import _ from 'lodash';
 import { $t } from 'boot/i18n'
+import DOMPurify from 'dompurify'
 
 export default {
   htmlEncode(html) {
     if(typeof(html) !== "string")  return "";
-    
-    var result = html
-    .replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '') // Non printable characters except NewLine
-    .replace(/</g, 'ΩΠг')
-    .replace(/>/g, 'ΏΠг')
-    .replace(/ΩΠгimg.+?src="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<img src="$1" alt="$2">')
-    .replace(/ΩΠгlegend.+?label="(.*?)".+?alt="(.*?)".*?ΏΠг/g, '<legend label="$1" alt="$2">')
-    .replace(/ΩΠг\/legendΏΠг/g, '</legend>')
-    .replace(/ΩΠгmark.+?data-color="(.*?)".+?style="(.*?)".*?ΏΠг/g, '<mark data-color="$1" style="$2">')
-    .replace(/ΩΠг\/markΏΠг/g, '</mark>')
-    .replace(/ΩΠгpΏΠг/g, '<p>')
-    .replace(/ΩΠг\/pΏΠг/g, '</p>')
-    .replace(/ΩΠгpreΏΠг/g, '<pre>')
-    .replace(/ΩΠг\/preΏΠг/g, '</pre>')
-    .replace(/ΩΠгbΏΠг/g, '<b>')
-    .replace(/ΩΠг\/bΏΠг/g, '</b>')
-    .replace(/ΩΠгstrongΏΠг/g, '<strong>')
-    .replace(/ΩΠг\/strongΏΠг/g, '</strong>')
-    .replace(/ΩΠгiΏΠг/g, '<i>')
-    .replace(/ΩΠг\/iΏΠг/g, '</i>')
-    .replace(/ΩΠгemΏΠг/g, '<em>')
-    .replace(/ΩΠг\/emΏΠг/g, '</em>')
-    .replace(/ΩΠгuΏΠг/g, '<u>')
-    .replace(/ΩΠг\/uΏΠг/g, '</u>')
-    .replace(/ΩΠгsΏΠг/g, '<s>')
-    .replace(/ΩΠг\/sΏΠг/g, '</s>')
-    .replace(/ΩΠгstrikeΏΠг/g, '<strike>')
-    .replace(/ΩΠг\/strikeΏΠг/g, '</strike>')
-    .replace(/ΩΠгbrΏΠг/g, '<br>')
-    .replace(/ΩΠгcodeΏΠг/g, '<code>')
-    .replace(/ΩΠг\/codeΏΠг/g, '</code>')
-    .replace(/ΩΠгulΏΠг/g, '<ul>')
-    .replace(/ΩΠг\/ulΏΠг/g, '</ul>')
-    .replace(/ΩΠгolΏΠг/g, '<ol>')
-    .replace(/ΩΠг\/olΏΠг/g, '</ol>')
-    .replace(/ΩΠгliΏΠг/g, '<li>')
-    .replace(/ΩΠг\/liΏΠг/g, '</li>')
-    .replace(/ΩΠгh1ΏΠг/g, '<h1>')
-    .replace(/ΩΠг\/h1ΏΠг/g, '</h1>')
-    .replace(/ΩΠгh2ΏΠг/g, '<h2>')
-    .replace(/ΩΠг\/h2ΏΠг/g, '</h2>')
-    .replace(/ΩΠгh3ΏΠг/g, '<h3>')
-    .replace(/ΩΠг\/h3ΏΠг/g, '</h3>')
-    .replace(/ΩΠгh4ΏΠг/g, '<h4>')
-    .replace(/ΩΠг\/h4ΏΠг/g, '</h4>')
-    .replace(/ΩΠгh5ΏΠг/g, '<h5>')
-    .replace(/ΩΠг\/h5ΏΠг/g, '</h5>')
-    .replace(/ΩΠгh6ΏΠг/g, '<h6>')
-    .replace(/ΩΠг\/h6ΏΠг/g, '</h6>')
-    .replace(/ΩΠг/g, '&lt;')
-    .replace(/ΏΠг/g, '&gt;')
 
+    const ALLOWED_TAGS = [
+      'p',
+      'br',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'b',
+      'strong',
+      'i',
+      'em',
+      'u',
+      's',
+      'strike',
+      'mark',
+      'ul',
+      'ol',
+      'li',
+      'code',
+      'pre',
+      'img',
+      'legend',
+      'comment'
+    ]
+    
+    DOMPurify.setConfig({
+      ALLOWED_TAGS: ALLOWED_TAGS,
+    }
+  );
+
+    // Hook to enable image sources not having a valid URL.
+    DOMPurify.addHook('uponSanitizeAttribute', function (node, data, config) {
+      data.keepAttr = false // default to remove any attribute
+
+      // Filter authorized attributes for <img> tags (<img src="..." alt="...">)
+      if (node.tagName === 'IMG') { 
+        if (data.attrName === 'src') {
+          const pattern = /^[a-fA-F0-9]{24}$/; // Check if the `src` consists of exactly 24 hexadecimal characters
+          const pattern_b64 = /^data:image\/.+base64,.+$/; // Check if the `src` is a base64 image (retrocompatibility)
+          if (pattern.test(data.attrValue) || pattern_b64.test(data.attrValue))
+            data.forceKeepAttr = true;
+        }
+        else if (data.attrName === 'alt' || data.attrName === 'commentid') {
+          data.forceKeepAttr = true; 
+        }
+      }
+      // Filter authorized attributes for <legend> tags (<legend label="..." alt="...">)
+      else if (node.tagName === 'LEGEND') {
+        if (data.attrName === 'label' || data.attrName === 'alt' || data.attrName === 'commentid')
+          data.forceKeepAttr = true;
+      }
+      // Filter authorized attributes for <mark> tags (<mark data-color="..." style="...">)
+      else if (node.tagName === 'MARK') {
+        if (data.attrName === 'data-color' || data.attrName === 'style')
+          data.forceKeepAttr = true;
+      }
+      // Filter authorized attributes for <code> tags (<code class="...")
+      else if (node.tagName === 'CODE') {
+        if (data.attrName === 'class') {
+          const pattern = /^language-[a-zA-Z0-9\-]{1,}$/; // Check for highlight language value
+          if (pattern.test(data.attrValue)) {
+            data.forceKeepAttr = true;
+          }
+        }
+      }
+      else if (node.tagName === 'COMMENT') {
+        if (data.attrName === 'id') {
+          data.forceKeepAttr = true
+        }
+      }
+    });
+    
+    const normalizeInvisibleCharacters = (str) => {
+      return str
+        // Replace non-breaking spaces and other space variants with regular space
+        .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ')
+        // Remove control characters except \n, \r, \t
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    }
+
+    const cleanHTML = normalizeInvisibleCharacters(html)
+    const result = DOMPurify.sanitize(cleanHTML);
     return result
   },
 
@@ -72,28 +106,28 @@ export default {
   // Compress images to allow more storage in database since limit in a mongo document is 16MB
   resizeImg: function(imageB64) {
     return new Promise((resolve, reject) => {
-      var oldSize = JSON.stringify(imageB64).length
-      var max_width = 1920
+      let oldSize = JSON.stringify(imageB64).length
+      let max_width = 1920
 
       var img = new Image()
       img.src = imageB64
       img.onload = function() {
         //scale the image and keep aspect ratio
-        var resize_width = (this.width > max_width) ? max_width : this.width
-        var scaleFactor =  resize_width / this.width
-        var resize_height = this.height * scaleFactor
+        let resize_width = (this.width > max_width) ? max_width : this.width
+        let scaleFactor =  resize_width / this.width
+        let resize_height = this.height * scaleFactor
 
         // Create a temporary canvas to draw the downscaled image on.
-        var canvas = document.createElement("canvas")
+        let canvas = document.createElement("canvas")
         canvas.width = resize_width
         canvas.height = resize_height
 
         //draw in canvas
-        var ctx = canvas.getContext('2d');
+        let ctx = canvas.getContext('2d');
         ctx.drawImage(this, 0, 0, resize_width, resize_height)
 
-        var result = canvas.toDataURL('image/jpeg')
-        var newSize = JSON.stringify(result).length
+        let result = canvas.toDataURL('image/jpeg')
+        let newSize = JSON.stringify(result).length
         if (newSize >= oldSize)
           resolve(imageB64)
         else
@@ -103,12 +137,12 @@ export default {
   },
 
   customFilter: function(rows, terms) {
-    var result = rows && rows.filter(row => {
+    let result = rows && rows.filter(row => {
         for (const [key, value] of Object.entries(terms)) { // for each search term
-          var searchString = (_.get(row, key) || "")
+          let searchString = (_.get(row, key) || "")
           if (typeof searchString === "string")
             searchString = searchString.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          var termString = (value || "")
+          let termString = (value || "")
           if (typeof termString === "string")
             termString = termString.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
           if (typeof searchString !== "string" || typeof termString !== "string")
@@ -123,8 +157,8 @@ export default {
   },
 
   filterCustomFields: function(page, displaySub, customFields = [], objectFields = [], locale = "") {
-    var cFields = []
-    var display = []
+    let cFields = []
+    let display = []
 
     customFields.forEach(field => {
       switch (page) {
@@ -143,15 +177,15 @@ export default {
       }
 
       if ((display.includes(field.display) && (field.displaySub === '' || field.displaySub === displaySub))) { // wanted field
-        var fieldText = ''
+        let fieldText = ''
         if (['select-multiple', 'checkbox'].includes(field.fieldType))
           fieldText = []
         if (locale && Array.isArray(field.text)) { // set default text for locale if it exists
           let textLocale = field.text.find(e => e.locale === locale)
           if (textLocale) fieldText = textLocale.value
         }
-        for (var i=0;i<objectFields.length; i++) { // Set corresponding text value
-          var customFieldId = ""
+        for (let i=0;i<objectFields.length; i++) { // Set corresponding text value
+          let customFieldId = ""
           if (typeof objectFields[i].customField === 'object')
             customFieldId = objectFields[i].customField._id
           else
@@ -193,7 +227,7 @@ export default {
   },
 
   strongPassword: function(value) {
-    var regExp = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
+    let regExp = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
     if (regExp.test(value))
       return true
     return $t('msg.passwordComplexity')
@@ -201,14 +235,14 @@ export default {
 
   // Return black or white color depending on background color
   getTextColor: function(bgColor) {
-    var regex = /^#[0-9a-fA-F]{6}$/
+    let regex = /^#[0-9a-fA-F]{6}$/
     if (!regex.test(bgColor))
       return "#000000" //black
 
-    var color = bgColor.substring(1, 7)
-    var red = parseInt(color.substring(0, 2), 16) // hexToR
-    var green = parseInt(color.substring(2, 4), 16) // hexToG
-    var blue = parseInt(color.substring(4, 6), 16) // hexToB
+    let color = bgColor.substring(1, 7)
+    let red = parseInt(color.substring(0, 2), 16) // hexToR
+    let green = parseInt(color.substring(2, 4), 16) // hexToG
+    let blue = parseInt(color.substring(4, 6), 16) // hexToB
     
     if ((red * 0.299) + (green * 0.587) + (blue * 0.114) > 186)
       return "#000000" //black

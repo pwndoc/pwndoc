@@ -2,4 +2,8 @@
 
 <script src='./add.js'></script>
 
-<style></style>
+<style scoped>
+.content {
+    margin-top: 50px;
+}
+</style>

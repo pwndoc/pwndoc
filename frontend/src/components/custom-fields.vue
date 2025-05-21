@@ -34,15 +34,16 @@
                         v-model="field.text" 
                         :noSync="noSyncEditor"
                         :editable="!readonly"
+                        :fieldName="`field-${field.customField.label}`"
+                        :commentMode="commentMode && canCreateComment"
+                        :focusedComment="focusedComment"
+                        :commentIdList="commentIdList"
                         /> 
                     </template>
 
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
-                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
-                        <q-icon name="add_comment" size="xs" />
-                    </q-badge>
                 </q-field>
 
                 <q-input
@@ -64,7 +65,7 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
-                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                    <q-badge v-if="commentMode && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment(`field-${field.customField.label}`)">
                         <q-icon name="add_comment" size="xs" />
                     </q-badge>
                 </q-input>
@@ -76,6 +77,7 @@
                 :label='field.customField.label'
                 stack-label
                 v-model="field.text"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :readonly="readonly"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
@@ -94,7 +96,7 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
-                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                    <q-badge v-if="commentMode && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment(`field-${field.customField.label}`)">
                         <q-icon name="add_comment" size="xs" />
                     </q-badge>
                 </q-input>
@@ -115,6 +117,7 @@
                 options-sanitize
                 outlined 
                 :readonly="readonly"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -124,7 +127,7 @@
                      <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
-                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                    <q-badge v-if="commentMode && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment(`field-${field.customField.label}`)">
                         <q-icon name="add_comment" size="xs" />
                     </q-badge>
                 </q-select>
@@ -147,6 +150,7 @@
                 options-sanitize
                 outlined 
                 :readonly="readonly"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -169,7 +173,7 @@
                             {{scope.opt}}
                         </q-chip>
                     </template>
-                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                    <q-badge v-if="commentMode && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment(`field-${field.customField.label}`)">
                         <q-icon name="add_comment" size="xs" />
                     </q-badge>
                 </q-select>
@@ -185,6 +189,7 @@
                 hide-bottom-space
                 outlined
                 :readonly="readonly"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -201,7 +206,7 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
-                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                    <q-badge v-if="commentMode && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment(`field-${field.customField.label}`)">
                         <q-icon name="add_comment" size="xs" />
                     </q-badge>
                 </q-field>
@@ -218,6 +223,7 @@
                 hide-bottom-space
                 outlined
                 :readonly="readonly"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -234,7 +240,7 @@
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
-                    <q-badge v-if="commentMode" color="deep-purple" floating class="cursor-pointer" @click="$emit('create-comment', (`field-${field.customField.label}`))">
+                    <q-badge v-if="commentMode && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment(`field-${field.customField.label}`)">
                         <q-icon name="add_comment" size="xs" />
                     </q-badge>
                 </q-field>
@@ -245,7 +251,7 @@
 </template>
 
 <script>
-import BasicEditor from 'components/editor';
+import BasicEditor from 'components/editor/Editor.vue';
 
 export default {
     name: 'custom-fields',
@@ -275,9 +281,25 @@ export default {
             type: Boolean,
             default: false
         },
+        focusedComment: {
+            type: String,
+            default: ""
+        },
+        commentIdList: {
+            type: Array,
+            default: () => []
+        },
         fieldHighlighted: {
             type: String,
-            default: null
+            default: ""
+        },
+        createComment: {
+            type: Function,
+            default: () => {}
+        },
+        canCreateComment: {
+            type: Boolean,
+            default: false
         }
     },
 
