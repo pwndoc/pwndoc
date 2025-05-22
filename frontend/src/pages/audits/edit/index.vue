@@ -328,7 +328,7 @@ import Utils from '@/services/utils';
 
 import { $t } from '@/boot/i18n';
 
-import { Cvss3P1 } from 'ae-cvss-calculator'
+import { Cvss4P0 } from 'ae-cvss-calculator'
 
 export default {
 	data () {
@@ -477,7 +477,7 @@ export default {
 
 		getFindingSeverity: function(finding) {
 			let severity = "None"
-			let cvss = new Cvss3P1(finding.cvssv3).createJsonSchema(true)
+			let cvss = new Cvss4P0(finding.cvssv4).createJsonSchema(true) // temp fix for CVSS4
 			if (cvss.baseScore >= 0) {
 				severity = cvss.baseSeverity
 
