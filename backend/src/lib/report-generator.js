@@ -344,7 +344,18 @@ async function prepAuditData(data, settings) {
         result.client.cell = data.client.cell || "undefined"
         result.client.title = data.client.title || "undefined"
     }
-
+    result.reviewers = []
+    data.reviewers.forEach(reviewer => {
+        result.collaborators.push({
+            username: reviewer.username || "undefined",
+            firstname: reviewer.firstname || "undefined",
+            lastname: reviewer.lastname || "undefined",
+            email: reviewer.email || "undefined",
+            phone: reviewer.phone || "undefined",
+            role: reviewer.role || "undefined"
+        })
+    })
+    
     result.collaborators = []
     data.collaborators.forEach(collab => {
         result.collaborators.push({
