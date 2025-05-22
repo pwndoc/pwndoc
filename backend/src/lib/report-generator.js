@@ -649,7 +649,7 @@ async function prepAuditData(data, settings) {
             else if (tmpCVSS.baseSeverity === "Medium") tmpFinding.cvss4.cellColor = cellMediumColor
             else if (tmpCVSS.baseSeverity === "High") tmpFinding.cvss4.cellColor = cellHighColor
             else if (tmpCVSS.baseSeverity === "Critical") tmpFinding.cvss4.cellColor = cellCriticalColor
-            else tmpFinding.cvss.cellColor = cellNoneColor
+            else tmpFinding.cvss4.cellColor = cellNoneColor
 
             tmpFinding.cvss4Obj = cvss4StrToObject(tmpCVSS.vectorString)
         }
