@@ -854,23 +854,23 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
                     var cvssB = null;
 
                     if (settings.report.public.scoringMethods.CVSS4 && a.cvssv4) {
-                        var cvssA = new cvss.Cvss4P0(a.cvssv4)
+                        var cvssA = new cvss.Cvss4P0(a.cvssv4).createJsonSchema()
                     } else {
-                        var cvssA = new cvss.Cvss3P1(a.cvssv3)
+                        var cvssA = new cvss.Cvss3P1(a.cvssv3).createJsonSchema()
                     }
 
                     if (settings.report.public.scoringMethods.CVSS4 && b.cvssv4) {
-                        var cvssB = new cvss.Cvss4P0(b.cvssv4)
+                        var cvssB = new cvss.Cvss4P0(b.cvssv4).createJsonSchema()
                     } else {
-                        var cvssB = new cvss.Cvss3P1(b.cvssv3)
+                        var cvssB = new cvss.Cvss3P1(b.cvssv3).createJsonSchema()
                     }
 
                     // Get built-in value (findings[sortValue])
                     var left = a[group.sortOption.sortValue]
 
                     // If sort value is a CVSS Score calculate it 
-                    if (cvssA.success && group.sortOption.sortValue === 'cvssScore')
-                        left = cvssA.baseMetricScore
+                    if (!isNan(cvssA.baseScore) && group.sortOption.sortValue === 'cvssScore') // A temp fix for cvss4
+                        left = cvssA.baseScore // CVSS3 will be baseMetricScore 
                     else if (cvssA.success && group.sortOption.sortValue === 'cvssTemporalScore')
                         left = cvssA.temporalMetricScore
                     else if (cvssA.success && group.sortOption.sortValue === 'cvssEnvironmentalScore')
@@ -891,11 +891,11 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
                     // Same for right value to compare
                     var right = b[group.sortOption.sortValue]
 
-                    if (cvssB.success && group.sortOption.sortValue === 'cvssScore')
-                        right = cvssB.baseMetricScore
-                    else if (cvssB.success && group.sortOption.sortValue === 'cvssTemporalScore')
+                    if (!isNan(cvssA.baseScore) && group.sortOption.sortValue === 'cvssScore') // A temp fix for cvss4
+                        right = cvssB..baseScore // CVSS3 will be baseMetricScore 
+                    else if (!isNan(cvssA.baseScore) && group.sortOption.sortValue === 'cvssTemporalScore')
                         right = cvssB.temporalMetricScore
-                    else if (cvssB.success && group.sortOption.sortValue === 'cvssEnvironmentalScore')
+                    else if (!isNan(cvssA.baseScore) && group.sortOption.sortValue === 'cvssEnvironmentalScore')
                         right = cvssB.environmentalMetricScore
 
                     if (!right) {
