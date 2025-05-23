@@ -221,10 +221,18 @@
                 </template>
             </q-field>
         </q-card-section>
-        <q-card-section>
+        <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
             <div class="col-md-12">
-                <cvss-calculator
+                <cvss3-calculator
                 v-model="currentVulnerability.cvssv3"
+                @cvssScoreChange="currentVulnerability.cvssScore = $event"
+                />
+            </div>
+        </q-card-section>
+        <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
+            <div class="col-md-12">
+                <cvss4-calculator
+                v-model="currentVulnerability.cvssv4"
                 @cvssScoreChange="currentVulnerability.cvssScore = $event"
                 />
             </div>
@@ -384,10 +392,18 @@
                 </template>
             </q-field>
         </q-card-section>
-        <q-card-section>
+        <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
             <div class="col-md-12">
-                <cvss-calculator
+                <cvss3-calculator
                 v-model="currentVulnerability.cvssv3"
+                @cvssScoreChange="currentVulnerability.cvssScore = $event"
+                />
+            </div>
+        </q-card-section>
+        <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
+            <div class="col-md-12">
+                <cvss4-calculator
+                v-model="currentVulnerability.cvssv4"
                 @cvssScoreChange="currentVulnerability.cvssScore = $event"
                 />
             </div>
@@ -528,9 +544,15 @@
                             </template>
                         </q-field>
                     </q-card-section>
-                    <q-card-section>
-                        <cvss-calculator
+                    <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
+                        <cvss3-calculator
                         v-model="currentVulnerability.cvssv3"
+                        @cvssScoreChange="currentVulnerability.cvssScore = $event"
+                        />
+                    </q-card-section>
+                    <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
+                        <cvss4-calculator
+                        v-model="currentVulnerability.cvssv4"
                         @cvssScoreChange="currentVulnerability.cvssScore = $event"
                         />
                     </q-card-section>
@@ -644,7 +666,7 @@
                                 outlined
                                 />
                             </q-card-section>
-                            <q-card-section>
+                            <q-card-section class="q-pt-md">
                                 <q-field 
                                 borderless 
                                 :label="$t('description')" 
@@ -654,7 +676,7 @@
                                     (currentVulnerability.details[currentDetailsIndex].description != update.description)
                                     ?'bg-diffbackground':''
                                 "
-                                class="basic-editor"
+                                class="basic-editor toolbar-padding"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor noAffix 
@@ -674,7 +696,7 @@
                                 (currentVulnerability.details[currentDetailsIndex].observation != update.observation)
                                 ?'bg-diffbackground':''
                                 "
-                                class="basic-editor"
+                                class="basic-editor toolbar-padding"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor noAffix 
@@ -684,10 +706,18 @@
                                     </template>
                                 </q-field>
                             </q-card-section>
-                            <q-card-section>
-                                <cvss-calculator
+                            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
+                                <cvss3-calculator
                                 :class="(currentVulnerability.cvssv3 !== update.cvssv3)?'bg-diffbackground':''"
                                 v-model="update.cvssv3"
+                                @cvssScoreChange="update.cvssScore = $event"
+                                readonly
+                                />
+                            </q-card-section>
+                            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
+                                <cvss4-calculator
+                                :class="(currentVulnerability.cvssv4 !== update.cvssv4)?'bg-diffbackground':''"
+                                v-model="update.cvssv4"
                                 @cvssScoreChange="update.cvssScore = $event"
                                 readonly
                                 />
@@ -702,7 +732,7 @@
                                 (currentVulnerability.details[currentDetailsIndex].remediation != update.remediation)
                                 ?'bg-diffbackground':''
                                 "
-                                class="basic-editor"
+                                class="basic-editor toolbar-padding"
                                 readonly>
                                     <template v-slot="control">
                                         <basic-editor noAffix 

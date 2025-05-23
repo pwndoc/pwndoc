@@ -297,6 +297,7 @@ module.exports = function(app, io) {
         if (req.body.priority) finding.priority = req.body.priority;
         if (req.body.references) finding.references = req.body.references;
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
+        if (req.body.cvssv4) finding.cvssv4 = req.body.cvssv4;
         if (req.body.poc) finding.poc = req.body.poc;
         if (req.body.scope) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;
@@ -342,6 +343,7 @@ module.exports = function(app, io) {
         if (req.body.priority) finding.priority = req.body.priority;
         if (req.body.references) finding.references = req.body.references;
         if (req.body.cvssv3) finding.cvssv3 = req.body.cvssv3;
+        if (req.body.cvssv4) finding.cvssv4 = req.body.cvssv4;
         if (!_.isNil(req.body.poc)) finding.poc = req.body.poc;
         if (!_.isNil(req.body.scope)) finding.scope = req.body.scope;
         if (req.body.status !== undefined) finding.status = req.body.status;

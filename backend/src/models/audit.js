@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');//.set('debug', true);
-const CVSS31 = require('../lib/cvsscalc31');
+const cvss = require('ae-cvss-calculator');
 var Schema = mongoose.Schema;
 
 var Paragraph = {
@@ -25,6 +25,7 @@ var Finding = {
     priority:               {type: Number, enum: [1,2,3,4]},
     references:             [String],
     cvssv3:                 String,
+    cvssv4:                 String,
     paragraphs:             [Paragraph],
     poc:                    String,
     scope:                  String,
@@ -796,7 +797,10 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
 
 // Update audit sort options for findings and run the sorting. If update param is null then just run sorting
 AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+        var Settings = mongoose.model('Settings');
+        var settings = await Settings.getAll();
+
         var audit = {} 
         var query = Audit.findById(auditId)
         if (!isAdmin)
@@ -846,19 +850,39 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
 
                 var tmpFindings = group.findings
                 .sort((a,b) => {
-                    var cvssA = CVSS31.calculateCVSSFromVector(a.cvssv3)
-                    var cvssB = CVSS31.calculateCVSSFromVector(b.cvssv3)
+                    var cvssA = null;
+                    var cvssB = null;
+
+                    if (settings.report.public.scoringMethods.CVSS4 && a.cvssv4) {
+                        var cvssA = new cvss.Cvss4P0(a.cvssv4).createJsonSchema()
+
+                        // Fix for the CVSS 4 -> CVSS 3.1 value mappings
+                        cvssA.temporalScore = cvssA.threatScore
+                    } else if (settings.report.public.scoringMethods.CVSS3 && a.cvssv3) {
+                        var cvssA = new cvss.Cvss3P1(a.cvssv3).createJsonSchema()
+                    }
+
+                    if (settings.report.public.scoringMethods.CVSS4 && b.cvssv4) {
+                        var cvssB = new cvss.Cvss4P0(b.cvssv4).createJsonSchema()
+
+                        // Fix for the CVSS 4 -> CVSS 3.1 value mappings
+                        cvssB.temporalScore = cvssB.threatScore
+                    } else if (settings.report.public.scoringMethods.CVSS3 && b.cvssv3) {
+                        var cvssB = new cvss.Cvss3P1(b.cvssv3).createJsonSchema()
+                    }
 
                     // Get built-in value (findings[sortValue])
                     var left = a[group.sortOption.sortValue]
 
-                    // If sort value is a CVSS Score calculate it 
-                    if (cvssA.success && group.sortOption.sortValue === 'cvssScore')
-                        left = cvssA.baseMetricScore
-                    else if (cvssA.success && group.sortOption.sortValue === 'cvssTemporalScore')
-                        left = cvssA.temporalMetricScore
-                    else if (cvssA.success && group.sortOption.sortValue === 'cvssEnvironmentalScore')
-                        left = cvssA.environmentalMetricScore
+                    // If sort value is a CVSS Score calculate it
+                    if (cvssA) {
+                        if (!isNaN(cvssA.baseScore) && group.sortOption.sortValue === 'cvssScore')
+                            left = cvssA.baseScore
+                        else if (!isNaN(cvssA.temporalScore) && group.sortOption.sortValue === 'cvssTemporalScore')
+                            left = cvssA.temporalScore
+                        else if (!isNaN(cvssA.environmentalScore) && group.sortOption.sortValue === 'cvssEnvironmentalScore')
+                            left = cvssA.environmentalScore
+                    }
 
                     // Not found then get customField sortValue
                     if (!left) {
@@ -875,12 +899,14 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
                     // Same for right value to compare
                     var right = b[group.sortOption.sortValue]
 
-                    if (cvssB.success && group.sortOption.sortValue === 'cvssScore')
-                        right = cvssB.baseMetricScore
-                    else if (cvssB.success && group.sortOption.sortValue === 'cvssTemporalScore')
-                        right = cvssB.temporalMetricScore
-                    else if (cvssB.success && group.sortOption.sortValue === 'cvssEnvironmentalScore')
-                        right = cvssB.environmentalMetricScore
+                    if (cvssB) {
+                        if (!isNaN(cvssB.baseScore) && group.sortOption.sortValue === 'cvssScore')
+                            right = cvssB.baseScore
+                        else if (!isNaN(cvssB.temporalScore) && group.sortOption.sortValue === 'cvssTemporalScore')
+                            right = cvssB.temporalScore
+                        else if (!isNaN(cvssB.environmentalScore) && group.sortOption.sortValue === 'cvssEnvironmentalScore')
+                            right = cvssB.environmentalScore
+                    }
 
                     if (!right) {
                         right = b.customFields.find(e => e.customField.label === group.sortOption.sortValue)
