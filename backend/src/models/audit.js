@@ -854,27 +854,33 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
                     var cvssB = null;
 
                     if (settings.report.public.scoringMethods.CVSS4 && a.cvssv4) {
-                        var cvssA = new cvss.Cvss4P0(a.cvssv4)
+                        var cvssA = new cvss.Cvss4P0(a.cvssv4).createJsonSchema()
+
+                        // Fix for the CVSS 4 -> CVSS 3.1 value mappings
+                        cvssA.temporalScore = cvssA.threatScore
                     } else {
-                        var cvssA = new cvss.Cvss3P1(a.cvssv3)
+                        var cvssA = new cvss.Cvss3P1(a.cvssv3).createJsonSchema()
                     }
 
                     if (settings.report.public.scoringMethods.CVSS4 && b.cvssv4) {
-                        var cvssB = new cvss.Cvss4P0(b.cvssv4)
+                        var cvssB = new cvss.Cvss4P0(b.cvssv4).createJsonSchema()
+
+                        // Fix for the CVSS 4 -> CVSS 3.1 value mappings
+                        cvssB.temporalScore = cvssB.threatScore
                     } else {
-                        var cvssB = new cvss.Cvss3P1(b.cvssv3)
+                        var cvssB = new cvss.Cvss3P1(b.cvssv3).createJsonSchema()
                     }
 
                     // Get built-in value (findings[sortValue])
                     var left = a[group.sortOption.sortValue]
 
                     // If sort value is a CVSS Score calculate it 
-                    if (cvssA.success && group.sortOption.sortValue === 'cvssScore')
-                        left = cvssA.baseMetricScore
-                    else if (cvssA.success && group.sortOption.sortValue === 'cvssTemporalScore')
-                        left = cvssA.temporalMetricScore
-                    else if (cvssA.success && group.sortOption.sortValue === 'cvssEnvironmentalScore')
-                        left = cvssA.environmentalMetricScore
+                    if (!isNan(cvssA.baseScore) && group.sortOption.sortValue === 'cvssScore')
+                        left = cvssA.baseScore
+                    else if (!isNan(cvssA.temporalScore) && group.sortOption.sortValue === 'cvssTemporalScore')
+                        left = cvssA.temporalScore
+                    else if (!isNan(cvssA.environmentalScore) && group.sortOption.sortValue === 'cvssEnvironmentalScore')
+                        left = cvssA.environmentalScore
 
                     // Not found then get customField sortValue
                     if (!left) {
@@ -891,12 +897,12 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
                     // Same for right value to compare
                     var right = b[group.sortOption.sortValue]
 
-                    if (cvssB.success && group.sortOption.sortValue === 'cvssScore')
-                        right = cvssB.baseMetricScore
-                    else if (cvssB.success && group.sortOption.sortValue === 'cvssTemporalScore')
-                        right = cvssB.temporalMetricScore
-                    else if (cvssB.success && group.sortOption.sortValue === 'cvssEnvironmentalScore')
-                        right = cvssB.environmentalMetricScore
+                    if (!isNan(cvssB.baseScore) && group.sortOption.sortValue === 'cvssScore')
+                        right = cvssB.baseScore
+                    else if (!isNan(cvssB.temporalScore) && group.sortOption.sortValue === 'cvssTemporalScore')
+                        right = cvssB.temporalScore
+                    else if (!isNan(cvssB.environmentalScore) && group.sortOption.sortValue === 'cvssEnvironmentalScore')
+                        right = cvssB.environmentalScore
 
                     if (!right) {
                         right = b.customFields.find(e => e.customField.label === group.sortOption.sortValue)
