@@ -298,7 +298,7 @@ function cvssStrToObject(cvss) {
 
 function cvss4StrToObject(cvss4) {
     var initialState = 'Not Defined'
-    var res = {AV:initialState, AC:initialState, AT:initialState, PR:initialState, UI:initialState, VC:initialState, VI:initialState, VA:initialState, SC:initialState, SI:initialState, SA:initialState, S:initialState, AU:initialState, R:initialState, V:initialState, RE:initialState, U:initialState, MAV:initialState, MAC:initialState, MAC:initialState, MPR:initialState, MUI:initialState, MVC:initialState, MVI:initialState, MVA:initialState, MSC:initialState, MSI:initialState, MSA:initialState, CR:initialState, IR:initialState, AR:initialState, E:initialState};
+    var res = {AV:initialState, AC:initialState, AT:initialState, PR:initialState, UI:initialState, VC:initialState, VI:initialState, VA:initialState, SC:initialState, SI:initialState, SA:initialState, S:initialState, AU:initialState, R:initialState, V:initialState, RE:initialState, U:initialState, MAV:initialState, MAC:initialState, MAT:initialState, MPR:initialState, MUI:initialState, MVC:initialState, MVI:initialState, MVA:initialState, MSC:initialState, MSI:initialState, MSA:initialState, CR:initialState, IR:initialState, AR:initialState, E:initialState};
     if (cvss4) {
         var temp = cvss4.split('/');
         for (var i=0; i<temp.length; i++) {
