@@ -346,7 +346,7 @@ async function prepAuditData(data, settings) {
     }
     result.reviewers = []
     data.reviewers.forEach(reviewer => {
-        result.collaborators.push({
+        result.reviewers.push({
             username: reviewer.username || "undefined",
             firstname: reviewer.firstname || "undefined",
             lastname: reviewer.lastname || "undefined",
