@@ -6,7 +6,7 @@
 
 All 3 containers can be run at once using the docker-compose file in the root directory.
 
-!> For production usage make sure to change the certificates in `backend/ssl` folder and optionnaly to set the JWT secret in `backend/src/lib/auth.js` (`jwtSecret` and `jwtRefreshSecret` in `backend/src/config/config.json`) if you don't want to use random ones.
+!> For production usage make sure to change the certificates in `backend/ssl` folder and optionally to set the JWT secret in `backend/src/lib/auth.js` (`jwtSecret` and `jwtRefreshSecret` in `backend/src/config/config.json`) if you don't want to use random ones.
 
 Build and run Docker containers
 
