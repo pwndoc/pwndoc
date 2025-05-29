@@ -46,7 +46,8 @@
     "tar-stream": "^3.1.6",
     "winston": "^3.8.2",
     "xml": "^1.0.1",
-    "swagger-autogen": "^2.23.1",
+    "swagger-autogen": "^2.23.7",
+    "ae-cvss-calculator": "^1.0.3",
     "highlight.js": "^11.9.0"
   }
 }

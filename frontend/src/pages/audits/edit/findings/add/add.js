@@ -161,6 +161,7 @@ export default {
                     priority: vuln.priority,
                     references: vuln.detail.references,
                     cvssv3: vuln.cvssv3,
+                    cvssv4: vuln.cvssv4,
                     category: vuln.category,
                     customFields: Utils.filterCustomFields('finding', vuln.category, this.$parent.customFields, vuln.detail.customFields, this.$parent.audit.language)
                 };
@@ -201,6 +202,7 @@ export default {
                     priority: "",
                     references: [],
                     cvssv3: "",
+                    cvssv4: "",
                     category: category.name,
                     customFields: Utils.filterCustomFields('finding', category.name, this.$parent.customFields, [], this.$parent.audit.language)
                 };
@@ -216,6 +218,7 @@ export default {
                     priority: "",
                     references: [],
                     cvssv3: "",
+                    cvssv4: "",
                     customFields: Utils.filterCustomFields('finding', '', this.$parent.customFields, [], this.$parent.audit.language)
                 };
             }

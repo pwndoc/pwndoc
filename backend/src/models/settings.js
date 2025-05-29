@@ -39,11 +39,15 @@ const SettingSchema = new Schema({
                 findingRemediationDifficulty: {type: Boolean, default: false},
                 findingPriority: {type: Boolean, default: false},
                 findingRemediation: {type: Boolean, default: false},
+            },
+            scoringMethods: {
+                CVSS3: { type: Boolean, default: true },
+                CVSS4: { type: Boolean, default: false }
             }
         },
         private: {
             imageBorder: { type: Boolean, default: false },
-            imageBorderColor: { type: String, default: "#000000", validate: [colorValidator, 'Invalid color'] }
+            imageBorderColor: { type: String, default: "#000000", validate: [colorValidator, 'Invalid color'] },
         }
      },
     reviews: {

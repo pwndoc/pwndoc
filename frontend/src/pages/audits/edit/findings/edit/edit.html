@@ -290,13 +290,26 @@ buttons
                     :class="{'highlighted-border': $parent.fieldHighlighted == 'cvssField' && $parent.commentMode}"
                     >
                         <div class="col-12">
-                            <cvss-calculator 
-                            v-model="finding.cvssv3"
-                            :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                            />
-                            <q-badge v-if="$parent.commentMode  && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
-                                <q-icon name="add_comment" size="xs" />
-                            </q-badge>
+                            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
+                                <cvss3-calculator 
+                                v-model="finding.cvssv3"
+                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                />
+                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
+                                    <q-icon name="add_comment" size="xs" />
+                                </q-badge>
+                            </q-card-section>
+                        </div>
+                        <div class="col-12">
+                            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
+                                <cvss4-calculator 
+                                v-model="finding.cvssv4"
+                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                />
+                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
+                                    <q-icon name="add_comment" size="xs" />
+                                </q-badge>
+                            </q-card-section>
                         </div>
                     </q-card>
                     <q-card class="q-mt-md">
