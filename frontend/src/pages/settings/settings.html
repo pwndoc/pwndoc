@@ -318,6 +318,24 @@
                         </q-item-section>
                     </q-item>
                 </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-bold">{{$t('dataRetention')}}</div>
+                    <br/>
+                    <div class="text-grey-8">{{$t('dataRetentionDescription')}}</div>
+                    <br/>
+                    <q-item>
+                        <q-item-section class="col-md-6">
+                            <q-input
+                                v-model.number="settings.report.private.defaultDataRetentionDays"
+                                type="number"
+                                filled
+                                :min="0"
+                                :hint="$t('defaultDataRetentionDays')"
+                            />
+                        </q-item-section>
+                    </q-item>
+                </q-card-section>
             </div>
         </q-card>
 
