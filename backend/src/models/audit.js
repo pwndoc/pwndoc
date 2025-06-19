@@ -76,9 +76,18 @@ var Comment = new Schema ({
 var AuditSchema = new Schema({
     name:               {type: String, required: true},
     auditType:          String,
-    date:               String,
-    date_start:         String,
-    date_end:           String,
+    // date_start: default is today
+    // date_end: default is 1 month from date_start
+    // date: aka Reporting date, default is 1 week from date_end for report generation
+    date:               {type: String, default: () => {
+        const endDate = new Date(new Date().setMonth(new Date().getMonth() + 1));
+        return new Date(endDate.setDate(endDate.getDate() + 7)).toISOString().split('T')[0];
+    }},
+    date_start:         {type: String, default: () => new Date().toISOString().split('T')[0]}, 
+    date_end:           {type: String, default: () => {
+        const date = new Date();
+        return new Date(date.setMonth(date.getMonth() + 1)).toISOString().split('T')[0];
+    }},
     summary:            String,
     company:            {type: Schema.Types.ObjectId, ref: 'Company'},
     client:             {type: Schema.Types.ObjectId, ref: 'Client'},
