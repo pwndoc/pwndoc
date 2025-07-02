@@ -255,6 +255,7 @@ export default {
                 this.$router.push('/');
             })
             .catch(err => {
+                console.log(err);
                 if (err.response.status === 422) {
                     this.step = 1
                     this.$nextTick(() => {

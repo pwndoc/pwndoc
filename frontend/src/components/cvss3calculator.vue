@@ -1,5 +1,5 @@
 <template>
-    <q-card class="cvsscalculator">
+    <q-card class="cvss3calculator">
         <q-card-section class="row">
             <div class="col-md-3" style="align-self:center">
             <span>
@@ -10,16 +10,12 @@
             </span>
             </div>
             <q-space />
-            <div v-if="cvss.baseImpact && cvss.baseExploitability" style="margin-right:120px">
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss.impactSubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseImpact)}}</span></q-chip>
-                <q-chip square color="blue-12" text-color="white">{{$t('cvss.exploitabilitySubscore')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.baseExploitability)}}</span></q-chip>
-            </div>
             <div class="scoreRating" :class="cvss.baseSeverity">
-                <span class="baseSeverity" v-if="!cvss.baseMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
-                <div v-else>
-                    <span class="baseMetricScore">{{cvss.baseMetricScore}}</span>
+                <div v-if="cvss.baseScore >= 0">
+                    <span class="baseMetricScore">{{cvss.baseScore}}</span>
                     <span class="baseSeverity">({{cvss.baseSeverity}})</span>
                 </div>
+                <span class="baseSeverity" v-else>{{$t('cvss.infoWhenNoScore')}}</span>
             </div>
         </q-card-section>
         <q-separator />
@@ -299,9 +295,9 @@
             </div>
             <q-space />
             <div class="scoreRating" :class="cvss.temporalSeverity">
-                <span class="baseSeverity" v-if="!cvss.temporalMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
+                <span class="baseSeverity" v-if="!cvss.temporalScore">{{$t('cvss.infoWhenNoScore')}}</span>
                 <div v-else>
-                    <span class="baseMetricScore">{{cvss.temporalMetricScore}}</span>
+                    <span class="baseMetricScore">{{cvss.temporalScore}}</span>
                     <span class="baseSeverity">({{cvss.temporalSeverity}})</span>
                 </div>
             </div>
@@ -451,9 +447,9 @@
                     <q-chip square color="blue-12" text-color="white">{{$t('cvss.environmentalModifiedExploitability')}}:&nbsp;<span class="text-bold">{{roundUp1(cvss.environmentalModifiedExploitability)}}</span></q-chip>
                 </div>
                 <div class="scoreRating" :class="cvss.environmentalSeverity">
-                    <span class="baseSeverity" v-if="!cvss.environmentalMetricScore">{{$t('cvss.infoWhenNoScore')}}</span>
+                    <span class="baseSeverity" v-if="!cvss.environmentalScore">{{$t('cvss.infoWhenNoScore')}}</span>
                     <div v-else>
-                        <span class="baseMetricScore">{{cvss.environmentalMetricScore}}</span>
+                        <span class="baseMetricScore">{{cvss.environmentalScore}}</span>
                         <span class="baseSeverity">({{cvss.environmentalSeverity}})</span>
                     </div>
                 </div>
@@ -879,10 +875,11 @@
 
 <script>
 import { $t } from '@/boot/i18n'
+import { Cvss3P1 } from 'ae-cvss-calculator'
 
 
 export default {
-    name: 'cvss-calculator',
+    name: 'cvss3-calculator',
     props: ['value', 'readonly'],
 
     data: function() {
@@ -912,14 +909,6 @@ export default {
                 MA: [{label: $t("cvss.notDefined"), value: "", slot: 'one'}, {label: $t("cvss.none"), value: "N", slot: 'two'}, {label: $t("cvss.low"), value: "L", slot: 'three'}, {label: $t("cvss.high"), value: "H", slot: 'four'}],
             },
             cvssObj: {version:'3.1', AV:'', AC:'', PR:'', UI:'', S:'', C:'', I:'', A:'', E:'', RL:'', RC:'', CR:'', IR:'', AR:'', MAV:'', MAC:'', MPR:'', MUI:'', MS:'', MC:'', MI:'', MA:''},
-            cvss: {
-                baseMetricScore: '',
-                baseSeverity: '',
-                temporalMetricScore: '',
-                temporalSeverity: '',
-                environmentalMetricScore: '',
-                environmentalSeverity: ''
-            },
             tooltip: {
                 anchor: "bottom middle",
                 self: "top left",
@@ -933,7 +922,11 @@ export default {
 
     created: function() {
         this.cvssStrToObject(this.value);
-        this.cvss = CVSS31.calculateCVSSFromVector(this.value);
+        try {
+            this.cvss = new Cvss3P1(this.value).createJsonSchema();
+        } catch {
+            this.cvss = {}
+        }
     },
 
     watch: {
@@ -949,10 +942,6 @@ export default {
     },
 
     methods: {
-        roundUp1(n) {
-            return CVSS31.roundUp1(n)
-        },
-
         cvssStrToObject(str) {
             if (str) {
                 var temp = str.split('/');
@@ -1059,7 +1048,11 @@ export default {
             if (this.cvssObj.MI) vectorString += "/MI:"+this.cvssObj.MI
             if (this.cvssObj.MA) vectorString += "/MA:"+this.cvssObj.MA
 
-            this.cvss = CVSS31.calculateCVSSFromVector(vectorString);                 
+            try {
+                this.cvss = new Cvss3P1(this.value).createJsonSchema();
+            } catch {
+                this.cvss = {}
+            }
             this.$emit('input', vectorString);
         }
     }
@@ -1105,31 +1098,31 @@ export default {
         position: absolute;
     }
 
-    .scoreRating.None {
+    .scoreRating.NONE {
         background: #53aa33;
         border: 2px solid #53aa33;
         color: white;
     }
 
-    .scoreRating.Low {
+    .scoreRating.LOW {
         background: #ffcb0d;
         border: 2px solid #ffcb0d;
         color: white;
     }
 
-    .scoreRating.Medium {
+    .scoreRating.MEDIUM {
         background: #f9a009;
         border: 2px solid #f9a009;
         color: white;
     }
 
-    .scoreRating.High {
+    .scoreRating.HIGH {
         background: #df3d03;
         border: 2px solid #df3d03;
         color: white;
     }
 
-    .scoreRating.Critical {
+    .scoreRating.CRITICAL {
         background: #212121;
         border: 2px solid #212121;
         color: white;

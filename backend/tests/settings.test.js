@@ -38,6 +38,10 @@ module.exports = function(request, app) {
                 "findingRemediationDifficulty": false,
                 "findingPriority": false,
                 "findingRemediation": false
+              },
+              "scoringMethods": {
+                "CVSS3": true,
+                "CVSS4": false,
               }
             },
           },
@@ -86,6 +90,10 @@ module.exports = function(request, app) {
                 "findingRemediationDifficulty": false,
                 "findingPriority": false,
                 "findingRemediation": false
+              },
+              "scoringMethods": {
+                "CVSS3": true,
+                "CVSS4": false,
               }
             },
           },
@@ -159,8 +167,11 @@ module.exports = function(request, app) {
                   "findingRemediationDifficulty": false,
                   "findingPriority": false,
                   "findingRemediation": false
+                },
+                "scoringMethods": {
+                  "CVSS3": true,
+                  "CVSS4": true,
                 }
-                
               },
             },
           "reviews": {
