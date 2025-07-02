@@ -43,6 +43,17 @@ services:
     networks: 
       - backend
 
+  pwndoc-languagetools-dev:
+    profiles:
+      - spellcheck
+    image: erikvl87/languagetool
+    container_name: pwndoc-languagetools
+    restart: always
+    ports:
+      - 8010:8010
+    networks:
+      - backend
+
 volumes:
   mongo-data-dev:
 

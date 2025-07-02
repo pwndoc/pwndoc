@@ -217,6 +217,28 @@
             </q-toolbar>
     </affix>
     <q-separator />
+    <bubble-menu
+        class="bubble-menu"
+        v-if="editor"
+        :editor="editor"
+        :tippy-options="{ placement: 'bottom', animation: 'fade' }"
+        >
+        <section class="bubble-menu-section-container">
+            <section class="message-section">
+                {{ editor.extensionStorage.languagetool.match?.message || 'No Message' }}
+            </section>
+            <section class="suggestions-section">
+                <article
+                    v-for="(replacement, i) in editor.extensionStorage.languagetool.match?.replacements"
+                    @click="() => editor.commands.insertContent(replacement.value)"
+                    :key="i + replacement.value"
+                    class="suggestion"
+                >
+                    {{ replacement.value }}
+                </article>
+            </section>
+        </section>
+    </bubble-menu>
     <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor"/>
     <div v-else class="editor__content q-pa-sm">
         <div class="ProseMirror" v-html="diffContent"></div>
@@ -226,7 +248,7 @@
 
 <script>
 // Import the editor
-import { Editor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-2'
+import { Editor, EditorContent, BubbleMenu, VueNodeViewRenderer } from '@tiptap/vue-2'
 
 // Import Extensions
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
@@ -240,6 +262,9 @@ import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 import CodeBlockComponent from './editor-code-block'
 import CommentExtension from './editor-comment-extension'
+
+import { ref, computed } from 'vue'
+import { LanguageTool } from './editor-spellcheck'
 
 const Diff = require('diff')
 
@@ -296,7 +321,8 @@ export default {
         }
     },
     components: {
-        EditorContent
+        EditorContent,
+        BubbleMenu,
     },
     data() {
         return {
@@ -334,6 +360,11 @@ export default {
                         excludes: "bold italic strike underline"
                     }),
                     CommentExtension,
+                    LanguageTool.configure({ 
+                        language: 'auto', // it can detect language automatically or you can write your own language like 'en-US'
+                        apiUrl: 'http://127.0.0.1:8010/v2/check', // For testing purposes, you can use [Public API](https://dev.languagetool.org/public-http-api), but keep an eye on the rules that they've written there
+                        automaticMode: true, // if true, it will start proofreading immediately otherwise only when you execute `editor.value.commands.proofread()` command of the extension.
+                    })
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -644,6 +675,44 @@ export default {
     .ProseMirror {
         min-height: 200px;
         cursor: auto;
+
+        .lt {
+            border-bottom: 2px solid #e86a69;
+            transition: background 0.25s ease-in-out;
+
+            &:hover {
+                background: rgba( #e86a69, $alpha: 0.2);
+            }
+
+            &-style {
+                border-bottom: 2px solid #9d8eff;
+
+                &:hover {
+                    background: rgba( #9d8eff, $alpha: 0.2) !important;
+                }
+            }
+
+            &-typographical,
+            &-grammar {
+                border-bottom: 2px solid #eeb55c;
+
+                &:hover {
+                    background: rgba( #eeb55c, $alpha: 0.2) !important;
+                }
+            }
+
+            &-misspelling {
+                border-bottom: 2px solid #e86a69;
+
+                &:hover {
+                    background: rgba( #e86a69, $alpha: 0.2) !important;
+                }
+            }
+        }
+
+        &-focused {
+            outline: none !important;
+        }
     }
 
     h1 {
@@ -893,6 +962,41 @@ pre .diffadd {
     .editor-caption {
         background-color: $bg-comment-focused;
     }
+}
+
+.bubble-menu {
+    visibility: visible !important;
+}
+
+.bubble-menu > .bubble-menu-section-container {
+  display: flex;
+  flex-direction: column;
+  background-color: black;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  max-width: 400px;
+
+  .suggestions-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 1em;
+
+    .suggestion {
+      background-color: #229afe;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      font-size: 1.1em;
+      max-width: fit-content;
+    }
+  }
 }
 
 </style>
