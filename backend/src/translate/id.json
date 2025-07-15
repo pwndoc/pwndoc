@@ -1,0 +1,20 @@
+{
+    "Attack Vector": "Vektor Serangan",
+    "Attack Complexity": "Kompleksitas Serangan",
+    "Privileges Required": "Hak Istimewa diperlukan",
+    "User Interaction": "Interaksi Pengguna",
+    "Scope": "Cakupan",
+    "Confidentiality": "Kerahasiaan",
+    "Integrity": "Integritas",
+    "Availability": "Tersedianya",
+    "Network": "Jaringan",
+    "Adjacent Network": "Jaringan Lokal",
+    "Physical": "Fisik",
+    "Low": "Rendah",
+    "High": "Tinggi",
+    "None": "Tidak ada",
+    "Required": "Diperlukan",
+    "Unchanged": "Tidak berubah",
+    "Changed": "Berubah",
+    "No Category": "Tidak ada kategori"
+}
