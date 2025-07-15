@@ -12,7 +12,7 @@
             <q-space />
             <div class="scoreRating" :class="cvss4.baseSeverity">
                 <div v-if="cvss4.baseScore >= 0">
-                    <span class="baseMetricScore">{{cvss4.baseScore}}</span>
+                    <span class="baseMetricScore">{{cvss4.baseScore.toFixed(1)}}</span>
                     <span class="baseSeverity">({{cvss4.baseSeverity}})</span>
                 </div>
                 <span class="baseSeverity" v-else>{{$t('cvss4.infoWhenNoScore')}}</span>
@@ -1280,12 +1280,12 @@ export default {
                 PR: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
                 UI: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.passive"), value: "P", slot: 'two'}, {label: $t("cvss4.active"), value: "A", slot: 'three'}],
                 
-                VC: [{label: $t("cvss4.high"), value: "H", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.none"), value: "N", slot: 'three'}],
-                VI: [{label: $t("cvss4.high"), value: "H", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.none"), value: "N", slot: 'three'}],
-                VA: [{label: $t("cvss4.high"), value: "H", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.none"), value: "N", slot: 'three'}],
-                SC: [{label: $t("cvss4.high"), value: "H", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.none"), value: "N", slot: 'three'}],
-                SI: [{label: $t("cvss4.high"), value: "H", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.none"), value: "N", slot: 'three'}],
-                SA: [{label: $t("cvss4.high"), value: "H", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.none"), value: "N", slot: 'three'}],
+                VC: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                VI: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                VA: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                SC: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                SI: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
+                SA: [{label: $t("cvss4.none"), value: "N", slot: 'one'}, {label: $t("cvss4.low"), value: "L", slot: 'two'}, {label: $t("cvss4.high"), value: "H", slot: 'three'}],
                 
                 S: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.negligible"), value: "N", slot: 'two'}, {label: $t("cvss4.present"), value: "P", slot: 'three'}],
                 AU: [{label: $t("cvss4.notDefined"), value: "X", slot: 'one'}, {label: $t("cvss4.no"), value: "N", slot: 'two'}, {label: $t("cvss4.yes"), value: "Y", slot: 'three'}],
