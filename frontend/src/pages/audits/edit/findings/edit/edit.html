@@ -584,9 +584,15 @@ buttons
                             </template>
                         </q-field>
                     </q-card-section>
-                    <q-card-section>
-                        <cvss-calculator 
+                    <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
+                        <cvss3-calculator 
                         v-model="finding.cvssv3"
+                        readonly
+                        />
+                    </q-card-section>
+                    <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
+                        <cvss4-calculator 
+                        v-model="finding.cvssv4"
                         readonly
                         />
                     </q-card-section>
