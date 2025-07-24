@@ -709,7 +709,7 @@
                     >
                         <template v-slot:one>
                             <q-tooltip :anchor="tooltip.anchor" :self="tooltip.self" :delay="tooltip.delay" :max-width="tooltip.maxWidth">
-                                <span :style="tooltip.style">{{$t('cvss4.tooltip.MAC__Label')}}</span>
+                                <span :style="tooltip.style">{{$t('cvss4.tooltip.MAC_X_Label')}}</span>
                             </q-tooltip>
                         </template>
                         <template v-slot:two>
