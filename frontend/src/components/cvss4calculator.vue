@@ -1,5 +1,5 @@
 <template>
-    <q-card class="cvss4calculator">
+    <q-card class="cvsscalculator">
         <q-card-section class="row">
             <div class="col-md-3" style="align-self:center">
             <span>
@@ -1269,7 +1269,7 @@ import { Cvss4P0 } from 'ae-cvss-calculator'
 
 export default {
     name: 'cvss4-calculator',
-    props: ['value', 'readonly'],
+    props: ['modelValue', 'readonly'],
 
     data: function() {
         return {
@@ -1334,16 +1334,16 @@ export default {
     },
 
     created: function() {
-        this.cvss4StrToObject(this.value);
+        this.cvss4StrToObject(this.modelValue);
         try {
-            this.cvss4 = new Cvss4P0(this.value).createJsonSchema();
+            this.cvss4 = new Cvss4P0(this.modelValue).createJsonSchema();
         } catch {
             this.cvss4 = {}
         }
     },
 
     watch: {
-        value: function(val) {
+        modelValue: function(val) {
             this.cvss4StrToObject(val);
         },
         cvss4Obj: {
@@ -1500,12 +1500,12 @@ export default {
             if (this.cvss4Obj.E) vectorString += "/E:"+this.cvss4Obj.E
 
             try {
-                this.cvss4 = new Cvss4P0(this.value).createJsonSchema();
+                this.cvss4 = new Cvss4P0(this.modelValue).createJsonSchema();
             } catch {
                 this.cvss4 = {}
             }
             
-            this.$emit('input', vectorString);
+            this.$emit('update:modelValue', vectorString);
         }
     }
 }

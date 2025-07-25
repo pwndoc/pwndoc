@@ -1,6 +1,6 @@
 <template>
     <q-chip v-if="state === 'APPROVED'" :size="size" square color="green-2" text-color="green-9" class="text-bold">
-        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
             Audit is approved ({{ getApprovalCount() }}/{{ getMinReviewers() }})
             <div v-for="reviewer in approvals" :key="reviewer._id">
                 <q-separator />
@@ -11,7 +11,7 @@
         <span>Approved</span>
     </q-chip>
     <q-chip v-else-if="state === 'REVIEW'" :size="size" square color="amber-2" text-color="amber-9" class="text-bold">
-        <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
             Audit is being reviewed ({{ getApprovalCount() }}/{{ getMinReviewers() }})
             <div v-for="reviewer in approvals" :key="reviewer._id">
                 {{ reviewer.firstname }} {{ reviewer.lastname }}

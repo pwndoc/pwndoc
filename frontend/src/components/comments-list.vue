@@ -1,5 +1,4 @@
 <template>
-    <div>
     <q-item>
         <q-item-section>
             <span class="text-h6">{{$t('comments')}}</span>
@@ -49,12 +48,12 @@
                                 <q-item-section side>
                                     <div v-if="!editComment && !replyingComment && !editReply">
                                         <q-btn v-if="canUpdateComment" size="sm" dense flat color="primary" icon="undo" @click="comment.resolved = false; updateComment(comment)">
-                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
                                                 {{(comment.resolved)?$t('tooltip.reopenComment'):$t('tooltip.resolveComment')}}
                                             </q-tooltip> 
                                         </q-btn>
                                         <q-btn v-if="canDeleteComment" size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
-                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
+                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
                                         </q-btn>
                                     </div>
                                 </q-item-section>
@@ -71,15 +70,15 @@
                                 <q-item-section side v-if="!comment.resolved">
                                     <div v-if="!editComment && !replyingComment && !editReply" class="q-gutter-xs">
                                         <q-btn v-if="!comment.resolved && canUpdateComment" size="sm" dense flat color="primary" icon="edit" @click="editCommentClicked(comment)">
-                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editComment')}}</q-tooltip> 
+                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.editComment')}}</q-tooltip> 
                                         </q-btn>
                                         <q-btn v-if="canUpdateComment" size="sm" dense flat color="green" icon="done" @click="comment.resolved = true; updateComment(comment)">
-                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">
+                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
                                                 {{(comment.resolved)?$t('tooltip.reopenComment'):$t('tooltip.resolveComment')}}
                                             </q-tooltip> 
                                         </q-btn>
                                         <q-btn v-if="canDeleteComment" size="sm" dense flat color="negative" icon="delete" @click.stop="deleteComment(comment)">
-                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
+                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.deleteComment')}}</q-tooltip> 
                                         </q-btn>
                                     </div>
                                 </q-item-section>
@@ -96,7 +95,7 @@
                                         autofocus
                                         bottom-slots
                                         :placeholder="$t('startConversation')"
-                                        @keyup.ctrl.enter="updateComment(comment)"
+                                        @keyup.ctrl.enter="(event) => {comment.textTemp = event.target.value; updateComment(comment)}"
                                         @keyup.esc="cancelOrDeleteEditComment(comment)"
                                         >
                                             <template v-slot:hint>
@@ -125,7 +124,7 @@
                                         dense
                                         autofocus
                                         bottom-slots
-                                        @keyup.ctrl.enter="reply.text = reply.textTemp; updateComment(comment)"
+                                        @keyup.ctrl.enter="(event) => {reply.text = event.target.value; updateComment(comment)}"
                                         @keyup.esc="$emit('update:editReply', null)"
                                         >
                                             <template v-slot:hint>
@@ -141,10 +140,10 @@
                                 <q-item-section side top v-show="hoverReply === reply._id && !editReply && !comment.resolved && comment._id === focusedComment">
                                     <div v-if="!editComment && !replyingComment" class="q-gutter-xs">
                                         <q-btn v-if="canUpdateComment" size="sm" dense flat color="primary" icon="edit" @click="$emit('update:editReply', reply._id); reply.textTemp = reply.text">
-                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.editReply')}}</q-tooltip> 
+                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.editReply')}}</q-tooltip> 
                                         </q-btn>
                                         <q-btn v-if="canDeleteComment" size="sm" dense flat color="negative" icon="delete" @click="removeReplyFromComment(reply, comment)">
-                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" content-class="text-bold">{{$t('tooltip.deleteReply')}}</q-tooltip> 
+                                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.deleteReply')}}</q-tooltip> 
                                         </q-btn>
                                     </div>
                                 </q-item-section>
@@ -162,7 +161,7 @@
                                         hide-bottom-space
                                         :placeholder="(editComment || replyingComment || editReply)?$t('anotherCommentInProgress'):$t('reply')"
                                         :disable="!!editComment || !!editReply || (replyingComment && !comment.replyTemp)"
-                                        @keyup.ctrl.enter="updateComment(comment)"
+                                        @keyup.ctrl.enter="(event) => {comment.replyTemp = event.target.value; updateComment(comment)}"
                                         @keyup.esc="comment.replyTemp = null"
                                         >
                                             <template v-if="comment.replyTemp" v-slot:hint>
@@ -181,16 +180,16 @@
                 </q-item>
             </div>
         </q-list>
-    <!-- </q-card> -->
     </q-scroll-area>
-    </div>
 </template>
 
 <script>
 import { LocalStorage } from 'quasar';
 import { $t } from '@/boot/i18n'
 
-import UserService from '@/services/user';
+import { useUserStore } from 'src/stores/user'
+
+const userStore = useUserStore()
 
 export default {
     name: 'comments-list',
@@ -270,11 +269,11 @@ export default {
 		},
 
         canUpdateComment: function() {
-            return UserService.isAllowed('audits:comments:update')
+            return userStore.isAllowed('audits:comments:update')
         },
 
         canDeleteComment: function() {
-            return UserService.isAllowed('audits:comments:delete')
+            return userStore.isAllowed('audits:comments:delete')
         },
 
         numberOfFilteredComments: function() {

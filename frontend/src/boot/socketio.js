@@ -1,11 +1,12 @@
+import { defineBoot } from '#q-app/wrappers';
 import io from 'socket.io-client'
-import {Loading} from 'quasar'
+import { Loading } from 'quasar'
 import { $t } from '@/boot/i18n'
 
-export default ({ Vue }) => {
-    var socketUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
+export default defineBoot(({ app }) => {
+    const socketUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
 
-    var socket = io(socketUrl);
+    const socket = io(socketUrl);
 
     socket.on('disconnect', (error) => {
         Loading.show({
@@ -20,5 +21,5 @@ export default ({ Vue }) => {
         Loading.hide()
     })
 
-    Vue.prototype.$socket = socket
-}  
+    app.config.globalProperties.$socket = socket
+})

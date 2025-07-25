@@ -10,11 +10,6 @@ import Utils from '@/services/utils';
 import { $t } from '@/boot/i18n'
 
 export default {
-    props: {
-        frontEndAuditState: Number,
-        parentState: String,
-        parentApprovals: Array
-    },
     data: () => {
         return {
             finding: {},
@@ -59,6 +54,12 @@ export default {
         }
     },
 
+    inject: [
+        'frontEndAuditState',
+        'auditParent',
+        'customFields'
+    ],
+
     components: {
         Breadcrumb
     },
@@ -66,7 +67,7 @@ export default {
     mounted: function() {
         this.auditId = this.$route.params.auditId;
         this.getLanguages();
-        this.dtLanguage = this.$parent.audit.language;
+        this.dtLanguage = this.auditParent.language;
         this.getVulnerabilities();
         this.getVulnerabilityCategories()
 
@@ -163,7 +164,7 @@ export default {
                     cvssv3: vuln.cvssv3,
                     cvssv4: vuln.cvssv4,
                     category: vuln.category,
-                    customFields: Utils.filterCustomFields('finding', vuln.category, this.$parent.customFields, vuln.detail.customFields, this.$parent.audit.language)
+                    customFields: Utils.filterCustomFields('finding', vuln.category, this.customFields, vuln.detail.customFields, this.auditParent.language)
                 };
             }
 
@@ -204,7 +205,7 @@ export default {
                     cvssv3: "",
                     cvssv4: "",
                     category: category.name,
-                    customFields: Utils.filterCustomFields('finding', category.name, this.$parent.customFields, [], this.$parent.audit.language)
+                    customFields: Utils.filterCustomFields('finding', category.name, this.customFields, [], this.auditParent.language)
                 };
             }
             else if (this.findingTitle){
@@ -219,7 +220,7 @@ export default {
                     references: [],
                     cvssv3: "",
                     cvssv4: "",
-                    customFields: Utils.filterCustomFields('finding', '', this.$parent.customFields, [], this.$parent.audit.language)
+                    customFields: Utils.filterCustomFields('finding', '', this.customFields, [], this.auditParent.language)
                 };
             }
 

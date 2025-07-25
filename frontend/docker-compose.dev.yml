@@ -11,9 +11,11 @@ services:
       - ./src:/app/src
       - ./ssl:/app/ssl
       - ./public:/app/public
-      - ./.postcssrc.js:/app/.postcssrc.js
+      - ./index.html:/app/index.html
+      - ./postcss.config.js:/app/postcss.config.js
       - ./babel.config.js:/app/babel.config.js
-      - ./quasar.conf.js:/app/quasar.conf.js
+      - ./quasar.config.js:/app/quasar.config.js
+      - ./jsconfig.json:/app/jsconfig.json
       - ./package.json:/app/package.json
       - ./package-lock.json:/app/package-lock.json
     restart: always

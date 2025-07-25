@@ -16,12 +16,6 @@ import Utils from '@/services/utils';
 import { $t } from '@/boot/i18n'
 
 export default {
-    props: {
-        frontEndAuditState: Number,
-        parentState: String,
-        parentApprovals: Array
-
-    },
     data: () => {
         return {
             // Set audit ID
@@ -36,7 +30,6 @@ export default {
                 collaborators: [],
                 reviewers: [],
                 date: "",
-                date_start: "",
                 date_end: "",
                 scope: [],
                 language: "",
@@ -69,6 +62,11 @@ export default {
         }
     },
 
+    inject: [
+        'frontEndAuditState',
+        'auditParent'
+    ],
+
     components: {
         Breadcrumb,
         TextareaArray,
@@ -89,11 +87,16 @@ export default {
         document.addEventListener('keydown', this._listener, false)
     },
 
-    destroyed: function() {
+    unmounted: function() {
         document.removeEventListener('keydown', this._listener, false)
     },
 
     beforeRouteLeave (to, from , next) {
+        if (to.name === '404' || to.name === '403') {
+            next()
+            return
+        }
+        
         Utils.syncEditors(this.$refs)
         
         var displayHighlightWarning = this.displayHighlightWarning()

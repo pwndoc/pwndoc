@@ -277,7 +277,7 @@ export default {
 }
 </script>
 
-<style lang="stylus">
+<style scoped>
 .login-background {
     background: linear-gradient(45deg, $blue, transparent)
 }

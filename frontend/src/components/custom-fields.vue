@@ -19,7 +19,7 @@
                 hide-bottom-space
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
-                :value="field.text"
+                :model-value="field.text"
                 >
                     <template v-slot:control>
                         <basic-editor 
@@ -89,7 +89,7 @@
                     <template v-slot:append>
                         <q-icon name="event" class="cursor-pointer">
                         <q-popup-proxy ref="qDateProxyField" transition-show="scale" transition-hide="scale">
-                            <q-date :readonly="readonly" first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text" @input="$refs.qDateProxyField.forEach(e => e.hide())" />
+                            <q-date :readonly="readonly" first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text" @update:model-value="$refs.qDateProxyField.forEach(e => e.hide())" />
                         </q-popup-proxy>
                         </q-icon>
                     </template>
@@ -107,6 +107,7 @@
                 v-if="field.customField.fieldType === 'select'"
                 :label="field.customField.label"
                 stack-label
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 v-model="field.text"
                 :options="field.customField.options.filter(e => e.locale === locale)"
                 option-value="value"
@@ -117,7 +118,6 @@
                 options-sanitize
                 outlined 
                 :readonly="readonly"
-                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -138,6 +138,7 @@
                 v-if="field.customField.fieldType === 'select-multiple'"
                 :label="field.customField.label"
                 stack-label
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 v-model="field.text"
                 :options="field.customField.options.filter(e => e.locale === locale)"
                 option-value="value"
@@ -150,7 +151,6 @@
                 options-sanitize
                 outlined 
                 :readonly="readonly"
-                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :hint="field.customField.description"
                 hide-bottom-space
@@ -184,12 +184,12 @@
                 v-if="field.customField.fieldType === 'checkbox'"
                 :label="field.customField.label"
                 stack-label
-                :value="field.text"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
+                :model-value="field.text"
                 :hint="field.description"
                 hide-bottom-space
                 outlined
                 :readonly="readonly"
-                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -218,12 +218,12 @@
                 v-if="field.customField.fieldType === 'radio'"
                 :label="field.customField.label"
                 stack-label
-                :value="field.text"
+                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
+                :model-value="field.text"
                 :hint="field.description"
                 hide-bottom-space
                 outlined
                 :readonly="readonly"
-                :class="{'highlighted-border': fieldHighlighted == `field-${field.customField.label}` && commentMode}"
                 :bg-color="(isTextInCustomFields(field))?'diffbackground':null"
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
@@ -256,7 +256,7 @@ import BasicEditor from 'components/editor/Editor.vue';
 export default {
     name: 'custom-fields',
     props: {
-        value: Array,
+        modelValue: Array,
         customElement: {
             type: String,
             default: 'div'
@@ -317,7 +317,7 @@ export default {
          computedFields: function() {
             var result = []
             var tmpArray = []
-            this.value.forEach(e => {
+            this.modelValue.forEach(e => {
                 if (e.customField.fieldType === 'space' && e.customField.size === 12) { // full size space creates an empty component as separator
                     result.push(tmpArray)
                     result.push([])
@@ -360,7 +360,7 @@ export default {
 
         requiredFieldsEmpty: function() {
             this.validate()
-            return this.value.some(e => e.customField.fieldType !== 'space' && e.customField.required && (!e.text || e.text.length === 0))
+            return this.modelValue.some(e => e.customField.fieldType !== 'space' && e.customField.required && (!e.text || e.text.length === 0))
         },
 
         getOptionsGroup: function(options) {

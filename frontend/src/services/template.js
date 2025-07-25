@@ -1,23 +1,23 @@
-import Vue from 'vue'
+import { api } from 'boot/axios'
 
 export default {
   getTemplates: function() {
-    return Vue.prototype.$axios.get(`templates`)
+    return api.get(`templates`)
   },
 
   createTemplate: function(template) {
-    return Vue.prototype.$axios.post('templates', template)
+    return api.post('templates', template)
   },
 
   updateTemplate: function(templateId, template) {
-    return Vue.prototype.$axios.put(`templates/${templateId}`, template)
+    return api.put(`templates/${templateId}`, template)
   },
 
   deleteTemplate: function(templateId) {
-    return Vue.prototype.$axios.delete(`templates/${templateId}`)
+    return api.delete(`templates/${templateId}`)
   },
 
   downloadTemplate: function(templateId) {
-    return Vue.prototype.$axios.get(`templates/download/${templateId}`, {responseType: 'blob'})
+    return api.get(`templates/download/${templateId}`, {responseType: 'blob'})
   }
 }

@@ -1,18 +1,20 @@
 import { Notify, Dialog } from 'quasar'
 
 import SettingsService from '@/services/settings'
-import UserService from '@/services/user'
+import { useUserStore } from 'src/stores/user'
 import BackupService from '@/services/backup'
 import Utils from '@/services/utils'
 
 import { $t } from 'boot/i18n'
 import LanguageSelector from '@/components/language-selector';
 
+const userStore = useUserStore()
+
 export default {
     data: () => {
         return {
             loading: true,
-            UserService: UserService,
+            userStore: userStore,
             settings: {},
             settingsOrig : {},
             canEdit: false,
@@ -36,7 +38,7 @@ export default {
             pagination: {
                 page: 1,
                 rowsPerPage: 10,
-                sortBy: 'date2',
+                sortBy: 'date',
                 descending: true
             },
             rowsPerPageOptions: [
@@ -56,7 +58,11 @@ export default {
             },
             backupType: 'full',
             backupEncrypted: false,
-            backupStatus: 'idle',
+            backupStatus: {
+                state: 'idle',
+                operation: 'idle',
+                message: ''
+            },
             // If following object modified, update handleBackupTicked accordingly
             backupOptions: [
                 {label: $t('audits'), value: 'Audits'},
@@ -104,12 +110,12 @@ export default {
     },
 
     mounted: function() {
-        if (UserService.isAllowed('settings:read')) {
+        if (userStore.isAllowed('settings:read')) {
             this.getSettings()
             this.getBackupStatus()
             setInterval(() => {this.getBackupStatus()}, 10000); // 10 seconds
             this.getBackups()
-            this.canEdit = this.UserService.isAllowed('settings:update');
+            this.canEdit = userStore.isAllowed('settings:update');
             document.addEventListener('keydown', this._listener, false)
         }
         else {
@@ -117,7 +123,7 @@ export default {
         }
     },
 
-    destroyed: function() {
+    unmounted: function() {
         document.removeEventListener('keydown', this._listener, false)
     },
 
