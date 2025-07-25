@@ -1,5 +1,6 @@
-// import Affix from 'vue-affix';
+import { defineBoot } from '#q-app/wrappers';
+import Sticky from 'vue3-sticky-directive';
 
-// export default ({ Vue }) => {
-//     Vue.use(Affix);
-// }
+export default defineBoot(({ app }) => {
+    app.use(Sticky)
+})
