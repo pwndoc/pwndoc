@@ -127,6 +127,7 @@ export default {
             .then((data) => {
                 this.audits = data.data.datas
                 this.loading = false
+                this.$router.replace({query: {...this.$route.query, findingTitle: this.search.finding}})
             })
             .catch((err) => {
                 console.log(err)
