@@ -1,0 +1,43 @@
+services:
+
+  frontend-tests-app:
+    build: .
+    image: yeln4ts/pwndoc:frontend-tests-app
+    container_name: pwndoc-frontend-tests-app
+    environment:
+      - BACKEND_URL=https://pwndoc-backend-test:4242
+    restart: always
+    ports:
+      - ${TEST_APP_PORT}:8443
+    networks:
+      - pwndoc-net
+
+  frontend-tests:
+    build: 
+      context: .
+      dockerfile: Dockerfile.test
+    image: yeln4ts/pwndoc:frontend-tests
+    container_name: pwndoc-frontend-tests
+    volumes:
+      - ./tests/e2e:/app/e2e
+      - ./tests/playwright.config.js:/app/playwright.config.js
+      - ./tests/package.json:/app/package.json
+      - ./tests/package-lock.json:/app/package-lock.json
+    environment:
+      - BASE_URL=https://pwndoc-frontend-tests-app:8443
+    depends_on:
+      - frontend-tests-app
+    networks:
+      - pwndoc-net
+
+  frontend-tests-ui:
+    extends:
+      service: frontend-tests
+    ports:
+      - ${TEST_UI_PORT}:8082
+    entrypoint: ["npm", "run", "test:e2e:ui"]
+
+networks:
+  pwndoc-net:
+    name: pwndoc-test-network
+    driver: bridge

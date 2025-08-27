@@ -16,7 +16,7 @@ services:
     environment:
       - MONGO_DB:pwndoc
     networks:
-      - backend
+      - pwndoc-net
 
   pwndoc-backend:
     image: ghcr.io/pwndoc/pwndoc-backend:latest
@@ -32,23 +32,24 @@ services:
     depends_on:
       - mongodb
     restart: always
-    links:
-      - mongodb
     networks: 
-      - backend
+      - pwndoc-net
 
   pwndoc-frontend:
     image: ghcr.io/pwndoc/pwndoc-frontend:latest
     container_name: pwndoc-frontend
+    environment:
+      - BACKEND_URL=https://pwndoc-backend:4242
     restart: always
     ports:
       - ${APP_PORT}:8443
     networks:
-      - backend
+      - pwndoc-net
 
 volumes:
   mongo-data:
 
 networks:
-  backend:
-      driver: bridge
+  pwndoc-net:
+    name: pwndoc-prod-network
+    driver: bridge

@@ -38,3 +38,7 @@ app-settings.json
 
 # Version managers
 .tool-versions
+
+# Frontend test files
+storageState.*
+copilot-context.md

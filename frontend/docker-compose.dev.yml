@@ -22,9 +22,9 @@ services:
     ports:
       - ${APP_PORT}:8081
     networks:
-      - backend
+      - pwndoc-net
 
 networks:
-  backend:
-    name: backend_backend
-    external: true
+  pwndoc-net:
+    name: pwndoc-dev-network
+    driver: bridge

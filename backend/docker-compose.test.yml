@@ -10,13 +10,15 @@ services:
           memory: 3G # Maximum memory to allocate (Modify it depending on host ressources - leave at least 1GB free for host)
         reservations:
           memory: 1G # Minimum memory required
-    volumes:
-      - ./mongo-data-test:/data/db
+    # volumes:
+    #   - ./mongo-data-test:/data/db
     restart: always
     environment:
       - MONGO_DB:pwndoc
+    networks:
+      - pwndoc-net
 
-  backend-test:
+  backend-test-api:
     image: yeln4ts/pwndoc:backend-test
     build: 
       context: .
@@ -31,6 +33,18 @@ services:
       - ./jest.config.js:/app/jest.config.js
     depends_on:
       - mongodb-test
+    networks:
+      - pwndoc-net
 
-volumes:
-  mongo-data-test:
+  backend-test-server:
+    extends:
+      service: backend-test-api
+    entrypoint: ["npm", "run", "test:server"]
+
+# volumes:
+#   mongo-data-test:
+
+networks:
+  pwndoc-net:
+    name: pwndoc-test-network
+    driver: bridge

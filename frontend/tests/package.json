@@ -1,0 +1,11 @@
+{
+    "name": "playwright-tests",
+    "private": true,
+    "scripts": {
+        "test:e2e:ui": "npx playwright test --ui-host=0.0.0.0 --ui-port=8082",
+        "test:e2e:ci": "npx playwright test"
+    },
+    "devDependencies": {
+      "@playwright/test": "^1.54.0"
+    }
+  }

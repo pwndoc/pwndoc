@@ -19,7 +19,7 @@ services:
     environment:
       - MONGO_DB:pwndoc
     networks:
-      - backend
+      - pwndoc-net
 
   pwndoc-backend-dev:
     build: 
@@ -38,14 +38,13 @@ services:
     depends_on:
       - mongodb
     restart: always
-    links:
-      - mongodb
     networks: 
-      - backend
+      - pwndoc-net
 
 volumes:
   mongo-data-dev:
 
 networks:
-  backend:
+  pwndoc-net:
+    name: pwndoc-dev-network
     driver: bridge

@@ -1,0 +1,346 @@
+#!/bin/bash
+
+# Default values
+ENV="prod"
+ONLY_BACKEND=false
+ONLY_FRONTEND=false
+TEST_UI=false
+
+
+function build_prod {
+    docker compose down
+    docker compose build
+}
+
+function run_prod {
+    docker compose down
+    docker compose up -d
+}
+
+function down_prod {
+    docker compose down
+}
+
+function restart_prod {
+    docker compose restart
+}
+
+function stop_prod {
+    docker compose stop
+}
+
+function start_prod {
+    docker compose start
+}
+
+function build_backend_dev {
+    docker compose -f backend/docker-compose.dev.yml down
+    docker compose -f backend/docker-compose.dev.yml build
+}
+
+function build_frontend_dev {
+    docker compose -f frontend/docker-compose.dev.yml down
+    docker compose -f frontend/docker-compose.dev.yml build
+}
+
+function run_backend_dev {
+    docker compose -f backend/docker-compose.dev.yml down
+    docker compose -f backend/docker-compose.dev.yml up -d
+}
+
+function run_frontend_dev {
+    docker compose -f frontend/docker-compose.dev.yml down
+    docker compose -f frontend/docker-compose.dev.yml up -d
+}
+
+function down_backend_dev {
+    docker compose -f backend/docker-compose.dev.yml down
+}
+
+function down_frontend_dev {
+    docker compose -f frontend/docker-compose.dev.yml down
+}
+
+function restart_backend_dev {
+    docker compose -f backend/docker-compose.dev.yml restart
+}
+
+function restart_frontend_dev {
+    docker compose -f frontend/docker-compose.dev.yml restart
+}
+
+function stop_backend_dev {
+    docker compose -f backend/docker-compose.dev.yml stop
+}
+
+function stop_frontend_dev {
+    docker compose -f frontend/docker-compose.dev.yml stop
+}
+
+function start_backend_dev {
+    docker compose -f backend/docker-compose.dev.yml start
+}
+
+function start_frontend_dev {
+    docker compose -f frontend/docker-compose.dev.yml start
+}
+
+function test_backend {  
+    docker compose -f backend/docker-compose.test.yml build backend-test-api
+    docker compose -f backend/docker-compose.test.yml run --rm backend-test-api
+    rc=$?
+    docker compose -f backend/docker-compose.test.yml down
+    return $rc
+}
+
+function test_backend_debug {
+    docker compose -f backend/docker-compose.test.yml build
+    docker compose -f backend/docker-compose.test.yml up -d backend-test-server
+}
+
+function test_frontend {
+    docker compose -f frontend/docker-compose.test.yml down
+    docker compose -f backend/docker-compose.test.yml down
+
+    docker compose -f backend/docker-compose.test.yml build backend-test-server
+    docker compose -f frontend/docker-compose.test.yml build frontend-tests
+    
+    docker compose -f backend/docker-compose.test.yml up -d backend-test-server
+    if [ "$TEST_UI" = true ];then
+        docker compose -f frontend/docker-compose.test.yml up frontend-tests-ui
+    else
+        docker compose -f frontend/docker-compose.test.yml run --rm frontend-tests
+    fi
+    
+    rc=$?
+    docker compose -f frontend/docker-compose.test.yml down
+    docker compose -f backend/docker-compose.test.yml down
+    return $rc
+}
+
+function build {
+    if [ "$ENV" = "prod" ]; then
+        build_prod
+    elif [ "$ENV" = "dev" ]; then
+        if [ "$ONLY_BACKEND" = true ]; then
+            build_backend_dev
+        elif [ "$ONLY_FRONTEND" = true ]; then
+            build_frontend_dev
+        else
+            build_backend_dev
+            build_frontend_dev
+        fi
+    fi
+}
+
+function up {
+    if [ "$ENV" = "prod" ]; then
+        run_prod
+    elif [ "$ENV" = "dev" ]; then
+        if [ "$ONLY_BACKEND" = true ]; then
+            run_backend_dev
+        elif [ "$ONLY_FRONTEND" = true ]; then
+            run_frontend_dev
+        else
+            run_backend_dev
+            run_frontend_dev
+        fi
+    fi
+}
+
+function down {
+    if [ "$ENV" = "prod" ]; then
+        down_prod
+    elif [ "$ENV" = "dev" ]; then
+        if [ "$ONLY_BACKEND" = true ]; then
+            down_backend_dev
+        elif [ "$ONLY_FRONTEND" = true ]; then
+            down_frontend_dev
+        else
+            down_backend_dev
+            down_frontend_dev
+        fi
+    fi
+}
+
+function restart {
+    if [ "$ENV" = "prod" ]; then
+        restart_prod
+    elif [ "$ENV" = "dev" ]; then
+        if [ "$ONLY_BACKEND" = true ]; then
+            restart_backend_dev
+        elif [ "$ONLY_FRONTEND" = true ]; then
+            restart_frontend_dev
+        else
+            restart_backend_dev
+            restart_frontend_dev
+        fi
+    fi
+}
+
+function stop {
+    if [ "$ENV" = "prod" ]; then
+        stop_prod
+    elif [ "$ENV" = "dev" ]; then
+        if [ "$ONLY_BACKEND" = true ]; then
+            stop_backend_dev
+        elif [ "$ONLY_FRONTEND" = true ]; then
+            stop_frontend_dev
+        else
+            stop_backend_dev
+            stop_frontend_dev
+        fi
+    fi
+}
+
+function start {
+    if [ "$ENV" = "prod" ]; then
+        start_prod
+    elif [ "$ENV" = "dev" ]; then
+        if [ "$ONLY_BACKEND" = true ]; then
+            start_backend_dev
+        elif [ "$ONLY_FRONTEND" = true ]; then
+            start_frontend_dev
+        else
+            start_backend_dev
+            start_frontend_dev
+        fi
+    fi
+}
+
+function run_tests {
+    if [ "$ONLY_BACKEND" = true ]; then
+        test_backend
+    elif [ "$ONLY_FRONTEND" = true ]; then
+        test_frontend
+    else
+        test_backend
+        if [ $rc_backend -ne 0 ];then
+            exit $rc_backend
+        fi
+        test_frontend
+        rc_frontend=$?
+        exit $rc_frontend
+    fi
+}
+
+### COMMAND LINE CONFIG
+
+print_help() {
+    cat <<EOF
+Usage: ./pwndoc-cli <command> [options]
+
+Commands:
+  up                          Build, (re)create, and start containers
+  build                       Build containers
+  stop                        Stop containers
+  down                        Bring down and remove containers
+  restart                     Restart containers
+  test                        Run tests
+  help                        Show this help message
+
+Environment options (applies to all commands except 'test', default: --prod):
+  --prod                      Use production environment
+  --dev                       Use development environment
+
+Test-specific options (only with command 'test'):
+  --ui                        Start playwright in UI mode (frontend test only)
+
+Other options:
+  --backend-only              Operate only on backend
+  --frontend-only             Operate only on frontend
+
+Examples:
+  ./pwndoc-cli up
+  ./pwndoc-cli up --dev
+  ./pwndoc-cli restart --dev --backend-only
+  ./pwndoc-cli test --only-backend
+  ./pwndoc-cli test --only-frontend --ui
+EOF
+}
+
+# Parse command
+COMMAND=$1
+shift  # shift removes the first argument so $@ contains flags
+
+# Help alias
+if [[ "$COMMAND" == "help" || "$COMMAND" == "--help" || "$COMMAND" == "-h" ]]; then
+    print_help
+    exit 0
+fi
+
+# Parse flags
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --dev)
+            if [[ "$COMMAND" = "test" ]]; then
+                print_help
+                exit 1
+            fi
+            ENV="dev"
+            ;;
+        --backend-only)
+            ONLY_BACKEND=true
+            ONLY_FRONTEND=false
+            ;;
+        --frontend-only)
+            ONLY_FRONTEND=true
+            ONLY_BACKEND=false
+            ;;
+        --ui)
+            if [[ "$COMMAND" != "test" ]]; then
+                print_help
+                exit 1
+            fi
+            TEST_UI=true
+            ONLY_FRONTEND=true
+            ;;
+        *)
+            print_help
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+case "$COMMAND" in
+    build)
+        echo "Build $ENV environment..."
+        build
+        ;;
+    up)
+        echo "Run $ENV environment..."
+        up
+        ;;
+    down)
+        echo "Down $ENV environment..."
+        down
+        ;;
+    restart)
+        echo "Restart $ENV environment..."
+        restart
+        ;;
+    stop)
+        echo "Stop $ENV environment..."
+        stop
+        ;;
+    start)
+        echo "Start $ENV environment..."
+        start
+        ;;
+    test)
+        echo "Running tests..."
+        run_tests
+        ;;
+    *)
+        print_help
+        exit 1
+        ;;
+esac
+
+# Build Playwright command
+# if [[ "$MODE" == "ui" ]]; then
+#   CMD="npx playwright test --ui-host=0.0.0.0 --ui-port=8082"
+# else
+#   CMD="npx playwright test"
+# fi

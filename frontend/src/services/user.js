@@ -54,7 +54,8 @@ export default {
             api.post(`users/init`, params)
             .then((response) => {
                 var token = response.data.datas.token;
-                this.user = jwtDecode(token);
+                console.log('Init User Token: ', token)
+                userStore.setUser(jwtDecode(token));
                 resolve();
             })
             .catch((error) => {

@@ -8,5 +8,4 @@ RUN npm install
 COPY . .
 ENV NODE_ENV test
 ENV NODE_ICU_DATA=node_modules/full-icu
-RUN npm install
-ENTRYPOINT ["npm", "run", "test"]
+ENTRYPOINT ["npm", "run", "test:api"]

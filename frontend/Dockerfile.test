@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/playwright:v1.54.0-noble
+
+RUN mkdir -p /app
+WORKDIR /app
+COPY tests/package*.json ./
+RUN npm install
+ENTRYPOINT ["npm", "run", "test:e2e:ci"]
