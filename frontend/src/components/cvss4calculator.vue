@@ -1500,7 +1500,7 @@ export default {
             if (this.cvss4Obj.E) vectorString += "/E:"+this.cvss4Obj.E
 
             try {
-                this.cvss4 = new Cvss4P0(this.modelValue).createJsonSchema();
+                this.cvss4 = new Cvss4P0(vectorString).createJsonSchema();
             } catch {
                 this.cvss4 = {}
             }

@@ -534,9 +534,9 @@ export default {
 			let cvss = null
 
 			if (this.$settings.report.public.scoringMethods.CVSS4 && finding.cvssv4) {
-				cvss = new Cvss4P0(finding.cvssv4).createJsonSchema(true)
+				cvss = new Cvss4P0(finding.cvssv4).createJsonSchema()
 			} else if (this.$settings.report.public.scoringMethods.CVSS3 && finding.cvssv3) {
-				cvss = new Cvss3P1(finding.cvssv3).createJsonSchema(true)
+				cvss = new Cvss3P1(finding.cvssv3).createJsonSchema()
 			}
 
 			if (cvss && cvss.baseScore >= 0) {

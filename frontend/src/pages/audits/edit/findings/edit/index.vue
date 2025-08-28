@@ -8,7 +8,6 @@
         :path-name="(auditParent.type === 'retest') ? $t('originalAudit') : (auditParent.type === 'default') ? $t('multi') : ''"
     >
         <template v-slot:buttons>
-            <!-- <template v-if="auditParent.type === 'default'"> -->
                 <q-btn
                 color="primary" 
                 :flat="!commentMode" 
@@ -23,7 +22,6 @@
                     </q-tooltip> 
                 </q-btn>
                 <q-separator vertical inset class="q-mr-sm" />
-            <!-- </template> -->
             <q-btn
             v-if="auditParent.type === 'default'"
             color="orange"
@@ -286,30 +284,30 @@
                         </q-card>
                         <q-card 
                         id="cvssField"
-                        class="q-mt-md bg-grey-1"
+                        class="q-mt-md"
                         :class="{'highlighted-border': fieldHighlighted == 'cvssField' && commentMode}"
                         >
                             <div class="col-12">
                                 <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
-                                <cvss3-calculator 
-                                v-model="finding.cvssv3"
-                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                                />
-                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
-                                    <q-icon name="add_comment" size="xs" />
-                                </q-badge>
-                            </q-card-section>
-                        </div>
-                        <div class="col-12">
-                            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
-                                <cvss4-calculator 
-                                v-model="finding.cvssv4"
-                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
-                                />
-                                <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
-                                    <q-icon name="add_comment" size="xs" />
-                                </q-badge>
-                            </q-card-section>
+                                    <cvss3-calculator 
+                                    v-model="finding.cvssv3"
+                                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                    />
+                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
+                                        <q-icon name="add_comment" size="xs" />
+                                    </q-badge>
+                                </q-card-section>
+                            </div>
+                            <div class="col-12">
+                                <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
+                                    <cvss4-calculator 
+                                    v-model="finding.cvssv4"
+                                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                    />
+                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
+                                        <q-icon name="add_comment" size="xs" />
+                                    </q-badge>
+                                </q-card-section>
                             </div>
                         </q-card>
                         <q-card class="q-mt-md">

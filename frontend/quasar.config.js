@@ -13,7 +13,8 @@ export default defineConfig((ctx) => {
       'darkmode',
       'lodash',
       'socketio',
-      'settings'
+      'settings',
+      'router-instance'
     ],
     css: [
       'app.scss'

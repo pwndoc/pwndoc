@@ -1,6 +1,7 @@
 import { useUserStore } from 'src/stores/user'
 import jwtDecode from 'jwt-decode';
 import { api } from 'boot/axios'
+import { routerInstance } from 'boot/router-instance';
 
 const userStore = useUserStore()
 
@@ -41,7 +42,7 @@ export default {
         api.delete('users/refreshtoken')
         .then(() => {
             userStore.clearUser()
-            Router.push('/login');
+            routerInstance.push('/login');
         })
         .catch(err => {
             console.log(err)

@@ -1050,7 +1050,7 @@ export default {
             if (this.cvssObj.MA) vectorString += "/MA:"+this.cvssObj.MA
 
             try {
-                this.cvss = new Cvss3P1(this.modelValue).createJsonSchema();
+                this.cvss = new Cvss3P1(vectorString).createJsonSchema();
             } catch {
                 this.cvss = {}
             }
