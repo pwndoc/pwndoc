@@ -35,7 +35,11 @@ mongoose.Promise = global.Promise;
 // Trim all Strings
 mongoose.Schema.Types.String.set('trim', true);
 
-mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI, {});
+} else {
+  mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
+}
 
 // Models import
 require('./models/user');

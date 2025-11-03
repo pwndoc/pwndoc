@@ -1,7 +1,11 @@
 const request = require("supertest");
 
 var mongoose = require('mongoose');
-mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI, {});
+} else {
+  mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
+}
 
 /* Clean the DB */
 mongoose.connection.dropDatabase();
