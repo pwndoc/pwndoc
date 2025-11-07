@@ -216,6 +216,30 @@
         </q-toolbar>
     </div>
     <q-separator />
+    <bubble-menu
+        class="bubble-menu"
+        v-if="editor"
+        :editor="editor"
+        :tippy-options="{ placement: 'bottom', animation: 'fade' }"
+        :should-show="({ editor }) => shouldShowSpellcheck({ editor })"
+        >
+        <section class="bubble-menu-section-container">
+            <section class="message-section">
+                {{ matchMessage }}
+            </section>
+            <section class="suggestions-section">
+                <article
+                v-for="(replacement, i) in replacements"
+                @click="() => acceptSuggestion(replacement)"
+                :key="i + replacement.value"
+                class="suggestion"
+                >
+                {{ replacement.value }}
+                </article>
+                <button class="ignore-suggestion-button float-right" @click="ignoreSuggestion">{{$t('tooltip.addToDict')}}</button>
+            </section>
+        </section>
+    </bubble-menu>
     <editor-content v-if="typeof diff === 'undefined' || !toggleDiff" class="editor__content q-pa-sm" :editor="editor"/>
     <div v-else class="editor__content q-pa-sm">
         <div class="ProseMirror" v-html="diffContent"></div>
@@ -225,7 +249,7 @@
 
 <script>
 // Import the editor
-import { Editor, EditorContent, VueNodeViewRenderer } from '@tiptap/vue-3'
+import { Editor, EditorContent, BubbleMenu, VueNodeViewRenderer } from '@tiptap/vue-3'
 
 // Import Extensions
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
@@ -239,6 +263,9 @@ import CustomHighlight from './editor-highlight'
 import TrailingNode from './editor-trailing-node'
 import CodeBlockComponent from './editor-code-block'
 import CommentExtension from './editor-comment-extension'
+
+import { ref, computed } from 'vue'
+import { LanguageTool } from './editor-spellcheck'
 
 const Diff = require('diff')
 
@@ -295,7 +322,8 @@ export default {
         }
     },
     components: {
-        EditorContent
+        EditorContent,
+        BubbleMenu
     },
     data() {
         return {
@@ -333,6 +361,12 @@ export default {
                         excludes: "bold italic strike underline"
                     }),
                     CommentExtension,
+
+                    LanguageTool.configure({ 
+                        language: 'auto', // it can detect language automatically or you can write your own language like 'en-US'
+                        apiUrl: '/api/spellcheck', // For testing purposes, you can use [Public API](https://dev.languagetool.org/public-http-api), but keep an eye on the rules that they've written there
+                        automaticMode: true, // if true, it will start proofreading immediately otherwise only when you execute `editor.value.commands.proofread()` command of the extension.
+                    })
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
                     if (this.noSync)
@@ -423,6 +457,15 @@ export default {
                 return {top: 50, bottom: 40}
             }
         },
+
+        matchMessage() {
+            return this.editor.storage.languagetool.match?.message || 'No Message';
+        },
+
+        replacements() {
+            return this.editor.storage.languagetool.match?.replacements || [];
+        },
+
         formatIcon: function () {
             if (this.editor.isActive('paragraph')) 
                 return 'fa fa-paragraph'
@@ -561,6 +604,29 @@ export default {
                 else
                     this.editor.chain().setNodeSelection(startPos).run()
             }
+        },
+
+        shouldShowSpellcheck({ editor }) {
+            const match = editor.storage.languagetool.match
+            const matchRange = editor.storage.languagetool.matchRange
+
+            const { from, to } = editor.state.selection
+
+            return !!match && !!matchRange && matchRange.from <= from && to <= matchRange.to
+        },
+
+        acceptSuggestion(sug) {
+            const from = this.editor.storage.languagetool.matchRange.from
+            this.editor.commands.insertContentAt(this.editor.storage.languagetool.matchRange, sug.value)
+            this.editor.commands.resetLanguageToolMatch()
+            this.editor.commands.setTextSelection(from)
+        },
+
+        ignoreSuggestion() {
+            const from = this.editor.storage.languagetool.matchRange.from
+            this.editor.commands.ignoreLanguageToolSuggestion()
+            this.editor.commands.resetLanguageToolMatch()
+            this.editor.commands.setTextSelection(from)
         }
     }
 }
@@ -603,6 +669,47 @@ export default {
     .ProseMirror {
         min-height: 200px;
         cursor: auto;
+
+        .lt {
+            text-decoration-line: underline;
+            text-decoration-style: wavy;
+            text-decoration-color: #e86a69;
+
+            transition: background 0.25s ease-in-out;
+
+            &:hover {
+                background: rgba( #e86a69, $alpha: 0.2);
+            }
+
+            &-style {
+                text-decoration-color: #9d8eff;
+
+                &:hover {
+                    background: rgba( #9d8eff, $alpha: 0.2) !important;
+                }
+            }
+
+            &-typographical,
+            &-grammar {
+                text-decoration-color: #eeb55c;
+
+                &:hover {
+                    background: rgba( #eeb55c, $alpha: 0.2) !important;
+                }
+            }
+
+            &-misspelling {
+                text-decoration-color: #e86a69;
+
+                &:hover {
+                    background: rgba( #e86a69, $alpha: 0.2) !important;
+                }
+            }
+        }
+
+        &-focused {
+            outline: none !important;
+        }
     }
 
     h1 {
@@ -852,6 +959,42 @@ pre .diffadd {
     .editor-caption {
         background-color: $bg-comment-focused;
     }
+}
+
+.bubble-menu {
+    visibility: visible !important;
+}
+
+.bubble-menu > .bubble-menu-section-container {
+  display: flex;
+  flex-direction: column;
+  background-color: black;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  max-width: 400px;
+
+  .suggestions-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 1em;
+
+    .suggestion {
+      background-color: #229afe;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      font-size: 1.1em;
+      max-width: fit-content;
+    }
+  }
 }
 
 </style>

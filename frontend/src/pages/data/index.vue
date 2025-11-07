@@ -30,6 +30,12 @@
                 </q-item-section>
                 <q-item-section>{{$t('templates')}}</q-item-section>
             </q-item>
+            <q-item to='/data/spellcheck'>
+                <q-item-section avatar>
+                    <q-icon name="fa fa-book" />
+                </q-item-section>
+                <q-item-section>{{$t('dictionary')}}</q-item-section>
+            </q-item>
 
             <q-separator spaced />
 

@@ -341,6 +341,18 @@
                             </q-item-section>
                         </q-item>
                     </q-card-section>
+                    <q-separator />
+                    <q-card-section>
+                        <div class="text-bold">{{$t('enableSpellcheck')}}</div>
+                        <br/>
+                        <div class="text-grey-8" v-html="$t('enableSpellcheckDescription')"></div>
+                        <br/>
+                        <q-item>
+                            <q-item-section class="col-md-2">
+                                <q-toggle :label="$t('btn.enable')" v-model="settings.report.public.enableSpellCheck" />
+                            </q-item-section>
+                        </q-item>
+                    </q-card-section>
                 </div>
             </q-card>
 

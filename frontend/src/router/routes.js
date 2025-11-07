@@ -18,7 +18,8 @@ export default [
       {path: 'collaborators', name: 'collaborators', component: () => import('pages/data/collaborators')},
       {path: 'companies', component: () => import('pages/data/companies')},
       {path: 'clients', component: () => import('pages/data/clients')},
-      {path: 'templates', component: () => import('pages/data/templates')},   
+      {path: 'templates', component: () => import('pages/data/templates')},
+      {path: 'spellcheck', component: () => import('pages/data/spellcheck')},
       {path: 'dump', component: () => import('pages/data/dump')},
       {path: 'custom', component: () => import('pages/data/custom')}
     ]},

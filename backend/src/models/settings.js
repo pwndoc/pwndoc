@@ -43,7 +43,8 @@ const SettingSchema = new Schema({
             scoringMethods: {
                 CVSS3: { type: Boolean, default: true },
                 CVSS4: { type: Boolean, default: false }
-            }
+            },
+            enableSpellCheck: {type: Boolean, default: false},
         },
         private: {
             imageBorder: { type: Boolean, default: false },

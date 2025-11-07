@@ -69,7 +69,8 @@ export default {
         reopenComment: 'Reopen Thread',
         deleteComment: 'Delete Comment',
         editReply: 'Edit Reply',
-        deleteReply: 'Delete Reply'
+        deleteReply: 'Delete Reply',
+        addToDict: 'Add to dictionary'
     },
     msg: {
         auditReviewUpdateOk: 'Audit review status updated successfully',
@@ -607,6 +608,7 @@ export default {
     reviewers: 'Reviewers',
     collaborator: 'Collaborator',
     collaborators: 'Collaborators',
+    dictionary: 'Spellcheck Dictionary',
     startDate: 'Start Date',
     endDate: 'End Date',
     reportingDate: 'Reporting Date',
@@ -743,6 +745,8 @@ export default {
     highlightWarning: 'Highlight Warning',
     highlightWarningDescription: `Add a warning message when editing a report and specified color highlighted text is still present.<br />
     Useful for generic text that should be replaced by reporter.`,
+    enableSpellcheck: 'Enable Spell Checking ',
+    enableSpellcheckDescription: 'Enable spell checking in the report redaction and findings database editor. Spell checking is done using the languagetool project and requires a build of PwnDoc that starts the associated container.',
     defaultFieldsRequired: 'Default Fields',
     defaultFieldsRequiredDescription: 'Manage requirement of default Fields in Audits',
     scoringTypes: 'Vulnerability Scoring Systems',

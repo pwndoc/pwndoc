@@ -1,0 +1,70 @@
+version: '3'
+services:
+
+  mongodb-dev:
+    image: mongo:4.2.15
+    container_name: mongo-pwndoc-dev
+    volumes:
+      - mongo-data-dev:/data/db
+    ports:
+      - 127.0.0.1:27017:27017
+    restart: always
+    environment:
+      - MONGO_DB:pwndoc
+
+  pwndoc-backend-dev:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile.dev
+    image: yeln4ts/pwndoc:backend-dev
+    container_name: pwndoc-backend-dev
+    environment:
+      - DB_SERVER=mongo-pwndoc-dev
+      - DB_NAME=pwndoc
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/ssl:/app/ssl
+      - ./backend/report-templates:/app/report-templates
+      - ./backend/backup:/app/backup
+    depends_on:
+      - mongodb-dev
+    restart: always
+    links:
+      - mongodb-dev
+
+  pwndoc-frontend-dev:
+    build: 
+      context: ./frontend/
+      dockerfile: Dockerfile.dev
+    image: yeln4ts/pwndoc:frontend-dev
+    container_name: pwndoc-frontend-dev
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/ssl:/app/ssl
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      - ./frontend/babel.config.js:/app/babel.config.js
+      - ./frontend/quasar.config.js:/app/quasar.config.js
+      - ./frontend/jsconfig.json:/app/jsconfig.json
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/package-lock.json:/app/package-lock.json
+    depends_on:
+      - pwndoc-backend-dev
+    restart: always
+    ports:
+      - 8081:8081
+    links:
+      - pwndoc-backend-dev
+
+  pwndoc-languagetools-dev:
+    image: erikvl87/languagetool
+    container_name: pwndoc-languagetools
+    restart: always
+    ports:
+      - 8010:8010
+    links:
+      - pwndoc-backend-dev
+
+volumes:
+  mongo-data-dev:
