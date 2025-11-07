@@ -1,10 +1,17 @@
 const request = require("supertest");
+const config = require("../src/config/config.json");
+const env = process.env.NODE_ENV || 'dev';
 
 var mongoose = require('mongoose');
+
+let connectionOptions = {};
+if (config && config[env] && config[env].database && config[env].database.connectionOptions) {
+  connectionOptions = config[env].database.connectionOptions;
+}
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI, {});
+  mongoose.connect(process.env.MONGODB_URI, connectionOptions);
 } else {
-  mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
+  mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, connectionOptions);
 }
 
 /* Clean the DB */
