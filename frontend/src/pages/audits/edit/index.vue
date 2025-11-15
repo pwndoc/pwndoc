@@ -106,6 +106,20 @@
 						<div v-for="(user,idx) in networkUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
 					</div>
 
+					<q-item
+					v-if="!currentAuditType || !currentAuditType.hidden.includes('observations')"
+					:to="'/audits/'+auditId+'/observations'"
+					>
+						<q-item-section avatar>
+							<q-icon name="fa fa-clipboard-list"></q-icon>
+						</q-item-section>
+						<q-item-section>{{$t('observations')}}</q-item-section>
+					</q-item>
+
+					<div class="row">
+						<div v-for="(user,idx) in observationUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
+					</div>
+
 					<div v-if="!currentAuditType || !currentAuditType.hidden.includes('findings')">
 						<q-separator class="q-my-sm" />
 						<q-item>
@@ -484,6 +498,7 @@ export default {
 	computed: {
 		generalUsers: function() {return this.users.filter(user => user.menu === 'general')},
 		networkUsers: function() {return this.users.filter(user => user.menu === 'network')},
+		observationUsers: function() {return this.users.filter(user => user.menu === 'observations' || user.menu === 'editObservation')},
 		findingUsers: function() {return this.users.filter(user => user.menu === 'editFinding')},
 		sectionUsers: function() {return this.users.filter(user => user.menu === 'editSection')},
 
@@ -560,6 +575,10 @@ export default {
 				return {menu: 'general', room: this.auditId}
 			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'network')
 				return {menu: 'network', room: this.auditId}
+			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'observations')
+				return {menu: 'observations', room: this.auditId}
+			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editObservation' && this.$router.currentRoute.params.observationId)
+				return {menu: 'editObservation', observation: this.$router.currentRoute.params.observationId, room: this.auditId}
 			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addFindings')
 				return {menu: 'addFindings', room: this.auditId}
 			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editFinding' && this.$router.currentRoute.params.findingId)
@@ -568,7 +587,7 @@ export default {
 				return {menu: 'editSection', section: this.$router.currentRoute.params.sectionId, room: this.auditId}
 			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addAudits')
 				return {menu: 'addAudits', room: this.auditId}
-			
+
 			return {menu: 'undefined', room: this.auditId}
 		},
 

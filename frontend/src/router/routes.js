@@ -10,7 +10,10 @@ export default [
         {path: 'findings/add', name: 'addFindings', component: () => import('pages/audits/edit/findings/add')},
         {path: 'findings/:findingId', name: 'editFinding', component: () => import('pages/audits/edit/findings/edit')},
         {path: 'sections/:sectionId', name: 'editSection', component: () => import('pages/audits/edit/sections')},
-        {path: 'audits/add', name: 'addAudits', component: () => import('pages/audits/edit/add-audits')}
+        {path: 'audits/add', name: 'addAudits', component: () => import('pages/audits/edit/add-audits')},
+        // POC: Observation routes
+        {path: 'observations', name: 'observations', component: () => import('pages/audits/edit/observations')},
+        {path: 'observations/:observationId', name: 'editObservation', component: () => import('pages/audits/edit/observations/edit')}
       ]}
     ]},
     {path: 'data', component: () => import('pages/data'), meta: {breadcrumb: 'Datas'}, children: [
@@ -18,7 +21,7 @@ export default [
       {path: 'collaborators', name: 'collaborators', component: () => import('pages/data/collaborators')},
       {path: 'companies', component: () => import('pages/data/companies')},
       {path: 'clients', component: () => import('pages/data/clients')},
-      {path: 'templates', component: () => import('pages/data/templates')},   
+      {path: 'templates', component: () => import('pages/data/templates')},
       {path: 'dump', component: () => import('pages/data/dump')},
       {path: 'custom', component: () => import('pages/data/custom')}
     ]},
