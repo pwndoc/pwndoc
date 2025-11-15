@@ -54,15 +54,16 @@ export default defineConfig((ctx) => {
       proxy: [
         {
           context: ["/api"],
-          target: "https://pwndoc-backend-dev:4242",
+          target: "http://localhost:5252",
           changeOrigin: true,
           secure: false
         },
         {
           context: ["/socket.io"],
-          target: "https://pwndoc-backend-dev:4242",
+          target: "http://localhost:5252",
           changeOrigin: true,
-          secure: false
+          secure: false,
+          ws: true
         }
       ]
       //open: true // opens browser window automatically
