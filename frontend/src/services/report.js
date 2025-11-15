@@ -1,9 +1,9 @@
-import { http } from 'src/boot/axios'
+import { api } from 'src/boot/axios'
 
 export default {
     // Generate and download DOCX report for audit
     generateReport: (auditId) => {
-        return http.get(`/audits/${auditId}/generate`, {
+        return api.get(`/audits/${auditId}/generate`, {
             responseType: 'blob' // Important for binary file download
         })
     },
@@ -11,7 +11,7 @@ export default {
     // Helper function to trigger browser download
     downloadReport: async (auditId, filename) => {
         try {
-            const response = await http.get(`/audits/${auditId}/generate`, {
+            const response = await api.get(`/audits/${auditId}/generate`, {
                 responseType: 'blob'
             })
 
