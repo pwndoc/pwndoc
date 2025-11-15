@@ -692,6 +692,76 @@ async function prepAuditData(data, settings) {
         .map((value,key) => {return {categoryName:key, categoryFindings:value}})
         .value()
 
+    // POC: Process observations if they exist
+    result.observations = []
+    if (data.observations && Array.isArray(data.observations)) {
+        for (var observation of data.observations) {
+            var tmpObs = {
+                title: observation.title || "",
+                observationType: observation.observationType?.name || "",
+                description: await splitHTMLParagraphs(observation.description),
+                evidence: await splitHTMLParagraphs(observation.evidence),
+                impact: await splitHTMLParagraphs(observation.impact),
+                recommendation: await splitHTMLParagraphs(observation.recommendation),
+                effortLevel: observation.effortLevel || "",
+                priority: observation.priority || "",
+                references: observation.references || [],
+                poc: await splitHTMLParagraphs(observation.poc),
+                affected: observation.scope || "",
+                status: observation.status || "",
+                category: observation.category || $t("No Category"),
+                identifier: "OBS-" + utils.lPad(observation.identifier),
+                verificationStatus: observation.verificationStatus || ""
+            }
+
+            // Handle flexible risk scoring
+            if (observation.riskScore) {
+                var riskScore = observation.riskScore;
+                tmpObs.riskScore = {
+                    method: riskScore.method || "custom",
+                    score: riskScore.score || 0,
+                    severity: riskScore.severity || "Medium",
+                    vector: riskScore.vector || ""
+                }
+
+                // Assign cell color based on severity
+                if (riskScore.severity === "Low") tmpObs.riskScore.cellColor = cellLowColor
+                else if (riskScore.severity === "Medium") tmpObs.riskScore.cellColor = cellMediumColor
+                else if (riskScore.severity === "High") tmpObs.riskScore.cellColor = cellHighColor
+                else if (riskScore.severity === "Critical") tmpObs.riskScore.cellColor = cellCriticalColor
+                else tmpObs.riskScore.cellColor = cellNoneColor
+
+                // For CVSS-based scoring, parse vector
+                if (riskScore.method === 'cvss3' && riskScore.vector) {
+                    tmpObs.cvssObj = cvssStrToObject(riskScore.vector)
+                } else if (riskScore.method === 'cvss4' && riskScore.vector) {
+                    tmpObs.cvss4Obj = cvss4StrToObject(riskScore.vector)
+                }
+            }
+
+            // Handle custom fields
+            if (observation.customFields) {
+                for (var field of observation.customFields) {
+                    var fieldType = field.customField.fieldType
+                    var label = field.customField.label
+                    if (fieldType === 'text')
+                        tmpObs[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = await splitHTMLParagraphs(field.text)
+                    else if (fieldType !== 'space')
+                        tmpObs[_.deburr(label.toLowerCase()).replace(/\s/g, '').replace(/[^\w]/g, '_')] = field.text
+                }
+            }
+
+            result.observations.push(tmpObs)
+        }
+
+        // Group observations by category (similar to findings)
+        result.observationsCategories = _
+            .chain(result.observations)
+            .groupBy("category")
+            .map((value,key) => {return {categoryName:key, categoryObservations:value}})
+            .value()
+    }
+
     result.creator = {}
     if (data.creator) {
         result.creator.username = data.creator.username || "undefined"

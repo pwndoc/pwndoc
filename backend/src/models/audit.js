@@ -97,7 +97,11 @@ var AuditSchema = new Schema({
     approvals:          [{type: Schema.Types.ObjectId, ref: 'User'}],
     type:               {type: String, enum: ['default', 'multi', 'retest'], default: 'default'},
     parentId:           {type: Schema.Types.ObjectId, ref: 'Audit'},
-    comments:           [Comment]
+    comments:           [Comment],
+
+    // New fields for observations support (POC)
+    reportType:         {type: String, enum: ['pentest', 'audit', 'compliance', 'risk', 'vendor', 'custom'], default: 'pentest'},
+    useLegacyFindings:  {type: Boolean, default: true}  // Feature flag for backward compatibility
 }, {timestamps: true});
 
 /*

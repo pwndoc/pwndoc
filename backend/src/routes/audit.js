@@ -419,6 +419,8 @@ module.exports = function(app, io) {
 
     // Generate Report for specific audit
     app.get("/api/audits/:auditId/generate", acl.hasPermission('audits:read'), function(req, res){
+        var Observation = require('mongoose').model('Observation'); // POC: Load Observation model
+
         Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
         .then(async audit => {
             var settings = await Settings.getAll();
@@ -430,6 +432,10 @@ module.exports = function(app, io) {
 
             if (!audit.template)
                 throw ({fn: 'BadParameters', message: 'Template not defined'})
+
+            // POC: Fetch observations for this audit and attach to audit object
+            var observations = await Observation.getByAudit(req.params.auditId);
+            audit.observations = observations; // Attach observations to audit data
 
             var reportDoc = await reportGenerator.generateDoc(audit);
             Response.SendFile(res, `${audit.name.replace(/[\\\/:*?"<>|]/g, "")}.${audit.template.ext || 'docx'}`, reportDoc);

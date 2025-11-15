@@ -53,6 +53,9 @@ require('./models/custom-section');
 require('./models/custom-field');
 require('./models/image');
 require('./models/settings');
+// POC: New observation models
+require('./models/observation');
+require('./models/observation-type');
 
 // Socket IO configuration
 io.on('connection', (socket) => {
@@ -127,6 +130,8 @@ require('./routes/data')(app);
 require('./routes/image')(app);
 require('./routes/settings')(app);
 require('./routes/backup')(app);
+// POC: New observation routes
+require('./routes/observation')(app, io);
 
 app.all(/(.*)/, function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});
