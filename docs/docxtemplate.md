@@ -122,6 +122,7 @@ Array of Objects:
 * **collaborators[i].username**
 * **collaborators[i].firstname**
 * **collaborators[i].lastname**
+* **collaborators[i].jobTitle**
 * **collaborators[i].role**
 
 > Use in template document

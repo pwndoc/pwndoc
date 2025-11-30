@@ -67,6 +67,15 @@
                             />
                         </q-td>
                         <q-td style="width: 20%">
+                            <q-input 
+                            dense
+                            :label="$t('search')"
+                            v-model="search.jobTitle"
+                            clearable
+                            outlined
+                            />
+                        </q-td>
+                        <q-td style="width: 20%">
                             <q-select 
                             dense
                             :label="$t('search')"
@@ -179,6 +188,16 @@
                 />
             </q-card-section>
             <q-card-section>
+                <q-input
+                :label="$t('jobTitle')"
+                class="col-md-12"
+                hide-bottom-space
+                @keyup.enter="createCollab()"
+                v-model="currentCollab.jobTitle"
+                outlined
+                />
+            </q-card-section>
+            <q-card-section>
                 <q-select
                 :label="$t('role')+' *'"
                 class="col-md-12"
@@ -277,6 +296,16 @@
                 hide-bottom-space
                 @keyup.enter="updateCollab()"
                 v-model="currentCollab.phone"
+                outlined
+                />
+            </q-card-section>
+            <q-card-section>
+                <q-input
+                :label="$t('jobTitle')"
+                class="col-md-12"
+                hide-bottom-space
+                @keyup.enter="updateCollab()"
+                v-model="currentCollab.jobTitle"
                 outlined
                 />
             </q-card-section>

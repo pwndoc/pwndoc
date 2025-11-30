@@ -17,6 +17,7 @@ var UserSchema = new Schema({
     lastname:       {type: String, required: true},
     email:          {type: String, required: false},
     phone:          {type: String, required: false},
+    jobTitle:       {type: String, required: false},
     role:           {type: String, default: 'user'},
     totpEnabled:    {type: Boolean, default: false},
     totpSecret:     {type: String, default: ''},
@@ -84,7 +85,7 @@ UserSchema.statics.create = function (user) {
 UserSchema.statics.getAll = function () {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname email phone role totpEnabled enabled');
+        query.select('username firstname lastname email phone jobTitle role totpEnabled enabled');
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -99,7 +100,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname email phone role totpEnabled enabled');
+        query.select('username firstname lastname email phone jobTitle role totpEnabled enabled');
         query.exec()
         .then(function(row) {
             if (row)
@@ -128,6 +129,7 @@ UserSchema.statics.updateProfile = function (username, user) {
                 if (user.lastname) row.lastname = user.lastname;
                 if (!_.isNil(user.email)) row.email = user.email;
                 if (!_.isNil(user.phone)) row.phone = user.phone;
+                if (!_.isNil(user.jobTitle)) row.jobTitle = user.jobTitle;
                 if (user.newPassword) row.password = bcrypt.hashSync(user.newPassword, 10);
                 if (typeof(user.totpEnabled)=='boolean') row.totpEnabled = user.totpEnabled;
 
@@ -138,6 +140,7 @@ UserSchema.statics.updateProfile = function (username, user) {
                 payload.lastname = row.lastname;
                 payload.email = row.email;
                 payload.phone = row.phone;
+                payload.jobTitle = row.jobTitle;
                 payload.roles = auth.acl.getRoles(payload.role);
 
                 return row.save();
@@ -217,6 +220,7 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                 payload.lastname = row.lastname
                 payload.email = row.email
                 payload.phone = row.phone
+                payload.jobTitle = row.jobTitle
                 payload.roles = auth.acl.getRoles(payload.role)
 
                 token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '15 minutes'})
