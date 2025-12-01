@@ -380,6 +380,7 @@ export default {
     function: '职能',
     phone: '座机',
     cell: '手机',
+    jobTitle: '职位',
     role: '角色',
     collatorator: '审计员',
     addCollaborator: '添加审计员',

@@ -185,6 +185,7 @@ module.exports = function(app) {
         user.role = req.body.role || 'user';
         if (req.body.email) user.email = req.body.email;
         if (req.body.phone) user.phone = req.body.phone;
+        if (req.body.jobTitle) user.jobTitle = req.body.jobTitle;
 
         User.create(user)
         .then(msg => Response.Created(res, 'User created successfully'))
@@ -262,6 +263,7 @@ module.exports = function(app) {
         if (req.body.lastname) user.lastname = req.body.lastname;
         if (!_.isNil(req.body.email)) user.email = req.body.email;
         if (!_.isNil(req.body.phone)) user.phone = req.body.phone;
+        if (!_.isNil(req.body.jobTitle)) user.jobTitle = req.body.jobTitle;
 
         User.updateProfile(req.decodedToken.username, user)
         .then(msg => {
@@ -286,6 +288,7 @@ module.exports = function(app) {
         if (req.body.lastname) user.lastname = req.body.lastname;
         if (!_.isNil(req.body.email)) user.email = req.body.email;
         if (!_.isNil(req.body.phone)) user.phone = req.body.phone;
+        if (!_.isNil(req.body.jobTitle)) user.jobTitle = req.body.jobTitle;
         if (req.body.role) user.role = req.body.role;
         if (typeof(req.body.totpEnabled) === 'boolean') user.totpEnabled = req.body.totpEnabled;
         if (typeof(req.body.enabled) === 'boolean') user.enabled = req.body.enabled;

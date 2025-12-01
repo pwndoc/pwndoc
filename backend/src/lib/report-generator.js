@@ -569,6 +569,7 @@ async function prepAuditData(data, settings) {
             lastname: collab.lastname || "undefined",
             email: collab.email || "undefined",
             phone: collab.phone || "undefined",
+            jobTitle: collab.jobTitle || "undefined",
             role: collab.role || "undefined"
         })
     })
