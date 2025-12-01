@@ -22,6 +22,7 @@ export default {
                 {name: 'firstname', label: $t('firstname'), field: 'firstname', align: 'left', sortable: true},
                 {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
                 {name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true},
+                {name: 'jobTitle', label: $t('jobTitle'), field: 'jobTitle', align: 'left', sortable: true},
                 {name: 'role', label: $t('role'), field: 'role', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
@@ -38,7 +39,7 @@ export default {
                 {label:'All', value:0}
             ],
             // Search filter
-            search: {username: '', firstname: '', lastname: '', role: '', email: '', enabled: true},
+            search: {username: '', firstname: '', lastname: '', role: '', email: '', jobTitle: '', enabled: true},
             customFilter: Utils.customFilter,
             // Errors messages
             errors: {lastname: '', firstname: '', username: ''},
@@ -50,6 +51,7 @@ export default {
                 role: '',
                 email: '',
                 phone: '',
+                jobTitle: '',
                 password: '',
                 totpEnabled: false
             },
@@ -177,6 +179,7 @@ export default {
             this.currentCollab.password = '';
             this.currentCollab.email = '';
             this.currentCollab.phone = '';
+            this.currentCollab.jobTitle = '';
         },
 
         dblClick: function(evt, row) {

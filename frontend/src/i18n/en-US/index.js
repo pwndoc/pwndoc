@@ -625,6 +625,7 @@ export default {
     function: 'Function',
     phone: 'Phone',
     cell: 'Cell',
+    jobTitle: 'Job title',
     role: 'Role',
     collatorator: 'Collatorator',
     addCollaborator: 'Add Collaborator',

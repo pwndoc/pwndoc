@@ -375,6 +375,7 @@ export default {
     function: 'Funktion',
     phone: 'Telefon',
     cell: 'Mobiltelefon',
+    jobTitle: 'Berufsbezeichnung',
     role: 'Rolle',
     collatorator: 'Mitarbeiter',
     addCollaborator: 'Mitarbeiter hinzufügen',

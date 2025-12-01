@@ -136,7 +136,7 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
         query.populate('creator', 'username firstname lastname email phone role')
         query.populate('company')
         query.populate('client')
-        query.populate('collaborators', 'username firstname lastname email phone role')
+        query.populate('collaborators', 'username firstname lastname email phone jobTitle role')
         query.populate('reviewers', 'username firstname lastname role')
         query.populate('approvals', 'username firstname lastname role')
         query.populate('customFields.customField', 'label fieldType text')
@@ -459,7 +459,7 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
                 select: 'name'}
             });
         query.populate('creator', 'username firstname lastname')
-        query.populate('collaborators', 'username firstname lastname')
+        query.populate('collaborators', 'username firstname lastname jobTitle')
         query.populate('reviewers', 'username firstname lastname')
         query.populate('company')
         query.select('name auditType date date_start date_end client collaborators language scope.name template customFields')
