@@ -24,6 +24,8 @@ var io = require('socket.io')(https, {
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
 var utils = require('./lib/utils');
+const config = require('./config/config.json');
+const env = process.env.NODE_ENV || 'dev';
 
 // Get configuration
 global.__basedir = __dirname;
@@ -35,7 +37,16 @@ mongoose.Promise = global.Promise;
 // Trim all Strings
 mongoose.Schema.Types.String.set('trim', true);
 
-mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
+let connectionOptions = {};
+if (config && config[env] && config[env].database && config[env].database.connectionOptions) {
+  connectionOptions = config[env].database.connectionOptions;
+}
+
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI, connectionOptions);
+} else {
+  mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, connectionOptions);
+}
 
 // Models import
 require('./models/user');

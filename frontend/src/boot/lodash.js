@@ -1,6 +1,6 @@
-// import VueLodash from 'vue-lodash'
-import Lodash from 'lodash'
+import { defineBoot } from '#q-app/wrappers';
+import Lodash from 'lodash';
 
-export default ({ Vue }) => {
-    Vue.prototype.$_ = Lodash
-}  
+export default defineBoot(({ app }) => {
+    app.config.globalProperties.$_ = Lodash;
+})

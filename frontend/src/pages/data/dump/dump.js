@@ -1,16 +1,17 @@
 import { Dialog, Notify } from 'quasar'
-import Vue from 'vue'
 import YAML from 'js-yaml'
 
 import VulnerabilityService from '@/services/vulnerability'
-import UserService from '@/services/user'
+import { useUserStore } from 'src/stores/user'
 
 import { $t } from '@/boot/i18n'
+
+const userStore = useUserStore()
 
 export default {
     data: () => {
         return {
-            UserService: UserService,
+            userStore: userStore,
             vulnerabilities: [],
         }
     },

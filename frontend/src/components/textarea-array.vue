@@ -5,7 +5,7 @@
     stack-label
     v-model="dataString"
     type="textarea"
-    @input="updateParent"
+    @update:model-value="updateParent"
     outlined
     :rules="rules"
     lazy-rules="ondemand"
@@ -23,7 +23,7 @@ export default {
     name: 'textarea-array',
     props: {
         label: String,
-        value: Array,
+        modelValue: Array,
         noEmptyLine: {
             type: Boolean,
             default: false
@@ -43,12 +43,12 @@ export default {
     },
 
     mounted: function() {
-        if (this.value)
-            this.dataString = this.value.join('\n')
+        if (this.modelValue)
+            this.dataString = this.modelValue.join('\n')
     },
 
     watch: {
-        value (val) {
+        modelValue (val) {
             var str = (val)? val.join('\n'): ""
             if (str === this.dataString)
                 return
@@ -59,9 +59,9 @@ export default {
     methods: {
         updateParent: function() {
             if (this.noEmptyLine)
-                this.$emit('input', this.dataString.split('\n').filter(e => e !== ''))
+                this.$emit('update:modelValue', this.dataString.split('\n').filter(e => e !== ''))
             else
-                this.$emit('input', this.dataString.split('\n'))
+                this.$emit('update:modelValue', this.dataString.split('\n'))
         },
 
         validate: function() {

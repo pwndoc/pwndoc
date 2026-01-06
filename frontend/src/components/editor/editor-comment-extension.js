@@ -135,6 +135,6 @@ export default Extension.create({
             }
           })
         ]
-    }
+      }
   })
   

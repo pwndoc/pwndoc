@@ -8,11 +8,6 @@ import Utils from '@/services/utils';
 import { $t } from '@/boot/i18n'
 
 export default {
-    props: {
-        frontEndAuditState: Number,
-        parentState: String,
-        parentApprovals: Array
-    },
     data: () => {
         return {
             auditId: null,
@@ -43,6 +38,11 @@ export default {
         }
     },
 
+    inject: [
+        'frontEndAuditState',
+        'auditParent'
+    ],
+
     components: {
         Breadcrumb
     },
@@ -59,11 +59,16 @@ export default {
 
     },
 
-    destroyed: function() {
+    unmounted: function() {
         document.removeEventListener('keydown', this._listener, false)
     },
 
     beforeRouteLeave (to, from , next) {
+        if (to.name === '404' || to.name === '403') {
+            next()
+            return
+        }
+        
         if (this.$_.isEqual(this.audit, this.auditOrig))
             next();
         else {
@@ -146,7 +151,7 @@ export default {
         },
 
         updateScopeHosts: function(scope) {
-            for (var i=0; i<this.selectedTargets[scope.name].length; i++) {
+            for (var i=0; i<this.selectedTargets[scope.name]?.length; i++) {
                 scope.hosts.push(this.selectedTargets[scope.name][i].host);
             }
         },

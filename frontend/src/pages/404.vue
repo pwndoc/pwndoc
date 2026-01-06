@@ -24,7 +24,7 @@ export default {
   },
 
   created: function() {
-      this.message = this.$route.params.error;
+      this.message = this.$route.query.error;
   }
 }
 </script>

@@ -9,15 +9,17 @@ import CustomFields from 'components/custom-fields'
 
 import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
-import UserService from '@/services/user'
+import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
 
 import { $t } from 'boot/i18n'
 
+const userStore = useUserStore()
+
 export default {
     data: () => {
         return {
-            UserService: UserService,
+            userStore: userStore,
             // Vulnerabilities list
             vulnerabilities: [],
             // Loading state
@@ -129,6 +131,20 @@ export default {
             var result = this.vulnTypes.filter(type => type.locale === this.dtLanguage).map(type => {return type.name})
             result.unshift('Undefined')
             return result
+        },
+
+        filteredVulnerabilitiesMergeLeft: function() {
+            return this.vulnerabilities.filter(vuln => 
+                this.getVulnTitleLocale(vuln, this.mergeLanguageRight) === 'undefined' &&
+                this.getVulnTitleLocale(vuln, this.mergeLanguageLeft) !== 'undefined'
+            )
+        },
+
+        filteredVulnerabilitiesMergeRight: function() {
+            return this.vulnerabilities.filter(vuln => 
+                this.getVulnTitleLocale(vuln, this.mergeLanguageLeft) === 'undefined' &&
+                this.getVulnTitleLocale(vuln, this.mergeLanguageRight) !== 'undefined'
+            )
         }
     },
 
@@ -315,7 +331,7 @@ export default {
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;
-            if (this.UserService.isAllowed('vulnerabilities:update'))
+            if (userStore.isAllowed('vulnerabilities:update'))
                 this.getVulnUpdates(this.vulnerabilityId);
         },
 
@@ -461,7 +477,7 @@ export default {
 
         goToAudits: function(row) {
             var title = this.getDtTitle(row);
-            this.$router.push({name: 'audits', params: {finding: title}});
+            this.$router.push({name: 'audits', query: {findingTitle: title}});
         },
 
         getVulnTitleLocale: function(vuln, locale) {
@@ -494,7 +510,7 @@ export default {
 
         dblClick: function(row) {
             this.clone(row)
-            if (this.UserService.isAllowed('vulnerabilities:update') && row.status === 2)
+            if (userStore.isAllowed('vulnerabilities:update') && row.status === 2)
                 this.$refs.updatesModal.show()
             else
                 this.$refs.editModal.show()

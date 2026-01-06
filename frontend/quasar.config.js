@@ -1,8 +1,8 @@
-// Configuration for your app
-let path = require('path')
-let fs = require('fs')
+import { defineConfig } from '#q-app/wrappers'
+import path from 'node:path'
+import fs from 'node:fs'
 
-module.exports = function (ctx) {
+export default defineConfig((ctx) => {
   return {
     // app boot (/src/boot)
     boot: [
@@ -13,10 +13,11 @@ module.exports = function (ctx) {
       'darkmode',
       'lodash',
       'socketio',
-      'settings'
+      'settings',
+      'router-instance'
     ],
     css: [
-      'app.styl'
+      'app.scss'
     ],
     extras: [
       'material-icons',
@@ -30,6 +31,9 @@ module.exports = function (ctx) {
       scopeHoisting: true,
       vueRouterMode: 'history',
       vueCompiler: true,
+      sourcemap: true,
+      // showProgress: true,
+      // showWarnings: true,
       // gzip: true,
       // analyze: true,
       // extractCSS: false,
@@ -47,22 +51,25 @@ module.exports = function (ctx) {
       },
       host: "0.0.0.0",
       port: 8081,
-      proxy: {
-        '/api': {
-          target: `https://pwndoc-backend-dev:4242`,
+      proxy: [
+        {
+          context: ["/api"],
+          target: "https://pwndoc-backend-dev:4242",
           changeOrigin: true,
           secure: false
         },
-        '/socket.io': {
-          target: `https://pwndoc-backend-dev:4242`,
+        {
+          context: ["/socket.io"],
+          target: "https://pwndoc-backend-dev:4242",
           changeOrigin: true,
           secure: false
         }
-      }
+      ]
       //open: true // opens browser window automatically
     },
     // framework: 'all' --- includes everything; for dev only!
     framework: {
+      autoImportComponentCase: 'combined',
       components: [
         'QAvatar',
         'QBadge',
@@ -216,4 +223,4 @@ module.exports = function (ctx) {
       }
     }
   }
-}
+})

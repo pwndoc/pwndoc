@@ -5,15 +5,17 @@ import CustomFields from 'components/custom-fields'
 
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
-import UserService from '@/services/user'
 import TemplateService from '@/services/template'
+import { useUserStore } from 'src/stores/user'
 
 import { $t } from '@/boot/i18n'
+
+const userStore = useUserStore()
 
 export default {
     data: () => {
         return {
-            UserService: UserService,
+            userStore: userStore,
             Utils: Utils,
             templates: [],
 
@@ -117,6 +119,10 @@ export default {
 
         newCustomFieldLangOptions() {
             return this.newCustomField.options.filter(e => e.locale === this.cfLocale)
+        },
+
+        vulnTypesLocale() {
+            return this.vulnTypes.filter(e => e.locale === this.newVulnType.locale)
         }
     },
 

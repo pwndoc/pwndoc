@@ -1,15 +1,23 @@
 .DS_Store
 .thumbs.db
 node_modules
-/dist
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 mongo-data*
-.quasar
 report-templates
 custom-generator.js
 report-filters-custom.js
+
+# Quasar core related directories
+.quasar
+/dist
+/quasar.config.*.temporary.compiled*
+
+# local .env files
+.env.local*
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Backups
 backend/backup

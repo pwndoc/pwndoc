@@ -109,7 +109,7 @@ export default {
       let oldSize = JSON.stringify(imageB64).length
       let max_width = 1920
 
-      var img = new Image()
+      let img = new Image()
       img.src = imageB64
       img.onload = function() {
         //scale the image and keep aspect ratio

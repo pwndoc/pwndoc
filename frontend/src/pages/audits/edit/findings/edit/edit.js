@@ -10,18 +10,15 @@ import CommentsList from 'components/comments-list'
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
-import UserService from '@/services/user';
+import { useUserStore } from 'src/stores/user'
 import VulnService from '@/services/vulnerability';
 import Utils from '@/services/utils';
 
 import { $t } from '@/boot/i18n'
 
+const userStore = useUserStore()
+
 export default {
-    props: {
-        frontEndAuditState: Number,
-        parentState: String,
-        parentApprovals: Array
-    },
     data: () => {
         return {
             finding: {},
@@ -47,6 +44,22 @@ export default {
         }
     },
 
+    inject: [
+        'frontEndAuditState',
+        'auditParent',
+        'retestSplitView',
+        'retestSplitRatio',
+        'retestSplitLimits',
+        'commentMode',
+        'focusedComment',
+        'editComment',
+        'editReply',
+        'replyingComment',
+        'fieldHighlighted',
+        'commentIdList',
+        'customFields'
+    ],
+
     components: {
         BasicEditor,
         Breadcrumb,
@@ -71,27 +84,41 @@ export default {
         document.addEventListener('comment-added', this.editorCommentAdded)
         document.addEventListener('comment-clicked', this.editorCommentClicked)
 
-        this.$parent.focusedComment = ""
-        this.$parent.fieldHighlighted = ""
+        // Handle focus when comment mode is enabled
+        if (this.commentMode) {
+            let comment = null
+            if (this.focusedComment && this.fieldHighlighted) {
+                comment = {_id: this.focusedComment, fieldName: this.fieldHighlighted}
+            }
+            this.focusedComment = ""
+            this.fieldHighlighted = ""
 
-        await this.$nextTick()
-        if (this.$route.params.comment){
-            this.focusComment(this.$route.params.comment)
-            // Focus comment on the sidebar
-            let commentElementSidebar = document.getElementById(`sidebar-${this.$route.params.comment._id}`)
-            if (commentElementSidebar)
-                commentElementSidebar.scrollIntoView({block: "center"})
+            // Focus when page is mounted and focusComment is in the query
+            if (this.$route.query.focusComment) {
+                await this.$nextTick()
+                if (comment){
+                    this.focusComment(comment)
+                    // Focus comment on the sidebar
+                    let commentElementSidebar = document.getElementById(`sidebar-${comment._id}`)
+                    if (commentElementSidebar)
+                        commentElementSidebar.scrollIntoView({block: "center"})
+                }
+            }
         }
-        
     },
 
-    destroyed: function() {
+    unmounted: function() {
         document.removeEventListener('keydown', this._listener, false);
         document.removeEventListener('comment-added', this.editorCommentAdded)
         document.removeEventListener('comment-clicked', this.editorCommentClicked)
     },
 
     beforeRouteLeave (to, from , next) {
+        if (to.name === '404' || to.name === '403') {
+            next()
+            return
+        }
+
         Utils.syncEditors(this.$refs)
 
         var displayHighlightWarning = this.displayHighlightWarning()
@@ -106,7 +133,7 @@ export default {
             })
             .onOk(() => next())
         }
-        else if (!this.$parent.commentMode && displayHighlightWarning) {
+        else if (!this.commentMode && displayHighlightWarning) {
             Dialog.create({
                 title: $t('msg.highlightWarningTitle'),
                 message: `${displayHighlightWarning}</mark>`,
@@ -135,7 +162,7 @@ export default {
             })
             .onOk(() => next())
         }
-        else if (!this.$parent.commentMode && displayHighlightWarning) {
+        else if (!this.commentMode && displayHighlightWarning) {
             Dialog.create({
                 title: $t('msg.highlightWarningTitle'),
                 message: `${displayHighlightWarning}</mark>`,
@@ -151,7 +178,7 @@ export default {
 
     computed: {
         vulnTypesLang: function() {
-            return this.vulnTypes.filter(type => type.locale === this.$parent.audit.language);
+            return this.vulnTypes.filter(type => type.locale === this.auditParent.language);
         },
 
         screenshotsSize: function() {
@@ -159,7 +186,7 @@ export default {
         },
 
         canCreateComment: function() {
-            return UserService.isAllowed('audits:comments:create') 
+            return userStore.isAllowed('audits:comments:create') 
         },
     },
 
@@ -191,7 +218,7 @@ export default {
                 if (this.finding.customFields && // For retrocompatibility with customField reference instead of object
                     this.finding.customFields.length > 0 && 
                     typeof (this.finding.customFields[0].customField) === 'string') 
-                    this.finding.customFields = Utils.filterCustomFields('finding', this.finding.category, this.$parent.customFields, this.finding.customFields, this.$parent.audit.language)
+                    this.finding.customFields = Utils.filterCustomFields('finding', this.finding.category, this.customFields, this.finding.customFields, this.auditParent.language)
                 if (this.finding.paragraphs.length > 0 && !this.finding.poc)
                     this.finding.poc = this.convertParagraphsToHTML(this.finding.paragraphs)
 
@@ -204,9 +231,9 @@ export default {
                 if (!err.response)
                     console.log(err)
                 else if (err.response.status === 403)
-                    this.$router.push({name: '403', params: {error: err.response.data.datas}})
+                    this.$router.push({name: '403', query: {error: err.response.data.datas}})
                 else if (err.response.status === 404)
-                    this.$router.push({name: '404', params: {error: err.response.data.datas}})
+                    this.$router.push({name: '404', query: {error: err.response.data.datas}})
             })
         },
 
@@ -279,13 +306,13 @@ export default {
                     })
                     this.findingOrig = this.finding
                     this.overrideLeaveCheck = true
-                    var currentIndex = this.$parent.audit.findings.findIndex(e => e._id === this.findingId)
-                    if (this.$parent.audit.findings.length === 1)
-                        this.$router.push(`/audits/${this.$parent.auditId}/findings/add`)
-                    else if (currentIndex === this.$parent.audit.findings.length - 1)
-                        this.$router.push(`/audits/${this.$parent.auditId}/findings/${this.$parent.audit.findings[currentIndex - 1]._id}`)
+                    var currentIndex = this.auditParent.findings.findIndex(e => e._id === this.findingId)
+                    if (this.auditParent.findings.length === 1)
+                        this.$router.push(`/audits/${this.auditParentId}/findings/add`)
+                    else if (currentIndex === this.auditParent.findings.length - 1)
+                        this.$router.push(`/audits/${this.auditParentId}/findings/${this.auditParent.findings[currentIndex - 1]._id}`)
                     else
-                        this.$router.push(`/audits/${this.$parent.auditId}/findings/${this.$parent.audit.findings[currentIndex + 1]._id}`)
+                        this.$router.push(`/audits/${this.auditParentId}/findings/${this.auditParent.findings[currentIndex + 1]._id}`)
                 })
                 .catch((err) => {
                     Notify.create({
@@ -301,7 +328,7 @@ export default {
          // Backup Finding to vulnerability database
         backupFinding: function() {
             Utils.syncEditors(this.$refs)
-            VulnService.backupFinding(this.$parent.audit.language, this.finding)
+            VulnService.backupFinding(this.auditParent.language, this.finding)
             .then((data) => {
                 Notify.create({
                     message: data.data.datas,
@@ -340,16 +367,16 @@ export default {
         },
 
         toggleSplitView: function() {
-            this.$parent.retestSplitView = !this.$parent.retestSplitView
-            if (this.$parent.retestSplitView) {
-                this.$parent.retestSplitRatio = 50
-                this.$parent.retestSplitLimits = [40, 60]
+            this.retestSplitView = !this.retestSplitView
+            if (this.retestSplitView) {
+                this.retestSplitRatio = 50
+                this.retestSplitLimits = [40, 60]
             }
             else {
-                this.$parent.retestSplitRatio = 100
-                this.$parent.retestSplitLimits = [100, 100]
+                this.retestSplitRatio = 100
+                this.retestSplitLimits = [100, 100]
             }
-            if (this.$parent.retestSplitView && this.$parent.commentMode)
+            if (this.retestSplitView && this.commentMode)
                 this.toggleCommentView()
         },
 
@@ -357,38 +384,52 @@ export default {
 
         toggleCommentView: function() {
             Utils.syncEditors(this.$refs)
-            this.$parent.commentMode = !this.$parent.commentMode
-            if (this.$parent.commentMode && this.$parent.retestSplitView)
+            this.commentMode = !this.commentMode
+            if (!this.commentMode) {
+                this.focusedComment = ""
+                this.fieldHighlighted = null
+            }
+            if (this.commentMode && this.retestSplitView)
                 this.toggleSplitView()
         },
 
         focusComment: function(comment) {
-            let commentId = comment._id || comment.commentId
+            const commentId = comment._id || comment.commentId
             // If another comment is in progress or if comment already focused, then do nothing
             if (
-                (!!this.$parent.editComment && this.$parent.editComment !== commentId) || 
-                (this.$parent.replyingComment && !comment.replyTemp) || 
-                (this.$parent.focusedComment === commentId)
+                (!!this.editComment && this.editComment !== commentId) || 
+                (this.replyingComment && !comment.replyTemp) || 
+                (this.focusedComment === commentId)
             )
                 return
 
+
+            this.fieldHighlighted = comment.fieldName
+            this.focusedComment = commentId
+
             // If comment is in another finding, then redirect to it
             if (comment.findingId && this.findingId !== comment.findingId) {
-                this.$router.replace({name: 'editFinding', params: {
-                    auditId: this.auditId, 
-                    findingId: comment.findingId, 
-                    comment: comment
-                }})
+                this.$router.replace({
+                    name: 'editFinding',
+                    params: {
+                        auditId: this.auditId, 
+                        findingId: comment.findingId, 
+                    }, 
+                    query: {focusComment: true}
+                })
                 return
             }
 
             // If comment is in another section, then redirect to it
             if (comment.sectionId && this.sectionId !== comment.sectionId) {
-                this.$router.replace({name: 'editSection', params: {
-                    auditId: this.auditId, 
-                    sectionId: comment.sectionId, 
-                    comment: comment
-                }})
+                this.$router.replace({
+                    name: 'editSection',
+                    params: {
+                        auditId: this.auditId, 
+                        sectionId: comment.sectionId, 
+                    },
+                    query: {focusComment: true}
+                })
                 return
             }
 
@@ -411,7 +452,7 @@ export default {
             const intervalId = setInterval(() => {
                 checkCount++
                 elementField = document.getElementById(comment.fieldName)
-                elementCommentEditor = document.getElementById(comment._id)
+                elementCommentEditor = document.getElementById(commentId)
                 if (elementField || elementCommentEditor) {
                     clearInterval(intervalId)
                     if (elementCommentEditor) {
@@ -425,10 +466,6 @@ export default {
                     clearInterval(intervalId)
                 }
             }, 200)
-
-            this.$parent.fieldHighlighted = comment.fieldName
-            this.$parent.focusedComment = comment._id
-
         },
 
         editorCommentAdded: function(event) {
@@ -453,12 +490,12 @@ export default {
         },
 
         editorCommentClicked: function(event) {
-            if (this.$parent.commentMode && event.detail.id) {
-                let comment = this.$parent.audit.comments.find(e => e._id === event.detail.id)
+            if (this.commentMode && event.detail.id) {
+                let comment = this.auditParent.comments.find(e => e._id === event.detail.id)
                 if (comment) {
                     document.getElementById(`sidebar-${comment._id}`).scrollIntoView({block: "center"})
-                    this.$parent.fieldHighlighted = comment.fieldName
-                    this.$parent.focusedComment = comment._id
+                    this.fieldHighlighted = comment.fieldName
+                    this.focusedComment = comment._id
                 }
             }
         },
@@ -467,10 +504,10 @@ export default {
             let comment = {
                 findingId: this.findingId,
                 fieldName: fieldName,
-                authorId: UserService.user.id,
+                authorId: userStore.id,
                 author: {
-                    firstname: UserService.user.firstname,
-                    lastname: UserService.user.lastname
+                    firstname: userStore.firstname,
+                    lastname: userStore.lastname
                 },
                 text: "" 
             }
@@ -479,9 +516,9 @@ export default {
             AuditService.createComment(this.auditId, comment)
             .then((res) => {
                 let newComment = res.data.datas
-                this.$parent.focusedComment = newComment._id
-                this.$parent.editComment = newComment._id
-                this.$parent.fieldHighlighted = fieldName
+                this.focusedComment = newComment._id
+                this.editComment = newComment._id
+                this.fieldHighlighted = fieldName
                 this.focusComment(comment)
                 this.updateFinding()
             })
@@ -496,12 +533,12 @@ export default {
         },
 
         deleteComment: function(comment) {
-            this.$parent.editComment = null
+            this.editComment = null
             let commentId = comment._id || comment.commentId
             AuditService.deleteComment(this.auditId, commentId)
             .then(() => {
-                if (this.$parent.focusedComment === commentId)
-                    this.$parent.fieldHighlighted = ""
+                if (this.focusedComment === commentId)
+                    this.fieldHighlighted = ""
                 document.dispatchEvent(new CustomEvent('comment-deleted', { detail: { id: commentId } }))
                 this.updateFinding()
             })
@@ -520,14 +557,14 @@ export default {
                 comment.text = comment.textTemp
             if (comment.replyTemp){
                 comment.replies.push({
-                    author: UserService.user.id,
+                    author: userStore.id,
                     text: comment.replyTemp
                 })
             }
             AuditService.updateComment(this.auditId, comment)
                 .then(() => {
-                    this.$parent.editComment = null
-                    this.$parent.editReply = null
+                    this.editComment = null
+                    this.editReply = null
                     this.updateFinding()
                 })
                 .catch((err) => {

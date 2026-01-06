@@ -514,6 +514,7 @@ export default {
     function: 'Function',
     phone: 'Phone',
     cell: 'Cell',
+    jobTitle: 'Job title',
     role: 'Role',
     collatorator: 'Collatorator',
     addCollaborator: 'Add Collaborator',
@@ -603,8 +604,8 @@ export default {
     removeAllPriorApprovals: 'All its prior approvals are removed.',
     keepAllPriorApprovals: 'All its prior approvals are kept.',
     mandatoryReview: 'Mandatory Review',
-    mandatoryReviewInfo: `Makes the review process mandatory. When activated, a user cannot export an audit unless it has been approved by the specified number of reviewers. 
-    <br/>The minimal number of reviewers is also used to determine if a report is marked as approved.`,
+    mandatoryReviewInfo: `Makes the review process mandatory. When activated, a user cannot export an audit unless it has been approved by the specified number of reviewers.<br />
+    The minimal number of reviewers is also used to determine if a report is marked as approved.`,
     minimalNumberOfReviewers: 'Minimal number of reviewers',
     saveSettings: 'Save settings',
     revertSettingsToDefaults: 'Revert settings to defaults',

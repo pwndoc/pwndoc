@@ -17,6 +17,11 @@
     background: var(--color);
 }*/
 
+.drag-ghost {
+    opacity: 0.5;
+    background: $grey-4;
+}
+
 .home-drawer .q-router-link--active {
     background-color: $primary;
     opacity: 0.9;
@@ -54,45 +59,55 @@
     white-space: pre-wrap;
 }
 
-.sticky-header-table
+.sticky-header-table {
     /* height or max-height is important */
-    max-height: calc(100vh - 82px)
+    max-height: calc(100vh - 82px);
 
-    thead tr:first-child th
-        border-bottom: 0
+    thead tr:first-child th {
+        border-bottom: 0;
         // border-bottom: 1px solid rgba(0,0,0,0.12)
+    }
     
-    thead tr:first-child th
-        position: sticky
-        z-index: 1
-        top: 0
+    thead tr:first-child th {
+        position: sticky;
+        z-index: 1;
+        top: 0;
+    }
 
     /* this is when the loading indicator appears */
-    &.q-table--loading thead tr:last-child th
-        z-index: 2
+    &.q-table--loading thead tr:last-child th {
+        z-index: 2;
+    }
 
-    tr
-        cursor: initial !important
+    tr {
+        cursor: initial !important;
+    }
+}
 
-.sticky-header-table-addfinding
+.sticky-header-table-addfinding {
     /* height or max-height is important */
-    max-height: calc(100vh - 132px)
+    max-height: calc(100vh - 132px);
 
-    thead tr:first-child th
-        border-bottom: 0
+    thead tr:first-child th {
+        border-bottom: 0;
         // border-bottom: 1px solid rgba(0,0,0,0.12)
+    }
     
-    thead tr:first-child th
-        position: sticky
-        z-index: 1
-        top: 0
+    thead tr:first-child th {
+        position: sticky;
+        z-index: 1;
+        top: 0;
+    }
 
     /* this is when the loading indicator appears */
-    &.q-table--loading thead tr:last-child th
-        z-index: 2
+    &.q-table--loading thead tr:last-child th {
+        z-index: 2;
+    }
 
-    tr
-        cursor: initial !important
+    tr {
+        cursor: initial !important;
+    }
+}
 
 .loading-error .material-icons {
     font-size: 100px;
