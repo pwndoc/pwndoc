@@ -64,18 +64,14 @@ module.exports = function(app) {
             if (!word)
                 return res.status(400).json({ error: "Missing 'word'" });
             
-            const w = word.toLowerCase();
-            
-            await SpellingDictionary.updateOne(
-                { word: w },
-                { word: w },
-                { upsert: true }
-            );
-
-            res.json({ success: true, word: w });
-
+            const savedWord = await SpellingDictionary.create(word);
+            Response.Ok(res, { success: true, word: savedWord.word });
         } catch (err) {
-            res.status(500).json({ error: err.toString() });
+            if (err.fn === 'BadParameters') {
+                Response.BadParameters(res, err.message);
+            } else {
+                Response.Internal(res, err);
+            }
         }
     });
 
@@ -85,14 +81,16 @@ module.exports = function(app) {
             if (!word)
                 return res.status(400).json({ error: "Missing 'word'" });
 
-            const w = word.toLowerCase();
-
-            await SpellingDictionary.deleteOne({ word: w });
-
-            res.json({ success: true, removed: w });
-
+            const deletedWord = await SpellingDictionary.delete(word);
+            Response.Ok(res, { success: true, removed: deletedWord.word });
         } catch (err) {
-            res.status(500).json({ error: err.toString() });
+            if (err.fn === 'BadParameters') {
+                Response.BadParameters(res, err.message);
+            } else if (err.fn === 'NotFound') {
+                Response.NotFound(res, err.message);
+            } else {
+                Response.Internal(res, err);
+            }
         }
     });
 };

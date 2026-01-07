@@ -167,8 +167,8 @@ module.exports = function(request, app) {
                     .send({ word: testWord });
 
                 expect(response.status).toBe(200);
-                expect(response.body.success).toBe(true);
-                expect(response.body.word).toBe(testWord.toLowerCase());
+                expect(response.body.datas.success).toBe(true);
+                expect(response.body.datas.word).toBe(testWord.toLowerCase());
 
                 // Verify word was added
                 var getResponse = await request(app)
@@ -248,8 +248,8 @@ module.exports = function(request, app) {
                     .send({ word: testWord });
 
                 expect(deleteResponse.status).toBe(200);
-                expect(deleteResponse.body.success).toBe(true);
-                expect(deleteResponse.body.removed).toBe(testWord.toLowerCase());
+                expect(deleteResponse.body.datas.success).toBe(true);
+                expect(deleteResponse.body.datas.removed).toBe(testWord.toLowerCase());
 
                 // Verify word was removed
                 var getResponse = await request(app)
@@ -269,8 +269,7 @@ module.exports = function(request, app) {
                     .set('Cookie', [`token=JWT ${adminToken}`])
                     .send({ word: nonExistentWord });
 
-                // Should succeed (deleteOne doesn't fail if document doesn't exist)
-                expect([200, 500]).toContain(response.status);
+                expect(response.status).toBe(404);
             });
         });
     });
