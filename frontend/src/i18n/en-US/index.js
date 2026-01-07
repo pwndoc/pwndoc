@@ -631,7 +631,6 @@ export default {
     ruleXml: 'Rule XML',
     ruleXmlHint: 'Make sure the rule XML includes a valid rule with an id attribute. The language attribute in the <rules> tag will be automatically set based on the selected language.',
     language: 'Language',
-    refresh: 'Refresh',
     view: 'View',
     noRulesFound: 'No rules found.',
     rulesAreLoadedFromGrammarXml: 'Rules are loaded from grammar.xml file in the rules folder.',
