@@ -1,5 +1,6 @@
 version: '3'
 services:
+
   mongodb:
     image: mongo:4.2.15
     container_name: mongo-pwndoc
@@ -16,7 +17,7 @@ services:
     environment:
       - MONGO_DB:pwndoc
     networks:
-      - backend
+      - backend-internal
 
   pwndoc-backend:
     image: ghcr.io/pwndoc/pwndoc-backend:latest
@@ -32,23 +33,42 @@ services:
     depends_on:
       - mongodb
     restart: always
-    links:
-      - mongodb
-    networks: 
-      - backend
+    networks:
+      - backend-internal
+      - nginx-backend
 
-  pwndoc-frontend:
-    image: ghcr.io/pwndoc/pwndoc-frontend:latest
-    container_name: pwndoc-frontend
+  pwndoc-languagetools:
+    build:
+      context: ./languagetool/
+      dockerfile: Dockerfile
+    container_name: pwndoc-languagetools
+    restart: always
+    environment:
+      - BACKEND_URL=https://pwndoc-backend:4242
+    depends_on:
+      - pwndoc-backend
+    networks:
+      - backend-internal
+
+  nginx:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pwndoc-nginx
     restart: always
     ports:
-      - ${APP_PORT}:8443
+      - ${APP_PORT:-8443}:8443
+    depends_on:
+      - pwndoc-backend
     networks:
-      - backend
+      - nginx-backend
 
 volumes:
   mongo-data:
 
 networks:
-  backend:
-      driver: bridge
+  backend-internal:
+    driver: bridge
+    internal: false
+  nginx-backend:
+    driver: bridge

@@ -15,7 +15,8 @@
                     <q-space />
                     <q-btn 
                     unelevated 
-                    :label="$t('addWord')"
+                    :label="$t('createWord')"
+                    v-if="canEdit"
                     color="secondary" 
                     no-caps
                     @click="cleanCurrentWord(); $refs.createModal.show()"
@@ -39,15 +40,15 @@
 
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
-                        <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteWord(props.row)">
+                        <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteWord(props.row)" v-if="canEdit">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                         </q-btn>
                     </q-td>
                 </template>
 
                 <template v-slot:bottom="scope">
-                    <span v-if="words.length === 1">1 {{$t('quantifier')}}{{$t('Word')}}</span>                
-                    <span v-else>{{words.length}} {{$t('quantifier')}}{{$t('companies')}}</span>    
+                    <span v-if="words.length === 1">1 {{$t('quantifier')}}{{$t('ignoredWord')}}</span>                
+                    <span v-else>{{words.length}} {{$t('quantifier')}}{{$t('ignoredWords')}}</span>    
                     <q-space />
                     <span>{{$t('resultsPerPage')}}</span>
                     <q-select
@@ -72,7 +73,7 @@
         <q-card style="width:800px">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
-                    {{$t('addWord')}}
+                    {{$t('createWord')}}
                 </div>
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
@@ -81,35 +82,16 @@
             <q-card-section>
                 <div class="row q-col-gutter-md">
                     <q-input
-                        :label="$t('name')+' *'"
+                        :label="$t('word')+' *'"
                         autofocus
                         class="col-md-12"
                         :error="!!errors.name"
                         :error-message="errors.name"
                         @keyup.enter="createWord()"
-                        v-model="currentWord.name" 
+                        v-model="currentWord.word" 
                         outlined
                         hide-bottom-space
                         />
-                    <q-input
-                        :label="$t('shortName')"
-                        class="col-md-12"
-                        @keyup.enter="createWord()"
-                        v-model="currentWord.shortName" 
-                        outlined
-                        />
-                    <div class="col-md-12">
-                        <q-uploader
-                            ref="addUploader"
-                            class="full-width"
-                            url=""
-                            :label="$t('logo')"
-                            accept='.gif,.jpg,.jpeg,.png'
-                            hide-upload-btn
-                            @added="handleImage"
-                            color="fixed-primary"
-                        />
-                    </div>
                 </div>
             </q-card-section>
 

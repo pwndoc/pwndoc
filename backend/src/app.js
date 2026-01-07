@@ -54,6 +54,7 @@ require('./models/custom-field');
 require('./models/image');
 require('./models/settings');
 require('./models/dictionary');
+require('./models/languagetool-rule');
 
 // Socket IO configuration
 io.on('connection', (socket) => {
@@ -129,6 +130,7 @@ require('./routes/image')(app);
 require('./routes/settings')(app);
 require('./routes/backup')(app);
 require('./routes/spellcheck')(app);
+require('./routes/languagetool-rules')(app);
 
 app.all(/(.*)/, function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});

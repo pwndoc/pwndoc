@@ -1,11 +1,20 @@
 import { Dialog, Notify } from 'quasar';
+import { useUserStore } from '@/stores/user'
 
 import SpellcheckService from '@/services/spellcheck'
 import Utils from '@/services/utils'
 
 import { $t } from '@/boot/i18n'
 
+const userStore = useUserStore()
+
 export default {
+    computed: {
+        canEdit() {
+            return userStore.isAllowed('settings:update')
+        }
+    },
+
     data: () => {
         return {
             // words list
@@ -54,17 +63,102 @@ export default {
                     this.loading = false
                 })
                 .catch((err) => {
-                    console.log(err)
+                    console.error(err)
+                    this.loading = false
+                    Notify.create({
+                        message: err.response?.data?.datas || $t('msg.errorLoading'),
+                        color: 'negative'
+                    })
                 })
         },
-            
-        addWord: function(word) {
+
+        createWord: function() {
+            if (!this.canEdit) {
+                Notify.create({
+                    message: $t('msg.unauthorized'),
+                    color: 'negative'
+                })
+                return
+            }
+
+            if (!this.currentWord.word || this.currentWord.word.trim() === '') {
+                this.errors.name = $t('msg.fieldRequired')
+                return
+            }
+
+            this.cleanErrors()
+            SpellcheckService.addWord(this.currentWord.word.trim())
+                .then((data) => {
+                    Notify.create({
+                        message: $t('msg.wordCreated') || 'Word created successfully',
+                        color: 'positive'
+                    })
+                    this.$refs.createModal.hide()
+                    this.getWords()
+                })
+                .catch((err) => {
+                    console.error(err)
+                    if (err.response?.status === 403) {
+                        Notify.create({
+                            message: $t('msg.unauthorized'),
+                            color: 'negative'
+                        })
+                    } else {
+                        const errorMsg = err.response?.data?.error || err.response?.data?.datas || $t('msg.errorCreating') || 'Failed to create word'
+                        Notify.create({
+                            message: errorMsg,
+                            color: 'negative'
+                        })
+                    }
+                    if (err.response?.data?.error && err.response.data.error.includes('word')) {
+                        this.errors.name = err.response.data.error
+                    }
+                })
         },
 
         deleteWord: function(word) {
+            if (!this.canEdit) {
+                Notify.create({
+                    message: $t('msg.unauthorized'),
+                    color: 'negative'
+                })
+                return
+            }
+
+            SpellcheckService.deleteWord(word.word)
+                .then((data) => {
+                    Notify.create({
+                        message: $t('msg.wordDeleted') || 'Word deleted successfully',
+                        color: 'positive'
+                    })
+                    this.getWords()
+                })
+                .catch((err) => {
+                    console.error(err)
+                    if (err.response?.status === 403) {
+                        Notify.create({
+                            message: $t('msg.unauthorized'),
+                            color: 'negative'
+                        })
+                    } else {
+                        const errorMsg = err.response?.data?.error || err.response?.data?.datas || $t('msg.errorDeleting') || 'Failed to delete word'
+                        Notify.create({
+                            message: errorMsg,
+                            color: 'negative'
+                        })
+                    }
+                })
         },
 
         confirmDeleteWord: function(word) {
+            if (!this.canEdit) {
+                Notify.create({
+                    message: $t('msg.unauthorized'),
+                    color: 'negative'
+                })
+                return
+            }
+
             Dialog.create({
                 title: $t('msg.confirmSuppression'),
                 message: `${$t('word')} «${word.word}» ${$t('msg.deleteNotice')}`,
@@ -72,6 +166,13 @@ export default {
                 cancel: {label: $t('btn.cancel'), color: 'white'}
             })
             .onOk(() => this.deleteWord(word))
+        },
+
+        cleanCurrentWord: function() {
+            this.currentWord = {
+                word: ''
+            }
+            this.cleanErrors()
         },
 
         cleanErrors: function() {

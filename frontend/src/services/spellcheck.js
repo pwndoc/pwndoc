@@ -9,7 +9,7 @@ export default {
     return api.post(`spellcheck/dict`, {word: word})
   },
 
-  deleteWord: function(clientId, word) {
-    return api.delete(`spellcheck/dict`, word)
+  deleteWord: function(word) {
+    return api.delete(`spellcheck/dict`, { data: { word: word } })
   }
 }

@@ -1,25 +1,25 @@
 version: '3'
 services:
 
-  mongodb-dev:
+  mongodb:
     image: mongo:4.2.15
-    container_name: mongo-pwndoc-dev
+    container_name: mongo-pwndoc
     volumes:
-      - mongo-data-dev:/data/db
+      - ./backend/mongo-data-dev:/data/db
     ports:
       - 127.0.0.1:27017:27017
     restart: always
     environment:
       - MONGO_DB:pwndoc
+    networks:
+      - backend-internal
 
-  pwndoc-backend-dev:
+  pwndoc-backend:
     build:
       context: ./backend/
       dockerfile: Dockerfile.dev
-    image: yeln4ts/pwndoc:backend-dev
-    container_name: pwndoc-backend-dev
     environment:
-      - DB_SERVER=mongo-pwndoc-dev
+      - DB_SERVER=mongo-pwndoc
       - DB_NAME=pwndoc
     volumes:
       - ./backend/src:/app/src
@@ -27,44 +27,74 @@ services:
       - ./backend/report-templates:/app/report-templates
       - ./backend/backup:/app/backup
     depends_on:
-      - mongodb-dev
+      - mongodb
     restart: always
-    links:
-      - mongodb-dev
+    ports:
+      - 4242:4242
+    networks:
+      - backend-internal
+      - nginx-backend
 
-  pwndoc-frontend-dev:
-    build: 
-      context: ./frontend/
+  pwndoc-frontend:
+    build:
+      context: ./frontend
       dockerfile: Dockerfile.dev
-    image: yeln4ts/pwndoc:frontend-dev
-    container_name: pwndoc-frontend-dev
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/ssl:/app/ssl
       - ./frontend/public:/app/public
       - ./frontend/index.html:/app/index.html
+      - ./frontend/jsconfig.json:/app/jsconfig.json
       - ./frontend/postcss.config.js:/app/postcss.config.js
       - ./frontend/babel.config.js:/app/babel.config.js
       - ./frontend/quasar.config.js:/app/quasar.config.js
-      - ./frontend/jsconfig.json:/app/jsconfig.json
       - ./frontend/package.json:/app/package.json
       - ./frontend/package-lock.json:/app/package-lock.json
-    depends_on:
-      - pwndoc-backend-dev
     restart: always
     ports:
       - 8081:8081
-    links:
-      - pwndoc-backend-dev
+    depends_on:
+      - pwndoc-backend
+    networks:
+      - nginx-backend
 
-  pwndoc-languagetools-dev:
-    image: erikvl87/languagetool
-    container_name: pwndoc-languagetools
+  pwndoc-languagetools:
+    build:
+      context: ./languagetool/
+      dockerfile: Dockerfile
     restart: always
     ports:
       - 8010:8010
-    links:
-      - pwndoc-backend-dev
+      - 8020:8020
+    environment:
+      - BACKEND_URL=https://pwndoc-backend:4242
+    depends_on:
+      - pwndoc-backend
+    volumes:
+      - ./languagetool/custom-rules:/LanguageTool/custom-rules
+    networks:
+      - backend-internal
+
+  pwndoc-frontend-nginx:
+    image: nginx:stable-alpine
+    user: root
+    volumes:
+      - ./frontend/.docker/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/ssl:/etc/nginx/ssl/
+      - ./frontend/.docker/nginx/snippets:/etc/nginx/snippets
+    restart: always
+    ports:
+      - 8443:8443
+    depends_on:
+      - pwndoc-frontend
+    networks:
+      - nginx-backend
 
 volumes:
   mongo-data-dev:
+
+networks:
+  backend-internal:
+    driver: bridge
+  nginx-backend:
+    driver: bridge

@@ -3,7 +3,7 @@ const SpellingDictionary = require("../models/dictionary");
 const acl = require('../lib/auth').acl
 
 module.exports = function(app) {
-    const LT_URL = "http://pwndoc-languagetools:8010";
+    const LT_URL = process.env.LT_URL || "http://pwndoc-languagetools:8010";
 
     // ---------------------------
     // Spellcheck with MongoDB filtering
@@ -18,9 +18,8 @@ module.exports = function(app) {
             const entries = await SpellingDictionary.find({});
             const dictionary = entries.map(e => e.word);
 
-            console.log(entries)
-
             // Build request to LanguageTool
+            // Custom rules are managed by the LanguageTool container and loaded automatically
             const params = new URLSearchParams({ text, language });
 
             const ltResponse = await fetch(`${LT_URL}/v2/check`, {
@@ -53,7 +52,7 @@ module.exports = function(app) {
         }
     });
 
-    app.get("/api/spellcheck/dict", acl.hasPermission("settings:update"), async (req, res) => {
+    app.get("/api/spellcheck/dict", acl.hasPermission('settings:read-public'), async (req, res) => {
         return SpellingDictionary.getAll()
             .then(dict => Response.Ok(res, dict))
             .catch(err => Response.Internal(res, err));
