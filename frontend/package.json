@@ -46,7 +46,7 @@
     "@quasar/cli": "^2.5.0",
     "autoprefixer": "^10.4.2",
     "devtron": "^1.4.0",
-    "electron": "^2.0.0",
+    "electron": "^35.7.5",
     "electron-debug": "^1.5.0",
     "electron-devtools-installer": "^2.2.4",
     "strip-ansi": "^3.0.1"
