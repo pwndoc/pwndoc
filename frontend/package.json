@@ -22,7 +22,7 @@
     "@tiptap/starter-kit": "^2.11.7",
     "@tiptap/vue-3": "^2.11.7",
     "ae-cvss-calculator": "^1.0.3",
-    "axios": "^0.18.1",
+    "axios": "^0.30.2",
     "core-js": "^3.37.1",
     "diff": "^4.0.2",
     "dompurify": "^3.2.4",
