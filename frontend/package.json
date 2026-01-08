@@ -27,7 +27,7 @@
     "diff": "^4.0.2",
     "dompurify": "^3.2.4",
     "highlight.js": "^11.10.0",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "jwt-decode": "^2.2.0",
     "lodash": "^4.17.21",
     "lowlight": "^2.7.0",
