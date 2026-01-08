@@ -25,8 +25,16 @@ AuditTypeSchema.statics.getAll = () => {
     return new Promise((resolve, reject) => {
         var query = AuditType.find().sort({order: 1});
         query.select('name templates sections hidden stage')
+        query.lean()
         query.exec()
         .then((rows) => {
+            // Convert null template subdocuments to empty objects for Mongoose 9.x compatibility
+            rows = rows.map(row => {
+                if (row.templates) {
+                    row.templates = row.templates.map(template => template === null ? {} : template);
+                }
+                return row;
+            });
             resolve(rows);
         })
         .catch((err) => {
@@ -40,8 +48,13 @@ AuditTypeSchema.statics.getByName = (name) => {
     return new Promise((resolve, reject) => {
         var query = AuditType.findOne({name: name});
         query.select('name templates sections hidden stage')
+        query.lean()
         query.exec()
         .then((rows) => {
+            // Convert null template subdocuments to empty objects for Mongoose 9.x compatibility
+            if (rows && rows.templates) {
+                rows.templates = rows.templates.map(template => template === null ? {} : template);
+            }
             resolve(rows);
         })
         .catch((err) => {

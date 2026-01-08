@@ -1,5 +1,6 @@
 var fs = require('fs');
-var app = require('express')();
+var express = require('express');
+var app = express();
 
 var https = require('https').Server({
   key: fs.readFileSync(__dirname+'/../ssl/server.key'),
@@ -21,7 +22,6 @@ var io = require('socket.io')(https, {
     origin: "*"
   }
 })
-var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
 var utils = require('./lib/utils');
 const config = require('./config/config.json');
@@ -32,8 +32,6 @@ global.__basedir = __dirname;
 
 // Database connection
 var mongoose = require('mongoose');
-// Use native promises
-mongoose.Promise = global.Promise;
 // Trim all Strings
 mongoose.Schema.Types.String.set('trim', true);
 
@@ -118,11 +116,20 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(bodyParser.json({limit: '100mb'}));
-app.use(bodyParser.urlencoded({
+app.use(express.json({limit: '100mb'}));
+app.use(express.urlencoded({
   limit: '10mb',
   extended: false // do not need to take care about images, videos -> false: only strings
 }));
+
+// Ensure req.body is always an object (not null/undefined) to prevent crashes
+// We may want to remove this once all methods support null object checks
+app.use(function(req, res, next) {
+    if (req.body === null || req.body === undefined) {
+        req.body = {};
+    }
+    next();
+});
 
 app.use(cookieParser())
 
