@@ -165,6 +165,7 @@
                 outlined
                 /> 
                 <q-select 
+                v-if="!shouldHideLanguageField"
                 :label="$t('selectLanguage')+' *'"
                 :error="!!errors.language"
                 :error-message="errors.language"
