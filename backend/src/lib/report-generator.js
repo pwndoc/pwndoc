@@ -541,13 +541,42 @@ async function prepAuditData(data, settings) {
     }
 
     result.client = {}
+    result.clients = []
+    
+    // Handle both array and single client for backwards compatibility
+    var clientsArray = []
     if (data.client) {
-        result.client.email = data.client.email || "undefined"
-        result.client.firstname = data.client.firstname || "undefined"
-        result.client.lastname = data.client.lastname || "undefined"
-        result.client.phone = data.client.phone || "undefined"
-        result.client.cell = data.client.cell || "undefined"
-        result.client.title = data.client.title || "undefined"
+        if (Array.isArray(data.client)) {
+            clientsArray = data.client
+        } else {
+            // Single client (old format) - convert to array
+            clientsArray = [data.client]
+        }
+    }
+    
+    // Build clients array for looping in templates
+    clientsArray.forEach(client => {
+        if (client) {
+            result.clients.push({
+                email: client.email || "undefined",
+                firstname: client.firstname || "undefined",
+                lastname: client.lastname || "undefined",
+                phone: client.phone || "undefined",
+                cell: client.cell || "undefined",
+                title: client.title || "undefined"
+            })
+        }
+    })
+    
+    // Backwards compatibility: set client object to first client for old templates
+    if (clientsArray.length > 0 && clientsArray[0]) {
+        var firstClient = clientsArray[0]
+        result.client.email = firstClient.email || "undefined"
+        result.client.firstname = firstClient.firstname || "undefined"
+        result.client.lastname = firstClient.lastname || "undefined"
+        result.client.phone = firstClient.phone || "undefined"
+        result.client.cell = firstClient.cell || "undefined"
+        result.client.title = firstClient.title || "undefined"
     }
     result.reviewers = []
     data.reviewers.forEach(reviewer => {
