@@ -254,6 +254,7 @@ export default {
     function: 'Fonction',
     phone: 'Téléphone',
     cell: 'Portable',
+    jobTitle: 'Titre du poste',
     role: 'Rôle',
     collatorator: 'Collaborateur',
     addCollaborator: 'Ajouter un Collaborateur',

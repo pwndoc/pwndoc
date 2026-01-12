@@ -1,5 +1,6 @@
 var fs = require('fs');
-var app = require('express')();
+var express = require('express');
+var app = express();
 
 var https = require('https').Server({
   key: fs.readFileSync(__dirname+'/../ssl/server.key'),
@@ -21,21 +22,29 @@ var io = require('socket.io')(https, {
     origin: "*"
   }
 })
-var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
 var utils = require('./lib/utils');
+const config = require('./config/config.json');
+const env = process.env.NODE_ENV || 'dev';
 
 // Get configuration
 global.__basedir = __dirname;
 
 // Database connection
 var mongoose = require('mongoose');
-// Use native promises
-mongoose.Promise = global.Promise;
 // Trim all Strings
 mongoose.Schema.Types.String.set('trim', true);
 
-mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, {});
+let connectionOptions = {};
+if (config && config[env] && config[env].database && config[env].database.connectionOptions) {
+  connectionOptions = config[env].database.connectionOptions;
+}
+
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI, connectionOptions);
+} else {
+  mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, connectionOptions);
+}
 
 // Models import
 require('./models/user');
@@ -109,11 +118,20 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(bodyParser.json({limit: '100mb'}));
-app.use(bodyParser.urlencoded({
+app.use(express.json({limit: '100mb'}));
+app.use(express.urlencoded({
   limit: '10mb',
   extended: false // do not need to take care about images, videos -> false: only strings
 }));
+
+// Ensure req.body is always an object (not null/undefined) to prevent crashes
+// We may want to remove this once all methods support null object checks
+app.use(function(req, res, next) {
+    if (req.body === null || req.body === undefined) {
+        req.body = {};
+    }
+    next();
+});
 
 app.use(cookieParser())
 

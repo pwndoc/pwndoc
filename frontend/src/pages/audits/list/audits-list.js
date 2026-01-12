@@ -86,7 +86,57 @@ export default {
     computed: {
         modalAuditTypes: function() {
             return this.auditTypes.filter(type => type.stage === this.currentAudit.type)
+        },
+        displayLanguage: function() {
+            return localStorage.getItem("system_language") || null;
+        },
+        shouldHideLanguageField: function() {
+            // Hide language field if there's only one language AND it matches the display language
+            if (!this.languages || this.languages.length !== 1) {
+                return false;
+            }
+            
+            // If no display language is set, don't hide the field
+            if (!this.displayLanguage) {
+                return false;
+            }
+            
+            const languageLocale = String(this.languages[0].locale || '').toLowerCase().trim();
+            const displayLang = String(this.displayLanguage || '').toLowerCase().trim();
+            
+            if (!languageLocale || !displayLang) {
+                return false;
+            }
+            
+            // Normalize both values (replace underscores with hyphens, handle case)
+            const normalizedLanguage = languageLocale.replace(/_/g, '-');
+            const normalizedDisplay = displayLang.replace(/_/g, '-');
+            
+            // Extract base language code (e.g., "en" from "en-US", "fr" from "fr-FR", etc.)
+            const languageBase = normalizedLanguage.split('-')[0];
+            const displayBase = normalizedDisplay.split('-')[0];
+            
+            // Match if exact match or if base language codes match
+            // This handles cases like "en" matching "en-us", "fr" matching "fr-FR", etc.
+            const matches = normalizedLanguage === normalizedDisplay || languageBase === displayBase;
+            
+            return matches;
         }
+    },
+
+    watch: {
+        languages: {
+            handler: function(newVal) {
+                // Auto-select language if only one is available
+                if (newVal && newVal.length === 1) {
+                    // Always set it if there's only one language, unless it's already set to that language
+                    if (this.currentAudit.language !== newVal[0].locale) {
+                        this.currentAudit.language = newVal[0].locale;
+                    }
+                }
+            },
+            immediate: true
+        },
     },
 
     methods: {
@@ -94,6 +144,10 @@ export default {
             DataService.getLanguages()
             .then((data) => {
                 this.languages = data.data.datas;
+                // Auto-select language if only one is available
+                if (this.languages.length === 1 && !this.currentAudit.language) {
+                    this.currentAudit.language = this.languages[0].locale;
+                }
             })
             .catch((err) => {
                 console.log(err)
@@ -266,9 +320,14 @@ export default {
         cleanCurrentAudit: function() {
             this.cleanErrors();
             this.currentAudit.name = '';
-            this.currentAudit.language = '';
             this.currentAudit.auditType = '';
             this.currentAudit.type = 'default';
+            // Auto-select language if only one is available when modal opens
+            if (this.languages && this.languages.length === 1) {
+                this.currentAudit.language = this.languages[0].locale;
+            } else {
+                this.currentAudit.language = '';
+            }
         },
 
         // Convert language locale of audit for table display

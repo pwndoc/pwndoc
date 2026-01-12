@@ -496,13 +496,11 @@ module.exports = function(app) {
     });
 
     function extractFiles(archivePath, destPath, files = []) {
-        console.log(archivePath, destPath, files)
         return new Promise((resolve, reject) => {
             const readStream = fs.createReadStream(archivePath)
             const extract = tar.extract()
             let filesExtracted = []
             const directories = files.filter(e => e.endsWith('/'))
-            console.log(directories)
 
             extract.on('entry', (header, stream, next) => {
                 console.log('entry: ', header.name)
@@ -530,7 +528,6 @@ module.exports = function(app) {
                         })
 
                         stream.on('end', () => {
-                            console.log('stream end: ', header.name)
                             writeStream.end()
                             filesExtracted.push(header.name)
                             next()
@@ -557,9 +554,6 @@ module.exports = function(app) {
                 console.log('finish')
                 readStream.close()
                 const missingFiles = files.filter(x => !filesExtracted.includes(x))
-                console.log(filesExtracted.length)
-                console.log(files)
-                console.log(missingFiles)
                 if (filesExtracted.length === 0 )
                     reject(new Error('No files were extracted from the Archive'))
                 else if (missingFiles.length > 0)
@@ -625,7 +619,6 @@ module.exports = function(app) {
         return new Promise(async (resolve, reject) => {
             const results = [];
             for (const promise of promises) {
-                console.log((results.length + 1) + ' / ' + promises.length)
                 try {
                     const result = await promise;
                     results.push({ status: 'fulfilled', value: result });

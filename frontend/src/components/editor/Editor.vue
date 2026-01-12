@@ -206,7 +206,7 @@
                 </template>
 
             </template>
-            <div v-if="diff !== undefined && (diff || valueModel) && valueModel !== diff">
+            <div v-if="diff !== undefined && (diff || modelValue) && modelValue !== diff">
                 <q-btn flat size="sm" dense
                 :class="{'is-active': toggleDiff}"
                 label="toggle diff"
@@ -267,7 +267,7 @@ import CommentExtension from './editor-comment-extension'
 import { ref, computed } from 'vue'
 import { LanguageTool } from './editor-spellcheck'
 
-const Diff = require('diff')
+import {Diff} from 'diff';
 
 import Utils from '@/services/utils'
 import ImageService from '@/services/image'
@@ -485,7 +485,7 @@ export default {
         diffContent: function() {
             var content = ''
             if (typeof this.diff !== "undefined") {
-                var HtmlDiff = new Diff.Diff(true)
+                var HtmlDiff = new Diff(true);
                 HtmlDiff.tokenize = function(value) {
                     return value.replace(/<code[^>]*>/g, "<code>").split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
                 }
@@ -500,7 +500,7 @@ export default {
                         .replace(/(<pre><code>)(.+?)(<\/code><\/pre>|$)/g, `$1<span class="${diffclass}">$2</span>$3`) // Insert span diffclass in codeblocks
                         .replace(/(^[^<].*?)(<|$)/g, `<span class="${diffclass}">$1</span>$2`) // Insert span diffclass if text only
                     }
-                        content += value
+                    content += value
                 })
             }
             return content

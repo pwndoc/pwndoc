@@ -44,7 +44,7 @@ async function generateDoc(audit) {
     }
     opts.getSize = function(img, tagValue, tagName) {
         if (img) {
-            var sizeObj = sizeOf(img);
+            var sizeObj = sizeOf.default(img);
             var width = sizeObj.width;
             var height = sizeObj.height;
             if (tagName === "company.logo_small") {
@@ -569,6 +569,7 @@ async function prepAuditData(data, settings) {
             lastname: collab.lastname || "undefined",
             email: collab.email || "undefined",
             phone: collab.phone || "undefined",
+            jobTitle: collab.jobTitle || "undefined",
             role: collab.role || "undefined"
         })
     })

@@ -166,8 +166,8 @@ module.exports = function () {
               `<w:bCs/>`+
               `<w:i/>`+
               `<w:iCs/>`+
-              `<w:u w:val="single"/>`+
               `<w:strike/>`+
+              `<w:u w:val="single"/>`+
             `</w:rPr>`+
             `<w:t xml:space="preserve">Mark</w:t>`+
           `</w:r>`+
