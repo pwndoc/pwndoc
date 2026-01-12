@@ -40,6 +40,8 @@ services:
   pwndoc-frontend:
     image: ghcr.io/pwndoc/pwndoc-frontend:latest
     container_name: pwndoc-frontend
+    volumes:
+      - ./frontend/ssl:/etc/nginx/ssl:ro
     restart: always
     ports:
       - ${APP_PORT}:8443
