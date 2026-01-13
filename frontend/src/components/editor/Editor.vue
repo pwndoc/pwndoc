@@ -272,7 +272,8 @@ import {Diff} from 'diff';
 import Utils from '@/services/utils'
 import ImageService from '@/services/image'
 
-import { lowlight } from 'lowlight'
+import {common, createLowlight} from 'lowlight'
+const lowlight = createLowlight(common)
 lowlight.registerAlias('xml', ['html'])
 
 export default {

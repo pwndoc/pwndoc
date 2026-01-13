@@ -1,5 +1,5 @@
 import { useUserStore } from 'src/stores/user'
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { api } from 'boot/axios';
 import { routerInstance } from 'boot/router-instance';
 
@@ -12,7 +12,7 @@ export default {
             api.post(`users/token`, params)
             .then((response) => {
                 var token = response.data.datas.token;
-                userStore.setUser(jwt_decode(token));
+                userStore.setUser(jwtDecode(token));
                 resolve();
             })
             .catch((error) => {
@@ -26,7 +26,7 @@ export default {
             api.get('users/refreshtoken')
             .then((response) => {
                 var token = response.data.datas.token;
-                userStore.setUser(jwt_decode(token));
+                userStore.setUser(jwtDecode(token));
                 resolve()
             })
             .catch(err => {
@@ -55,7 +55,7 @@ export default {
             api.post(`users/init`, params)
             .then((response) => {
                 var token = response.data.datas.token;
-                this.user = jwt_decode(token);
+                this.user = jwtDecode(token);
                 resolve();
             })
             .catch((error) => {
