@@ -533,13 +533,18 @@ export default {
 			let severity = "None"
 			let cvss = null
 
-			if (this.$settings.report.public.scoringMethods.CVSS4 && finding.cvssv4) {
-				cvss = new Cvss4P0(finding.cvssv4).createJsonSchema()
-			} else if (this.$settings.report.public.scoringMethods.CVSS3 && finding.cvssv3) {
-				cvss = new Cvss3P1(finding.cvssv3).createJsonSchema()
+			try {
+				if (this.$settings.report.public.scoringMethods.CVSS4 && finding.cvssv4) {
+					cvss = new Cvss4P0(finding.cvssv4).createJsonSchema()
+				} else if (this.$settings.report.public.scoringMethods.CVSS3 && finding.cvssv3) {
+					cvss = new Cvss3P1(finding.cvssv3).createJsonSchema()
+				}
+			} catch (err) {
+				// Invalid CVSS format — ignore and treat as no CVSS
+				cvss = null
 			}
 
-			if (cvss && cvss.baseScore >= 0) {
+			if (cvss && typeof cvss.baseScore === 'number' && cvss.baseScore >= 0) {
 				severity = cvss.baseSeverity
 
 				let category = finding.category || "No Category"
