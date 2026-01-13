@@ -20,6 +20,7 @@ module.exports = function(request, app) {
                 "mediumColor": "#f9a009",
                 "noneColor": "#4a86e8",
               },
+              "enableSpellCheck": false,
               "highlightWarning": false,
               "highlightWarningColor": "#ffff25",
               "requiredFields": {
@@ -72,6 +73,7 @@ module.exports = function(request, app) {
                 "mediumColor": "#f9a009",
                 "noneColor": "#4a86e8",
               },
+              "enableSpellCheck": false,
               "highlightWarning": false,
               "highlightWarningColor": "#ffff25",
               "requiredFields": {
@@ -149,6 +151,7 @@ module.exports = function(request, app) {
                   "mediumColor": "#123456",
                   "noneColor": "#123456",
                 },
+                "enableSpellCheck": true,
                 "highlightWarning": true,
                 "highlightWarningColor": "#123456",
                 "requiredFields": {

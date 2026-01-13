@@ -2,6 +2,7 @@
 .thumbs.db
 node_modules
 mongo-data*
+mongo-data-dev*
 report-templates
 custom-generator.js
 report-filters-custom.js
