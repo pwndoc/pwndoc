@@ -96,15 +96,29 @@
                     option-value="email"
                     option-label="email"
                     @update:model-value="setCompanyFromClient"
+                    multiple
+                    use-chips
                     clearable
                     options-sanitize
                     outlined
-                    :rules="($settings.report.public.requiredFields.client) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                    :rules="($settings.report.public.requiredFields.client) ? [val => !!val && val.length > 0 || $t('fieldIsRequired')] : ['']"
                     lazy-rules="ondemand"
                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                     >
                         <template v-slot:label>
                             {{$t('client')}} <span v-if="$settings.report.public.requiredFields.client" class="text-red">*</span>
+                        </template>
+                        <template v-slot:selected-item="scope">
+                            <q-chip
+                            dense
+                            :removable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                            @remove="scope.removeAtIndex(scope.index)"
+                            :tabindex="scope.tabindex"
+                            color="blue-grey-5"
+                            text-color="white"
+                            >
+                                {{scope.opt.email}}
+                            </q-chip>
                         </template>
                     </q-select>
                     <q-select 

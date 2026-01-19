@@ -25,7 +25,7 @@ export default {
                 creator: {},
                 name: "",
                 auditType: "",
-                client: {},
+                client: [],
                 company: {},
                 collaborators: [],
                 reviewers: [],
@@ -143,6 +143,14 @@ export default {
             })
             .then((data) => {
                 this.audit = data.data.datas;
+                // Backwards compatibility: convert single client to array
+                if (this.audit.client && !Array.isArray(this.audit.client)) {
+                    this.audit.client = [this.audit.client];
+                }
+                // Ensure client is always an array
+                if (!this.audit.client) {
+                    this.audit.client = [];
+                }
                 this.auditOrig = this.$_.cloneDeep(this.audit);
                 this.getCollaborators();
                 this.getReviewers();
@@ -276,7 +284,17 @@ export default {
 
         // Filter client options when selecting company
         filterClients: function(step) {
-            if (step !== 'init') this.audit.client = null // only reset client when company is updated
+            if (step !== 'init') {
+                // Reset client when company is updated, but filter to keep valid clients
+                if (this.audit.company && this.audit.company.name) {
+                    // Keep only clients that belong to the selected company
+                    this.audit.client = (this.audit.client || []).filter(client => 
+                        client && client.company && client.company.name === this.audit.company.name
+                    );
+                } else {
+                    this.audit.client = [];
+                }
+            }
             if (this.audit.company && this.audit.company.name) {
                 this.selectClients = [];
                 this.clients.map(client => {
@@ -289,16 +307,37 @@ export default {
 
         // Set Company when selecting client 
         setCompanyFromClient: function(value) {
-            if (value && !value.company) {
-                this.audit.company = null;
+            // value is now an array of clients
+            if (!value || value.length === 0) {
+                // If no clients selected, don't change company
+                return;
             }
-            else if (value) {
+            // Use the first client's company to set the company
+            var firstClient = value[0];
+            if (firstClient && firstClient.company) {
+                var companyName = firstClient.company.name;
                 for (var i=0; i<this.companies.length; i++) {
-                    if (this.companies[i].name === value.company.name) {
-                        this.audit.company = this.companies[i];
+                    if (this.companies[i].name === companyName) {
+                        // Only update company if it's different
+                        if (!this.audit.company || this.audit.company.name !== companyName) {
+                            this.audit.company = this.companies[i];
+                            // Filter available clients to only those from this company
+                            this.selectClients = [];
+                            this.clients.map(client => {
+                                if (client.company && client.company.name === companyName) {
+                                    this.selectClients.push(client);
+                                }
+                            });
+                            // Filter selected clients to only those from this company
+                            this.audit.client = value.filter(c => 
+                                c && c.company && c.company.name === companyName
+                            );
+                        }
                         break;
                     }
                 }
+            } else if (firstClient && !firstClient.company) {
+                this.audit.company = null;
             }
         },
 
