@@ -22,13 +22,24 @@ module.exports = function(app) {
             // Custom rules are managed by the LanguageTool container and loaded automatically
             const params = new URLSearchParams({ text, language });
 
-            const ltResponse = await fetch(`${LT_URL}/v2/check`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: params
-            });
+            let ltResponse;
+            try {
+                ltResponse = await fetch(`${LT_URL}/v2/check`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: params
+                });
+            } catch (err) {
+                const cause = err && err.cause ? err.cause : {};
+                const code = cause.code || cause.errno;
+                const detail = cause.message || err.message || String(err);
+                console.error("LanguageTool fetch failed", { url: LT_URL, code, detail });
+                return res.status(502).json({
+                    error: `LanguageTool fetch failed${code ? ` (${code})` : ""}: ${detail}`
+                });
+            }
 
             if (!ltResponse.ok) {
                 return res.status(502).json({
