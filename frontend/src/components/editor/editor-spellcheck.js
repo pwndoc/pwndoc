@@ -3,6 +3,7 @@ import { Extension } from '@tiptap/core'
 import { debounce } from 'lodash'
 import { Plugin, PluginKey } from 'prosemirror-state'
 import { Decoration, DecorationSet } from 'prosemirror-view'
+import { Notify } from 'quasar'
 
 import SpellcheckService from '@/services/spellcheck'
 
@@ -11,6 +12,7 @@ const LanguageToolHelpingWords = {
   MatchUpdatedTransactionName: 'matchUpdated',
   MatchRangeUpdatedTransactionName: 'matchRangeUpdated',
   LoadingTransactionName: 'languageToolLoading',
+  WordIgnoredEventName: 'spellcheck-word-ignored',
 }
 
 const updateMatchAndRange = (storage, editorView, m, range) => {
@@ -255,11 +257,23 @@ export const LanguageTool = Extension.create({
         () =>
         ({ editor }) => {
           const { from, to } = this.storage.matchRange
-          this.storage.decorationSet = this.storage.decorationSet.remove(this.storage.decorationSet.find(from, to))
-
           const word = editor.state.doc.textBetween(from, to)
 
           SpellcheckService.addWord(word)
+            .then(() => {
+              // Notify editors to remove decorations for this word
+              document.dispatchEvent(new CustomEvent(LanguageToolHelpingWords.WordIgnoredEventName, {
+                detail: { word: word.toLowerCase() }
+              }))
+            })
+            .catch((err) => {
+              Notify.create({
+                message: err.response.data.datas || "Failed to add word to dictionary",
+                color: 'negative',
+                textColor: 'white',
+                position: 'top-right'
+              })
+            })
 
           return false
         },
@@ -408,32 +422,54 @@ export const LanguageTool = Extension.create({
           },
         },
 
-        view: () => ({
-          update: (view) => {
-            extensionThis.storage.editorView = view
+        view: (view) => {
+          // Handler for when another editor ignores a word
+          const handleWordIgnored = (event) => {
+            const ignoredWord = event.detail.word
+            const allDecorations = extensionThis.storage.decorationSet.find()
+            const decorationsToRemove = allDecorations.filter((deco) => {
+              const decoText = view.state.doc.textBetween(deco.from, deco.to)
+              return decoText.toLowerCase() === ignoredWord
+            })
 
-            // Initialize debounced functions now that we have editorView
-            if (!extensionThis.storage.debouncedGetMatchAndSetDecorations) {
-              extensionThis.storage.debouncedGetMatchAndSetDecorations = createDebouncedGetMatchAndSetDecorations(
-                extensionThis.storage,
-                view
-              )
+            if (decorationsToRemove.length > 0) {
+              extensionThis.storage.decorationSet = extensionThis.storage.decorationSet.remove(decorationsToRemove)
+              view.dispatch(view.state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
             }
+          }
 
-            if (!extensionThis.storage.debouncedProofreadAndDecorate) {
-              extensionThis.storage.debouncedProofreadAndDecorate = debounce((doc, nodePos = 0) => {
-                proofreadAndDecorateWholeDoc(extensionThis.storage, view, doc, nodePos)
-              }, 500)
+          document.addEventListener(LanguageToolHelpingWords.WordIgnoredEventName, handleWordIgnored)
 
-              // Trigger initial proofread if automatic mode is enabled
-              if (extensionThis.options.automaticMode && !extensionThis.storage.proofReadInitially) {
-                proofreadAndDecorateWholeDoc(extensionThis.storage, view, view.state.doc)
+          return {
+            update: (view) => {
+              extensionThis.storage.editorView = view
+
+              // Initialize debounced functions now that we have editorView
+              if (!extensionThis.storage.debouncedGetMatchAndSetDecorations) {
+                extensionThis.storage.debouncedGetMatchAndSetDecorations = createDebouncedGetMatchAndSetDecorations(
+                  extensionThis.storage,
+                  view
+                )
               }
-            }
 
-            setTimeout(() => addEventListenersToDecorations(extensionThis.storage, view), 100)
-          },
-        }),
+              if (!extensionThis.storage.debouncedProofreadAndDecorate) {
+                extensionThis.storage.debouncedProofreadAndDecorate = debounce((doc, nodePos = 0) => {
+                  proofreadAndDecorateWholeDoc(extensionThis.storage, view, doc, nodePos)
+                }, 500)
+
+                // Trigger initial proofread if automatic mode is enabled
+                if (extensionThis.options.automaticMode && !extensionThis.storage.proofReadInitially) {
+                  proofreadAndDecorateWholeDoc(extensionThis.storage, view, view.state.doc)
+                }
+              }
+
+              setTimeout(() => addEventListenersToDecorations(extensionThis.storage, view), 100)
+            },
+            destroy: () => {
+              document.removeEventListener(LanguageToolHelpingWords.WordIgnoredEventName, handleWordIgnored)
+            },
+          }
+        },
       }),
     ]
   },
