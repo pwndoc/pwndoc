@@ -89,18 +89,34 @@ const gimmeDecoration = (from, to, match) =>
 
 const moreThan500Words = (s) => s.trim().split(/\s+/).length >= 500
 
-const fetchMatchesForChunk = async (apiUrl, text) => {
-  const postOptions = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-    },
-    body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
-  }
+// Get text content excluding inline code marks
+const getTextWithoutCode = (node) => {
+  let text = ''
+  node.descendants((child) => {
+    if (child.isText) {
+      // Skip text with code mark
+      if (child.marks?.some(mark => mark.type.name === 'code')) return
+      text += child.text
+    }
+  })
+  return text
+}
 
-  const ltRes = await (await fetch(apiUrl, postOptions)).json()
-  return ltRes.datas?.matches || []
+const fetchMatchesForChunk = async (apiUrl, text) => {
+  if (text) {
+    const postOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
+    }
+
+    const ltRes = await (await fetch(apiUrl, postOptions)).json()
+    return ltRes.datas?.matches || []
+  }
+  return []
 }
 
 const getMatchAndSetDecorations = async (storage, editorView, doc, text, originalFrom) => {
@@ -133,11 +149,15 @@ const proofreadAndDecorateWholeDoc = async (storage, editorView, doc, nodePos = 
   let textNodesWithPosition = []
 
   let index = 0
-  doc.descendants((node, pos) => {
+  doc.descendants((node, pos, parent) => {
     if (!node.isText) {
       index += 1
       return
     }
+
+    // Skip code blocks and inline code
+    if (parent?.type.name === 'codeBlock') return
+    if (node.marks?.some(mark => mark.type.name === 'code')) return
 
     let item = textNodesWithPosition[index] || { text: '', from: -1, to: -1 }
 
@@ -163,7 +183,8 @@ const proofreadAndDecorateWholeDoc = async (storage, editorView, doc, nodePos = 
       newDataSet = true
     } else {
       const diff = from - lastPos
-      if (diff > 0) finalText += ' '.repeat(diff)
+      // Cap spacing to avoid huge gaps from skipped code blocks
+      if (diff > 0) finalText += ' '
     }
 
     lastPos = to
@@ -385,6 +406,8 @@ export const LanguageTool = Extension.create({
 
                 tr.doc.descendants((node, pos) => {
                   if (!node.isBlock) return false
+                  if (node.type.name === 'codeBlock') return false
+
                   const nodeFrom = pos
                   const nodeTo = pos + node.nodeSize
 
@@ -394,18 +417,19 @@ export const LanguageTool = Extension.create({
 
                 if (selectedNode && extensionThis.storage.editorView) {
                   const originalFrom = selectedNode.pos + 1
+                  const textWithoutCode = getTextWithoutCode(selectedNode.node)
                   if (originalFrom !== extensionThis.storage.lastOriginalFrom) {
                     getMatchAndSetDecorations(
                       extensionThis.storage,
                       extensionThis.storage.editorView,
                       selectedNode.node,
-                      selectedNode.node.textContent,
+                      textWithoutCode,
                       originalFrom
                     )
                   } else if (extensionThis.storage.debouncedGetMatchAndSetDecorations) {
                     extensionThis.storage.debouncedGetMatchAndSetDecorations(
                       selectedNode.node,
-                      selectedNode.node.textContent,
+                      textWithoutCode,
                       originalFrom
                     )
                   }
