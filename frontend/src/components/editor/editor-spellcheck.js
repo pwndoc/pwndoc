@@ -87,7 +87,7 @@ const gimmeDecoration = (from, to, match) =>
 
 const moreThan500Words = (s) => s.trim().split(/\s+/).length >= 500
 
-const getMatchAndSetDecorations = async (storage, editorView, doc, text, originalFrom) => {
+const fetchMatchesForChunk = async (apiUrl, text) => {
   const postOptions = {
     method: 'POST',
     headers: {
@@ -97,14 +97,17 @@ const getMatchAndSetDecorations = async (storage, editorView, doc, text, origina
     body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
   }
 
-  const ltRes = await (await fetch(storage.apiUrl, postOptions)).json()
+  const ltRes = await (await fetch(apiUrl, postOptions)).json()
+  return ltRes.matches || []
+}
+
+const getMatchAndSetDecorations = async (storage, editorView, doc, text, originalFrom) => {
+  const matches = await fetchMatchesForChunk(storage.apiUrl, text)
 
   const decorations = []
-
-  for (const match of ltRes.matches) {
+  for (const match of matches) {
     const docFrom = match.offset + originalFrom
     const docTo = docFrom + match.length
-
     decorations.push(gimmeDecoration(docFrom, docTo, match))
   }
 
@@ -138,7 +141,7 @@ const proofreadAndDecorateWholeDoc = async (storage, editorView, doc, nodePos = 
 
     item.text += node.text
     item.from = item.from === -1 ? pos + nodePos : item.from
-    item.to = pos + nodePos + item.text.length
+    item.to = pos + nodePos + node.text.length  // Use node.text.length, not item.text.length
 
     textNodesWithPosition[index] = item
   })
@@ -158,7 +161,7 @@ const proofreadAndDecorateWholeDoc = async (storage, editorView, doc, nodePos = 
       newDataSet = true
     } else {
       const diff = from - lastPos
-      if (diff > 0) finalText += ' '.repeat(diff + 1)
+      if (diff > 0) finalText += ' '.repeat(diff)
     }
 
     lastPos = to
@@ -180,10 +183,33 @@ const proofreadAndDecorateWholeDoc = async (storage, editorView, doc, nodePos = 
   if (editorView)
     editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, true))
 
-  Promise.all(chunks.map(({ text, from }) => getMatchAndSetDecorations(storage, editorView, doc, text, from))).then(() => {
-    if (editorView)
-      editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
-  })
+  // Fetch all matches in parallel, then add all decorations at once to avoid race conditions
+  const allMatches = await Promise.all(
+    chunks.map(async ({ text, from }) => {
+      const matches = await fetchMatchesForChunk(storage.apiUrl, text)
+      return { matches, from }
+    })
+  )
+
+  // Collect all decorations
+  const allDecorations = []
+  for (const { matches, from } of allMatches) {
+    for (const match of matches) {
+      const docFrom = match.offset + from
+      const docTo = docFrom + match.length
+      allDecorations.push(gimmeDecoration(docFrom, docTo, match))
+    }
+  }
+
+  // Add all decorations at once
+  storage.decorationSet = storage.decorationSet.add(doc, allDecorations)
+
+  if (editorView) {
+    editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
+    editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
+  }
+
+  setTimeout(() => addEventListenersToDecorations(storage, editorView), 100)
 
   storage.proofReadInitially = true
 }
