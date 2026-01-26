@@ -100,7 +100,7 @@ const fetchMatchesForChunk = async (apiUrl, text) => {
   }
 
   const ltRes = await (await fetch(apiUrl, postOptions)).json()
-  return ltRes.matches || []
+  return ltRes.datas?.matches || []
 }
 
 const getMatchAndSetDecorations = async (storage, editorView, doc, text, originalFrom) => {

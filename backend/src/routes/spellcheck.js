@@ -8,11 +8,11 @@ module.exports = function(app) {
     // ---------------------------
     // Spellcheck with MongoDB filtering
     // ---------------------------
-    app.post("/api/spellcheck", acl.hasPermission("audit:read"), async (req, res) => {
+    app.post("/api/spellcheck", acl.hasPermission("spellcheck:read"), async (req, res) => {
         try {
             const { text, language = "en-CA" } = req.body;
             if (!text)
-                return res.status(200).json({ matches: [] });
+                return Response.Ok(res, { matches: [] });
 
             // Load custom words from MongoDB
             const entries = await SpellingDictionary.find({});
@@ -36,15 +36,16 @@ module.exports = function(app) {
                 const code = cause.code || cause.errno;
                 const detail = cause.message || err.message || String(err);
                 console.error("LanguageTool fetch failed", { url: LT_URL, code, detail });
-                return res.status(502).json({
-                    error: `LanguageTool fetch failed${code ? ` (${code})` : ""}: ${detail}`
-                });
+                return Response.Custom(res, "error", 502, `LanguageTool fetch failed${code ? ` (${code})` : ""}: ${detail}`);
             }
 
             if (!ltResponse.ok) {
-                return res.status(502).json({
-                    error: `LanguageTool HTTP ${ltResponse.status}`
-                });
+                let errorDetail = ltResponse.statusText || 'Unknown error';
+                try {
+                    const errorBody = await ltResponse.text();
+                    if (errorBody) errorDetail = errorBody;
+                } catch (_) {}
+                return Response.Custom(res, "error", 502, `LanguageTool HTTP ${ltResponse.status}: ${errorDetail}`);
             }
 
             const ltResult = await ltResponse.json();
@@ -55,26 +56,25 @@ module.exports = function(app) {
                 return !dictionary.includes(word.toLowerCase());
             });
 
-            res.json(ltResult);
+            Response.Ok(res, ltResult);
 
         } catch (err) {
-            console.error(err);
-            res.status(500).json({ error: err.toString() });
+            Response.Internal(res, err);
         }
     });
 
-    app.get("/api/spellcheck/dict", acl.hasPermission('settings:read-public'), async (req, res) => {
+    app.get("/api/spellcheck/dict", acl.hasPermission('spellcheck:read'), async (req, res) => {
         return SpellingDictionary.getAll()
             .then(dict => Response.Ok(res, dict))
             .catch(err => Response.Internal(res, err));
     });
 
-    app.post("/api/spellcheck/dict", acl.hasPermission("settings:update"), async (req, res) => {
+    app.post("/api/spellcheck/dict", acl.hasPermission("spellcheck:create"), async (req, res) => {
         try {
             const { word } = req.body;
             if (!word)
-                return res.status(400).json({ error: "Missing 'word'" });
-            
+                return Response.BadParameters(res, "Missing required parameter: word");
+
             const savedWord = await SpellingDictionary.create(word);
             Response.Ok(res, { success: true, word: savedWord.word });
         } catch (err) {
@@ -86,11 +86,11 @@ module.exports = function(app) {
         }
     });
 
-    app.delete("/api/spellcheck/dict", acl.hasPermission("settings:update"), async (req, res) => {
+    app.delete("/api/spellcheck/dict", acl.hasPermission("spellcheck:delete"), async (req, res) => {
         try {
             const { word } = req.body;
             if (!word)
-                return res.status(400).json({ error: "Missing 'word'" });
+                return Response.BadParameters(res, "Missing required parameter: word");
 
             const deletedWord = await SpellingDictionary.delete(word);
             Response.Ok(res, { success: true, removed: deletedWord.word });
