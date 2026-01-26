@@ -6,16 +6,6 @@ import { Decoration, DecorationSet } from 'prosemirror-view'
 
 import SpellcheckService from '@/services/spellcheck'
 
-let editorView
-let decorationSet
-
-let apiUrl = ''
-let textNodesWithPosition = []
-let match = undefined
-let matchRange
-let proofReadInitially = false
-let isLanguageToolActive = true
-
 const LanguageToolHelpingWords = {
   LanguageToolTransactionName: 'languageToolTransaction',
   MatchUpdatedTransactionName: 'matchUpdated',
@@ -23,11 +13,9 @@ const LanguageToolHelpingWords = {
   LoadingTransactionName: 'languageToolLoading',
 }
 
-const dispatch = (tr) => editorView.dispatch(tr)
-
-const updateMatchAndRange = (m, range) => {
-  match = m || undefined
-  matchRange = range || undefined
+const updateMatchAndRange = (storage, editorView, m, range) => {
+  storage.match = m || undefined
+  storage.matchRange = range || undefined
 
   const tr = editorView.state.tr
   tr.setMeta(LanguageToolHelpingWords.MatchUpdatedTransactionName, true)
@@ -35,23 +23,31 @@ const updateMatchAndRange = (m, range) => {
   editorView.dispatch(tr)
 }
 
-const mouseEventsListener = (e) => {
+const createMouseEventsListener = (storage, editorView) => (e) => {
   if (!e.target) return
 
   const matchString = e.target.getAttribute('match')?.trim()
   if (!matchString) return
 
   const { match: m, from, to } = JSON.parse(matchString)
-  updateMatchAndRange(m, { from, to })
+  updateMatchAndRange(storage, editorView, m, { from, to })
 }
 
-const debouncedMouseEventsListener = debounce(mouseEventsListener, 50)
+const addEventListenersToDecorations = (storage, editorView) => {
+  if (!editorView || !editorView.dom) return
 
-const addEventListenersToDecorations = () => {
-  const decorations = document.querySelectorAll('span.lt')
+  // Query only within this editor's DOM element
+  const decorations = editorView.dom.querySelectorAll('span.lt')
   decorations.forEach((el) => {
-    el.addEventListener('mouseover', debouncedMouseEventsListener)
-    el.addEventListener('mouseenter', debouncedMouseEventsListener)
+    // Remove old listeners to avoid duplicates
+    if (el._ltMouseHandler) {
+      el.removeEventListener('mouseover', el._ltMouseHandler)
+      el.removeEventListener('mouseenter', el._ltMouseHandler)
+    }
+    // Create and store the handler on the element
+    el._ltMouseHandler = debounce(createMouseEventsListener(storage, editorView), 50)
+    el.addEventListener('mouseover', el._ltMouseHandler)
+    el.addEventListener('mouseenter', el._ltMouseHandler)
   })
 }
 
@@ -91,17 +87,17 @@ const gimmeDecoration = (from, to, match) =>
 
 const moreThan500Words = (s) => s.trim().split(/\s+/).length >= 500
 
-const getMatchAndSetDecorations = async (doc, text, originalFrom) => {
+const getMatchAndSetDecorations = async (storage, editorView, doc, text, originalFrom) => {
   const postOptions = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       Accept: 'application/json',
     },
-    body: `text=${encodeURIComponent(text)}&language=en-US&enabledOnly=false`,
+    body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
   }
 
-  const ltRes = await (await fetch(apiUrl, postOptions)).json()
+  const ltRes = await (await fetch(storage.apiUrl, postOptions)).json()
 
   const decorations = []
 
@@ -112,31 +108,24 @@ const getMatchAndSetDecorations = async (doc, text, originalFrom) => {
     decorations.push(gimmeDecoration(docFrom, docTo, match))
   }
 
-  const toRemove = decorationSet.find(originalFrom, originalFrom + text.length)
-  decorationSet = decorationSet.remove(toRemove)
-  decorationSet = decorationSet.add(doc, decorations)
+  const toRemove = storage.decorationSet.find(originalFrom, originalFrom + text.length)
+  storage.decorationSet = storage.decorationSet.remove(toRemove)
+  storage.decorationSet = storage.decorationSet.add(doc, decorations)
 
   if (editorView)
-    dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
+    editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
 
-  setTimeout(addEventListenersToDecorations, 100)
+  setTimeout(() => addEventListenersToDecorations(storage, editorView), 100)
 }
 
-const debouncedGetMatchAndSetDecorations = debounce(getMatchAndSetDecorations, 300)
-
-let lastOriginalFrom = 0
-
-const onNodeChanged = (doc, text, originalFrom) => {
-  if (originalFrom !== lastOriginalFrom)
-    getMatchAndSetDecorations(doc, text, originalFrom)
-  else
-    debouncedGetMatchAndSetDecorations(doc, text, originalFrom)
-
-  lastOriginalFrom = originalFrom
+const createDebouncedGetMatchAndSetDecorations = (storage, editorView) => {
+  return debounce((doc, text, originalFrom) => {
+    getMatchAndSetDecorations(storage, editorView, doc, text, originalFrom)
+  }, 300)
 }
 
-const proofreadAndDecorateWholeDoc = async (doc, nodePos = 0) => {
-  textNodesWithPosition = []
+const proofreadAndDecorateWholeDoc = async (storage, editorView, doc, nodePos = 0) => {
+  let textNodesWithPosition = []
 
   let index = 0
   doc.descendants((node, pos) => {
@@ -189,17 +178,15 @@ const proofreadAndDecorateWholeDoc = async (doc, nodePos = 0) => {
   })
 
   if (editorView)
-    dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, true))
+    editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, true))
 
-  Promise.all(chunks.map(({ text, from }) => getMatchAndSetDecorations(doc, text, from))).then(() => {
+  Promise.all(chunks.map(({ text, from }) => getMatchAndSetDecorations(storage, editorView, doc, text, from))).then(() => {
     if (editorView)
-      dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
+      editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
   })
 
-  proofReadInitially = true
+  storage.proofReadInitially = true
 }
-
-const debouncedProofreadAndDecorate = debounce(proofreadAndDecorateWholeDoc, 500)
 
 export const LanguageTool = Extension.create({
   name: 'languagetool',
@@ -214,10 +201,18 @@ export const LanguageTool = Extension.create({
 
   addStorage() {
     return {
-      match,
+      match: undefined,
       loading: false,
       matchRange: { from: -1, to: -1 },
-      active: isLanguageToolActive,
+      active: true,
+      // Per-instance state
+      apiUrl: null,
+      editorView: null,
+      decorationSet: null,
+      proofReadInitially: false,
+      lastOriginalFrom: 0,
+      debouncedGetMatchAndSetDecorations: null,
+      debouncedProofreadAndDecorate: null,
     }
   },
 
@@ -226,16 +221,15 @@ export const LanguageTool = Extension.create({
       proofread:
         () =>
         ({ tr }) => {
-          apiUrl = this.options.apiUrl
-          proofreadAndDecorateWholeDoc(tr.doc)
+          proofreadAndDecorateWholeDoc(this.storage, this.storage.editorView, tr.doc)
           return true
         },
 
       ignoreLanguageToolSuggestion:
         () =>
         ({ editor }) => {
-          const { from, to } = matchRange
-          decorationSet = decorationSet.remove(decorationSet.find(from, to))
+          const { from, to } = this.storage.matchRange
+          this.storage.decorationSet = this.storage.decorationSet.remove(this.storage.decorationSet.find(from, to))
 
           const word = editor.state.doc.textBetween(from, to)
 
@@ -250,8 +244,8 @@ export const LanguageTool = Extension.create({
           const { dispatch, state } = editor.view
           const tr = state.tr
 
-          match = null
-          matchRange = null
+          this.storage.match = null
+          this.storage.matchRange = null
 
           dispatch(
             tr
@@ -265,23 +259,23 @@ export const LanguageTool = Extension.create({
       toggleLanguageTool:
         () =>
         ({ commands }) => {
-          isLanguageToolActive = !isLanguageToolActive
+          this.storage.active = !this.storage.active
 
-          if (isLanguageToolActive) commands.proofread()
+          if (this.storage.active) commands.proofread()
           else commands.resetLanguageToolMatch()
-
-          this.storage.active = isLanguageToolActive
 
           return false
         },
 
-      getLanguageToolState: () => () => isLanguageToolActive,
+      getLanguageToolState: () => () => this.storage.active,
     }
   },
 
   addProseMirrorPlugins() {
-    const { apiUrl: optionsApiUrl } = this.options
-    apiUrl = optionsApiUrl
+    const extensionThis = this
+
+    // Store apiUrl in storage for access by helper functions
+    this.storage.apiUrl = this.options.apiUrl
 
     return [
       new Plugin({
@@ -294,12 +288,17 @@ export const LanguageTool = Extension.create({
 
           attributes: {
             spellcheck: 'false',
-            isLanguageToolActive: `${isLanguageToolActive}`,
+            get isLanguageToolActive() {
+              return `${extensionThis.storage.active}`
+            },
           },
 
           handlePaste(view) {
-            if (view.state.tr.docChanged)
-              debouncedProofreadAndDecorate(view.state.tr.doc)
+            if (view.state.tr.docChanged) {
+              if (extensionThis.storage.debouncedProofreadAndDecorate) {
+                extensionThis.storage.debouncedProofreadAndDecorate(view.state.tr.doc)
+              }
+            }
 
             return false
           },
@@ -307,16 +306,14 @@ export const LanguageTool = Extension.create({
 
         state: {
           init: (_, state) => {
-            decorationSet = DecorationSet.create(state.doc, [])
+            extensionThis.storage.decorationSet = DecorationSet.create(state.doc, [])
 
-            if (this.options.automaticMode)
-              proofreadAndDecorateWholeDoc(state.doc)
-
-            return decorationSet
+            // Defer initial proofread until we have editorView
+            return extensionThis.storage.decorationSet
           },
 
           apply: (tr) => {
-            if (!isLanguageToolActive) return DecorationSet.empty
+            if (!extensionThis.storage.active) return DecorationSet.empty
 
             const matchUpdated = tr.getMeta(
               LanguageToolHelpingWords.MatchUpdatedTransactionName,
@@ -328,18 +325,20 @@ export const LanguageTool = Extension.create({
               LanguageToolHelpingWords.LoadingTransactionName,
             )
 
-            this.storage.loading = !!loading
-            if (matchUpdated) this.storage.match = match
-            if (matchRangeUpdated) this.storage.matchRange = matchRange
+            extensionThis.storage.loading = !!loading
+            if (matchUpdated) extensionThis.storage.match = extensionThis.storage.match
+            if (matchRangeUpdated) extensionThis.storage.matchRange = extensionThis.storage.matchRange
 
             const ltDecorations = tr.getMeta(
               LanguageToolHelpingWords.LanguageToolTransactionName,
             )
-            if (ltDecorations) return decorationSet
+            if (ltDecorations) return extensionThis.storage.decorationSet
 
-            if (tr.docChanged && this.options.automaticMode) {
-              if (!proofReadInitially) {
-                debouncedProofreadAndDecorate(tr.doc)
+            if (tr.docChanged && extensionThis.options.automaticMode) {
+              if (!extensionThis.storage.proofReadInitially) {
+                if (extensionThis.storage.debouncedProofreadAndDecorate) {
+                  extensionThis.storage.debouncedProofreadAndDecorate(tr.doc)
+                }
               } else {
                 let selectedNode
                 const { from, to } = tr.selection
@@ -353,26 +352,60 @@ export const LanguageTool = Extension.create({
                     selectedNode = { node, pos }
                 })
 
-                if (selectedNode) {
-                  onNodeChanged(
-                    selectedNode.node,
-                    selectedNode.node.textContent,
-                    selectedNode.pos + 1,
-                  )
+                if (selectedNode && extensionThis.storage.editorView) {
+                  const originalFrom = selectedNode.pos + 1
+                  if (originalFrom !== extensionThis.storage.lastOriginalFrom) {
+                    getMatchAndSetDecorations(
+                      extensionThis.storage,
+                      extensionThis.storage.editorView,
+                      selectedNode.node,
+                      selectedNode.node.textContent,
+                      originalFrom
+                    )
+                  } else if (extensionThis.storage.debouncedGetMatchAndSetDecorations) {
+                    extensionThis.storage.debouncedGetMatchAndSetDecorations(
+                      selectedNode.node,
+                      selectedNode.node.textContent,
+                      originalFrom
+                    )
+                  }
+                  extensionThis.storage.lastOriginalFrom = originalFrom
                 }
               }
             }
 
-            decorationSet = decorationSet.map(tr.mapping, tr.doc)
-            setTimeout(addEventListenersToDecorations, 100)
-            return decorationSet
+            extensionThis.storage.decorationSet = extensionThis.storage.decorationSet.map(tr.mapping, tr.doc)
+            if (extensionThis.storage.editorView) {
+              setTimeout(() => addEventListenersToDecorations(extensionThis.storage, extensionThis.storage.editorView), 100)
+            }
+            return extensionThis.storage.decorationSet
           },
         },
 
         view: () => ({
           update: (view) => {
-            editorView = view
-            setTimeout(addEventListenersToDecorations, 100)
+            extensionThis.storage.editorView = view
+
+            // Initialize debounced functions now that we have editorView
+            if (!extensionThis.storage.debouncedGetMatchAndSetDecorations) {
+              extensionThis.storage.debouncedGetMatchAndSetDecorations = createDebouncedGetMatchAndSetDecorations(
+                extensionThis.storage,
+                view
+              )
+            }
+
+            if (!extensionThis.storage.debouncedProofreadAndDecorate) {
+              extensionThis.storage.debouncedProofreadAndDecorate = debounce((doc, nodePos = 0) => {
+                proofreadAndDecorateWholeDoc(extensionThis.storage, view, doc, nodePos)
+              }, 500)
+
+              // Trigger initial proofread if automatic mode is enabled
+              if (extensionThis.options.automaticMode && !extensionThis.storage.proofReadInitially) {
+                proofreadAndDecorateWholeDoc(extensionThis.storage, view, view.state.doc)
+              }
+            }
+
+            setTimeout(() => addEventListenersToDecorations(extensionThis.storage, view), 100)
           },
         }),
       }),
