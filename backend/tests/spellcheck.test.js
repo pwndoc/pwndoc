@@ -34,7 +34,7 @@ module.exports = function(request, app) {
                     .send({ text: '', language: 'en-CA' });
 
                 expect(response.status).toBe(200);
-                expect(response.body.matches).toEqual([]);
+                expect(response.body.datas.matches).toEqual([]);
 
                 global.fetch = originalFetch;
             });
@@ -64,7 +64,7 @@ module.exports = function(request, app) {
                     .send({ text: 'test', language: 'en-CA' });
 
                 expect(response.status).toBe(200);
-                expect(response.body).toHaveProperty('matches');
+                expect(response.body.datas).toHaveProperty('matches');
                 // If 'test' is in dictionary, it should be filtered out
                 // If not, it should appear in matches
 
@@ -86,7 +86,7 @@ module.exports = function(request, app) {
                     .send({ text: 'test', language: 'en-CA' });
 
                 expect(response.status).toBe(502);
-                expect(response.body.error).toContain('LanguageTool HTTP 502');
+                expect(response.body.datas).toContain('LanguageTool HTTP 502');
 
                 global.fetch = originalFetch;
             });
@@ -154,8 +154,8 @@ module.exports = function(request, app) {
                     .set('Cookie', [`token=JWT ${adminToken}`])
                     .send({});
 
-                expect(response.status).toBe(400);
-                expect(response.body.error).toContain("Missing 'word'");
+                expect(response.status).toBe(422);
+                expect(response.body.datas).toContain("Missing required parameter: word");
             });
 
             it('Should add word to dictionary (lowercase)', async () => {
@@ -226,8 +226,8 @@ module.exports = function(request, app) {
                     .set('Cookie', [`token=JWT ${adminToken}`])
                     .send({});
 
-                expect(response.status).toBe(400);
-                expect(response.body.error).toContain("Missing 'word'");
+                expect(response.status).toBe(422);
+                expect(response.body.datas).toContain("Missing required parameter: word");
             });
 
             it('Should delete word from dictionary', async () => {

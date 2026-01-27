@@ -29,6 +29,40 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://pwndoc-backend:4242';
 // LanguageTool process tracking
 let languageToolProcess = null;
 let languageToolPid = null;
+let isShuttingDown = false;
+let restartTimer = null;
+let restartAttempts = 0;
+
+const RESTART_BASE_DELAY_MS = parseInt(process.env.LT_RESTART_BASE_DELAY_MS || '1000', 10);
+const RESTART_MAX_DELAY_MS = parseInt(process.env.LT_RESTART_MAX_DELAY_MS || '30000', 10);
+const RESTART_MAX_ATTEMPTS = parseInt(process.env.LT_RESTART_MAX_ATTEMPTS || '10', 10);
+
+function clearRestartTimer() {
+    if (restartTimer) {
+        clearTimeout(restartTimer);
+        restartTimer = null;
+    }
+}
+
+function scheduleRestart(reason) {
+    if (isShuttingDown) {
+        return;
+    }
+    if (Number.isFinite(RESTART_MAX_ATTEMPTS) && RESTART_MAX_ATTEMPTS >= 0 &&
+        restartAttempts >= RESTART_MAX_ATTEMPTS) {
+        console.error(`[LanguageTool] Restart limit reached (${RESTART_MAX_ATTEMPTS}). Not restarting.`);
+        return;
+    }
+
+    restartAttempts += 1;
+    const delay = Math.min(RESTART_MAX_DELAY_MS, RESTART_BASE_DELAY_MS * Math.pow(2, restartAttempts - 1));
+    console.warn(`[LanguageTool] Scheduling restart in ${delay}ms. Reason: ${reason}`);
+    clearRestartTimer();
+    restartTimer = setTimeout(() => {
+        restartTimer = null;
+        startLanguageTool();
+    }, delay);
+}
 
 /**
  * Get list of supported languages by checking org/languagetool/rules directory
@@ -300,6 +334,9 @@ ${customRulesXml.trim().split('\n').map(line => '    ' + line).join('\n')}
  * Returns the spawned process and its PID
  */
 function startLanguageTool() {
+    if (languageToolProcess || languageToolPid) {
+        return { process: languageToolProcess, pid: languageToolPid };
+    }
     // Build Java arguments
     const Xms = process.env.Java_Xms || '256m';
     const Xmx = process.env.Java_Xmx || '512m';
@@ -342,18 +379,23 @@ function startLanguageTool() {
     });
     
     javaProcess.on('exit', (code, signal) => {
-        console.log(`[LanguageTool] Process exited with code ${code} and signal ${signal}`);
+        const reason = `exit code ${code} signal ${signal}`;
+        console.log(`[LanguageTool] Process exited with ${reason}`);
         languageToolProcess = null;
         languageToolPid = null;
+        scheduleRestart(reason);
     });
     
     javaProcess.on('error', (err) => {
+        const reason = `spawn error: ${err.message}`;
         console.error(`[LanguageTool] Failed to start process: ${err.message}`);
         languageToolProcess = null;
         languageToolPid = null;
+        scheduleRestart(reason);
     });
     
     console.log(`[LanguageTool] Started with PID: ${languageToolPid}`);
+    restartAttempts = 0;
     return { process: javaProcess, pid: languageToolPid };
 }
 
@@ -361,6 +403,7 @@ function startLanguageTool() {
  * Stop LanguageTool Java process
  */
 async function stopLanguageTool() {
+    clearRestartTimer();
     if (languageToolProcess && languageToolPid) {
         try {
             // Check if process is still alive

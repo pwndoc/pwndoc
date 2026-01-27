@@ -73,7 +73,10 @@ var builtInRoles = {
             // Custom Fields
             'custom-fields:read',
             // Settings
-            'settings:read-public'
+            'settings:read-public',
+            // Spellcheck
+            'spellcheck:read',
+            'spellcheck:create'
         ]
     },
     admin: {
