@@ -99,6 +99,11 @@ const getMatchAndSetDecorations = async (storage, doc, text, originalFrom, offse
 
   const decorations = []
   for (const match of matches) {
+    // Limit suggestions per match if maxSuggestions is set
+    if (storage.maxSuggestions && match.replacements?.length > storage.maxSuggestions) {
+      match.replacements = match.replacements.slice(0, storage.maxSuggestions)
+    }
+
     let docFrom, docTo
     if (hasValidOffsetMap) {
       // Use offset map to convert string position to editor position
@@ -220,6 +225,7 @@ export const LanguageTool = Extension.create({
       language: 'auto',
       apiUrl: '/api/spellcheck',
       automaticMode: true,
+      maxSuggestions: 5,
     }
   },
 
@@ -231,6 +237,7 @@ export const LanguageTool = Extension.create({
       active: true,
       // Per-instance state
       apiUrl: null,
+      maxSuggestions: null,
       editorView: null,
       decorationSet: null,
       proofReadInitially: false,
@@ -309,8 +316,9 @@ export const LanguageTool = Extension.create({
   },
 
   addProseMirrorPlugins() {
-    // Store apiUrl in storage for access by helper functions
+    // Store options in storage for access by helper functions
     this.storage.apiUrl = this.options.apiUrl
+    this.storage.maxSuggestions = this.options.maxSuggestions
 
     return [
       new Plugin({
