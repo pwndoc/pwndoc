@@ -15,31 +15,31 @@ const LanguageToolHelpingWords = {
   WordIgnoredEventName: 'spellcheck-word-ignored',
 }
 
-const updateMatchAndRange = (storage, editorView, m, range) => {
+const updateMatchAndRange = (storage, m, range) => {
   storage.match = m || undefined
   storage.matchRange = range || undefined
 
-  const tr = editorView.state.tr
+  const tr = storage.editorView.state.tr
   tr.setMeta(LanguageToolHelpingWords.MatchUpdatedTransactionName, true)
   tr.setMeta(LanguageToolHelpingWords.MatchRangeUpdatedTransactionName, true)
-  editorView.dispatch(tr)
+  storage.editorView.dispatch(tr)
 }
 
-const createMouseEventsListener = (storage, editorView) => (e) => {
+const createMouseEventsListener = (storage) => (e) => {
   if (!e.target) return
 
   const matchString = e.target.getAttribute('match')?.trim()
   if (!matchString) return
 
   const { match: m, from, to } = JSON.parse(matchString)
-  updateMatchAndRange(storage, editorView, m, { from, to })
+  updateMatchAndRange(storage, m, { from, to })
 }
 
-const addEventListenersToDecorations = (storage, editorView) => {
-  if (!editorView || !editorView.dom) return
+const addEventListenersToDecorations = (storage) => {
+  if (!storage.editorView || !storage.editorView.dom) return
 
   // Query only within this editor's DOM element
-  const decorations = editorView.dom.querySelectorAll('span.lt')
+  const decorations = storage.editorView.dom.querySelectorAll('span.lt')
   decorations.forEach((el) => {
     // Remove old listeners to avoid duplicates
     if (el._ltMouseHandler) {
@@ -47,37 +47,10 @@ const addEventListenersToDecorations = (storage, editorView) => {
       el.removeEventListener('mouseenter', el._ltMouseHandler)
     }
     // Create and store the handler on the element
-    el._ltMouseHandler = debounce(createMouseEventsListener(storage, editorView), 50)
+    el._ltMouseHandler = debounce(createMouseEventsListener(storage), 50)
     el.addEventListener('mouseover', el._ltMouseHandler)
     el.addEventListener('mouseenter', el._ltMouseHandler)
   })
-}
-
-export function changedDescendants(oldNode, curNode, offset, fn) {
-  const oldSize = oldNode.childCount
-  const curSize = curNode.childCount
-
-  outer: for (let i = 0, j = 0; i < curSize; i++) {
-    const child = curNode.child(i)
-
-    for (let scan = j, e = Math.min(oldSize, i + 3); scan < e; scan++) {
-      if (oldNode.child(scan) === child) {
-        j = scan + 1
-        offset += child.nodeSize
-        continue outer
-      }
-    }
-
-    fn(child, offset, curNode)
-
-    if (j < oldSize && oldNode.child(j).sameMarkup(child)) {
-      changedDescendants(oldNode.child(j), child, offset + 1, fn)
-    } else {
-      child.nodesBetween(0, child.content.size, fn, offset + 1)
-    }
-
-    offset += child.nodeSize
-  }
 }
 
 const gimmeDecoration = (from, to, match) =>
@@ -115,7 +88,7 @@ const fetchMatchesForChunk = async (apiUrl, text) => {
   return ltRes.datas?.matches || []
 }
 
-const getMatchAndSetDecorations = async (storage, editorView, doc, text, originalFrom, offsetMap = null) => {
+const getMatchAndSetDecorations = async (storage, doc, text, originalFrom, offsetMap = null) => {
   const matches = await fetchMatchesForChunk(storage.apiUrl, text)
 
   // If offsetMap is empty or not provided with no originalFrom, we can't place decorations
@@ -147,24 +120,24 @@ const getMatchAndSetDecorations = async (storage, editorView, doc, text, origina
   storage.decorationSet = storage.decorationSet.remove(toRemove)
   storage.decorationSet = storage.decorationSet.add(doc, decorations)
 
-  if (editorView)
-    editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
+  if (storage.editorView)
+    storage.editorView.dispatch(storage.editorView.state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
 
-  setTimeout(() => addEventListenersToDecorations(storage, editorView), 100)
+  setTimeout(() => addEventListenersToDecorations(storage), 100)
 }
 
-const createDebouncedGetMatchAndSetDecorations = (storage, editorView) => {
+const createDebouncedGetMatchAndSetDecorations = (storage) => {
   return debounce((doc, text, originalFrom) => {
-    getMatchAndSetDecorations(storage, editorView, doc, text, originalFrom)
+    getMatchAndSetDecorations(storage, doc, text, originalFrom)
   }, 300)
 }
 
-const proofreadAndDecorateWholeDoc = async (storage, editorView, doc) => {
-  if (!doc || !storage.editorView) return;
+const proofreadAndDecorateWholeDoc = async (storage, doc) => {
+  if (!doc || !storage.editorView) return
 
   let textNodesWithPosition = []
   let index = 0
-  
+
   doc.descendants((node, pos, parent) => {
     if (node.isText && parent?.type.name !== 'codeBlock') {
       if (textNodesWithPosition[index]) {
@@ -184,7 +157,7 @@ const proofreadAndDecorateWholeDoc = async (storage, editorView, doc) => {
   })
 
   storage.textNodesWithPosition = textNodesWithPosition.filter(Boolean)
-  
+
   // If no text to check, exit
   if (storage.textNodesWithPosition.length === 0) return
 
@@ -228,13 +201,13 @@ const proofreadAndDecorateWholeDoc = async (storage, editorView, doc) => {
   }
 
   const requests = chunksOf500Words.map(({ text, offsetMap }) =>
-    getMatchAndSetDecorations(storage, editorView, doc, text, null, offsetMap)
+    getMatchAndSetDecorations(storage, doc, text, null, offsetMap)
   )
 
-  if (editorView) editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, true))
-  
+  storage.editorView.dispatch(storage.editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, true))
+
   Promise.all(requests).then(() => {
-    if (editorView) editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
+    if (storage.editorView) storage.editorView.dispatch(storage.editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
     storage.proofReadInitially = true
   })
 }
@@ -272,7 +245,7 @@ export const LanguageTool = Extension.create({
       proofread:
         () =>
         ({ tr }) => {
-          proofreadAndDecorateWholeDoc(this.storage, this.storage.editorView, tr.doc)
+          proofreadAndDecorateWholeDoc(this.storage, tr.doc)
           return true
         },
 
@@ -335,8 +308,6 @@ export const LanguageTool = Extension.create({
   },
 
   addProseMirrorPlugins() {
-    const extensionThis = this
-
     // Store apiUrl in storage for access by helper functions
     this.storage.apiUrl = this.options.apiUrl
 
@@ -351,16 +322,12 @@ export const LanguageTool = Extension.create({
 
           attributes: {
             spellcheck: 'false',
-            get isLanguageToolActive() {
-              return `${extensionThis.storage.active}`
-            },
           },
 
-          handlePaste(view) {
-            if (view.state.tr.docChanged) {
-              if (extensionThis.storage.debouncedProofreadAndDecorate) {
-                extensionThis.storage.debouncedProofreadAndDecorate(view.state.tr.doc)
-              }
+          handlePaste: (view) => {
+            console.log('ici', view)
+            if (this.storage.debouncedProofreadAndDecorate) {
+              this.storage.debouncedProofreadAndDecorate(view.state.tr.doc)
             }
 
             return false
@@ -369,38 +336,25 @@ export const LanguageTool = Extension.create({
 
         state: {
           init: (_, state) => {
-            extensionThis.storage.decorationSet = DecorationSet.create(state.doc, [])
+            this.storage.decorationSet = DecorationSet.create(state.doc, [])
 
             // Defer initial proofread until we have editorView
-            return extensionThis.storage.decorationSet
+            return this.storage.decorationSet
           },
 
-          apply: (tr) => {
-            if (!extensionThis.storage.active) return DecorationSet.empty
+          apply: (tr, oldEditorState) => {
+            if (!this.storage.active) return DecorationSet.empty
 
-            const matchUpdated = tr.getMeta(
-              LanguageToolHelpingWords.MatchUpdatedTransactionName,
-            )
-            const matchRangeUpdated = tr.getMeta(
-              LanguageToolHelpingWords.MatchRangeUpdatedTransactionName,
-            )
-            const loading = tr.getMeta(
-              LanguageToolHelpingWords.LoadingTransactionName,
-            )
+            const loading = tr.getMeta(LanguageToolHelpingWords.LoadingTransactionName)
+            this.storage.loading = !!loading
 
-            extensionThis.storage.loading = !!loading
-            if (matchUpdated) extensionThis.storage.match = extensionThis.storage.match
-            if (matchRangeUpdated) extensionThis.storage.matchRange = extensionThis.storage.matchRange
+            const ltDecorations = tr.getMeta(LanguageToolHelpingWords.LanguageToolTransactionName)
+            if (ltDecorations) return this.storage.decorationSet
 
-            const ltDecorations = tr.getMeta(
-              LanguageToolHelpingWords.LanguageToolTransactionName,
-            )
-            if (ltDecorations) return extensionThis.storage.decorationSet
-
-            if (tr.docChanged && extensionThis.options.automaticMode) {
-              if (!extensionThis.storage.proofReadInitially) {
-                if (extensionThis.storage.debouncedProofreadAndDecorate) {
-                  extensionThis.storage.debouncedProofreadAndDecorate(tr.doc)
+            if (tr.docChanged && this.options.automaticMode) {
+              if (!this.storage.proofReadInitially) {
+                if (this.storage.debouncedProofreadAndDecorate) {
+                  this.storage.debouncedProofreadAndDecorate(tr.doc)
                 }
               } else {
                 let selectedNode
@@ -417,33 +371,32 @@ export const LanguageTool = Extension.create({
                     selectedNode = { node, pos }
                 })
 
-                if (selectedNode && extensionThis.storage.editorView) {
+                if (selectedNode && this.storage.editorView) {
                   const originalFrom = selectedNode.pos + 1
-                  if (originalFrom !== extensionThis.storage.lastOriginalFrom) {
+                  if (originalFrom !== this.storage.lastOriginalFrom) {
                     getMatchAndSetDecorations(
-                      extensionThis.storage,
-                      extensionThis.storage.editorView,
+                      this.storage,
                       selectedNode.node,
                       selectedNode.node.textContent,
                       originalFrom
                     )
-                  } else if (extensionThis.storage.debouncedGetMatchAndSetDecorations) {
-                    extensionThis.storage.debouncedGetMatchAndSetDecorations(
+                  } else if (this.storage.debouncedGetMatchAndSetDecorations) {
+                    this.storage.debouncedGetMatchAndSetDecorations(
                       selectedNode.node,
                       selectedNode.node.textContent,
                       originalFrom
                     )
                   }
-                  extensionThis.storage.lastOriginalFrom = originalFrom
+                  this.storage.lastOriginalFrom = originalFrom
                 }
               }
             }
 
-            extensionThis.storage.decorationSet = extensionThis.storage.decorationSet.map(tr.mapping, tr.doc)
-            if (extensionThis.storage.editorView) {
-              setTimeout(() => addEventListenersToDecorations(extensionThis.storage, extensionThis.storage.editorView), 100)
+            this.storage.decorationSet = this.storage.decorationSet.map(tr.mapping, tr.doc)
+            if (this.storage.editorView) {
+              setTimeout(() => addEventListenersToDecorations(this.storage), 100)
             }
-            return extensionThis.storage.decorationSet
+            return this.storage.decorationSet
           },
         },
 
@@ -451,44 +404,43 @@ export const LanguageTool = Extension.create({
           // Handler for when another editor ignores a word
           const handleWordIgnored = (event) => {
             const ignoredWord = event.detail.word
-            const allDecorations = extensionThis.storage.decorationSet.find()
+            const allDecorations = this.storage.decorationSet.find()
             const decorationsToRemove = allDecorations.filter((deco) => {
               const decoText = view.state.doc.textBetween(deco.from, deco.to)
               return decoText.toLowerCase() === ignoredWord
             })
 
             if (decorationsToRemove.length > 0) {
-              extensionThis.storage.decorationSet = extensionThis.storage.decorationSet.remove(decorationsToRemove)
+              this.storage.decorationSet = this.storage.decorationSet.remove(decorationsToRemove)
               view.dispatch(view.state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
             }
           }
 
           document.addEventListener(LanguageToolHelpingWords.WordIgnoredEventName, handleWordIgnored)
 
+          // Initialize debounced functions now that we have editorView
+          if (!this.storage.debouncedGetMatchAndSetDecorations) {
+            this.storage.debouncedGetMatchAndSetDecorations = createDebouncedGetMatchAndSetDecorations(
+              this.storage
+            )
+          }
+
+          if (!this.storage.debouncedProofreadAndDecorate) {
+            this.storage.debouncedProofreadAndDecorate = debounce((doc) => {
+              proofreadAndDecorateWholeDoc(this.storage, doc)
+            }, 500)
+
+            // Trigger initial proofread if automatic mode is enabled
+            if (this.options.automaticMode && !this.storage.proofReadInitially) {
+              proofreadAndDecorateWholeDoc(this.storage, view.state.doc)
+            }
+          }
+
+          setTimeout(() => addEventListenersToDecorations(this.storage), 100)
+
           return {
             update: (view) => {
-              extensionThis.storage.editorView = view
-
-              // Initialize debounced functions now that we have editorView
-              if (!extensionThis.storage.debouncedGetMatchAndSetDecorations) {
-                extensionThis.storage.debouncedGetMatchAndSetDecorations = createDebouncedGetMatchAndSetDecorations(
-                  extensionThis.storage,
-                  view
-                )
-              }
-
-              if (!extensionThis.storage.debouncedProofreadAndDecorate) {
-                extensionThis.storage.debouncedProofreadAndDecorate = debounce((doc, nodePos = 0) => {
-                  proofreadAndDecorateWholeDoc(extensionThis.storage, view, doc, nodePos)
-                }, 500)
-
-                // Trigger initial proofread if automatic mode is enabled
-                if (extensionThis.options.automaticMode && !extensionThis.storage.proofReadInitially) {
-                  proofreadAndDecorateWholeDoc(extensionThis.storage, view, view.state.doc)
-                }
-              }
-
-              setTimeout(() => addEventListenersToDecorations(extensionThis.storage, view), 100)
+              this.storage.editorView = view
             },
             destroy: () => {
               document.removeEventListener(LanguageToolHelpingWords.WordIgnoredEventName, handleWordIgnored)
