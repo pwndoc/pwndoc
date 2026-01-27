@@ -86,7 +86,7 @@ module.exports = function(request, app) {
                     .send({ text: 'test', language: 'en-CA' });
 
                 expect(response.status).toBe(502);
-                expect(response.body.datas).toContain('LanguageTool fetch failed');
+                expect(response.body.datas).toContain('LanguageTool HTTP 502');
 
                 global.fetch = originalFetch;
             });
