@@ -234,6 +234,7 @@ export const LanguageTool = Extension.create({
       editorView: null,
       decorationSet: null,
       proofReadInitially: false,
+      forceFullProofread: false,
       lastOriginalFrom: 0,
       debouncedGetMatchAndSetDecorations: null,
       debouncedProofreadAndDecorate: null,
@@ -324,12 +325,9 @@ export const LanguageTool = Extension.create({
             spellcheck: 'false',
           },
 
-          handlePaste: (view) => {
-            console.log('ici', view)
-            if (this.storage.debouncedProofreadAndDecorate) {
-              this.storage.debouncedProofreadAndDecorate(view.state.tr.doc)
-            }
-
+          handlePaste: () => {
+            // Set flag to trigger full proofread after paste is applied
+            this.storage.forceFullProofread = true
             return false
           },
         },
@@ -352,11 +350,14 @@ export const LanguageTool = Extension.create({
             if (ltDecorations) return this.storage.decorationSet
 
             if (tr.docChanged && this.options.automaticMode) {
-              if (!this.storage.proofReadInitially) {
+              // Full proofread if not done initially or if paste triggered it
+              if (!this.storage.proofReadInitially || this.storage.forceFullProofread) {
+                this.storage.forceFullProofread = false
                 if (this.storage.debouncedProofreadAndDecorate) {
                   this.storage.debouncedProofreadAndDecorate(tr.doc)
                 }
               } else {
+                // Only check the currently selected node for normal typing
                 let selectedNode
                 const { from, to } = tr.selection
 
