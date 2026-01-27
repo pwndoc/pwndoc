@@ -89,47 +89,61 @@ const gimmeDecoration = (from, to, match) =>
 
 const moreThan500Words = (s) => s.trim().split(/\s+/).length >= 500
 
-// Get text content excluding inline code marks
-const getTextWithoutCode = (node) => {
-  let text = ''
-  node.descendants((child) => {
-    if (child.isText) {
-      // Skip text with code mark
-      if (child.marks?.some(mark => mark.type.name === 'code')) return
-      text += child.text
+// Convert a string offset (position in concatenated text) to editor document position
+const stringOffsetToEditorPos = (stringOffset, offsetMap) => {
+  // Find the segment that contains this offset (search from end for efficiency)
+  for (let i = offsetMap.length - 1; i >= 0; i--) {
+    if (stringOffset >= offsetMap[i].stringPos) {
+      return offsetMap[i].editorPos + (stringOffset - offsetMap[i].stringPos)
     }
-  })
-  return text
+  }
+  // Fallback to first segment
+  return offsetMap[0]?.editorPos + stringOffset
 }
 
 const fetchMatchesForChunk = async (apiUrl, text) => {
-  if (text) {
-    const postOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Accept: 'application/json',
-      },
-      body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
-    }
-
-    const ltRes = await (await fetch(apiUrl, postOptions)).json()
-    return ltRes.datas?.matches || []
+  const postOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Accept: 'application/json',
+    },
+    body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
   }
-  return []
+
+  const ltRes = await (await fetch(apiUrl, postOptions)).json()
+  return ltRes.datas?.matches || []
 }
 
-const getMatchAndSetDecorations = async (storage, editorView, doc, text, originalFrom) => {
+const getMatchAndSetDecorations = async (storage, editorView, doc, text, originalFrom, offsetMap = null) => {
   const matches = await fetchMatchesForChunk(storage.apiUrl, text)
+
+  // If offsetMap is empty or not provided with no originalFrom, we can't place decorations
+  const hasValidOffsetMap = offsetMap && offsetMap.length > 0
+  if (!hasValidOffsetMap && originalFrom === null) {
+    return
+  }
 
   const decorations = []
   for (const match of matches) {
-    const docFrom = match.offset + originalFrom
-    const docTo = docFrom + match.length
+    let docFrom, docTo
+    if (hasValidOffsetMap) {
+      // Use offset map to convert string position to editor position
+      docFrom = stringOffsetToEditorPos(match.offset, offsetMap)
+      docTo = stringOffsetToEditorPos(match.offset + match.length, offsetMap)
+    } else {
+      // Legacy behavior: simple offset from originalFrom
+      docFrom = match.offset + originalFrom
+      docTo = docFrom + match.length
+    }
     decorations.push(gimmeDecoration(docFrom, docTo, match))
   }
 
-  const toRemove = storage.decorationSet.find(originalFrom, originalFrom + text.length)
+  // Calculate the range to clear decorations from
+  const rangeFrom = hasValidOffsetMap ? offsetMap[0].editorPos : originalFrom
+  const rangeTo = hasValidOffsetMap ? offsetMap[offsetMap.length - 1].editorPos + offsetMap[offsetMap.length - 1].length : originalFrom + text.length
+
+  const toRemove = storage.decorationSet.find(rangeFrom, rangeTo)
   storage.decorationSet = storage.decorationSet.remove(toRemove)
   storage.decorationSet = storage.decorationSet.add(doc, decorations)
 
@@ -145,96 +159,84 @@ const createDebouncedGetMatchAndSetDecorations = (storage, editorView) => {
   }, 300)
 }
 
-const proofreadAndDecorateWholeDoc = async (storage, editorView, doc, nodePos = 0) => {
+const proofreadAndDecorateWholeDoc = async (storage, editorView, doc) => {
+  if (!doc || !storage.editorView) return;
+
   let textNodesWithPosition = []
-
   let index = 0
+  
   doc.descendants((node, pos, parent) => {
-    if (!node.isText) {
+    if (node.isText && parent?.type.name !== 'codeBlock') {
+      if (textNodesWithPosition[index]) {
+        const text = textNodesWithPosition[index].text + node.text
+        const from = textNodesWithPosition[index].from
+        const to = from + text.length
+        textNodesWithPosition[index] = { text, from, to }
+      } else {
+        const text = node.text
+        const from = pos
+        const to = pos + text.length
+        textNodesWithPosition[index] = { text, from, to }
+      }
+    } else {
       index += 1
-      return
     }
-
-    // Skip code blocks and inline code
-    if (parent?.type.name === 'codeBlock') return
-    if (node.marks?.some(mark => mark.type.name === 'code')) return
-
-    let item = textNodesWithPosition[index] || { text: '', from: -1, to: -1 }
-
-    item.text += node.text
-    item.from = item.from === -1 ? pos + nodePos : item.from
-    item.to = pos + nodePos + node.text.length  // Use node.text.length, not item.text.length
-
-    textNodesWithPosition[index] = item
   })
 
-  textNodesWithPosition = textNodesWithPosition.filter(Boolean)
+  storage.textNodesWithPosition = textNodesWithPosition.filter(Boolean)
+  
+  // If no text to check, exit
+  if (storage.textNodesWithPosition.length === 0) return
 
+  // Build finalText with single space separators and track offset mapping
   let finalText = ''
-  const chunks = []
+  let currentStringPos = 0
+  let offsetMap = [] // Maps string positions to editor positions
+  const chunksOf500Words = []
 
-  let upperFrom = nodePos
-  let newDataSet = true
-  let lastPos = 1 + nodePos
-
-  for (const { text, from, to } of textNodesWithPosition) {
-    if (!newDataSet) {
-      upperFrom = from
-      newDataSet = true
-    } else {
-      const diff = from - lastPos
-      // Cap spacing to avoid huge gaps from skipped code blocks
-      if (diff > 0) finalText += ' '
+  for (const { text, from } of storage.textNodesWithPosition) {
+    // Add single space separator between text nodes (except for the first one)
+    if (finalText.length > 0) {
+      finalText += ' '
+      currentStringPos += 1
     }
 
-    lastPos = to
+    // Record the mapping: position in finalText → position in editor
+    offsetMap.push({ stringPos: currentStringPos, editorPos: from, length: text.length })
+
     finalText += text
+    currentStringPos += text.length
 
     if (moreThan500Words(finalText)) {
-      const updatedFrom = chunks.length ? upperFrom : upperFrom + 1
-      chunks.push({ from: updatedFrom, text: finalText })
+      chunksOf500Words.push({
+        text: finalText,
+        offsetMap: offsetMap,
+      })
+      // Reset for next chunk
       finalText = ''
-      newDataSet = false
+      currentStringPos = 0
+      offsetMap = []
     }
   }
 
-  chunks.push({
-    from: chunks.length ? upperFrom : 1,
-    text: finalText,
-  })
-
-  if (editorView)
-    editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, true))
-
-  // Fetch all matches in parallel, then add all decorations at once to avoid race conditions
-  const allMatches = await Promise.all(
-    chunks.map(async ({ text, from }) => {
-      const matches = await fetchMatchesForChunk(storage.apiUrl, text)
-      return { matches, from }
+  // Push remaining text as final chunk (only if we have valid offset mappings)
+  if (offsetMap.length > 0) {
+    chunksOf500Words.push({
+      text: finalText,
+      offsetMap: offsetMap,
     })
+  }
+
+  const requests = chunksOf500Words.map(({ text, offsetMap }) =>
+    getMatchAndSetDecorations(storage, editorView, doc, text, null, offsetMap)
   )
 
-  // Collect all decorations
-  const allDecorations = []
-  for (const { matches, from } of allMatches) {
-    for (const match of matches) {
-      const docFrom = match.offset + from
-      const docTo = docFrom + match.length
-      allDecorations.push(gimmeDecoration(docFrom, docTo, match))
-    }
-  }
-
-  // Add all decorations at once
-  storage.decorationSet = storage.decorationSet.add(doc, allDecorations)
-
-  if (editorView) {
-    editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
-    editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
-  }
-
-  setTimeout(() => addEventListenersToDecorations(storage, editorView), 100)
-
-  storage.proofReadInitially = true
+  if (editorView) editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, true))
+  
+  Promise.all(requests).then(() => {
+    if (editorView) editorView.dispatch(editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
+    storage.proofReadInitially = true
+  })
 }
 
 export const LanguageTool = Extension.create({
@@ -417,19 +419,18 @@ export const LanguageTool = Extension.create({
 
                 if (selectedNode && extensionThis.storage.editorView) {
                   const originalFrom = selectedNode.pos + 1
-                  const textWithoutCode = getTextWithoutCode(selectedNode.node)
                   if (originalFrom !== extensionThis.storage.lastOriginalFrom) {
                     getMatchAndSetDecorations(
                       extensionThis.storage,
                       extensionThis.storage.editorView,
                       selectedNode.node,
-                      textWithoutCode,
+                      selectedNode.node.textContent,
                       originalFrom
                     )
                   } else if (extensionThis.storage.debouncedGetMatchAndSetDecorations) {
                     extensionThis.storage.debouncedGetMatchAndSetDecorations(
                       selectedNode.node,
-                      textWithoutCode,
+                      selectedNode.node.textContent,
                       originalFrom
                     )
                   }
