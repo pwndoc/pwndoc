@@ -12,7 +12,7 @@ services:
         reservations:
           memory: 1G # Minimum memory required
     volumes:
-      - ./backend/mongo-data:/data/db
+      - mongo-data:/data/db
     restart: always
     environment:
       - MONGO_DB:pwndoc
