@@ -29,6 +29,7 @@ export default defineConfig({
     }
   },
   resolve: {
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],
     alias: {
       '@': path.resolve(__dirname, './src'),
       'src': path.resolve(__dirname, './src'),

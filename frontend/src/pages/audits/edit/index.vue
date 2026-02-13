@@ -561,17 +561,18 @@ export default {
 		},
 
 		getMenuSection: function() {
-			if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'general')
+			const currentRoute = this.$router.currentRoute?.value || this.$router.currentRoute || {}
+			if (currentRoute.name && currentRoute.name === 'general')
 				return {menu: 'general', room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'network')
+			else if (currentRoute.name && currentRoute.name === 'network')
 				return {menu: 'network', room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addFindings')
+			else if (currentRoute.name && currentRoute.name === 'addFindings')
 				return {menu: 'addFindings', room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editFinding' && this.$router.currentRoute.params.findingId)
-				return {menu: 'editFinding', finding: this.$router.currentRoute.params.findingId, room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editSection' && this.$router.currentRoute.params.sectionId)
-				return {menu: 'editSection', section: this.$router.currentRoute.params.sectionId, room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addAudits')
+			else if (currentRoute.name && currentRoute.name === 'editFinding' && currentRoute.params?.findingId)
+				return {menu: 'editFinding', finding: currentRoute.params.findingId, room: this.auditId}
+			else if (currentRoute.name && currentRoute.name === 'editSection' && currentRoute.params?.sectionId)
+				return {menu: 'editSection', section: currentRoute.params.sectionId, room: this.auditId}
+			else if (currentRoute.name && currentRoute.name === 'addAudits')
 				return {menu: 'addAudits', room: this.auditId}
 			
 			return {menu: 'undefined', room: this.auditId}
