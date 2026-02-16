@@ -1,7 +1,7 @@
 # E2E Page Spec Template
 
 ```javascript
-import { test, expect } from '@playwright/test';
+import { test, expect } from './base.js';
 
 test.describe('{Feature} Page', () => {
 

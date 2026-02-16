@@ -47,10 +47,10 @@
 
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
-                        <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                        <q-btn data-testid="edit-company-button" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                         </q-btn>
-                        <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCompany(props.row)">
+                        <q-btn data-testid="delete-company-button" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteCompany(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                         </q-btn>
                     </q-td>
@@ -92,25 +92,28 @@
             <q-card-section>
                 <div class="row q-col-gutter-md">
                     <q-input
+                        data-testid="create-company-name-input"
                         :label="$t('name')+' *'"
                         autofocus
                         class="col-md-12"
                         :error="!!errors.name"
                         :error-message="errors.name"
                         @keyup.enter="createCompany()"
-                        v-model="currentCompany.name" 
+                        v-model="currentCompany.name"
                         outlined
                         hide-bottom-space
                         />
                     <q-input
+                        data-testid="create-company-shortname-input"
                         :label="$t('shortName')"
                         class="col-md-12"
                         @keyup.enter="createCompany()"
-                        v-model="currentCompany.shortName" 
+                        v-model="currentCompany.shortName"
                         outlined
                         />
                     <div class="col-md-12">
                         <q-uploader
+                            data-testid="create-company-logo-uploader"
                             ref="addUploader"
                             class="full-width"
                             url=""
@@ -126,7 +129,7 @@
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="createCompany()">{{$t('btn.create')}}</q-btn>
+                <q-btn data-testid="create-company-submit-button" color="secondary" unelevated @click="createCompany()">{{$t('btn.create')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -155,6 +158,7 @@
                         hide-bottom-space
                         />
                     <q-input
+                        data-testid="edit-company-shortname-input"
                         :label="$t('shortName')"
                         class="col-md-12"
                         @keyup.enter="updateCompany()"
@@ -163,6 +167,7 @@
                         />
                     <div class="col-md-12">
                         <q-uploader
+                            data-testid="edit-company-logo-uploader"
                             ref="addUploader"
                             class="full-width"
                             url=""
@@ -178,7 +183,7 @@
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="updateCompany()">{{$t('btn.update')}}</q-btn>
+                <q-btn data-testid="edit-company-submit-button" color="secondary" unelevated @click="updateCompany()">{{$t('btn.update')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

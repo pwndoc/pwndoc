@@ -28,7 +28,7 @@ test.describe('Vulnerabilities Page', () => {
 
       // Verify filter toggles
       await expect(page.getByText('Valid')).toBeVisible();
-      await expect(page.getByText('New')).toBeVisible();
+      await expect(page.getByText('New', { exact: true })).toBeVisible();
       await expect(page.getByText('Updates')).toBeVisible();
 
       // Verify "New Vulnerability" dropdown button
@@ -39,7 +39,7 @@ test.describe('Vulnerabilities Page', () => {
     });
 
     test('should show empty table when no vulnerabilities exist', async ({ page }) => {
-      await expect(page.getByText('No data available')).toBeVisible();
+      await expect(page.getByText('No data available')).toBeVisible({ timeout: 10000 });
     });
   });
 

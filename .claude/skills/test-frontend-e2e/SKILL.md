@@ -70,66 +70,76 @@ All `*.spec.js` files run with authentication already handled. The test user is:
 ### Test Structure
 
 ```javascript
-import { test, expect } from '@playwright/test';
-
-test.describe('{Feature} Page', () => {
-
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/{route}');
-  });
-
-  test('should display the page correctly', async ({ page }) => {
-    // Check page heading/title
-    // Check key UI elements are visible
-  });
-
-  test('should create a new {item}', async ({ page }) => {
-    // Click create/add button
-    // Fill form fields
-    // Submit
-    // Verify creation (item appears in list/table)
-  });
-
-  test('should edit an existing {item}', async ({ page }) => {
-    // Select item
-    // Modify fields
-    // Save
-    // Verify changes
-  });
-
-  test('should delete a {item}', async ({ page }) => {
-    // Select item
-    // Click delete
-    // Confirm dialog if any
-    // Verify removal
-  });
-});
+import { test, expect } from './base.js';
 ```
 
-### Selectors (prefer accessible selectors)
+**Important:** Always import from `./base.js`, NOT from `@playwright/test`. The base fixture auto-saves browser storage state after each test, which is required because PwnDoc rotates refresh tokens on every use. Without this, subsequent tests load stale tokens and get redirected to `/login`.
+
+See [template-page-spec.md](template-page-spec.md) for the full test scaffold.
+
+### Locator Priority (strict order)
+
+Follow this priority strictly. Use the first one that works — do NOT skip ahead to CSS selectors.
+
+**1. `getByRole()` — Always try first**
+```javascript
+page.getByRole('button', { name: 'Save' })
+page.getByRole('textbox', { name: 'Title' })
+page.getByRole('link', { name: 'Settings' })
+page.getByRole('tab', { name: 'Languages' })
+page.getByRole('row').filter({ hasText: 'row content' })
+page.getByRole('cell', { name: 'value' })
+page.getByRole('heading', { name: 'Audits' })
+page.getByRole('dialog')                        // scope modals
+page.getByRole('toolbar').getByRole('listitem')  // scope toolbar
+```
+
+**2. `getByText()` — Non-interactive elements**
+```javascript
+page.getByText('Vulnerability created successfully')
+page.getByText(/already exists/i)
+```
+
+**3. `getByLabel()` — Form controls with labels**
+```javascript
+page.getByLabel('Description')
+page.getByLabel(/Name/)
+```
+
+**4. `getByPlaceholder()` — Inputs with placeholder but no label**
+```javascript
+page.getByPlaceholder('Search...')
+```
+
+**5. `getByTestId()` — When semantic locators don't work**
+```javascript
+page.getByTestId('delete-language-btn')
+```
+When you need `getByTestId`, **add `data-testid` to the Vue source file** yourself. This is preferred over CSS selectors.
+
+**6. CSS selectors — Absolute last resort**
+Only when the element is truly outside your control and none of the above work. **NEVER use Quasar CSS class selectors** (`.q-dialog`, `.q-btn`, `.q-card`, `.q-table`, `.q-field`, or any `.q-*` class). These are framework implementation details that break across versions.
+
+### Scoping within dialogs/modals
 
 ```javascript
-// Buttons
-page.getByRole('button', { name: 'Save' })
-page.getByRole('button', { name: 'Add' })
+// Scope to a dialog using role (NOT .q-dialog)
+const dialog = page.getByRole('dialog');
+await dialog.getByLabel('Title').fill('New Item');
+await dialog.getByRole('button', { name: 'Create' }).click();
+```
 
-// Inputs
-page.getByRole('textbox', { name: 'Title' })
-page.getByLabel('Description')
+### Chaining and filtering
 
-// Links
-page.getByRole('link', { name: 'Settings' })
+```javascript
+// Filter rows by text content
+page.getByRole('row').filter({ hasText: 'Item Name' })
 
-// Nav items
-page.getByRole('listitem').filter({ hasText: 'Audits' })
+// First matching element
+page.getByLabel(/Name/).first()
 
-// Text content
-page.getByText('expected text')
-
-// Tables
-page.getByRole('row').filter({ hasText: 'row content' })
-
-// Avoid CSS selectors unless no accessible alternative exists
+// Narrow with .and()
+page.locator('input').and(page.getByLabel('Language'))
 ```
 
 ### Waiting

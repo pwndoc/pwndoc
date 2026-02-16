@@ -3,7 +3,11 @@ module.exports = function(app) {
         app.post('/api/__test__/reset-db', async (req, res) => {
             const mongoose = require('mongoose');
 
-            await mongoose.connection.dropDatabase();
+            // Clear all documents while preserving collection indexes.
+            const collections = mongoose.connection.collections;
+            await Promise.all(
+                Object.values(collections).map((collection) => collection.deleteMany({}))
+            );
             res.sendStatus(204);
         });
     }

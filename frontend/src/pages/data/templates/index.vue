@@ -50,13 +50,13 @@
 
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
-                        <q-btn v-if="userStore.isAllowed('templates:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                        <q-btn data-testid="edit-template-button" v-if="userStore.isAllowed('templates:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                         </q-btn>
-                        <q-btn size="sm" flat color="info" icon="fa fa-download" @click="downloadTemplate(props.row)">
+                        <q-btn data-testid="download-template-button" size="sm" flat color="info" icon="fa fa-download" @click="downloadTemplate(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.download')}}</q-tooltip>
                         </q-btn>
-                        <q-btn v-if="userStore.isAllowed('templates:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteTemplate(props.row)">
+                        <q-btn data-testid="delete-template-button" v-if="userStore.isAllowed('templates:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteTemplate(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                         </q-btn>
                     </q-td>
@@ -98,6 +98,7 @@
             <q-card-section>
                 <div class="row">
                     <q-input
+                    data-testid="create-template-name-input"
                     :label="$t('name')+' *'"
                     autofocus
                     class="col-md-12 col-12"
@@ -105,13 +106,14 @@
                     :error="!!errors.name"
                     :error-message="errors.name"
                     @keyup.enter="createTemplate()"
-                    v-model="currentTemplate.name" 
+                    v-model="currentTemplate.name"
                     outlined
                     />
-                    
+
                     <q-field class="col-md-12 col-12" no-error-icon borderless :error="!!errors.file" :error-message="errors.file">
                         <template v-slot:control>
                             <q-uploader
+                            data-testid="create-template-file-uploader"
                             class="col-md-12 col-12"
                             :label="$t('file')+' *'"
                             accept='.doc,.docx,.docm,.ppt,.pptx'
@@ -128,7 +130,7 @@
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="createTemplate()">{{$t('btn.create')}}</q-btn>
+                <q-btn data-testid="create-template-submit-button" color="secondary" unelevated @click="createTemplate()">{{$t('btn.create')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -146,6 +148,7 @@
             <q-card-section>
                 <div class="row">
                     <q-input
+                    data-testid="edit-template-name-input"
                     :label="$t('name')+' *'"
                     autofocus
                     class="col-md-12 col-12"
@@ -153,13 +156,14 @@
                     :error="!!errors.name"
                     :error-message="errors.name"
                     @keyup.enter="updateTemplate()"
-                    v-model="currentTemplate.name" 
+                    v-model="currentTemplate.name"
                     outlined
                     />
-                    
+
                     <q-field class="col-md-12 col-12" no-error-icon borderless :error="!!errors.file" :error-message="errors.file">
                         <template v-slot:control>
                             <q-uploader
+                            data-testid="edit-template-file-uploader"
                             class="col-md-12"
                             :label="$t('file')+' *'"
                             accept='.doc,.docx,.docm,.ppt,.pptx'
@@ -176,7 +180,7 @@
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="updateTemplate()">{{$t('btn.update')}}</q-btn>
+                <q-btn data-testid="edit-template-submit-button" color="secondary" unelevated @click="updateTemplate()">{{$t('btn.update')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

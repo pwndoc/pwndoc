@@ -74,10 +74,10 @@
 
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
-                        <q-btn size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                        <q-btn data-testid="edit-client-button" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                         </q-btn>
-                        <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteClient(props.row)">
+                        <q-btn data-testid="delete-client-button" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteClient(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                         </q-btn>
                     </q-td>
@@ -116,6 +116,7 @@
 
             <q-card-section>
                 <q-select
+                data-testid="create-client-company-select"
                 :label="$t('company')"
                 stack-label
                 clearable
@@ -129,6 +130,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-client-firstname-input"
                 autofocus
                 :label="$t('firstname')+' *'"
                 :error="!!errors.firstname"
@@ -141,6 +143,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-client-lastname-input"
                 :label="$t('lastname')+' *'"
                 :error="!!errors.lastname"
                 :error-message="errors.lastname"
@@ -152,6 +155,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-client-email-input"
                 :label="$t('email')+' *'"
                 :error="!!errors.email"
                 :error-message="errors.email"
@@ -163,34 +167,37 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-client-title-input"
                 :label="$t('function')"
                 @keyup.enter="createClient()"
-                v-model="currentClient.title" 
+                v-model="currentClient.title"
                 outlined
                 />
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-client-phone-input"
                 :label="$t('phone')"
                 @keyup.enter="createClient()"
-                v-model="currentClient.phone" 
+                v-model="currentClient.phone"
                 outlined
                 />
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-client-cell-input"
                 :label="$t('cell')"
                 @keyup.enter="createClient()"
-                v-model="currentClient.cell" 
+                v-model="currentClient.cell"
                 outlined
                 />
-            </q-card-section>  
-                    
+            </q-card-section>
+
             <q-separator />
-            
+
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="createClient()">{{$t('btn.create')}}</q-btn>
+                <q-btn data-testid="create-client-submit-button" color="secondary" unelevated @click="createClient()">{{$t('btn.create')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -205,6 +212,7 @@
 
             <q-card-section>
                     <q-select
+                    data-testid="edit-client-company-select"
                     :label="$t('company')"
                     stack-label
                     clearable
@@ -218,6 +226,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
+                    data-testid="edit-client-firstname-input"
                     :label="$t('firstname')+' *'"
                     :error="!!errors.firstname"
                     :error-message="errors.firstname"
@@ -229,6 +238,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
+                    data-testid="edit-client-lastname-input"
                     :label="$t('lastname')+' *'"
                     :error="!!errors.lastname"
                     :error-message="errors.lastname"
@@ -241,6 +251,7 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
+                    data-testid="edit-client-email-input"
                     :label="$t('email')+' *'"
                     :error="!!errors.email"
                     :error-message="errors.email"
@@ -252,34 +263,37 @@
                 </q-card-section>
                 <q-card-section>
                     <q-input
+                    data-testid="edit-client-title-input"
                     :label="$t('function')"
                     @keyup.enter="updateClient()"
-                    v-model="currentClient.title" 
+                    v-model="currentClient.title"
                     outlined
                     />
                 </q-card-section>
                 <q-card-section>
                     <q-input
+                    data-testid="edit-client-phone-input"
                     :label="$t('phone')"
                     @keyup.enter="updateClient()"
-                    v-model="currentClient.phone" 
+                    v-model="currentClient.phone"
                     outlined
                     />
                 </q-card-section>
                 <q-card-section>
                     <q-input
+                    data-testid="edit-client-cell-input"
                     :label="$t('cell')"
                     @keyup.enter="updateClient()"
-                    v-model="currentClient.cell" 
+                    v-model="currentClient.cell"
                     outlined
                     />
-                </q-card-section>  
-            
+                </q-card-section>
+
             <q-separator />
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="updateClient()">{{$t('btn.update')}}</q-btn>
+                <q-btn data-testid="edit-client-submit-button" color="secondary" unelevated @click="updateClient()">{{$t('btn.update')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

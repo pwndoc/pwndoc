@@ -38,6 +38,7 @@ services:
       - ./frontend/tests/playwright.config.js:/app/playwright.config.js
       - ./frontend/tests/package.json:/app/package.json
       - ./frontend/tests/package-lock.json:/app/package-lock.json
+      - ./backend/report-templates:/app/backend/report-templates
     environment:
       - BASE_URL=https://pwndoc-frontend:8443
     depends_on:
