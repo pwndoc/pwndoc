@@ -97,20 +97,47 @@ SettingSchema.statics.update = (settings) => {
     });
 };
 
+// Ensure settings exist and sanitize obsolete fields
+SettingSchema.statics.ensureInitialized = async function() {
+    var liveSettings = await this.findOne({});
+
+    if (!liveSettings) {
+        console.log("Initializing Settings");
+        liveSettings = await this.create({});
+        return liveSettings;
+    }
+
+    var needUpdate = false
+    var liveSettingsPaths = Utils.getObjectPaths(liveSettings.toObject())
+
+    liveSettingsPaths.forEach(path => {
+        if (!SettingSchema.path(path) && !path.startsWith('_')) {
+            needUpdate = true
+            _.set(liveSettings, path, undefined)
+        }
+    })
+
+    if (needUpdate) {
+        console.log("Removing unused fields from Settings")
+        await liveSettings.save()
+    }
+
+    return liveSettings
+};
+
 
 // Restore settings to default
 SettingSchema.statics.restoreDefaults = () => {
-    return new Promise((resolve, reject) => {
-        const query = Settings.deleteMany({});
-        query.exec()
-            .then(_ => {
-                const query = new Settings({});
-                query.save()
-                    .then(_ => resolve("Restored default settings."))
-                    .catch(err => reject(err));
-            })
-            .catch(err => reject(err));
-    });
+    return new Promise(async (resolve, reject) => {
+        try {
+            await Settings.deleteMany({})
+            await Settings.ensureInitialized()
+            resolve("Restored default settings.")
+        }
+        catch (err) {
+            reject(err)
+        }
+    })
 };
 
 SettingSchema.statics.backup = (path) => {
@@ -198,6 +225,7 @@ SettingSchema.statics.restore = (path) => {
         try {
             await Settings.deleteMany()
             await importSettingsPromise()
+            await Settings.ensureInitialized()
             resolve()
         }
         catch (error) {
@@ -209,33 +237,9 @@ SettingSchema.statics.restore = (path) => {
 const Settings = mongoose.model('Settings', SettingSchema);
 
 // Populate/update settings when server starts
-Settings.findOne()
-.then((liveSettings) => {
-  if (!liveSettings) {
-    console.log("Initializing Settings");
-    Settings.create({}).catch((err) => {
-      throw "Error creating the settings in the database : " + err;
-    });
-  } 
-  else {
-    var needUpdate = false
-    var liveSettingsPaths = Utils.getObjectPaths(liveSettings.toObject())
-
-    liveSettingsPaths.forEach(path => {
-        if (!SettingSchema.path(path) && !path.startsWith('_')) {
-            needUpdate = true
-            _.set(liveSettings, path, undefined)
-        }
-    })
-
-    if (needUpdate) {
-        console.log("Removing unused fields from Settings")
-        liveSettings.save()
-    }
-  }
-})
+Settings.ensureInitialized()
 .catch((err) => {
-  throw "Error checking for initial settings in the database : " + err;
+  throw "Error ensuring initial settings in the database : " + err;
 });
 
 module.exports = Settings;

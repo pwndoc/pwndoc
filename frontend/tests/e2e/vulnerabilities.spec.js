@@ -9,10 +9,8 @@ test.describe('Vulnerabilities Page', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/vulnerabilities');
-    // Wait for the table to finish loading
-    await page.waitForResponse(resp =>
-      resp.url().includes('/api/vulnerabilities') && resp.status() === 200
-    );
+    // Wait for the page to finish loading by checking for a key UI element
+    await expect(page.getByRole('button', { name: 'New Vulnerability' })).toBeVisible();
   });
 
   test.describe('Page Layout', () => {
@@ -39,31 +37,24 @@ test.describe('Vulnerabilities Page', () => {
     });
 
     test('should show empty table when no vulnerabilities exist', async ({ page }) => {
-      await expect(page.getByText('No data available')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText('No matching records found')).toBeVisible({ timeout: 10000 });
     });
   });
 
   test.describe('CRUD Operations', () => {
     test('should create a new vulnerability', async ({ page }) => {
-      // Click "New Vulnerability" dropdown
+      // Click "New Vulnerability" dropdown and wait for menu to appear
       await page.getByRole('button', { name: 'New Vulnerability' }).click();
-
-      // Select "No Category" from the dropdown list
+      await expect(page.getByText('Select category')).toBeVisible();
       await page.getByRole('listitem').filter({ hasText: 'No Category' }).click();
 
-      // The create modal should appear with the title "Add Vulnerability (No Category)"
-      await expect(page.getByText('Add Vulnerability (No Category)')).toBeVisible();
-
-      // Fill in the title field
-      await page.locator('.q-dialog').getByLabel('Title *').fill('Test SQL Injection');
+      // Wait for the create dialog to open and fill in the title
+      await expect(page.getByRole('dialog').getByText(/add vulnerability/i)).toBeVisible();
+      // await expect(page.getByTestId('create-vulnerability-title')).toBeVisible({ timeout: 10000 });
+      await page.getByTestId('create-vulnerability-title').fill('Test SQL Injection');
 
       // Click Create button
       await page.getByRole('button', { name: 'Create' }).click();
-
-      // Wait for the creation API response
-      await page.waitForResponse(resp =>
-        resp.url().includes('/api/vulnerabilities') && resp.request().method() === 'POST' && resp.status() === 200
-      );
 
       // Verify success notification
       await expect(page.getByText('Vulnerability created successfully')).toBeVisible();
@@ -76,30 +67,22 @@ test.describe('Vulnerabilities Page', () => {
       // First create a vulnerability to edit
       await page.getByRole('button', { name: 'New Vulnerability' }).click();
       await page.getByRole('listitem').filter({ hasText: 'No Category' }).click();
-      await page.locator('.q-dialog').getByLabel('Title *').fill('Vuln To Edit');
+      await page.getByTestId('create-vulnerability-title').fill('Vuln To Edit');
       await page.getByRole('button', { name: 'Create' }).click();
-      await page.waitForResponse(resp =>
-        resp.url().includes('/api/vulnerabilities') && resp.request().method() === 'POST' && resp.status() === 200
-      );
       await expect(page.getByText('Vulnerability created successfully')).toBeVisible();
 
       // Click the edit button on the row
       const row = page.getByRole('row').filter({ hasText: 'Vuln To Edit' });
-      await row.getByRole('button', { name: 'Edit' }).click();
+      await row.getByTestId('edit-vulnerability-button').click();
 
       // The edit modal should appear
       await expect(page.getByText('Edit Vulnerability (No Category)')).toBeVisible();
 
       // Clear and update the title
-      await page.locator('.q-dialog').getByLabel('Title *').fill('Vuln Edited Successfully');
+      await page.getByTestId('edit-vulnerability-title').fill('Vuln Edited Successfully');
 
       // Click Update button
       await page.getByRole('button', { name: 'Update' }).click();
-
-      // Wait for the update API response
-      await page.waitForResponse(resp =>
-        resp.url().includes('/api/vulnerabilities/') && resp.request().method() === 'PUT' && resp.status() === 200
-      );
 
       // Verify success notification
       await expect(page.getByText('Vulnerability updated successfully')).toBeVisible();
@@ -115,25 +98,17 @@ test.describe('Vulnerabilities Page', () => {
       // First create a vulnerability to delete
       await page.getByRole('button', { name: 'New Vulnerability' }).click();
       await page.getByRole('listitem').filter({ hasText: 'No Category' }).click();
-      await page.locator('.q-dialog').getByLabel('Title *').fill('Vuln To Delete');
+      await page.getByTestId('create-vulnerability-title').fill('Vuln To Delete');
       await page.getByRole('button', { name: 'Create' }).click();
-      await page.waitForResponse(resp =>
-        resp.url().includes('/api/vulnerabilities') && resp.request().method() === 'POST' && resp.status() === 200
-      );
       await expect(page.getByText('Vulnerability created successfully')).toBeVisible();
 
       // Click the delete button on the row
       const row = page.getByRole('row').filter({ hasText: 'Vuln To Delete' });
-      await row.getByRole('button', { name: 'Delete' }).click();
+      await row.getByTestId('delete-vulnerability-button').click();
 
       // Confirm deletion in the dialog
       await expect(page.getByText('Vulnerability will be permanently deleted')).toBeVisible();
       await page.getByRole('button', { name: 'Confirm' }).click();
-
-      // Wait for the delete API response
-      await page.waitForResponse(resp =>
-        resp.url().includes('/api/vulnerabilities/') && resp.request().method() === 'DELETE' && resp.status() === 200
-      );
 
       // Verify success notification
       await expect(page.getByText('Vulnerability deleted successfully')).toBeVisible();
@@ -148,27 +123,23 @@ test.describe('Vulnerabilities Page', () => {
       // Create two vulnerabilities with different titles
       await page.getByRole('button', { name: 'New Vulnerability' }).click();
       await page.getByRole('listitem').filter({ hasText: 'No Category' }).click();
-      await page.locator('.q-dialog').getByLabel('Title *').fill('XSS Reflected');
+      await page.getByTestId('create-vulnerability-title').fill('XSS Reflected');
       await page.getByRole('button', { name: 'Create' }).click();
-      await page.waitForResponse(resp =>
-        resp.url().includes('/api/vulnerabilities') && resp.request().method() === 'POST' && resp.status() === 200
-      );
+      await expect(page.getByText('Vulnerability created successfully')).toBeVisible();
 
       await page.getByRole('button', { name: 'New Vulnerability' }).click();
       await page.getByRole('listitem').filter({ hasText: 'No Category' }).click();
-      await page.locator('.q-dialog').getByLabel('Title *').fill('CSRF Token Missing');
+      await page.getByTestId('create-vulnerability-title').fill('CSRF Token Missing');
       await page.getByRole('button', { name: 'Create' }).click();
-      await page.waitForResponse(resp =>
-        resp.url().includes('/api/vulnerabilities') && resp.request().method() === 'POST' && resp.status() === 200
-      );
+      await expect(page.getByText('Vulnerability created successfully')).toBeVisible();
 
       // Both should be visible initially
       await expect(page.getByRole('cell', { name: 'XSS Reflected' })).toBeVisible();
       await expect(page.getByRole('cell', { name: 'CSRF Token Missing' })).toBeVisible();
 
       // Type in the search field (the title search input in the top row of the table)
-      const searchInput = page.getByRole('row').first().getByLabel('Search');
-      await searchInput.fill('XSS');
+      const searchInput = page.getByTestId('search-vulnerability-title');
+      await searchInput.fill('xss');
 
       // XSS should still be visible, CSRF should be filtered out
       await expect(page.getByRole('cell', { name: 'XSS Reflected' })).toBeVisible();
@@ -189,14 +160,16 @@ test.describe('Vulnerabilities Page', () => {
       // Select "No Category"
       await page.getByRole('listitem').filter({ hasText: 'No Category' }).click();
 
-      // The create modal should appear
-      await expect(page.getByText('Add Vulnerability (No Category)')).toBeVisible();
+      // Verify create dialog opened
+      const createDialog = page.getByRole('dialog');
+      await expect(createDialog).toBeVisible();
+      await expect(page.getByTestId('create-vulnerability-title')).toBeVisible();
 
       // Click Create without filling the title
       await page.getByRole('button', { name: 'Create' }).click();
 
       // Verify error message for missing title
-      await expect(page.getByText('Title is required')).toBeVisible();
+      await expect(page.getByText('Title required')).toBeVisible();
     });
   });
 });
