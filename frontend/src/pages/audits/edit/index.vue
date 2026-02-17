@@ -116,6 +116,7 @@
 							<q-item-section v-else>{{$t('findings')}} ({{audit.findings.length || 0}})</q-item-section>
 							<q-item-section avatar>
 								<q-btn
+								data-testid="add-finding-button"
 								@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
 								icon="add"
 								round

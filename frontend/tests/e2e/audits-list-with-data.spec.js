@@ -33,12 +33,12 @@ test.describe('Audits List Page (with data)', () => {
   });
 
   test('should show audit count in table footer', async ({ page }) => {
-    await expect(page.getByText(/1 audit/)).toBeVisible();
+    await expect(page.getByText(/1 audit/i)).toBeVisible();
   });
 
   test('should have edit and delete actions on audit row', async ({ page }) => {
     const row = page.getByRole('row').filter({ hasText: 'E2E Test Audit' });
-    await expect(row.getByRole('button', { name: /Edit/ })).toBeVisible();
-    await expect(row.getByRole('button', { name: /Delete/ })).toBeVisible();
+    await expect(row.getByTestId('edit-audit-button')).toBeVisible();
+    await expect(row.getByTestId('delete-audit-button')).toBeVisible();
   });
 });

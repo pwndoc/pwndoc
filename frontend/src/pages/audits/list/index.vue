@@ -150,14 +150,14 @@
                 
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
-                        <q-btn size="sm" flat color="primary" :to="'/audits/'+props.row._id" icon="fa fa-edit">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.editAudit')}}</q-tooltip> 
+                        <q-btn data-testid="edit-audit-button" size="sm" flat color="primary" :to="'/audits/'+props.row._id" icon="fa fa-edit">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.editAudit')}}</q-tooltip>
                         </q-btn>
                         <q-btn size="sm" flat color="info" @click="generateReport(props.row._id)" icon="fa fa-download">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.downloadReport')}}</q-tooltip> 
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.downloadReport')}}</q-tooltip>
                         </q-btn>
-                        <q-btn size="sm" flat color="negative" @click="confirmDeleteAudit(props.row)" icon="fa fa-trash">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.deleteAudit')}}</q-tooltip> 
+                        <q-btn data-testid="delete-audit-button" size="sm" flat color="negative" @click="confirmDeleteAudit(props.row)" icon="fa fa-trash">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.deleteAudit')}}</q-tooltip>
                         </q-btn>
                     </q-td>
                 </template>

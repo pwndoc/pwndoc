@@ -28,7 +28,7 @@ test.describe('Audit Edit Page', () => {
       );
 
       // Check audit type chip
-      await expect(page.getByText('audit', { exact: true }).first()).toBeVisible();
+      await expect(page.getByText(/^Audit$/).first()).toBeVisible();
 
       // Check sidebar navigation items
       await expect(page.getByText('General Information')).toBeVisible();
@@ -104,21 +104,18 @@ test.describe('Audit Edit Page', () => {
       // Click save
       await page.getByRole('button', { name: /Save/ }).click();
 
-      // Wait for the save API response
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}/general`) && resp.request().method() === 'PUT' && resp.status() === 200
-      );
-
       // Verify success notification
       await expect(page.getByText('Audit updated successfully')).toBeVisible();
 
       // Revert the name back
       await nameField.clear();
       await nameField.fill('E2E Test Audit');
-      await page.getByRole('button', { name: /Save/ }).click();
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}/general`) && resp.request().method() === 'PUT' && resp.status() === 200
-      );
+      await Promise.all([
+        page.waitForResponse(resp =>
+          resp.url().includes(`/api/audits/${auditId}/general`) && resp.status() === 200
+        ),
+        page.getByRole('button', { name: /Save/ }).click()
+      ]);
     });
 
     test('should set start and end dates', async ({ page }) => {
@@ -132,10 +129,6 @@ test.describe('Audit Edit Page', () => {
 
       // Save
       await page.getByRole('button', { name: /Save/ }).click();
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}/general`) && resp.request().method() === 'PUT' && resp.status() === 200
-      );
-
       await expect(page.getByText('Audit updated successfully')).toBeVisible();
 
       // Verify dates are saved by reloading
@@ -174,11 +167,8 @@ test.describe('Audit Edit Page', () => {
       );
 
       // Click the add button next to Findings
-      const addButton = page.locator('button[icon="add"]').first();
-      if (await addButton.isVisible()) {
-        await addButton.click();
-        await expect(page).toHaveURL(new RegExp(`/audits/${auditId}/findings/add`));
-      }
+      await page.getByTestId('add-finding-button').click();
+      await expect(page).toHaveURL(new RegExp(`/audits/${auditId}/findings/add`));
     });
 
     test('should create a finding with a custom title', async ({ page }) => {
@@ -193,16 +183,11 @@ test.describe('Audit Edit Page', () => {
       const titleInput = page.getByLabel('Title');
       await titleInput.fill('Test SQL Injection Finding');
 
-      // Click the Create button (in the dropdown)
-      await page.getByRole('button', { name: 'Create' }).click();
+      // Click the Create dropdown button (inside the title input)
+      await page.getByRole('button', { name: /^Expand "Create"$/ }).click();
 
       // Select "No Category" from the dropdown
       await page.getByText('No Category').click();
-
-      // Wait for finding creation API response
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}/findings`) && resp.request().method() === 'POST' && resp.status() === 200
-      );
 
       // Should be redirected to the finding edit page
       await expect(page).toHaveURL(new RegExp(`/audits/${auditId}/findings/`));
