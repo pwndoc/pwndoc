@@ -62,7 +62,7 @@
             <q-tab name="details" :label="$t('details')" />
             <template v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"> 
             <q-separator vertical />
-            <q-toggle :label="$t('completed')" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
+            <q-toggle data-testid="finding-completed-toggle" :label="$t('completed')" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
             </template>
             <q-space />
         </q-tabs>

@@ -6,6 +6,8 @@ import path from 'path';
  * @see https://playwright.dev/docs/test-configuration
  */
 
+const uiChromiumOnly = process.env.PW_UI_CHROMIUM_ONLY === '1';
+
 function browserChain(browser, browserDevices, prevChainLast) {
   const storageState = path.join(__dirname, 'e2e', `storageState.${browser}.json`);
   const use = { ...browserDevices };
@@ -61,12 +63,85 @@ function browserChain(browser, browserDevices, prevChainLast) {
       testMatch: ['**/audit-edit.spec.js'],
       dependencies: deps(prefix('vulnerabilities')),
     },
-    // Step 5: Audits list with data (verify audit appears, warnings gone)
+    // Step 5a-i: Edge-case tests — fan out from audit-edit independently (no inter-deps)
+    {
+      name: prefix('keyboard-shortcuts'),
+      use: useWithAuth,
+      testMatch: ['**/keyboard-shortcuts.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    {
+      name: prefix('double-click'),
+      use: useWithAuth,
+      testMatch: ['**/double-click.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    {
+      name: prefix('finding-tabs'),
+      use: useWithAuth,
+      testMatch: ['**/finding-tabs.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    {
+      name: prefix('unsaved-changes'),
+      use: useWithAuth,
+      testMatch: ['**/unsaved-changes.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    {
+      name: prefix('report-generation'),
+      use: useWithAuth,
+      testMatch: ['**/report-generation.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    {
+      name: prefix('sticky-toolbar'),
+      use: useWithAuth,
+      testMatch: ['**/sticky-toolbar.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    {
+      name: prefix('drag-drop'),
+      use: useWithAuth,
+      testMatch: ['**/drag-drop.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    // editor-images uses clipboard APIs — Chromium only for reliability
+    ...(browser === 'chromium' ? [{
+      name: prefix('editor-images'),
+      use: useWithAuth,
+      testMatch: ['**/editor-images.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    }] : []),
+    {
+      name: prefix('vuln-merge'),
+      use: useWithAuth,
+      testMatch: ['**/vuln-merge.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    // Step 5j: settings-backup runs last among edge-case specs (restore is destructive)
+    {
+      name: prefix('settings-backup'),
+      use: useWithAuth,
+      testMatch: ['**/settings-backup.spec.js'],
+      dependencies: [
+        prefix('keyboard-shortcuts'),
+        prefix('double-click'),
+        prefix('finding-tabs'),
+        prefix('unsaved-changes'),
+        prefix('report-generation'),
+        prefix('sticky-toolbar'),
+        prefix('drag-drop'),
+        ...(browser === 'chromium' ? [prefix('editor-images')] : []),
+        prefix('vuln-merge'),
+      ],
+    },
+    // Step 6: Audits list with data (verify audit appears, warnings gone)
     {
       name: prefix('audits-list-data'),
       use: useWithAuth,
       testMatch: ['**/audits-list-with-data.spec.js'],
-      dependencies: deps(prefix('audit-edit')),
+      dependencies: deps(prefix('settings-backup')),
     },
   ];
 }
@@ -102,10 +177,12 @@ export default defineConfig({
     // === CHROMIUM ===
     ...browserChain('chromium', devices['Desktop Chrome'], null),
 
-    // === FIREFOX (starts after chromium finishes) ===
-    ...browserChain('firefox', devices['Desktop Firefox'], 'audits-list-data-chromium'),
+    ...(uiChromiumOnly ? [] : [
+      // === FIREFOX (starts after chromium finishes) ===
+      ...browserChain('firefox', devices['Desktop Firefox'], 'audits-list-data-chromium'),
 
-    // === WEBKIT (starts after firefox finishes) ===
-    ...browserChain('webkit', devices['Desktop Safari'], 'audits-list-data-firefox'),
+      // === WEBKIT (starts after firefox finishes) ===
+      ...browserChain('webkit', devices['Desktop Safari'], 'audits-list-data-firefox'),
+    ]),
   ]
 });

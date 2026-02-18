@@ -447,18 +447,19 @@ export default {
 					var sortOption = this.audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
 					
 					if (!sortOption) { // no option for category in audit
-						sortOption = this.vulnCategories.find(e => e.name === key) // Get sort option from default in vulnerability category
-						if (sortOption) // found sort option from vuln categories
-							sortOption.category = sortOption.name
-						else // no default option or category don't exist
+						var defaultSortOption = this.vulnCategories.find(e => e.name === key) // Get sort option from default in vulnerability category
+						if (defaultSortOption) { // found sort option from vuln categories
+							sortOption = {
+								category: defaultSortOption.name,
+								sortValue: defaultSortOption.sortValue,
+								sortOrder: defaultSortOption.sortOrder,
+								sortAuto: defaultSortOption.sortAuto
+							}
+						}
+						else { // no default option or category don't exist
 							sortOption = {category: key, sortValue: 'cvssScore', sortOrder: 'desc', sortAuto: true} // set a default sort option
-						
-						this.audit.sortFindings.push({
-							category: sortOption.category,
-							sortValue: sortOption.sortValue,
-							sortOrder: sortOption.sortOrder,
-							sortAuto: sortOption.sortAuto
-						})
+						}
+						this.audit.sortFindings.push(sortOption)
 					}
 					
 					return {category: key, findings: value, sortOption: sortOption}

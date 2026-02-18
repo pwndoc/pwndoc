@@ -21,11 +21,8 @@ test.describe('Audit Edit Page', () => {
 
     test('should display the audit edit sidebar with correct elements', async ({ page }) => {
       await page.goto(`/audits/${auditId}`);
-
-      // Wait for audit data to load
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}`) && resp.status() === 200
-      );
+      // Wait for sidebar to render (indicates audit data loaded)
+      await expect(page.getByText('General Information')).toBeVisible();
 
       // Check audit type chip
       await expect(page.getByText(/^Audit$/).first()).toBeVisible();
@@ -40,12 +37,11 @@ test.describe('Audit Edit Page', () => {
     });
 
     test('should navigate to general information by default', async ({ page }) => {
-      await page.goto(`/audits/${auditId}/general`);
-
-      // Wait for the general page to load
-      await page.waitForResponse(resp =>
+      const responsePromise = page.waitForResponse(resp =>
         resp.url().includes(`/api/audits/${auditId}/general`) && resp.status() === 200
       );
+      await page.goto(`/audits/${auditId}/general`);
+      await responsePromise;
 
       // The breadcrumb should show the audit name and type
       await expect(page.getByText('E2E Test Audit (E2E Pentest)')).toBeVisible();
@@ -153,8 +149,15 @@ test.describe('Audit Edit Page', () => {
       // Validation error should appear
       await expect(page.getByText('Field is required')).toBeVisible();
 
-      // Revert by reloading
+      // Revert by reloading — wait for the auth refresh to complete so base.js
+      // saves a fresh storageState token (PwnDoc rotates refresh tokens on each page load).
+      const revertResponse = page.waitForResponse(r =>
+        (r.url().includes('/api/users/refreshtoken') ||
+          r.url().includes(`/api/audits/${auditId}/general`)) &&
+        r.status() === 200
+      );
       await page.reload();
+      await revertResponse;
     });
   });
 
@@ -162,9 +165,8 @@ test.describe('Audit Edit Page', () => {
 
     test('should navigate to add findings page', async ({ page }) => {
       await page.goto(`/audits/${auditId}`);
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}`) && resp.status() === 200
-      );
+      // Wait for the sidebar to render (indicates audit data loaded)
+      await expect(page.getByText('Findings')).toBeVisible();
 
       // Click the add button next to Findings
       await page.getByTestId('add-finding-button').click();
@@ -172,12 +174,11 @@ test.describe('Audit Edit Page', () => {
     });
 
     test('should create a finding with a custom title', async ({ page }) => {
-      await page.goto(`/audits/${auditId}/findings/add`);
-
-      // Wait for the findings/add page to load
-      await page.waitForResponse(resp =>
+      const responsePromise = page.waitForResponse(resp =>
         resp.url().includes('/api/vulnerabilities') && resp.status() === 200
       );
+      await page.goto(`/audits/${auditId}/findings/add`);
+      await responsePromise;
 
       // Fill in a finding title
       const titleInput = page.getByLabel('Title');
@@ -195,9 +196,8 @@ test.describe('Audit Edit Page', () => {
 
     test('should see created finding in the sidebar', async ({ page }) => {
       await page.goto(`/audits/${auditId}`);
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}`) && resp.status() === 200
-      );
+      // Wait for the sidebar to render
+      await expect(page.getByText('Findings')).toBeVisible();
 
       // The finding title should appear in the sidebar
       await expect(page.getByText('Test SQL Injection Finding')).toBeVisible();
@@ -205,9 +205,8 @@ test.describe('Audit Edit Page', () => {
 
     test('should navigate to edit a finding by clicking on it in sidebar', async ({ page }) => {
       await page.goto(`/audits/${auditId}`);
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}`) && resp.status() === 200
-      );
+      // Wait for the sidebar to render
+      await expect(page.getByText('Findings')).toBeVisible();
 
       // Click on the finding in the sidebar
       await page.getByText('Test SQL Injection Finding').click();
@@ -220,12 +219,11 @@ test.describe('Audit Edit Page', () => {
   test.describe('Network Scan', () => {
 
     test('should navigate to network scan page', async ({ page }) => {
-      await page.goto(`/audits/${auditId}/network`);
-
-      // Wait for network page to load
-      await page.waitForResponse(resp =>
+      const responsePromise = page.waitForResponse(resp =>
         resp.url().includes(`/api/audits/${auditId}/network`) && resp.status() === 200
       );
+      await page.goto(`/audits/${auditId}/network`);
+      await responsePromise;
 
       // The breadcrumb should show the audit name
       await expect(page.getByText('E2E Test Audit (E2E Pentest)')).toBeVisible();
@@ -236,16 +234,15 @@ test.describe('Audit Edit Page', () => {
 
     test('should show current user in connected users', async ({ page }) => {
       await page.goto(`/audits/${auditId}`);
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}`) && resp.status() === 200
-      );
+      // Wait for the sidebar to render
+      await expect(page.getByText('Findings')).toBeVisible();
 
       // Wait for socket connection to establish
       await page.waitForTimeout(1000);
 
       // The current user should appear in the connected users list
       await expect(page.getByText('Users Connected')).toBeVisible();
-      await expect(page.getByText('admin (me)')).toBeVisible();
+      await expect(page.getByText('admin (me)').first()).toBeVisible();
     });
   });
 });

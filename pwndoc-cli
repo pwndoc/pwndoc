@@ -53,6 +53,11 @@ get_services() {
 check_env() {
     local current_project other_project other_env_hint
 
+    # test commands manage their own ephemeral stack; skip dev/prod cross-env guard
+    if [ "$ENV" = "test" ]; then
+        return 0
+    fi
+
     if [ "$ENV" = "dev" ]; then
         current_project="pwndoc-dev"
         other_project="pwndoc"
@@ -176,7 +181,7 @@ function test_backend {
     $(dc_cmd) build pwndoc-backend
     $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api
     rc=$?
-    $(dc_cmd) down
+    $(dc_cmd) down -v --remove-orphans
     return $rc
 }
 
@@ -188,19 +193,19 @@ function test_backend_debug {
 
 function test_frontend_e2e {
     ENV=test
-    $(dc_cmd) down
+    $(dc_cmd) down -v --remove-orphans
 
     $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests
     $(dc_cmd) up -d pwndoc-backend pwndoc-frontend
 
     if [ "$TEST_UI" = true ]; then
-        $(dc_cmd) up frontend-tests-ui
+        $(dc_cmd) run --rm --service-ports -e PW_UI_CHROMIUM_ONLY=1 frontend-tests-ui
     else
         $(dc_cmd) run --rm frontend-tests
     fi
 
     rc=$?
-    $(dc_cmd) down
+    $(dc_cmd) down -v --remove-orphans
     return $rc
 }
 
@@ -209,7 +214,7 @@ function test_frontend_unit {
     $(dc_cmd) build frontend-unit-tests
     $(dc_cmd) run --rm frontend-unit-tests
     rc=$?
-    $(dc_cmd) down
+    $(dc_cmd) down -v --remove-orphans
     return $rc
 }
 
