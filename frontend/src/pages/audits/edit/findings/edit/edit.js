@@ -12,6 +12,7 @@ import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import { useUserStore } from 'src/stores/user'
 import VulnService from '@/services/vulnerability';
+import AiService from '@/services/ai';
 import Utils from '@/services/utils';
 
 import { $t } from '@/boot/i18n'
@@ -30,6 +31,12 @@ export default {
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
             overrideLeaveCheck: false,
             transitionEnd: true,
+            aiGeneratingFields: {
+                description: false,
+                observation: false,
+                remediation: false,
+                references: false
+            },
             // Comments
             commentTemp: null,
             replyTemp: null,
@@ -345,6 +352,109 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        isAiFieldLoading: function(field) {
+            return !!this.aiGeneratingFields[field]
+        },
+
+        generateDescriptionDraftAI: function() {
+            return this.generateFieldDraftAI('description')
+        },
+
+        generateFieldDraftAI: async function(field) {
+            const supportedFields = ['description', 'observation', 'remediation', 'references']
+            if (!supportedFields.includes(field))
+                return
+
+            if (this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT || this.isAiFieldLoading(field))
+                return
+
+            Utils.syncEditors(this.$refs)
+            this.aiGeneratingFields[field] = true
+
+            try {
+                const response = await AiService.generateFieldDraft({
+                    entityType: 'finding',
+                    field: field,
+                    locale: this.auditParent.language,
+                    context: {
+                        title: this.finding.title || '',
+                        vulnType: this.finding.vulnType || '',
+                        observation: this.finding.observation || '',
+                        description: this.finding.description || '',
+                        remediation: this.finding.remediation || '',
+                        references: this.finding.references || []
+                    }
+                })
+
+                const rawDraft = response.data?.datas?.draft || ''
+                const providerUsed = response.data?.datas?.provider || 'default provider'
+                if (field === 'references') {
+                    const references = Array.isArray(rawDraft)
+                        ? rawDraft
+                        : String(rawDraft).split('\n')
+
+                    const normalized = references
+                    .map(e => String(e || '').trim())
+                    .filter(Boolean)
+
+                    if (normalized.length === 0)
+                        throw new Error('AI draft is empty')
+
+                    const preview = normalized
+                    .map(line => line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+                    .join('<br/>')
+
+                    Dialog.create({
+                        title: `AI Draft - References (${providerUsed})`,
+                        html: true,
+                        message: `<div style="max-height:40vh;overflow:auto;border:1px solid #d7d7d7;padding:8px;">${preview}</div><p class="q-mt-md">Apply this draft to the References field?</p>`,
+                        ok: {label: 'Apply', color: 'primary'},
+                        cancel: {label: $t('btn.cancel'), color: 'white'}
+                    })
+                    .onOk(() => {
+                        this.finding.references = normalized
+                        Notify.create({
+                            message: `AI draft applied from ${providerUsed} (not saved yet)`,
+                            color: 'positive',
+                            textColor: 'white',
+                            position: 'top-right'
+                        })
+                    })
+                    return
+                }
+
+                const draft = Utils.htmlEncode(String(rawDraft))
+                if (!draft)
+                    throw new Error('AI draft is empty')
+
+                Dialog.create({
+                    title: `AI Draft - ${field.charAt(0).toUpperCase() + field.slice(1)} (${providerUsed})`,
+                    html: true,
+                    message: `<div style="max-height:40vh;overflow:auto;border:1px solid #d7d7d7;padding:8px;">${draft}</div><p class="q-mt-md">Apply this draft to the ${field} field?</p>`,
+                    ok: {label: 'Apply', color: 'primary'},
+                    cancel: {label: $t('btn.cancel'), color: 'white'}
+                })
+                .onOk(() => {
+                    this.finding[field] = draft
+                    Notify.create({
+                        message: `AI draft applied from ${providerUsed} (not saved yet)`,
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                })
+            } catch (err) {
+                Notify.create({
+                    message: err.response?.data?.datas || err.message || 'Unable to generate AI draft',
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            } finally {
+                this.aiGeneratingFields[field] = false
+            }
         },
 
         syncEditors: function() {

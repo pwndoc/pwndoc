@@ -11,6 +11,11 @@ module.exports = function(app) {
     var VulnerabilityCategory = require('mongoose').model('VulnerabilityCategory');
     var CustomSection = require('mongoose').model('CustomSection');
     var CustomField = require('mongoose').model('CustomField');
+    var Settings = require('mongoose').model('Settings');
+    const { getAiPromptsFromSettings, mergeWithDefaults } = require('../lib/ai-prompts');
+    const AI_PROVIDERS = ['mock', 'openai', 'anthropic', 'deepseek', 'ollama'];
+    const DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434/v1';
+    const DEFAULT_OLLAMA_MODEL = 'llama3.1';
 
     var _ = require('lodash')
 
@@ -26,6 +31,126 @@ module.exports = function(app) {
             Response.Internal(res, error)
         }
     })
+
+/* ===== AI PROMPTS ===== */
+
+    // Get AI prompts
+    app.get("/api/data/ai-prompts", acl.hasPermission('settings:read-public'), async function(req, res) {
+        try {
+            const settings = await Settings.getAll();
+            const isAdmin = acl.isAllowed(req.decodedToken.role, 'settings:update');
+            const responsePayload = {
+                prompts: getAiPromptsFromSettings(settings),
+                defaultProvider: settings?.ai?.public?.defaultProvider || 'mock'
+            };
+            if (isAdmin) {
+                responsePayload.hasOpenAIApiKey = Boolean((settings?.ai?.private?.openaiApiKey || '').trim());
+                responsePayload.hasAnthropicApiKey = Boolean((settings?.ai?.private?.anthropicApiKey || '').trim());
+                responsePayload.hasDeepseekApiKey = Boolean((settings?.ai?.private?.deepseekApiKey || '').trim());
+                responsePayload.hasOllamaApiKey = Boolean((settings?.ai?.private?.ollamaApiKey || '').trim());
+                responsePayload.ollamaBaseUrl = String(settings?.ai?.private?.ollamaBaseUrl || DEFAULT_OLLAMA_BASE_URL);
+                responsePayload.ollamaModel = String(settings?.ai?.private?.ollamaModel || DEFAULT_OLLAMA_MODEL);
+            }
+            Response.Ok(res, responsePayload);
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    });
+
+    // Update AI prompts (admin only)
+    app.put("/api/data/ai-prompts", acl.hasPermission('settings:update'), async function(req, res) {
+        try {
+            const existingSettings = await Settings.getAll() || {};
+            const bodyPrompts = req.body.prompts;
+            if (bodyPrompts !== undefined && (typeof bodyPrompts !== 'object' || Array.isArray(bodyPrompts))) {
+                Response.BadParameters(res, 'Invalid prompts payload');
+                return;
+            }
+
+            const mergedPrompts = mergeWithDefaults({
+                ...getAiPromptsFromSettings(existingSettings),
+                ...(bodyPrompts || {})
+            });
+            const update = {
+                $set: {
+                    'ai.public.prompts': mergedPrompts
+                }
+            };
+
+            if (req.body.defaultProvider !== undefined) {
+                const provider = String(req.body.defaultProvider || '').toLowerCase().trim();
+                if (!AI_PROVIDERS.includes(provider)) {
+                    Response.BadParameters(res, `Invalid defaultProvider. Allowed values: ${AI_PROVIDERS.join(', ')}`);
+                    return;
+                }
+                update.$set['ai.public.defaultProvider'] = provider;
+            }
+
+            const apiKeyFields = [
+                { bodyField: 'openaiApiKey', settingsField: 'ai.private.openaiApiKey' },
+                { bodyField: 'anthropicApiKey', settingsField: 'ai.private.anthropicApiKey' },
+                { bodyField: 'deepseekApiKey', settingsField: 'ai.private.deepseekApiKey' },
+                { bodyField: 'ollamaApiKey', settingsField: 'ai.private.ollamaApiKey' }
+            ];
+
+            for (const entry of apiKeyFields) {
+                if (!Object.prototype.hasOwnProperty.call(req.body, entry.bodyField))
+                    continue;
+
+                const keyValue = req.body[entry.bodyField];
+                if (typeof keyValue !== 'string') {
+                    Response.BadParameters(res, `Invalid ${entry.bodyField} payload`);
+                    return;
+                }
+
+                const apiKey = keyValue.trim();
+                if (apiKey) {
+                    update.$set[entry.settingsField] = apiKey;
+                } else {
+                    update.$unset = update.$unset || {};
+                    update.$unset[entry.settingsField] = 1;
+                }
+            }
+
+            const ollamaConfigFields = [
+                { bodyField: 'ollamaBaseUrl', settingsField: 'ai.private.ollamaBaseUrl', fallback: DEFAULT_OLLAMA_BASE_URL },
+                { bodyField: 'ollamaModel', settingsField: 'ai.private.ollamaModel', fallback: DEFAULT_OLLAMA_MODEL }
+            ];
+
+            for (const entry of ollamaConfigFields) {
+                if (!Object.prototype.hasOwnProperty.call(req.body, entry.bodyField))
+                    continue;
+
+                const value = req.body[entry.bodyField];
+                if (typeof value !== 'string') {
+                    Response.BadParameters(res, `Invalid ${entry.bodyField} payload`);
+                    return;
+                }
+
+                const normalized = value.trim();
+                update.$set[entry.settingsField] = normalized || entry.fallback;
+            }
+
+            const updatedSettings = await Settings.findOneAndUpdate({}, update, {
+                new: true,
+                runValidators: true,
+                upsert: true
+            });
+
+            Response.Ok(res, {
+                prompts: getAiPromptsFromSettings(updatedSettings),
+                defaultProvider: updatedSettings?.ai?.public?.defaultProvider || 'mock',
+                hasOpenAIApiKey: Boolean((updatedSettings?.ai?.private?.openaiApiKey || '').trim()),
+                hasAnthropicApiKey: Boolean((updatedSettings?.ai?.private?.anthropicApiKey || '').trim()),
+                hasDeepseekApiKey: Boolean((updatedSettings?.ai?.private?.deepseekApiKey || '').trim()),
+                hasOllamaApiKey: Boolean((updatedSettings?.ai?.private?.ollamaApiKey || '').trim()),
+                ollamaBaseUrl: String(updatedSettings?.ai?.private?.ollamaBaseUrl || DEFAULT_OLLAMA_BASE_URL),
+                ollamaModel: String(updatedSettings?.ai?.private?.ollamaModel || DEFAULT_OLLAMA_MODEL)
+            });
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    });
 
 /* ===== LANGUAGES ===== */
 

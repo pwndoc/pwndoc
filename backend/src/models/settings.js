@@ -2,6 +2,7 @@ var mongoose = require('mongoose');//.set('debug', true);
 var Schema = mongoose.Schema;
 var _ = require('lodash');
 var Utils = require('../lib/utils.js');
+const { DEFAULT_AI_PROMPTS } = require('../lib/ai-prompts');
 
 // https://stackoverflow.com/questions/25822289/what-is-the-best-way-to-store-color-hex-values-in-mongodb-mongoose
 const colorValidator = (v) => (/^#([0-9a-f]{3}){1,2}$/i).test(v);
@@ -59,6 +60,25 @@ const SettingSchema = new Schema({
         },
         private: {
             removeApprovalsUponUpdate: { type: Boolean, default: false }
+        }
+    },
+    ai: {
+        public: {
+            defaultProvider: {type: String, enum: ['mock', 'openai', 'anthropic', 'deepseek', 'ollama'], default: 'mock'},
+            prompts: {
+                description: {type: String, default: DEFAULT_AI_PROMPTS.description},
+                observation: {type: String, default: DEFAULT_AI_PROMPTS.observation},
+                remediation: {type: String, default: DEFAULT_AI_PROMPTS.remediation},
+                references: {type: String, default: DEFAULT_AI_PROMPTS.references}
+            }
+        },
+        private: {
+            openaiApiKey: {type: String, default: ''},
+            anthropicApiKey: {type: String, default: ''},
+            deepseekApiKey: {type: String, default: ''},
+            ollamaApiKey: {type: String, default: ''},
+            ollamaBaseUrl: {type: String, default: 'http://localhost:11434/v1'},
+            ollamaModel: {type: String, default: 'llama3.1'}
         }
     }
 }, {strict: true});
