@@ -76,7 +76,9 @@ var builtInRoles = {
             'settings:read-public',
             // Spellcheck
             'spellcheck:read',
-            'spellcheck:create'
+            'spellcheck:create',
+            // AI
+            'ai:generate'
         ]
     },
     admin: {

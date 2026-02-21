@@ -21,6 +21,7 @@ export default [
       {path: 'templates', component: () => import('pages/data/templates')},
       {path: 'spellcheck', component: () => import('pages/data/spellcheck')},
       {path: 'languagetool-rules', component: () => import('pages/data/languagetool-rules')},
+      {path: 'ai-prompts', component: () => import('pages/data/ai-prompts')},
       {path: 'dump', component: () => import('pages/data/dump')},
       {path: 'custom', component: () => import('pages/data/custom')}
     ]},
