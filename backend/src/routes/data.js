@@ -1,5 +1,3 @@
-const { isArray } = require('lodash');
-
 module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
@@ -11,13 +9,59 @@ module.exports = function(app) {
     var VulnerabilityCategory = require('mongoose').model('VulnerabilityCategory');
     var CustomSection = require('mongoose').model('CustomSection');
     var CustomField = require('mongoose').model('CustomField');
+    var AiPrompt = require('mongoose').model('AiPrompt');
     var Settings = require('mongoose').model('Settings');
-    const { getAiPromptsFromSettings, mergeWithDefaults } = require('../lib/ai-prompts');
-    const AI_PROVIDERS = ['mock', 'openai', 'anthropic', 'deepseek', 'ollama'];
-    const DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434/v1';
-    const DEFAULT_OLLAMA_MODEL = 'llama3.1';
+    const {
+        AI_PROVIDERS,
+        AI_DEFAULT_PROVIDER,
+        AI_PROVIDER_DEFAULTS,
+        normalizePromptValue,
+        toPromptCompositeKey,
+        buildAiFieldCatalog,
+        buildPromptMappings
+    } = require('../lib/ai-prompts');
 
     var _ = require('lodash')
+
+    const getAiPromptsPayload = async (settings, isAdmin) => {
+        const aiSettings = settings?.ai || {};
+        const customFields = await CustomField.getAll();
+        const fieldCatalog = buildAiFieldCatalog(customFields);
+        const promptRows = await AiPrompt.find({}).select('entityType fieldKey fieldLabel outputType enabled prompt customFieldId').lean();
+
+        const promptMappings = buildPromptMappings(fieldCatalog, promptRows);
+        const defaultProvider = AI_PROVIDERS.includes(settings?.ai?.public?.defaultProvider) ?
+            settings.ai.public.defaultProvider :
+            AI_DEFAULT_PROVIDER;
+
+        const payload = {
+            aiEnabled: settings?.ai?.public?.enabled !== false,
+            defaultProvider: defaultProvider,
+            promptMappings: promptMappings
+        };
+
+        if (!isAdmin)
+            return payload;
+
+        payload.hasOpenAIApiKey = Boolean((aiSettings?.private?.openaiApiKey || '').trim());
+        payload.openaiBaseUrl = String(aiSettings?.private?.openaiBaseUrl || AI_PROVIDER_DEFAULTS.openai.baseUrl);
+        payload.openaiModel = String(aiSettings?.private?.openaiModel || AI_PROVIDER_DEFAULTS.openai.model);
+
+        payload.hasAnthropicApiKey = Boolean((aiSettings?.private?.anthropicApiKey || '').trim());
+        payload.anthropicBaseUrl = String(aiSettings?.private?.anthropicBaseUrl || AI_PROVIDER_DEFAULTS.anthropic.baseUrl);
+        payload.anthropicModel = String(aiSettings?.private?.anthropicModel || AI_PROVIDER_DEFAULTS.anthropic.model);
+        payload.anthropicVersion = String(aiSettings?.private?.anthropicVersion || AI_PROVIDER_DEFAULTS.anthropic.version);
+
+        payload.hasDeepseekApiKey = Boolean((aiSettings?.private?.deepseekApiKey || '').trim());
+        payload.deepseekBaseUrl = String(aiSettings?.private?.deepseekBaseUrl || AI_PROVIDER_DEFAULTS.deepseek.baseUrl);
+        payload.deepseekModel = String(aiSettings?.private?.deepseekModel || AI_PROVIDER_DEFAULTS.deepseek.model);
+
+        payload.hasOllamaApiKey = Boolean((aiSettings?.private?.ollamaApiKey || '').trim());
+        payload.ollamaBaseUrl = String(aiSettings?.private?.ollamaBaseUrl || AI_PROVIDER_DEFAULTS.ollama.baseUrl);
+        payload.ollamaModel = String(aiSettings?.private?.ollamaModel || AI_PROVIDER_DEFAULTS.ollama.model);
+
+        return payload;
+    }
 
 /* ===== ROLES ===== */
 
@@ -39,19 +83,8 @@ module.exports = function(app) {
         try {
             const settings = await Settings.getAll();
             const isAdmin = acl.isAllowed(req.decodedToken.role, 'settings:update');
-            const responsePayload = {
-                prompts: getAiPromptsFromSettings(settings),
-                defaultProvider: settings?.ai?.public?.defaultProvider || 'mock'
-            };
-            if (isAdmin) {
-                responsePayload.hasOpenAIApiKey = Boolean((settings?.ai?.private?.openaiApiKey || '').trim());
-                responsePayload.hasAnthropicApiKey = Boolean((settings?.ai?.private?.anthropicApiKey || '').trim());
-                responsePayload.hasDeepseekApiKey = Boolean((settings?.ai?.private?.deepseekApiKey || '').trim());
-                responsePayload.hasOllamaApiKey = Boolean((settings?.ai?.private?.ollamaApiKey || '').trim());
-                responsePayload.ollamaBaseUrl = String(settings?.ai?.private?.ollamaBaseUrl || DEFAULT_OLLAMA_BASE_URL);
-                responsePayload.ollamaModel = String(settings?.ai?.private?.ollamaModel || DEFAULT_OLLAMA_MODEL);
-            }
-            Response.Ok(res, responsePayload);
+            const payload = await getAiPromptsPayload(settings, isAdmin);
+            Response.Ok(res, payload);
         } catch (err) {
             Response.Internal(res, err);
         }
@@ -60,22 +93,16 @@ module.exports = function(app) {
     // Update AI prompts (admin only)
     app.put("/api/data/ai-prompts", acl.hasPermission('settings:update'), async function(req, res) {
         try {
-            const existingSettings = await Settings.getAll() || {};
-            const bodyPrompts = req.body.prompts;
-            if (bodyPrompts !== undefined && (typeof bodyPrompts !== 'object' || Array.isArray(bodyPrompts))) {
-                Response.BadParameters(res, 'Invalid prompts payload');
-                return;
-            }
+            let currentSettings = await Settings.getAll() || {};
+            const update = {$set: {}};
 
-            const mergedPrompts = mergeWithDefaults({
-                ...getAiPromptsFromSettings(existingSettings),
-                ...(bodyPrompts || {})
-            });
-            const update = {
-                $set: {
-                    'ai.public.prompts': mergedPrompts
+            if (req.body.aiEnabled !== undefined) {
+                if (typeof req.body.aiEnabled !== 'boolean') {
+                    Response.BadParameters(res, 'Invalid aiEnabled payload');
+                    return;
                 }
-            };
+                update.$set['ai.public.enabled'] = req.body.aiEnabled;
+            }
 
             if (req.body.defaultProvider !== undefined) {
                 const provider = String(req.body.defaultProvider || '').toLowerCase().trim();
@@ -112,12 +139,19 @@ module.exports = function(app) {
                 }
             }
 
-            const ollamaConfigFields = [
-                { bodyField: 'ollamaBaseUrl', settingsField: 'ai.private.ollamaBaseUrl', fallback: DEFAULT_OLLAMA_BASE_URL },
-                { bodyField: 'ollamaModel', settingsField: 'ai.private.ollamaModel', fallback: DEFAULT_OLLAMA_MODEL }
+            const providerConfigFields = [
+                { bodyField: 'openaiBaseUrl', settingsField: 'ai.private.openaiBaseUrl', fallback: AI_PROVIDER_DEFAULTS.openai.baseUrl },
+                { bodyField: 'openaiModel', settingsField: 'ai.private.openaiModel', fallback: AI_PROVIDER_DEFAULTS.openai.model },
+                { bodyField: 'anthropicBaseUrl', settingsField: 'ai.private.anthropicBaseUrl', fallback: AI_PROVIDER_DEFAULTS.anthropic.baseUrl },
+                { bodyField: 'anthropicModel', settingsField: 'ai.private.anthropicModel', fallback: AI_PROVIDER_DEFAULTS.anthropic.model },
+                { bodyField: 'anthropicVersion', settingsField: 'ai.private.anthropicVersion', fallback: AI_PROVIDER_DEFAULTS.anthropic.version },
+                { bodyField: 'deepseekBaseUrl', settingsField: 'ai.private.deepseekBaseUrl', fallback: AI_PROVIDER_DEFAULTS.deepseek.baseUrl },
+                { bodyField: 'deepseekModel', settingsField: 'ai.private.deepseekModel', fallback: AI_PROVIDER_DEFAULTS.deepseek.model },
+                { bodyField: 'ollamaBaseUrl', settingsField: 'ai.private.ollamaBaseUrl', fallback: AI_PROVIDER_DEFAULTS.ollama.baseUrl },
+                { bodyField: 'ollamaModel', settingsField: 'ai.private.ollamaModel', fallback: AI_PROVIDER_DEFAULTS.ollama.model }
             ];
 
-            for (const entry of ollamaConfigFields) {
+            for (const entry of providerConfigFields) {
                 if (!Object.prototype.hasOwnProperty.call(req.body, entry.bodyField))
                     continue;
 
@@ -131,22 +165,91 @@ module.exports = function(app) {
                 update.$set[entry.settingsField] = normalized || entry.fallback;
             }
 
-            const updatedSettings = await Settings.findOneAndUpdate({}, update, {
-                new: true,
-                runValidators: true,
-                upsert: true
-            });
+            if (Array.isArray(req.body.promptMappings)) {
+                const customFields = await CustomField.getAll();
+                const fieldCatalog = buildAiFieldCatalog(customFields);
+                const fieldByCompositeKey = new Map(
+                    fieldCatalog.map((field) => [toPromptCompositeKey(field.entityType, field.fieldKey), field])
+                );
+                const seenCompositeKeys = new Set();
+                const operations = [];
 
-            Response.Ok(res, {
-                prompts: getAiPromptsFromSettings(updatedSettings),
-                defaultProvider: updatedSettings?.ai?.public?.defaultProvider || 'mock',
-                hasOpenAIApiKey: Boolean((updatedSettings?.ai?.private?.openaiApiKey || '').trim()),
-                hasAnthropicApiKey: Boolean((updatedSettings?.ai?.private?.anthropicApiKey || '').trim()),
-                hasDeepseekApiKey: Boolean((updatedSettings?.ai?.private?.deepseekApiKey || '').trim()),
-                hasOllamaApiKey: Boolean((updatedSettings?.ai?.private?.ollamaApiKey || '').trim()),
-                ollamaBaseUrl: String(updatedSettings?.ai?.private?.ollamaBaseUrl || DEFAULT_OLLAMA_BASE_URL),
-                ollamaModel: String(updatedSettings?.ai?.private?.ollamaModel || DEFAULT_OLLAMA_MODEL)
-            });
+                for (const mapping of req.body.promptMappings) {
+                    if (!mapping || typeof mapping !== 'object') {
+                        Response.BadParameters(res, 'Invalid promptMappings payload');
+                        return;
+                    }
+
+                    const entityType = String(mapping.entityType || '').trim();
+                    const fieldKey = String(mapping.fieldKey || '').trim();
+                    const compositeKey = toPromptCompositeKey(entityType, fieldKey);
+                    if (!entityType || !fieldKey || !fieldByCompositeKey.has(compositeKey)) {
+                        Response.BadParameters(res, `Invalid prompt mapping: ${entityType || '(entityType missing)'} / ${fieldKey || '(fieldKey missing)'}`);
+                        return;
+                    }
+                    if (seenCompositeKeys.has(compositeKey))
+                        continue;
+
+                    seenCompositeKeys.add(compositeKey);
+                    const fieldMeta = fieldByCompositeKey.get(compositeKey);
+                    const prompt = normalizePromptValue(mapping.prompt);
+                    let enabled = true;
+                    if (Object.prototype.hasOwnProperty.call(mapping, 'enabled')) {
+                        if (typeof mapping.enabled !== 'boolean') {
+                            Response.BadParameters(res, `Invalid prompt enabled flag for: ${fieldMeta.entityType} / ${fieldMeta.fieldKey}`);
+                            return;
+                        }
+                        enabled = mapping.enabled;
+                    }
+                    operations.push({
+                        updateOne: {
+                            filter: {entityType: fieldMeta.entityType, fieldKey: fieldMeta.fieldKey},
+                            update: {
+                                $set: {
+                                    entityType: fieldMeta.entityType,
+                                    fieldKey: fieldMeta.fieldKey,
+                                    fieldLabel: fieldMeta.fieldLabel,
+                                    outputType: fieldMeta.outputType,
+                                    customFieldId: fieldMeta.customFieldId || null,
+                                    enabled: enabled,
+                                    prompt: prompt
+                                }
+                            },
+                            upsert: true
+                        }
+                    });
+                }
+
+                if (operations.length > 0)
+                    await AiPrompt.bulkWrite(operations);
+
+                const validCompositeKeys = new Set(Array.from(fieldByCompositeKey.keys()));
+                const existingRows = await AiPrompt.find({}).select('_id entityType fieldKey').lean();
+                const staleIds = existingRows
+                .filter((row) => !validCompositeKeys.has(toPromptCompositeKey(row.entityType, row.fieldKey)))
+                .map((row) => row._id);
+                if (staleIds.length > 0)
+                    await AiPrompt.deleteMany({_id: {$in: staleIds}});
+            } else if (req.body.promptMappings !== undefined) {
+                Response.BadParameters(res, 'Invalid promptMappings payload');
+                return;
+            }
+
+            if (!update.$set || Object.keys(update.$set).length === 0)
+                delete update.$set;
+            if (!update.$unset || Object.keys(update.$unset).length === 0)
+                delete update.$unset;
+
+            if (update.$set || update.$unset) {
+                currentSettings = await Settings.findOneAndUpdate({}, update, {
+                    new: true,
+                    runValidators: true,
+                    upsert: true
+                });
+            }
+
+            const payload = await getAiPromptsPayload(currentSettings, true);
+            Response.Ok(res, payload);
         } catch (err) {
             Response.Internal(res, err);
         }

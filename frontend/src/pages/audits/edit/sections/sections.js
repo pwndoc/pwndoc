@@ -7,6 +7,7 @@ import CommentsList from 'components/comments-list';
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
+import AiService from '@/services/ai';
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils';
 
@@ -28,6 +29,9 @@ export default {
             // List of CustomFields
             customFields: [],
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+            aiEnabled: false,
+            aiPromptFieldKeys: [],
+            aiGeneratingFields: {},
             // Comments
             commentTemp: null,
             replyTemp: null,
@@ -65,6 +69,7 @@ export default {
         this.auditId = this.$route.params.auditId;
         this.sectionId = this.$route.params.sectionId;
         this.getSection();
+        this.getAiPromptsConfig();
 
         this.$socket.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
 
@@ -198,6 +203,143 @@ export default {
             .catch((err) => {
                 console.log(err)
             })
+        },
+
+        getAiPromptsConfig: function() {
+            DataService.getAiPrompts()
+            .then((data) => {
+                const payload = data.data.datas || {}
+                this.aiEnabled = payload.aiEnabled !== false
+                this.aiPromptFieldKeys = (payload.promptMappings || [])
+                .filter((mapping) => String(mapping.entityType || '') === 'section' && mapping.enabled !== false)
+                .map((mapping) => String(mapping.fieldKey || ''))
+            })
+            .catch(() => {
+                this.aiEnabled = false
+                this.aiPromptFieldKeys = []
+            })
+        },
+
+        getCustomFieldAiKey: function(customFieldId) {
+            return `custom-field:${customFieldId}`
+        },
+
+        canGenerateAi: function(fieldKey) {
+            return this.aiEnabled && this.aiPromptFieldKeys.includes(fieldKey)
+        },
+
+        isAiFieldLoading: function(fieldKey) {
+            return !!this.aiGeneratingFields[fieldKey]
+        },
+
+        generateCustomFieldDraftAI: async function(customField) {
+            const fieldKey = this.getCustomFieldAiKey(customField?.customField?._id)
+            if (!fieldKey || !this.canGenerateAi(fieldKey))
+                return
+
+            if (this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT || this.isAiFieldLoading(fieldKey))
+                return
+
+            Utils.syncEditors(this.$refs)
+            this.aiGeneratingFields[fieldKey] = true
+
+            try {
+                const customFieldContext = {}
+                if (this.section.customFields && this.section.customFields.length > 0) {
+                    this.section.customFields.forEach((entry) => {
+                        if (entry?.customField?.label)
+                            customFieldContext[entry.customField.label] = entry.text
+                    })
+                }
+
+                const response = await AiService.generateFieldDraft({
+                    entityType: 'section',
+                    field: fieldKey,
+                    locale: this.auditParent.language,
+                    context: {
+                        sectionField: this.section.field || '',
+                        sectionName: this.section.name || '',
+                        sectionText: this.section.text || '',
+                        customFieldLabel: customField?.customField?.label || '',
+                        customFieldValue: customField?.text || '',
+                        customFields: customFieldContext
+                    }
+                })
+
+                const rawDraft = response.data?.datas?.draft || ''
+                const outputType = response.data?.datas?.outputType || 'html'
+                const providerUsed = response.data?.datas?.provider || 'default provider'
+                let normalizedDraft = null
+
+                if (outputType === 'array') {
+                    const entries = Array.isArray(rawDraft)
+                        ? rawDraft
+                        : String(rawDraft).split('\n')
+
+                    normalizedDraft = entries
+                    .map((entry) => String(entry || '').trim())
+                    .filter(Boolean)
+
+                    if (normalizedDraft.length === 0)
+                        throw new Error('AI draft is empty')
+
+                    const preview = normalizedDraft
+                    .map((line) => line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+                    .join('<br/>')
+
+                    Dialog.create({
+                        title: `AI Draft - ${customField?.customField?.label || fieldKey} (${providerUsed})`,
+                        html: true,
+                        message: `<div style="max-height:40vh;overflow:auto;border:1px solid #d7d7d7;padding:8px;">${preview}</div><p class="q-mt-md">Apply this draft to the field?</p>`,
+                        ok: {label: 'Apply', color: 'primary'},
+                        cancel: {label: $t('btn.cancel'), color: 'white'}
+                    })
+                    .onOk(() => {
+                        customField.text = normalizedDraft
+                        Notify.create({
+                            message: `AI draft applied from ${providerUsed} (not saved yet)`,
+                            color: 'positive',
+                            textColor: 'white',
+                            position: 'top-right'
+                        })
+                    })
+                    return
+                }
+
+                normalizedDraft = String(rawDraft || '').trim()
+                if (!normalizedDraft)
+                    throw new Error('AI draft is empty')
+
+                const preview = (outputType === 'html') ?
+                    Utils.htmlEncode(normalizedDraft) :
+                    normalizedDraft.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+                Dialog.create({
+                    title: `AI Draft - ${customField?.customField?.label || fieldKey} (${providerUsed})`,
+                    html: true,
+                    message: `<div style="max-height:40vh;overflow:auto;border:1px solid #d7d7d7;padding:8px;">${preview}</div><p class="q-mt-md">Apply this draft to the field?</p>`,
+                    ok: {label: 'Apply', color: 'primary'},
+                    cancel: {label: $t('btn.cancel'), color: 'white'}
+                })
+                .onOk(() => {
+                    customField.text = (outputType === 'html') ? Utils.htmlEncode(normalizedDraft) : normalizedDraft
+                    Notify.create({
+                        message: `AI draft applied from ${providerUsed} (not saved yet)`,
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                })
+            } catch (err) {
+                Notify.create({
+                    message: err.response?.data?.datas || err.message || 'Unable to generate AI draft',
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            } finally {
+                this.aiGeneratingFields[fieldKey] = false
+            }
         },
 
 

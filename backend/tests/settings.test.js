@@ -6,7 +6,31 @@ module.exports = function(request, app) {
         userToken = response.body.datas.token
       })
 
+      const defaultAiPublicSettings = {
+        "enabled": true,
+        "defaultProvider": "openai"
+      }
+
+      const defaultAiPrivateSettings = {
+        "openaiApiKey": "",
+        "openaiBaseUrl": "https://api.openai.com/v1",
+        "openaiModel": "gpt-4.1-mini",
+        "anthropicApiKey": "",
+        "anthropicBaseUrl": "https://api.anthropic.com/v1",
+        "anthropicModel": "claude-3-5-sonnet-latest",
+        "anthropicVersion": "2023-06-01",
+        "deepseekApiKey": "",
+        "deepseekBaseUrl": "https://api.deepseek.com/v1",
+        "deepseekModel": "deepseek-chat",
+        "ollamaApiKey": "",
+        "ollamaBaseUrl": "http://localhost:11434/v1",
+        "ollamaModel": "llama3.1"
+      }
+
       const defaultPublicSettings = {
+        "ai": {
+          "public": defaultAiPublicSettings,
+        },
         "report": {
             "enabled": true,
             "public": {
@@ -56,6 +80,10 @@ module.exports = function(request, app) {
       }
 
       const defaultSettings = {
+        "ai": {
+          "private": defaultAiPrivateSettings,
+          "public": defaultAiPublicSettings,
+        },
         "report": {
             "enabled": true,
             "private": {
@@ -133,6 +161,10 @@ module.exports = function(request, app) {
 
       it('Edit settings', async () => {
         const fullModification = {
+          "ai": {
+            "private": defaultAiPrivateSettings,
+            "public": defaultAiPublicSettings,
+          },
           "report": {
               "enabled": false,
               "private": {

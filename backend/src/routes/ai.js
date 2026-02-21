@@ -1,7 +1,16 @@
 const Response = require('../lib/httpResponse.js');
 const acl = require('../lib/auth').acl;
 const Settings = require('mongoose').model('Settings');
-const { getAiPromptsFromSettings } = require('../lib/ai-prompts');
+const CustomField = require('mongoose').model('CustomField');
+const AiPrompt = require('mongoose').model('AiPrompt');
+const {
+    AI_PROVIDERS,
+    AI_DEFAULT_PROVIDER,
+    AI_PROVIDER_DEFAULTS,
+    normalizePromptValue,
+    toPromptCompositeKey,
+    buildAiFieldCatalog
+} = require('../lib/ai-prompts');
 
 const toBaseUrl = (value, fallback) => String(value || fallback).replace(/\/+$/g, '');
 const toTimeout = (value, fallback) => {
@@ -9,40 +18,13 @@ const toTimeout = (value, fallback) => {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-const OPENAI_BASE_URL = toBaseUrl(process.env.AI_OPENAI_BASE_URL, 'https://api.openai.com/v1');
-const OPENAI_MODEL = process.env.AI_OPENAI_MODEL || 'gpt-4.1-mini';
-const OPENAI_TIMEOUT_MS = toTimeout(process.env.AI_OPENAI_TIMEOUT_MS, 30000);
-
-const DEEPSEEK_BASE_URL = toBaseUrl(process.env.AI_DEEPSEEK_BASE_URL, 'https://api.deepseek.com/v1');
-const DEEPSEEK_MODEL = process.env.AI_DEEPSEEK_MODEL || 'deepseek-chat';
-const DEEPSEEK_TIMEOUT_MS = toTimeout(process.env.AI_DEEPSEEK_TIMEOUT_MS, 30000);
-
-const OLLAMA_BASE_URL = toBaseUrl(process.env.AI_OLLAMA_BASE_URL, 'http://localhost:11434/v1');
-const OLLAMA_MODEL = process.env.AI_OLLAMA_MODEL || 'llama3.1';
-const OLLAMA_TIMEOUT_MS = toTimeout(process.env.AI_OLLAMA_TIMEOUT_MS, 60000);
-
-const ANTHROPIC_BASE_URL = toBaseUrl(process.env.AI_ANTHROPIC_BASE_URL, 'https://api.anthropic.com/v1');
-const ANTHROPIC_MODEL = process.env.AI_ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest';
-const ANTHROPIC_TIMEOUT_MS = toTimeout(process.env.AI_ANTHROPIC_TIMEOUT_MS, 30000);
-const ANTHROPIC_VERSION = process.env.AI_ANTHROPIC_VERSION || '2023-06-01';
-
-const SUPPORTED_FIELDS = ['description', 'observation', 'remediation', 'references'];
-const SUPPORTED_PROVIDERS = ['mock', 'openai', 'anthropic', 'deepseek', 'ollama'];
-
-const escapeHtml = (value = '') => {
-    return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 const normalizeContextValue = (value) => {
     if (value === null || value === undefined)
         return '';
     if (Array.isArray(value))
         return value.join(', ');
+    if (typeof value === 'object')
+        return JSON.stringify(value);
     return String(value);
 }
 
@@ -64,47 +46,6 @@ const toReferenceArray = (value) => {
         .filter(Boolean);
     }
     return [];
-}
-
-const uniqStrings = (values = []) => {
-    return [...new Set(values.map((value) => String(value).trim()).filter(Boolean))];
-}
-
-const buildMockDraft = (field, context = {}, promptInstruction = '', userPrompt = '') => {
-    const title = escapeHtml(context.title || 'the identified issue');
-    const vulnType = escapeHtml(context.vulnType || 'security');
-    const observation = escapeHtml(context.observation || '');
-    const description = escapeHtml(context.description || '');
-    const remediation = escapeHtml(context.remediation || '');
-    const prompt = escapeHtml(userPrompt || promptInstruction || '');
-
-    if (field === 'references') {
-        const output = [];
-        if (prompt)
-            output.push(prompt);
-        output.push(`OWASP Testing Guide - ${title}`);
-        if (vulnType)
-            output.push(`${vulnType} Security Verification Reference`);
-        return uniqStrings([...output, ...toReferenceArray(context.references)]).slice(0, 5);
-    }
-
-    const firstParagraph = prompt || `Draft for ${field} related to ${title}.`;
-    let secondParagraph = '';
-    if (field === 'description') {
-        secondParagraph = observation ?
-            `Observed behavior: ${observation}` :
-            'Further technical validation should document attack prerequisites and impact boundaries.';
-    } else if (field === 'observation') {
-        secondParagraph = description ?
-            `Context from description: ${description}` :
-            'Capture reproducible steps, affected components, and attacker-controlled conditions.';
-    } else if (field === 'remediation') {
-        secondParagraph = remediation ?
-            `Existing remediation notes: ${remediation}` :
-            'Prioritize practical controls, ownership, and verification steps to reduce risk.';
-    }
-
-    return `<p>${firstParagraph}</p><p>${secondParagraph}</p>`;
 }
 
 const normalizeProvider = (provider) => {
@@ -139,25 +80,27 @@ const extractJsonObjectFromText = (text = '') => {
     }
 }
 
-const getDraftFromParsed = (field, parsed = {}, providerLabel = 'AI provider') => {
-    if (field === 'references') {
-        const refs = toReferenceArray(parsed.references || parsed[field]);
+const getDraftFromParsed = (outputType, parsed = {}, providerLabel = 'AI provider') => {
+    const raw = parsed?.draft;
+
+    if (outputType === 'array') {
+        const refs = toReferenceArray(raw);
         if (refs.length === 0) {
             throw({
                 fn: 'BadRequest',
-                message: `${providerLabel} response is missing valid references`
+                message: `${providerLabel} response is missing a valid array draft`
             });
         }
         return refs;
     }
 
-    const raw = parsed[field];
     if (typeof raw !== 'string' || !raw.trim()) {
         throw({
             fn: 'BadRequest',
-            message: `${providerLabel} response is missing a valid "${field}" value`
+            message: `${providerLabel} response is missing a valid text draft`
         });
     }
+
     return raw.trim();
 }
 
@@ -173,9 +116,30 @@ const normalizeOpenAIContent = (content) => {
     return '';
 }
 
+const getSystemPrompt = (outputType) => {
+    if (outputType === 'array') {
+        return [
+            'You are an assistant writing pentest report content.',
+            'Return ONLY valid JSON with one key: "draft" as an array of concise strings.'
+        ].join(' ');
+    }
+
+    if (outputType === 'text') {
+        return [
+            'You are an assistant writing pentest report content.',
+            'Return ONLY valid JSON with one key: "draft" as plain text without markdown fences.'
+        ].join(' ');
+    }
+
+    return [
+        'You are an assistant writing pentest report content.',
+        'Return ONLY valid JSON with one key: "draft" as HTML paragraphs using <p>...</p> without markdown fences.'
+    ].join(' ');
+}
+
 const generateWithOpenAICompatible = async ({
     providerLabel,
-    field,
+    outputType,
     context = {},
     promptInstruction = '',
     userPrompt = '',
@@ -194,15 +158,9 @@ const generateWithOpenAICompatible = async ({
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
-    const systemPrompt = [
-        'You are an assistant writing pentest report finding content.',
-        field === 'references' ?
-            'Return ONLY valid JSON with one key: "references" as an array of concise strings.' :
-            `Return ONLY valid JSON with one key: "${field}" as HTML paragraphs using <p>...</p> without markdown fences.`
-    ].join(' ');
+    const systemPrompt = getSystemPrompt(outputType);
 
     const userPayload = {
-        field: field,
         promptInstruction: promptInstruction,
         context: context,
         userPrompt: userPrompt || ''
@@ -261,12 +219,12 @@ const generateWithOpenAICompatible = async ({
     if (!parsed) {
         throw({
             fn: 'BadRequest',
-            message: `${providerLabel} response does not contain valid JSON for "${field}"`
+            message: `${providerLabel} response does not contain valid JSON`
         });
     }
 
     return {
-        draft: getDraftFromParsed(field, parsed, providerLabel),
+        draft: getDraftFromParsed(outputType, parsed, providerLabel),
         model: payload?.model || model
     };
 }
@@ -284,11 +242,15 @@ const normalizeAnthropicContent = (content) => {
 }
 
 const generateWithAnthropic = async ({
-    field,
+    outputType,
     context = {},
     promptInstruction = '',
     userPrompt = '',
-    apiKey = ''
+    apiKey = '',
+    baseUrl,
+    model,
+    version,
+    timeoutMs
 }) => {
     if (!apiKey) {
         throw({
@@ -298,16 +260,10 @@ const generateWithAnthropic = async ({
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), ANTHROPIC_TIMEOUT_MS);
-    const systemPrompt = [
-        'You are an assistant writing pentest report finding content.',
-        field === 'references' ?
-            'Return ONLY valid JSON with one key: "references" as an array of concise strings.' :
-            `Return ONLY valid JSON with one key: "${field}" as HTML paragraphs using <p>...</p> without markdown fences.`
-    ].join(' ');
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const systemPrompt = getSystemPrompt(outputType);
 
     const userPayload = {
-        field: field,
         promptInstruction: promptInstruction,
         context: context,
         userPrompt: userPrompt || ''
@@ -315,16 +271,16 @@ const generateWithAnthropic = async ({
 
     let response = null;
     try {
-        response = await fetch(`${ANTHROPIC_BASE_URL}/messages`, {
+        response = await fetch(`${baseUrl}/messages`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'x-api-key': apiKey,
-                'anthropic-version': ANTHROPIC_VERSION
+                'anthropic-version': version
             },
             signal: controller.signal,
             body: JSON.stringify({
-                model: ANTHROPIC_MODEL,
+                model: model,
                 max_tokens: 1200,
                 temperature: 0.2,
                 system: systemPrompt,
@@ -340,7 +296,7 @@ const generateWithAnthropic = async ({
         if (err && err.name === 'AbortError') {
             throw({
                 fn: 'BadRequest',
-                message: `Anthropic request timed out after ${ANTHROPIC_TIMEOUT_MS}ms`
+                message: `Anthropic request timed out after ${timeoutMs}ms`
             });
         }
         throw({
@@ -368,27 +324,28 @@ const generateWithAnthropic = async ({
     if (!parsed) {
         throw({
             fn: 'BadRequest',
-            message: `Anthropic response does not contain valid JSON for "${field}"`
+            message: 'Anthropic response does not contain valid JSON'
         });
     }
 
     return {
-        draft: getDraftFromParsed(field, parsed, 'Anthropic'),
-        model: payload?.model || ANTHROPIC_MODEL
+        draft: getDraftFromParsed(outputType, parsed, 'Anthropic'),
+        model: payload?.model || model
     };
 }
 
 module.exports = function(app) {
     app.post('/api/ai/generate', acl.hasPermission('ai:generate'), async function(req, res) {
         try {
-            const field = req.body.field;
-            if (!field) {
-                Response.BadParameters(res, 'Missing required parameter: field');
+            const entityType = String(req.body.entityType || 'finding').trim().toLowerCase();
+            if (!['finding', 'section'].includes(entityType)) {
+                Response.BadParameters(res, `Unsupported entityType "${entityType}". Allowed entity types: finding, section`);
                 return;
             }
 
-            if (!SUPPORTED_FIELDS.includes(field)) {
-                Response.BadParameters(res, `Unsupported field "${field}". Allowed fields: ${SUPPORTED_FIELDS.join(', ')}`);
+            const field = String(req.body.field || '').trim();
+            if (!field) {
+                Response.BadParameters(res, 'Missing required parameter: field');
                 return;
             }
 
@@ -399,83 +356,123 @@ module.exports = function(app) {
                 settings = null;
             }
 
-            const prompts = getAiPromptsFromSettings(settings || {});
-            const promptInstruction = renderPromptTemplate(prompts[field], req.body.context || {});
-
-            const provider = normalizeProvider(req.body.provider) ||
-                normalizeProvider(settings?.ai?.public?.defaultProvider) ||
-                normalizeProvider(process.env.AI_PROVIDER) ||
-                'mock';
-
-            if (!SUPPORTED_PROVIDERS.includes(provider)) {
-                Response.BadParameters(res, `Unsupported provider "${provider}". Allowed providers: ${SUPPORTED_PROVIDERS.join(', ')}`);
+            if (!settings || settings?.ai?.public?.enabled === false) {
+                Response.Forbidden(res, 'AI integration is disabled in organization settings');
                 return;
             }
 
-            const openaiApiKey = (settings?.ai?.private?.openaiApiKey || process.env.AI_OPENAI_API_KEY || '').trim();
-            const anthropicApiKey = (settings?.ai?.private?.anthropicApiKey || process.env.AI_ANTHROPIC_API_KEY || '').trim();
-            const deepseekApiKey = (settings?.ai?.private?.deepseekApiKey || process.env.AI_DEEPSEEK_API_KEY || '').trim();
-            const ollamaApiKey = (settings?.ai?.private?.ollamaApiKey || process.env.AI_OLLAMA_API_KEY || '').trim();
-            const ollamaBaseUrl = toBaseUrl(settings?.ai?.private?.ollamaBaseUrl, OLLAMA_BASE_URL);
-            const ollamaModel = (settings?.ai?.private?.ollamaModel || OLLAMA_MODEL).trim() || OLLAMA_MODEL;
+            const customFields = await CustomField.getAll();
+            const fieldCatalog = buildAiFieldCatalog(customFields);
+            const fieldByCompositeKey = new Map(
+                fieldCatalog.map((entry) => [toPromptCompositeKey(entry.entityType, entry.fieldKey), entry])
+            );
+            const fieldConfig = fieldByCompositeKey.get(toPromptCompositeKey(entityType, field));
+
+            if (!fieldConfig) {
+                Response.BadParameters(res, `Unsupported field "${field}" for entityType "${entityType}"`);
+                return;
+            }
+
+            const promptDoc = await AiPrompt.findOne({
+                entityType: fieldConfig.entityType,
+                fieldKey: fieldConfig.fieldKey
+            }).select('enabled prompt').lean();
+            if (promptDoc && promptDoc.enabled === false) {
+                Response.Forbidden(res, `AI generation is disabled for field "${fieldConfig.fieldLabel}"`);
+                return;
+            }
+
+            const promptTemplate = normalizePromptValue(promptDoc?.prompt) || fieldConfig.defaultPrompt;
+            const promptInstruction = renderPromptTemplate(promptTemplate, req.body.context || {});
+
+            const provider = normalizeProvider(req.body.provider) ||
+                normalizeProvider(settings?.ai?.public?.defaultProvider) ||
+                AI_DEFAULT_PROVIDER;
+
+            if (!AI_PROVIDERS.includes(provider)) {
+                Response.BadParameters(res, `Unsupported provider "${provider}". Allowed providers: ${AI_PROVIDERS.join(', ')}`);
+                return;
+            }
+
+            const openaiApiKey = (settings?.ai?.private?.openaiApiKey || '').trim();
+            const openaiBaseUrl = toBaseUrl(settings?.ai?.private?.openaiBaseUrl, AI_PROVIDER_DEFAULTS.openai.baseUrl);
+            const openaiModel = (settings?.ai?.private?.openaiModel || AI_PROVIDER_DEFAULTS.openai.model).trim() || AI_PROVIDER_DEFAULTS.openai.model;
+            const openaiTimeoutMs = toTimeout(settings?.ai?.private?.openaiTimeoutMs, AI_PROVIDER_DEFAULTS.openai.timeoutMs);
+
+            const anthropicApiKey = (settings?.ai?.private?.anthropicApiKey || '').trim();
+            const anthropicBaseUrl = toBaseUrl(settings?.ai?.private?.anthropicBaseUrl, AI_PROVIDER_DEFAULTS.anthropic.baseUrl);
+            const anthropicModel = (settings?.ai?.private?.anthropicModel || AI_PROVIDER_DEFAULTS.anthropic.model).trim() || AI_PROVIDER_DEFAULTS.anthropic.model;
+            const anthropicVersion = (settings?.ai?.private?.anthropicVersion || AI_PROVIDER_DEFAULTS.anthropic.version).trim() || AI_PROVIDER_DEFAULTS.anthropic.version;
+            const anthropicTimeoutMs = toTimeout(settings?.ai?.private?.anthropicTimeoutMs, AI_PROVIDER_DEFAULTS.anthropic.timeoutMs);
+
+            const deepseekApiKey = (settings?.ai?.private?.deepseekApiKey || '').trim();
+            const deepseekBaseUrl = toBaseUrl(settings?.ai?.private?.deepseekBaseUrl, AI_PROVIDER_DEFAULTS.deepseek.baseUrl);
+            const deepseekModel = (settings?.ai?.private?.deepseekModel || AI_PROVIDER_DEFAULTS.deepseek.model).trim() || AI_PROVIDER_DEFAULTS.deepseek.model;
+            const deepseekTimeoutMs = toTimeout(settings?.ai?.private?.deepseekTimeoutMs, AI_PROVIDER_DEFAULTS.deepseek.timeoutMs);
+
+            const ollamaApiKey = (settings?.ai?.private?.ollamaApiKey || '').trim();
+            const ollamaBaseUrl = toBaseUrl(settings?.ai?.private?.ollamaBaseUrl, AI_PROVIDER_DEFAULTS.ollama.baseUrl);
+            const ollamaModel = (settings?.ai?.private?.ollamaModel || AI_PROVIDER_DEFAULTS.ollama.model).trim() || AI_PROVIDER_DEFAULTS.ollama.model;
+            const ollamaTimeoutMs = toTimeout(settings?.ai?.private?.ollamaTimeoutMs, AI_PROVIDER_DEFAULTS.ollama.timeoutMs);
 
             let result = null;
             if (provider === 'openai') {
                 result = await generateWithOpenAICompatible({
                     providerLabel: 'OpenAI',
-                    field: field,
+                    outputType: fieldConfig.outputType,
                     context: req.body.context || {},
                     promptInstruction: promptInstruction,
                     userPrompt: req.body.userPrompt || '',
                     apiKey: openaiApiKey,
-                    baseUrl: OPENAI_BASE_URL,
-                    model: OPENAI_MODEL,
-                    timeoutMs: OPENAI_TIMEOUT_MS,
+                    baseUrl: openaiBaseUrl,
+                    model: openaiModel,
+                    timeoutMs: openaiTimeoutMs,
                     requireApiKey: true
                 });
             } else if (provider === 'anthropic') {
                 result = await generateWithAnthropic({
-                    field: field,
+                    outputType: fieldConfig.outputType,
                     context: req.body.context || {},
                     promptInstruction: promptInstruction,
                     userPrompt: req.body.userPrompt || '',
-                    apiKey: anthropicApiKey
+                    apiKey: anthropicApiKey,
+                    baseUrl: anthropicBaseUrl,
+                    model: anthropicModel,
+                    version: anthropicVersion,
+                    timeoutMs: anthropicTimeoutMs
                 });
             } else if (provider === 'deepseek') {
                 result = await generateWithOpenAICompatible({
                     providerLabel: 'DeepSeek',
-                    field: field,
+                    outputType: fieldConfig.outputType,
                     context: req.body.context || {},
                     promptInstruction: promptInstruction,
                     userPrompt: req.body.userPrompt || '',
                     apiKey: deepseekApiKey,
-                    baseUrl: DEEPSEEK_BASE_URL,
-                    model: DEEPSEEK_MODEL,
-                    timeoutMs: DEEPSEEK_TIMEOUT_MS,
+                    baseUrl: deepseekBaseUrl,
+                    model: deepseekModel,
+                    timeoutMs: deepseekTimeoutMs,
                     requireApiKey: true
                 });
-            } else if (provider === 'ollama') {
+            } else {
                 result = await generateWithOpenAICompatible({
                     providerLabel: 'Ollama',
-                    field: field,
+                    outputType: fieldConfig.outputType,
                     context: req.body.context || {},
                     promptInstruction: promptInstruction,
                     userPrompt: req.body.userPrompt || '',
                     apiKey: ollamaApiKey,
                     baseUrl: ollamaBaseUrl,
                     model: ollamaModel,
-                    timeoutMs: OLLAMA_TIMEOUT_MS,
+                    timeoutMs: ollamaTimeoutMs,
                     requireApiKey: false
                 });
-            } else {
-                result = {
-                    draft: buildMockDraft(field, req.body.context || {}, promptInstruction, req.body.userPrompt || ''),
-                    model: 'pwndoc-template-v1'
-                };
             }
 
             Response.Ok(res, {
+                entityType: fieldConfig.entityType,
                 field: field,
+                outputType: fieldConfig.outputType,
                 draft: result.draft,
                 provider: provider,
                 model: result.model

@@ -5,15 +5,26 @@
                 <q-card-section class="bg-blue-grey-5 text-white">
                     <div class="text-h6">AI Prompts</div>
                 </q-card-section>
+
                 <q-card-section v-if="loading">
                     <q-spinner color="primary" size="2em" />
                 </q-card-section>
+
+                <template v-else-if="!aiEnabled">
+                    <q-card-section>
+                        <q-banner dense class="bg-orange-1 text-orange-10">
+                            AI integration is disabled in organization settings. Enable it from <b>Settings</b> to manage prompts.
+                        </q-banner>
+                    </q-card-section>
+                </template>
+
                 <template v-else>
                     <q-card-section>
                         <div class="text-grey-8">
-                            Configure generation prompts used by AI for finding fields.
+                            Configure generation prompts mapped to report fields.
                             Placeholders supported: <code>{title}</code>, <code>{vulnType}</code>,
-                            <code>{description}</code>, <code>{observation}</code>, <code>{remediation}</code>, <code>{references}</code>.
+                            <code>{description}</code>, <code>{observation}</code>, <code>{remediation}</code>,
+                            <code>{references}</code>, <code>{poc}</code>, <code>{customFieldLabel}</code>, <code>{customFieldValue}</code>.
                         </div>
                         <div v-if="!canEdit" class="text-orange q-mt-sm">
                             Read-only: only admins can update prompts.
@@ -36,7 +47,19 @@
                         />
                     </q-card-section>
 
-                    <q-card-section v-if="canEdit && defaultProvider === 'openai'">
+                    <q-card-section v-if="canEdit && defaultProvider === 'openai'" class="q-gutter-md">
+                        <q-input
+                        outlined
+                        label="OpenAI Base URL"
+                        v-model="openaiBaseUrl"
+                        :readonly="!canEdit"
+                        />
+                        <q-input
+                        outlined
+                        label="OpenAI Model"
+                        v-model="openaiModel"
+                        :readonly="!canEdit"
+                        />
                         <q-input
                         v-if="!hasOpenAIApiKey"
                         outlined
@@ -61,7 +84,25 @@
                         />
                     </q-card-section>
 
-                    <q-card-section v-if="canEdit && defaultProvider === 'anthropic'">
+                    <q-card-section v-if="canEdit && defaultProvider === 'anthropic'" class="q-gutter-md">
+                        <q-input
+                        outlined
+                        label="Anthropic Base URL"
+                        v-model="anthropicBaseUrl"
+                        :readonly="!canEdit"
+                        />
+                        <q-input
+                        outlined
+                        label="Anthropic Model"
+                        v-model="anthropicModel"
+                        :readonly="!canEdit"
+                        />
+                        <q-input
+                        outlined
+                        label="Anthropic Version"
+                        v-model="anthropicVersion"
+                        :readonly="!canEdit"
+                        />
                         <q-input
                         v-if="!hasAnthropicApiKey"
                         outlined
@@ -86,7 +127,19 @@
                         />
                     </q-card-section>
 
-                    <q-card-section v-if="canEdit && defaultProvider === 'deepseek'">
+                    <q-card-section v-if="canEdit && defaultProvider === 'deepseek'" class="q-gutter-md">
+                        <q-input
+                        outlined
+                        label="DeepSeek Base URL"
+                        v-model="deepseekBaseUrl"
+                        :readonly="!canEdit"
+                        />
+                        <q-input
+                        outlined
+                        label="DeepSeek Model"
+                        v-model="deepseekModel"
+                        :readonly="!canEdit"
+                        />
                         <q-input
                         v-if="!hasDeepseekApiKey"
                         outlined
@@ -149,38 +202,38 @@
                     </q-card-section>
 
                     <q-card-section class="q-gutter-md">
-                        <q-input
-                        outlined
-                        type="textarea"
-                        autogrow
-                        label="Description Prompt"
-                        v-model="prompts.description"
-                        :readonly="!canEdit"
-                        />
-                        <q-input
-                        outlined
-                        type="textarea"
-                        autogrow
-                        label="Observation Prompt"
-                        v-model="prompts.observation"
-                        :readonly="!canEdit"
-                        />
-                        <q-input
-                        outlined
-                        type="textarea"
-                        autogrow
-                        label="Remediation Prompt"
-                        v-model="prompts.remediation"
-                        :readonly="!canEdit"
-                        />
-                        <q-input
-                        outlined
-                        type="textarea"
-                        autogrow
-                        label="References Prompt"
-                        v-model="prompts.references"
-                        :readonly="!canEdit"
-                        />
+                        <q-card
+                        v-for="mapping in promptMappings"
+                        :key="`${mapping.entityType}:${mapping.fieldKey}`"
+                        bordered
+                        flat
+                        class="q-pa-md"
+                        >
+                            <div class="row items-center q-col-gutter-md q-mb-sm">
+                                <div class="col">
+                                    <div class="text-subtitle2">{{ mapping.fieldLabel }}</div>
+                                    <div class="text-caption text-grey-7">
+                                        Entity: {{ mapping.entityType }} | Field key: {{ mapping.fieldKey }} | Output: {{ mapping.outputType }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <q-toggle
+                                    v-model="mapping.enabled"
+                                    label="Enable AI"
+                                    :disable="!canEdit"
+                                    />
+                                </div>
+                            </div>
+                            <q-input
+                            outlined
+                            type="textarea"
+                            autogrow
+                            :label="`${mapping.fieldLabel} Prompt`"
+                            v-model="mapping.prompt"
+                            :readonly="!canEdit"
+                            :disable="!mapping.enabled"
+                            />
+                        </q-card>
                     </q-card-section>
 
                     <q-card-actions align="right">

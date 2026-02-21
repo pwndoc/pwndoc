@@ -27,6 +27,7 @@ module.exports = function(app) {
     const STATE_RESTORE_ERROR = 'restore_error'
 
     const Audit = require('mongoose').model('Audit');
+    const AiPrompt = require('mongoose').model('AiPrompt');
     const AuditType = require('mongoose').model('AuditType');
     const Client = require('mongoose').model('Client');
     const Company = require('mongoose').model('Company');
@@ -401,6 +402,7 @@ module.exports = function(app) {
             // Settings
             if (e === "Settings") {
                 backupPromises.push(Settings.backup(backupTmpPath))
+                backupPromises.push(AiPrompt.backup(backupTmpPath))
             }
         })
 
@@ -770,6 +772,7 @@ module.exports = function(app) {
             // Settings
             if (info.data.includes('Settings') && backupData.includes('Settings')) {
                 files.push('settings.json')
+                files.push('aiPrompts.json')
             }
 
             if (!fs.existsSync(restoreTmpPath))
@@ -839,6 +842,7 @@ module.exports = function(app) {
             // Settings
             if (info.data.includes('Settings') && backupData.includes('Settings')) {
                 restorePromises.push(Settings.restore(restoreTmpPath))
+                restorePromises.push(AiPrompt.restore(restoreTmpPath, restoreMode))
             }
             
             

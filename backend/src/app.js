@@ -60,6 +60,7 @@ require('./models/vulnerability-type');
 require('./models/vulnerability-category');
 require('./models/custom-section');
 require('./models/custom-field');
+require('./models/ai-prompt');
 require('./models/image');
 require('./models/settings');
 require('./models/dictionary');
