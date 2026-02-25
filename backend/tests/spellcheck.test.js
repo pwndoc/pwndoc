@@ -98,6 +98,24 @@ module.exports = function(request, app) {
                 expect(response.body.datas).toContain('LanguageTool HTTP 502');
             });
 
+            it('Should return 502 when LanguageTool cannot be reached', async () => {
+                global.fetch.mockImplementation(() =>
+                    Promise.reject({
+                        message: 'connect ECONNREFUSED',
+                        cause: { code: 'ECONNREFUSED', message: 'connect ECONNREFUSED 127.0.0.1:8010' }
+                    })
+                );
+
+                var response = await request(app)
+                    .post('/api/spellcheck')
+                    .set('Cookie', [`token=JWT ${userToken}`])
+                    .send({ text: 'test', language: 'en-CA' });
+
+                expect(response.status).toBe(502);
+                expect(response.body.datas).toContain('LanguageTool fetch failed');
+                expect(response.body.datas).toContain('ECONNREFUSED');
+            });
+
             it('Should use default language en-CA if not provided', async () => {
                 var response = await request(app)
                     .post('/api/spellcheck')
