@@ -162,15 +162,6 @@ page.locator('input').and(page.getByLabel('Language'))
     await expect(editor.locator('img')).toBeVisible({ timeout: 5000 });
     ```
 
-### Test Independence
-
-- Each spec file should be independent (can run in any order)
-- Use `test.beforeEach` to navigate to the starting page
-- If tests need specific data (languages, audit types, etc.), either:
-  - Create the data in the test using the UI
-  - Use API calls in `test.beforeAll` via `page.request`
-  - Create a setup project for shared data across many specs
-
 ### Multi-browser
 
 - Tests run in 3 browsers (Chromium, Firefox, WebKit)
@@ -203,6 +194,8 @@ Otherwise, run tests with:
 ```bash
 ./pwndoc-cli test --frontend-e2e
 ```
+
+Do not combine E2E runs with `--coverage`; coverage mode only supports backend and frontend unit suites.
 
 If tests fail, read the error output, fix the spec, and re-run. Iterate until all tests pass across all browsers.
 

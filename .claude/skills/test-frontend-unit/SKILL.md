@@ -305,4 +305,9 @@ Otherwise, run tests with:
 ./pwndoc-cli test --frontend-unit
 ```
 
+If coverage is requested, use:
+```bash
+./pwndoc-cli test --frontend-unit --coverage
+```
+
 If tests fail, read the error output, fix the test file, and re-run. Iterate until all tests pass.

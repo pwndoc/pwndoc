@@ -96,6 +96,7 @@ After ALL sub-skills have finished writing code, run the test cycle below.
 - **NEVER run `pwndoc-cli` in parallel.** Only one instance of `./pwndoc-cli` may run at a time across all agents and subagents. No two test commands may overlap.
 - **Fix agents must NEVER run tests.** When you delegate fixes to subagents/parallel agents, they must ONLY edit code. They must NOT run `./pwndoc-cli test` or any test command. Only YOU (the main test-specialist orchestrator) run tests, and only AFTER all fix agents have completed.
 - Always use `./pwndoc-cli test` commands. Never use `npm run test` or `npx` directly.
+- Use `--coverage` only for backend and frontend unit suites (not E2E).
 
 **Fix loop procedure:**
 
@@ -117,84 +118,43 @@ After ALL sub-skills have finished writing code, run the test cycle below.
 
 5. **Maximum 2 iterations.** If tests still fail after 2 fix cycles, report the remaining failures to the user rather than continuing to loop.
 
-### Step 5: Update Coverage State
+## Coverage Thresholds
 
-After all tests pass (or after the fix loop completes), update the "Current Coverage State" section at the bottom of THIS file (`/srv/pwndoc/.claude/skills/test-specialist/SKILL.md`).
+When running coverage tests or filling gaps, aim to reach these thresholds:
 
-**Procedure:**
-1. Scan actual test files:
-   - `backend/tests/*.test.js` (excluding `index.test.js` which is the runner)
-   - `frontend/tests/unit/services/*.test.js`
-   - `frontend/tests/unit/components/*.test.js`
-   - `frontend/tests/unit/pages/*.test.js`
-   - `frontend/tests/unit/stores/*.test.js`
-   - `frontend/tests/e2e/*.spec.js` and `frontend/tests/e2e/*.setup.js`
-2. Compare against source files:
-   - `frontend/src/services/*.js` (15 total)
-   - `frontend/src/components/**/*.vue` (12 total)
-   - `frontend/src/pages/**/*.vue` (24 total)
-   - `frontend/src/stores/*.js` (2 total)
-3. Compute coverage percentages and update the "Existing" / "Missing" lists
-4. Update the "Last updated" date
-5. Edit the coverage section in-place using the Edit tool
+**Backend** (`./pwndoc-cli test --backend --coverage`):
+- Statements: `75%`
+- Lines: `75%`
+- Functions: `70%`
+- Branches: `60%` (advisory)
 
-This ensures the coverage state always reflects reality and guides future test generation accurately.
+**Frontend Unit** (`./pwndoc-cli test --frontend-unit --coverage`):
+- Statements: `65%`
+- Lines: `65%`
+- Functions: `60%`
+- Branches: `50%` (advisory)
 
-## Current Coverage State
+**E2E** (`./pwndoc-cli test --frontend-e2e`):
+- No coverage percentages
+- Focus on critical user flows (auth, audit CRUD, report generation)
+- Validate stable pass/fail behavior
 
-> **This section is auto-updated.** After tests pass, the orchestrator runs Step 5 to refresh it.
-> Last updated: 2026-02-13
+## Automatic Threshold Enforcement
 
-### Backend (~90% covered)
-Existing test files in `backend/tests/`: unauthenticated, user, role, template, data, company, client, settings, vulnerability, audit, backup, images, cvss, languagetool-rules, spellcheck, lib.
-These run sequentially via `backend/tests/index.test.js`.
+When adding features or filling gaps:
 
-### Frontend Unit (~80% covered)
-**Services (15/15 — complete):** audit, backup, client, collaborator, company, data, image, languagetool-rules, reviewer, session, settings, spellcheck, template, user, utils/vulnerability
-**Components (5/12):** audit-state-icon, breadcrumb, comments-list, custom-fields, language-selector, textarea-array
-**Missing components:** cvss3calculator, cvss4calculator, editor/Editor, editor/editor-image-template, editor/editor-caption-template, editor/editor-code-block
-**Pages (20/24):** 403, 404, add-audits, audits-edit, audits-edit-general, audits-edit-network, audits-list, clients, collaborators, companies, data-custom, findings-add, findings-edit, languagetool-rules, login, profile, sections, settings, spellcheck, templates, vulnerabilities
-**Missing pages:** data/index (hub), data/dump
-**Stores (2/2 — complete):** index, user
+1. **Run coverage**: Execute `./pwndoc-cli test --backend --coverage` or `./pwndoc-cli test --frontend-unit --coverage`.
 
-### Frontend E2E (~10% covered)
-**Existing:** init-user.setup.js, auth.setup.js, audits-list.spec.js, data-setup.spec.js, vulnerabilities.spec.js, audit-edit.spec.js
-**Missing:** login flows, data-clients, data-companies, data-templates, settings, profile
+2. **Parse results**: Extract statements, lines, functions, and branches percentages from the coverage output.
 
-## Feature-to-File Mapping
+3. **Compare to thresholds**: Check each metric against the targets above.
 
-| Feature | Backend Route | Frontend Service | Frontend Pages | Key Components |
-|---------|--------------|-----------------|----------------|----------------|
-| audit | routes/audit.js | services/audit.js | pages/audits/* | editor/*, comments-list |
-| client | routes/client.js | services/client.js | pages/data/clients/* | custom-fields |
-| company | routes/company.js | services/company.js | pages/data/companies/* | - |
-| vulnerability | routes/vulnerability.js | services/vulnerability.js | pages/vulnerabilities/* | cvss3calculator, cvss4calculator |
-| template | routes/template.js | services/template.js | pages/data/templates/* | - |
-| backup | routes/backup.js | services/backup.js | pages/settings/* | - |
-| settings | routes/settings.js | services/settings.js | pages/settings/* | - |
-| data | routes/data.js | services/data.js | pages/data/custom/* | - |
-| image | routes/image.js | services/image.js | - | - |
-| user | routes/user.js | services/user.js | pages/profile/* | - |
-| spellcheck | routes/spellcheck.js | services/spellcheck.js | pages/data/spellcheck/* | - |
-| languagetool-rules | routes/languagetool-rules.js | services/languagetool-rules.js | pages/data/languagetool-rules/* | - |
-| collaborator | - | services/collaborator.js | pages/data/collaborators/* | - |
-| reviewer | - | services/reviewer.js | - | - |
+4. **If below threshold**:
+   - Identify uncovered paths from the coverage report.
+   - Prioritize: critical business logic (auth, permissions, CRUD), shared services/stores, error handling and validation, high-reuse components.
+   - Add targeted tests to close gaps.
+   - Re-run coverage once.
 
-## Priority Order (for "gaps" mode)
-
-When filling all gaps, work in this order (highest impact first):
-
-### Frontend Unit — Services
-All 15 services are covered. No gaps.
-
-### Frontend Unit — Components
-1. cvss3calculator, cvss4calculator (complex calculators, high value)
-2. editor/Editor, editor/editor-image-template, editor/editor-caption-template, editor/editor-code-block (editor suite)
-
-### Frontend Unit — Pages
-1. data/index (hub page), data/dump (backup page)
-
-### Frontend E2E
-1. data-clients, data-companies, data-templates (CRUD flows)
-2. settings, profile
-3. login flows (auth edge cases)
+5. **Completion rule**:
+   - Task is complete when thresholds are met, or measurably improved (`>= 5%` gain in any below-threshold metric).
+   - If thresholds are still not met after one gap-filling round, report current coverage and remaining gaps to the user instead of looping indefinitely.
