@@ -17,6 +17,7 @@ services:
       - ./backend/tests:/app/tests
       - ./backend/src:/app/src
       - ./backend/jest.config.js:/app/jest.config.js
+      - ./backend/coverage:/app/coverage
     depends_on:
       mongodb:
         condition: service_healthy
@@ -61,5 +62,6 @@ services:
       - ./frontend/src:/app/src
       - ./frontend/tests/unit:/app/tests/unit
       - ./frontend/vitest.config.js:/app/vitest.config.js
+      - ./frontend/coverage:/app/coverage
     entrypoint: ["npm", "run", "test:run"]
     restart: "no"

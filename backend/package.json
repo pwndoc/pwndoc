@@ -10,6 +10,7 @@
     "generate-api-doc": "node swagger-autogen.js",
     "prod": "NODE_ENV=prod nodemon src/app.js",
     "test:api": "NODE_ENV=test jest tests/index.test.js --testTimeout=10000 --forceExit",
+    "test:api:coverage": "NODE_ENV=test jest tests/index.test.js --coverage --testTimeout=10000 --forceExit",
     "test:server": "NODE_ENV=test nodemon --ext js src/app.js"
   },
   "devDependencies": {

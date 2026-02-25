@@ -114,6 +114,11 @@ Otherwise, run tests with:
 ./pwndoc-cli test --backend
 ```
 
+If coverage is requested, use:
+```bash
+./pwndoc-cli test --backend --coverage
+```
+
 If tests fail, read the error output, fix the test file, and re-run. Iterate until all tests pass.
 
 ## Reference

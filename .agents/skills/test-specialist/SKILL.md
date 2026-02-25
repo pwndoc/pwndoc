@@ -68,6 +68,7 @@ After ALL sub-skills have finished writing code, run the test cycle below.
 - **NEVER run `pwndoc-cli` in parallel.** Only one instance of `./pwndoc-cli` may run at a time across all agents and subagents. No two test commands may overlap.
 - **Fix agents must NEVER run tests.** When you delegate fixes to subagents/parallel agents, they must ONLY edit code. They must NOT run `./pwndoc-cli test` or any test command. Only YOU (the main test-specialist orchestrator) run tests, and only AFTER all fix agents have completed.
 - Always use `./pwndoc-cli test` commands. Never use `npm run test` or `npx` directly.
+- Use `--coverage` only for backend and frontend unit suites (not E2E).
 
 **Fix loop procedure:**
 
@@ -75,6 +76,7 @@ After ALL sub-skills have finished writing code, run the test cycle below.
    - `./pwndoc-cli test --backend` if backend tests were created/modified
    - `./pwndoc-cli test --frontend-unit` if frontend unit tests were created/modified
    - `./pwndoc-cli test --frontend-e2e` if E2E tests were created/modified
+   - Add `--coverage` for backend/frontend-unit runs when coverage output is requested.
 
 2. **Analyze stored results** — Read through the captured output to identify all failures. Do NOT re-run tests to get more information.
 

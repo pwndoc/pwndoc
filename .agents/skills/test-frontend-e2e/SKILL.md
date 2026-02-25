@@ -162,6 +162,8 @@ Otherwise, run tests with:
 ./pwndoc-cli test --frontend-e2e
 ```
 
+Do not combine E2E runs with `--coverage`; coverage mode only supports backend and frontend unit suites.
+
 If tests fail, read the error output, fix the spec, and re-run. Iterate until all tests pass across all browsers.
 
 ## Reference

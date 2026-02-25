@@ -6,6 +6,7 @@ ENV="prod"
 ONLY_BACKEND=false
 ONLY_FRONTEND=false
 TEST_UI=false
+TEST_COVERAGE=false
 
 # Test-specific flags (combinable)
 RUN_BACKEND=false
@@ -179,7 +180,11 @@ function update {
 function test_backend {
     ENV=test
     $(dc_cmd) build pwndoc-backend
-    $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api
+    if [ "$TEST_COVERAGE" = true ]; then
+        $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api -- --coverage
+    else
+        $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api
+    fi
     rc=$?
     $(dc_cmd) down -v --remove-orphans
     return $rc
@@ -212,13 +217,30 @@ function test_frontend_e2e {
 function test_frontend_unit {
     ENV=test
     $(dc_cmd) build frontend-unit-tests
-    $(dc_cmd) run --rm frontend-unit-tests
+    if [ "$TEST_COVERAGE" = true ]; then
+        $(dc_cmd) run --rm --entrypoint npm frontend-unit-tests run test:coverage
+    else
+        $(dc_cmd) run --rm frontend-unit-tests
+    fi
     rc=$?
     $(dc_cmd) down -v --remove-orphans
     return $rc
 }
 
 function run_tests {
+    if [ "$TEST_COVERAGE" = true ] && [ "$RUN_FRONTEND_E2E" = true ]; then
+        echo "Error: --coverage is not supported with --frontend-e2e."
+        return 1
+    fi
+
+    # Coverage mode defaults to backend + frontend-unit only.
+    if [ "$TEST_COVERAGE" = true ] && [ "$RUN_ALL" = true ]; then
+        RUN_ALL=false
+        RUN_BACKEND=true
+        RUN_FRONTEND_UNIT=true
+        RUN_FRONTEND_E2E=false
+    fi
+
     if [ "$RUN_ALL" = true ]; then
         RUN_BACKEND=true
         RUN_FRONTEND_UNIT=true
@@ -261,7 +283,7 @@ _pwndoc_cli() {
     local cmd="${COMP_WORDS[1]}"
     case "$cmd" in
         test)
-            COMPREPLY=($(compgen -W "--backend --frontend-unit --frontend-e2e --ui" -- "$cur"))
+            COMPREPLY=($(compgen -W "--backend --frontend-unit --frontend-e2e --ui --coverage" -- "$cur"))
             ;;
         build)
             COMPREPLY=($(compgen -W "--dev --prod-local --backend-only --frontend-only" -- "$cur"))
@@ -308,8 +330,10 @@ Test-specific options (only with command 'test'):
   --frontend-unit             Run Vitest unit tests (Docker, no browser needed)
   --frontend-e2e              Run Playwright E2E tests (Docker, full stack)
   --ui                        Start Playwright in UI mode (implies --frontend-e2e)
+  --coverage                  Collect coverage for supported suites (backend + frontend-unit)
 
   No flags runs all tests (backend + frontend-unit + frontend-e2e).
+  In coverage mode, no suite flags runs backend + frontend-unit only.
   Flags are combinable: --backend --frontend-unit runs both.
 
 Other options:
@@ -332,6 +356,8 @@ Examples:
   ./pwndoc-cli test --frontend-e2e
   ./pwndoc-cli test --backend --frontend-unit
   ./pwndoc-cli test --frontend-e2e --ui
+  ./pwndoc-cli test --coverage
+  ./pwndoc-cli test --backend --coverage
 
 Enable tab completion:
   source <(./pwndoc-cli completion)
@@ -412,6 +438,13 @@ while [[ "$#" -gt 0 ]]; do
             TEST_UI=true
             RUN_FRONTEND_E2E=true
             RUN_ALL=false
+            ;;
+        --coverage)
+            if [[ "$COMMAND" != "test" ]]; then
+                print_help
+                exit 1
+            fi
+            TEST_COVERAGE=true
             ;;
         *)
             print_help
