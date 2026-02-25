@@ -37,7 +37,7 @@ Scan all three test directories and compare against source files to build a comp
 For each layer, check what exists:
 
 **Backend** (tests in `backend/tests/`):
-- Already ~90% covered. Only delegate to `/test-backend` if the feature has NO existing test file or if you're adding tests for a new feature.
+- Delegate to `/test-backend` when coverage gaps remain for the feature, when touched backend files are under target, or when a new feature/path lacks tests.
 - Check: Does `backend/tests/{feature}.test.js` exist?
 
 **Frontend Unit** (tests in `frontend/tests/unit/`):
@@ -86,70 +86,43 @@ After ALL sub-skills have finished writing code, run the test cycle below.
 
 5. **Maximum 2 iterations.** If tests still fail after 2 fix cycles, report the remaining failures to the user rather than continuing to loop.
 
-## Current Coverage State
+## Coverage Thresholds
 
-### Backend (~90% covered)
-Existing test files in `backend/tests/`: unauthenticated, user, template, data, company, client, settings, vulnerability, audit, backup, cvss, languagetool-rules, spellcheck, lib.
-These run sequentially via `backend/tests/index.test.js`.
+When running coverage tests or filling gaps, aim to reach these thresholds:
 
-### Frontend Unit (~5% covered)
-**Existing:**
-- `stores/user.test.js`
-- `components/audit-state-icon.test.js`
-- `services/utils.test.js`, `services/user.test.js`, `services/session.test.js`
-- `pages/login.test.js`
+**Backend** (`./pwndoc-cli test --backend --coverage`):
+- Statements: `75%`
+- Lines: `75%`
+- Functions: `70%`
+- Branches: `60%` (advisory)
 
-**Missing services:** audit, backup, client, collaborator, company, data, image, languagetool-rules, reviewer, settings, spellcheck, template, vulnerability
-**Missing components:** breadcrumb, comments-list, custom-fields, cvss3calculator, cvss4calculator, editor/*, language-selector, textarea-array
-**Missing pages:** 403, 404, audits/*, data/*, profile/*, settings/*, vulnerabilities/*
-**Missing stores:** index (root store)
+**Frontend Unit** (`./pwndoc-cli test --frontend-unit --coverage`):
+- Statements: `65%`
+- Lines: `65%`
+- Functions: `60%`
+- Branches: `50%` (advisory)
 
-### Frontend E2E (~1% covered)
-**Existing:** init-user.setup.js, auth.setup.js, audits-list.spec.js
-**Missing:** login flows, audit editing, data management, settings, vulnerabilities, profile
+**E2E** (`./pwndoc-cli test --frontend-e2e`):
+- No coverage percentages
+- Focus on critical user flows (auth, audit CRUD, report generation)
+- Validate stable pass/fail behavior
 
-## Feature-to-File Mapping
+## Automatic Threshold Enforcement
 
-| Feature | Backend Route | Frontend Service | Frontend Pages | Key Components |
-|---------|--------------|-----------------|----------------|----------------|
-| audit | routes/audit.js | services/audit.js | pages/audits/* | editor/*, comments-list |
-| client | routes/client.js | services/client.js | pages/data/clients/* | custom-fields |
-| company | routes/company.js | services/company.js | pages/data/companies/* | - |
-| vulnerability | routes/vulnerability.js | services/vulnerability.js | pages/vulnerabilities/* | cvss3calculator, cvss4calculator |
-| template | routes/template.js | services/template.js | pages/data/templates/* | - |
-| backup | routes/backup.js | services/backup.js | pages/settings/* | - |
-| settings | routes/settings.js | services/settings.js | pages/settings/* | - |
-| data | routes/data.js | services/data.js | pages/data/custom/* | - |
-| image | routes/image.js | services/image.js | - | - |
-| user | routes/user.js | services/user.js | pages/profile/* | - |
-| spellcheck | routes/spellcheck.js | services/spellcheck.js | pages/data/spellcheck/* | - |
-| languagetool-rules | routes/languagetool-rules.js | services/languagetool-rules.js | pages/data/languagetool-rules/* | - |
-| collaborator | - | services/collaborator.js | pages/data/collaborators/* | - |
-| reviewer | - | services/reviewer.js | - | - |
+When adding features or filling gaps:
 
-## Priority Order (for "gaps" mode)
+1. **Run coverage**: Execute `./pwndoc-cli test --backend --coverage` or `./pwndoc-cli test --frontend-unit --coverage`.
 
-When filling all gaps, work in this order (highest impact first):
+2. **Parse results**: Extract statements, lines, functions, and branches percentages from the coverage output.
 
-### Frontend Unit — Services (quickest wins)
-1. audit, client, company, vulnerability, template (core CRUD services)
-2. data, settings, backup, image
-3. spellcheck, languagetool-rules, collaborator, reviewer
+3. **Compare to thresholds**: Check each metric against the targets above.
 
-### Frontend Unit — Components
-1. breadcrumb, language-selector, textarea-array (simpler)
-2. custom-fields, comments-list (medium complexity)
-3. cvss3calculator, cvss4calculator (complex, lower priority)
+4. **If below threshold**:
+   - Identify uncovered paths from the coverage report.
+   - Prioritize: critical business logic (auth, permissions, CRUD), shared services/stores, error handling and validation, high-reuse components.
+   - Add targeted tests to close gaps.
+   - Re-run coverage once.
 
-### Frontend Unit — Pages
-1. 403, 404 (simple error pages)
-2. profile (standalone)
-3. data/* pages, settings, vulnerabilities
-4. audits/* (most complex)
-
-### Frontend E2E
-1. data-setup (create languages, audit types — prerequisite for other flows)
-2. vulnerabilities (CRUD)
-3. audit-edit (general, findings, sections)
-4. data-clients, data-companies, data-templates
-5. settings, profile
+5. **Completion rule**:
+   - Task is complete when thresholds are met, or measurably improved (`>= 5%` gain in any below-threshold metric).
+   - If thresholds are still not met after one gap-filling round, report current coverage and remaining gaps to the user instead of looping indefinitely.
