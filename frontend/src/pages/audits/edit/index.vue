@@ -167,7 +167,7 @@
 										<q-item-label header>{{categoryFindings.category}}</q-item-label>
 									</q-item-section>
 									<q-item-section avatar>
-										<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+										<q-btn data-testid="sort-options-button" icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 											<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
 											<q-menu style="width: 300px" anchor="bottom middle" self="top left">
 												<q-item>
@@ -247,7 +247,7 @@
 											:to="'/audits/'+auditId+'/findings/'+finding._id"
 											>
 												<q-item-section side v-if="!categoryFindings.sortOption.sortAuto && frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-													<q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
+													<q-icon data-testid="finding-drag-handle" name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
 												</q-item-section>
 												<q-item-section side>
 													<q-chip

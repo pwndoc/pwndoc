@@ -38,7 +38,7 @@
                         <br/>
                         <q-item>
                             <q-item-section class="col-md-2">
-                                <q-toggle :label="$t('btn.enable')" v-model="settings.report.private.imageBorder" />
+                                <q-toggle data-testid="image-border-toggle" :label="$t('btn.enable')" v-model="settings.report.private.imageBorder" />
                             </q-item-section>
                             <q-item-section class="col-md-1">
                                 <input :disabled="!settings.report.private.imageBorder" type="color" id="colorpicker" v-model="settings.report.private.imageBorderColor" />

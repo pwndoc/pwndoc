@@ -56,7 +56,7 @@
     </breadcrumb>
 
     <div class="row" v-if="auditParent.type === 'default'">
-        <q-tabs v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width top-fixed">
+        <q-tabs data-testid="finding-tabs-bar" v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width top-fixed">
             <q-tab name="definition" default :label="$t('definition')" />
             <q-tab name="proofs" :label="$t('proofs')"/>
             <q-tab name="details" :label="$t('details')" />

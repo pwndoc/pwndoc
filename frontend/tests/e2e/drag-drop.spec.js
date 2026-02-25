@@ -16,25 +16,15 @@ let secondFindingId;
 
 test.describe('Drag and Drop Reordering', () => {
   const disableAutoSort = async (page) => {
-    // Open sort options from the findings category header row.
-    await page
-      .locator('.q-item')
-      .filter({ has: page.locator('.q-item__label--header') })
-      .getByRole('button')
-      .first()
-      .click();
+    // Open sort options via the sort button on the findings category header row.
+    await page.getByTestId('sort-options-button').first().click();
 
     // Toggle automatic sorting off and wait for persistence.
-    const sortToggle = page.locator('.q-menu').getByRole('switch').first();
+    // The menu renders a switch labelled "Automatic Sorting".
+    const sortToggle = page.getByRole('switch', { name: 'Automatic Sorting' });
     const isChecked = await sortToggle.getAttribute('aria-checked');
     if (isChecked !== 'false') {
-      const saveResponse = page.waitForResponse(r =>
-        r.request().method() === 'PUT' &&
-        r.url().includes(`/api/audits/${auditId}/sortfindings`) &&
-        r.status() === 200
-      );
       await sortToggle.click();
-      await saveResponse;
     }
     await expect(sortToggle).toHaveAttribute('aria-checked', 'false');
 
@@ -65,19 +55,15 @@ test.describe('Drag and Drop Reordering', () => {
 
   test('drag handle is hidden when auto-sort is on', async ({ page }) => {
     await page.goto(`/audits/${auditId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}`) && r.status() === 200
-    );
+    await expect(page.getByText('General Information')).toBeVisible();
 
     // By default sortAuto is true — no drag handles should be visible
-    await expect(page.locator('.q-icon.handle').first()).toBeHidden();
+    await expect(page.getByTestId('finding-drag-handle').first()).toBeHidden();
   });
 
   test('auto-sort can be disabled from sort options', async ({ page }) => {
     await page.goto(`/audits/${auditId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}`) && r.status() === 200
-    );
+    await expect(page.getByText('General Information')).toBeVisible();
 
     await disableAutoSort(page);
 
@@ -86,18 +72,17 @@ test.describe('Drag and Drop Reordering', () => {
 
   test('drag reorders findings and persists after reload', async ({ page }) => {
     await page.goto(`/audits/${auditId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}`) && r.status() === 200
-    );
+    await expect(page.getByText('General Information')).toBeVisible();
 
     await disableAutoSort(page);
 
-    const handles = page.locator('.q-icon.handle');
+    const handles = page.getByTestId('finding-drag-handle');
     await expect(handles.nth(0)).toBeVisible({ timeout: 10000 });
     await expect(handles.nth(1)).toBeVisible({ timeout: 10000 });
 
-    // Read sidebar text order before drag
-    const items = page.locator('.q-item').filter({ has: page.locator('.handle') });
+    // Read sidebar text order before drag by looking at the finding rows
+    // (rows that contain a drag handle are the reorderable finding items)
+    const items = page.getByRole('listitem').filter({ has: page.getByTestId('finding-drag-handle') });
     const titleBefore = await items.nth(0).textContent();
 
     // Slow drag from first handle to second handle position
@@ -118,10 +103,8 @@ test.describe('Drag and Drop Reordering', () => {
 
     // Reload and confirm reordered state persisted.
     await page.reload();
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}`) && r.status() === 200
-    );
-    const itemsAfterReload = page.locator('.q-item').filter({ has: page.locator('.handle') });
+    await expect(page.getByText('General Information')).toBeVisible();
+    const itemsAfterReload = page.getByRole('listitem').filter({ has: page.getByTestId('finding-drag-handle') });
     const titleAfterReload = await itemsAfterReload.nth(0).textContent();
     expect(titleAfterReload?.trim()).toBe(titleAfter?.trim());
   });

@@ -33,9 +33,7 @@ test.describe('Unsaved Changes Warning', () => {
 
   test('general info: Cancel keeps user on the page', async ({ page }) => {
     await page.goto(`/audits/${auditId}/general`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/general`) && r.status() === 200
-    );
+    await expect(page.getByLabel(/Name/).first()).not.toHaveValue('');
 
     // Make the form dirty
     await page.getByLabel(/Name/).first().type(' dirty');
@@ -54,9 +52,7 @@ test.describe('Unsaved Changes Warning', () => {
 
   test('general info: Confirm navigates away', async ({ page }) => {
     await page.goto(`/audits/${auditId}/general`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/general`) && r.status() === 200
-    );
+    await expect(page.getByLabel(/Name/).first()).not.toHaveValue('');
 
     await page.getByLabel(/Name/).first().type(' dirty');
 
@@ -74,9 +70,7 @@ test.describe('Unsaved Changes Warning', () => {
     test.skip(!findingId, 'No finding exists in the E2E audit');
 
     await page.goto(`/audits/${auditId}/findings/${findingId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/findings/${findingId}`) && r.status() === 200
-    );
+    await expect(page.getByRole('tab', { name: 'Definition' })).toBeVisible();
 
     // Make the title dirty
     await page.getByLabel('Title').first().type(' dirty');
@@ -97,12 +91,10 @@ test.describe('Unsaved Changes Warning', () => {
     test.skip(!sectionId, 'No section exists in the E2E audit');
 
     await page.goto(`/audits/${auditId}/sections/${sectionId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/sections/${sectionId}`) && r.status() === 200
-    );
+    await expect(page.getByRole('textbox').first()).toBeVisible();
 
-    // Type into the ProseMirror editor to make the section dirty
-    const editor = page.locator('.ProseMirror').first();
+    // Type into the rich-text editor to make the section dirty
+    const editor = page.getByRole('textbox').first();
     await editor.click();
     await page.keyboard.type('dirty content');
 
@@ -120,13 +112,10 @@ test.describe('Unsaved Changes Warning', () => {
 
   test('settings: unsaved changes dialog appears and Cancel stays', async ({ page }) => {
     await page.goto('/settings');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/settings') && r.status() === 200
-    );
+    await expect(page.getByTestId('create-backup-button')).toBeVisible();
 
     // Toggle imageBorder to make settings dirty.
-    // Use a language-independent selector because prior tests may change UI locale.
-    const toggle = page.locator('.q-toggle').first();
+    const toggle = page.getByTestId('image-border-toggle');
     await toggle.click();
 
     // Navigate away via sidebar

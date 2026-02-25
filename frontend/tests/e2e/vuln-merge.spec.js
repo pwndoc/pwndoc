@@ -50,9 +50,7 @@ test.describe('Vulnerability Merge', () => {
 
   test('Merge Vulnerabilities button opens the merge dialog', async ({ page }) => {
     await page.goto('/vulnerabilities');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/vulnerabilities') && r.status() === 200
-    );
+    await expect(page.getByRole('button', { name: 'Merge Vulnerabilities' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Merge Vulnerabilities' }).click();
 
@@ -65,9 +63,7 @@ test.describe('Vulnerability Merge', () => {
     test.skip(!vulnEnId || !vulnFrId, 'Test vulnerabilities were not created');
 
     await page.goto('/vulnerabilities');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/vulnerabilities') && r.status() === 200
-    );
+    await expect(page.getByRole('button', { name: 'Merge Vulnerabilities' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Merge Vulnerabilities' }).click();
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });

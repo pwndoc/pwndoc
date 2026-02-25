@@ -31,11 +31,9 @@ test.describe('Sticky / Fixed UI Elements', () => {
     test.skip(!findingId, 'No finding exists in the E2E audit');
 
     await page.goto(`/audits/${auditId}/findings/${findingId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/findings/${findingId}`) && r.status() === 200
-    );
+    await expect(page.getByRole('tab', { name: 'Definition' })).toBeVisible();
 
-    const tabsBar = page.locator('.top-fixed').first();
+    const tabsBar = page.getByTestId('finding-tabs-bar');
     await expect(tabsBar).toBeVisible();
 
     // Capture Y position before scrolling
@@ -57,13 +55,10 @@ test.describe('Sticky / Fixed UI Elements', () => {
     test.skip(!findingId, 'No finding exists in the E2E audit');
 
     await page.goto(`/audits/${auditId}/findings/${findingId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/findings/${findingId}`) && r.status() === 200
-    );
+    await expect(page.getByRole('tab', { name: 'Definition' })).toBeVisible();
 
-    // The editor toolbar is rendered by the custom TipTap Editor component via
-    // <q-toolbar class="editor-toolbar"> — NOT Quasar's built-in q-editor.
-    const toolbar = page.locator('.editor-toolbar').first();
+    // The editor toolbar is rendered by the custom TipTap Editor component.
+    const toolbar = page.getByTestId('editor-toolbar').first();
     await expect(toolbar).toBeVisible();
 
     const viewportHeight = page.viewportSize().height;

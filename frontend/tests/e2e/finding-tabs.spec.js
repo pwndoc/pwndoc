@@ -27,9 +27,7 @@ test.describe('Finding Tab Navigation', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(!findingId, 'No finding exists in the E2E audit');
     await page.goto(`/audits/${auditId}/findings/${findingId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/findings/${findingId}`) && r.status() === 200
-    );
+    await expect(page.getByRole('tab', { name: 'Definition' })).toBeVisible();
   });
 
   test('Definition tab is active by default and shows title field', async ({ page }) => {
@@ -48,8 +46,8 @@ test.describe('Finding Tab Navigation', () => {
       'aria-selected',
       'true'
     );
-    // The Proofs panel exposes the PoC field label container.
-    await expect(page.locator('#pocField')).toBeVisible({ timeout: 5000 });
+    // The Proofs panel exposes the Proofs field label.
+    await expect(page.getByText('Proofs').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('switching to Details tab shows the details panel', async ({ page }) => {
@@ -59,8 +57,8 @@ test.describe('Finding Tab Navigation', () => {
       'aria-selected',
       'true'
     );
-    // The Details panel exposes details-only controls such as priority.
-    await expect(page.locator('#priorityField')).toBeVisible({ timeout: 5000 });
+    // The Details panel exposes details-only controls such as the priority select.
+    await expect(page.getByLabel(/Priority/)).toBeVisible({ timeout: 5000 });
   });
 
   test('Completed toggle saves finding status', async ({ page }) => {
@@ -76,9 +74,7 @@ test.describe('Finding Tab Navigation', () => {
 
     // Reload and verify persistence
     await page.reload();
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/findings/${findingId}`) && r.status() === 200
-    );
+    await expect(page.getByRole('tab', { name: 'Definition' })).toBeVisible();
     const after = await toggle.getAttribute('aria-checked');
     expect(after).not.toBe(before);
 

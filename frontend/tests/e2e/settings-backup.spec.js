@@ -16,9 +16,7 @@ const BACKUP_NAME = 'E2E Test Backup';
 test.describe('Settings Backup', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/settings');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/settings') && r.status() === 200
-    );
+    await expect(page.getByTestId('create-backup-button')).toBeVisible();
   });
 
   test.afterAll(async ({ request }) => {
@@ -52,12 +50,6 @@ test.describe('Settings Backup', () => {
 
     // Submit
     await dialog.getByRole('button', { name: 'Create', exact: true }).click();
-
-    // Dialog should close while backup runs; wait for it to appear in the list
-    await page.waitForResponse(r =>
-      r.url().includes('/api/backups') && r.status() === 200,
-      { timeout: 30000 }
-    );
 
     // The backup row should eventually appear
     await expect(

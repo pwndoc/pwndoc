@@ -36,9 +36,7 @@ test.describe('Double-Click to Edit', () => {
 
   test('double-click audit row navigates to audit edit page', async ({ page }) => {
     await page.goto('/audits');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/audits') && r.status() === 200
-    );
+    await expect(page.getByRole('row').filter({ hasText: 'E2E Test Audit' })).toBeVisible();
 
     const row = page.getByRole('row').filter({ hasText: 'E2E Test Audit' });
     await row.dblclick();
@@ -49,9 +47,7 @@ test.describe('Double-Click to Edit', () => {
 
   test('double-click vulnerability row opens edit dialog', async ({ page }) => {
     await page.goto('/vulnerabilities');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/vulnerabilities') && r.status() === 200
-    );
+    await expect(page.getByRole('row').filter({ hasText: 'E2E DblClick Vuln' })).toBeVisible();
 
     const row = page.getByRole('row').filter({ hasText: 'E2E DblClick Vuln' });
     await row.dblclick();
@@ -61,9 +57,7 @@ test.describe('Double-Click to Edit', () => {
 
   test('double-click collaborator row opens edit dialog', async ({ page }) => {
     await page.goto('/data/collaborators');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/users') && r.status() === 200
-    );
+    await expect(page.getByRole('row').filter({ hasText: 'admin' })).toBeVisible();
 
     // The admin user is always present
     const row = page.getByRole('row').filter({ hasText: 'admin' });
@@ -74,9 +68,7 @@ test.describe('Double-Click to Edit', () => {
 
   test('double-click template row opens edit dialog', async ({ page }) => {
     await page.goto('/data/templates');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/templates') && r.status() === 200
-    );
+    await expect(page.getByRole('row').filter({ hasText: 'E2E Full Template' })).toBeVisible();
 
     // The template created by data-setup.spec.js
     const row = page.getByRole('row').filter({ hasText: 'E2E Full Template' });

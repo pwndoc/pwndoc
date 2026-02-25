@@ -37,9 +37,7 @@ test.describe('Report Generation', () => {
 
   test('clicking download report button downloads a .docx file', async ({ page }) => {
     await page.goto('/audits');
-    await page.waitForResponse(r =>
-      r.url().includes('/api/audits') && r.status() === 200
-    );
+    await expect(page.getByRole('row').filter({ hasText: 'E2E Test Audit' })).toBeVisible();
 
     const row = page.getByRole('row').filter({ hasText: 'E2E Test Audit' });
     await expect(row).toBeVisible();

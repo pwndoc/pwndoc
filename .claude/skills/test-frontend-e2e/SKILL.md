@@ -146,7 +146,21 @@ page.locator('input').and(page.getByLabel('Language'))
 
 - Playwright auto-waits for elements. Use `expect(...).toBeVisible()` rather than explicit waits.
 - For navigation: `await expect(page).toHaveURL('/expected-route')`
-- For API-dependent state: `page.waitForResponse()` if needed
+- **Never use `page.waitForResponse()`** — assert visual outcomes instead:
+  - After `page.goto()` or `page.reload()`: wait for a key UI element that only appears once data is fetched:
+    ```javascript
+    await page.goto(`/audits/${auditId}/general`);
+    await expect(page.getByLabel(/Name/).first()).not.toHaveValue('');
+    ```
+  - After a save action (button click or Ctrl+S): wait for the success toast:
+    ```javascript
+    await page.keyboard.press('Control+s');
+    await expect(page.getByText('Audit updated successfully')).toBeVisible();
+    ```
+  - After upload-triggered side-effects (images, files): assert the resulting UI element — the visual assertion implicitly waits for the async operation:
+    ```javascript
+    await expect(editor.locator('img')).toBeVisible({ timeout: 5000 });
+    ```
 
 ### Test Independence
 

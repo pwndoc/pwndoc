@@ -34,13 +34,11 @@ test.describe('Editor Image Paste and Drop', () => {
     test.skip(!findingId, 'No finding exists in the E2E audit');
 
     await page.goto(`/audits/${auditId}/findings/${findingId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/findings/${findingId}`) && r.status() === 200
-    );
+    await expect(page.getByRole('tab', { name: 'Definition' })).toBeVisible();
 
-    // Click into the description ProseMirror editor.
-    // The BasicEditor component renders inside .editor__content; #descriptionField is
-    // only on the label div, not on the editor wrapper.
+    // Click into the description rich-text editor.
+    // We scope to .editor__content to target the TipTap ProseMirror editor
+    // rather than a plain text input (e.g. the Title field).
     const editor = page.locator('.editor__content .ProseMirror').first();
     await editor.click();
 
@@ -71,12 +69,6 @@ test.describe('Editor Image Paste and Drop', () => {
       });
     });
 
-    // Wait for the image upload API call to complete
-    await page.waitForResponse(
-      r => r.url().includes('/api/images') && r.status() === 200,
-      { timeout: 10000 }
-    );
-
     // An <img> node should now exist in the editor
     await expect(editor.locator('img')).toBeVisible({ timeout: 5000 });
   });
@@ -85,10 +77,9 @@ test.describe('Editor Image Paste and Drop', () => {
     test.skip(!findingId, 'No finding exists in the E2E audit');
 
     await page.goto(`/audits/${auditId}/findings/${findingId}`);
-    await page.waitForResponse(r =>
-      r.url().includes(`/api/audits/${auditId}/findings/${findingId}`) && r.status() === 200
-    );
+    await expect(page.getByRole('tab', { name: 'Definition' })).toBeVisible();
 
+    // Scope to .editor__content to target the TipTap ProseMirror editor.
     const editor = page.locator('.editor__content .ProseMirror').first();
     await editor.click();
 
@@ -128,12 +119,6 @@ test.describe('Editor Image Paste and Drop', () => {
         }, 'image/png');
       });
     });
-
-    // Wait for image upload
-    await page.waitForResponse(
-      r => r.url().includes('/api/images') && r.status() === 200,
-      { timeout: 10000 }
-    );
 
     await expect(editor.locator('img')).toBeVisible({ timeout: 5000 });
   });

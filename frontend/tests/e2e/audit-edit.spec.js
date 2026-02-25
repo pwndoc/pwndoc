@@ -37,11 +37,8 @@ test.describe('Audit Edit Page', () => {
     });
 
     test('should navigate to general information by default', async ({ page }) => {
-      const responsePromise = page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}/general`) && resp.status() === 200
-      );
       await page.goto(`/audits/${auditId}/general`);
-      await responsePromise;
+      await expect(page.getByLabel(/Name/).first()).toBeVisible();
 
       // The breadcrumb should show the audit name and type
       await expect(page.getByText('E2E Test Audit (E2E Pentest)')).toBeVisible();
@@ -57,9 +54,7 @@ test.describe('Audit Edit Page', () => {
 
     test.beforeEach(async ({ page }) => {
       await page.goto(`/audits/${auditId}/general`);
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}/general`) && resp.status() === 200
-      );
+      await expect(page.getByLabel(/Name/).first()).not.toHaveValue('');
     });
 
     test('should display all general information fields', async ({ page }) => {
@@ -106,12 +101,8 @@ test.describe('Audit Edit Page', () => {
       // Revert the name back
       await nameField.clear();
       await nameField.fill('E2E Test Audit');
-      await Promise.all([
-        page.waitForResponse(resp =>
-          resp.url().includes(`/api/audits/${auditId}/general`) && resp.status() === 200
-        ),
-        page.getByRole('button', { name: /Save/ }).click()
-      ]);
+      await page.getByRole('button', { name: /Save/ }).click();
+      await expect(page.getByText('Audit updated successfully')).toBeVisible();
     });
 
     test('should set start and end dates', async ({ page }) => {
@@ -129,9 +120,7 @@ test.describe('Audit Edit Page', () => {
 
       // Verify dates are saved by reloading
       await page.reload();
-      await page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}/general`) && resp.status() === 200
-      );
+      await expect(page.getByLabel(/Start Date/).first()).toBeVisible();
 
       await expect(page.getByLabel(/Start Date/).first()).toHaveValue('2025-01-01');
       await expect(page.getByLabel(/End Date/).first()).toHaveValue('2025-01-31');
@@ -149,15 +138,9 @@ test.describe('Audit Edit Page', () => {
       // Validation error should appear
       await expect(page.getByText('Field is required')).toBeVisible();
 
-      // Revert by reloading — wait for the auth refresh to complete so base.js
-      // saves a fresh storageState token (PwnDoc rotates refresh tokens on each page load).
-      const revertResponse = page.waitForResponse(r =>
-        (r.url().includes('/api/users/refreshtoken') ||
-          r.url().includes(`/api/audits/${auditId}/general`)) &&
-        r.status() === 200
-      );
+      // Revert by reloading
       await page.reload();
-      await revertResponse;
+      await expect(page.getByLabel(/Name/).first()).toBeVisible();
     });
   });
 
@@ -174,11 +157,8 @@ test.describe('Audit Edit Page', () => {
     });
 
     test('should create a finding with a custom title', async ({ page }) => {
-      const responsePromise = page.waitForResponse(resp =>
-        resp.url().includes('/api/vulnerabilities') && resp.status() === 200
-      );
       await page.goto(`/audits/${auditId}/findings/add`);
-      await responsePromise;
+      await expect(page.getByLabel('Title')).toBeVisible();
 
       // Fill in a finding title
       const titleInput = page.getByLabel('Title');
@@ -219,11 +199,8 @@ test.describe('Audit Edit Page', () => {
   test.describe('Network Scan', () => {
 
     test('should navigate to network scan page', async ({ page }) => {
-      const responsePromise = page.waitForResponse(resp =>
-        resp.url().includes(`/api/audits/${auditId}/network`) && resp.status() === 200
-      );
       await page.goto(`/audits/${auditId}/network`);
-      await responsePromise;
+      await expect(page.getByText('E2E Test Audit (E2E Pentest)')).toBeVisible();
 
       // The breadcrumb should show the audit name
       await expect(page.getByText('E2E Test Audit (E2E Pentest)')).toBeVisible();
