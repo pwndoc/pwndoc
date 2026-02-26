@@ -7,6 +7,10 @@ import path from 'path';
  */
 
 const uiChromiumOnly = process.env.PW_UI_CHROMIUM_ONLY === '1';
+const selectedBrowsers = (process.env.PW_BROWSERS || '')
+  .split(',')
+  .map((name) => name.trim().toLowerCase())
+  .filter(Boolean);
 const artifactsRoot = process.env.PW_ARTIFACTS_DIR || '/tmp/pw';
 
 function browserChain(browser, browserDevices, prevChainLast) {
@@ -175,16 +179,25 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  projects: [
-    // === CHROMIUM ===
-    ...browserChain('chromium', devices['Desktop Chrome'], null),
+  projects: (() => {
+    const browserDevices = {
+      chromium: devices['Desktop Chrome'],
+      firefox: devices['Desktop Firefox'],
+      webkit: devices['Desktop Safari'],
+    };
+    const defaultOrder = uiChromiumOnly ? ['chromium'] : ['chromium', 'firefox', 'webkit'];
+    const activeBrowsers = selectedBrowsers.length > 0
+      ? defaultOrder.filter((browser) => selectedBrowsers.includes(browser))
+      : defaultOrder;
 
-    ...(uiChromiumOnly ? [] : [
-      // === FIREFOX (starts after chromium finishes) ===
-      ...browserChain('firefox', devices['Desktop Firefox'], 'audits-list-data-chromium'),
+    let previousChainLast = null;
+    const projects = [];
 
-      // === WEBKIT (starts after firefox finishes) ===
-      ...browserChain('webkit', devices['Desktop Safari'], 'audits-list-data-firefox'),
-    ]),
-  ]
+    for (const browser of activeBrowsers) {
+      projects.push(...browserChain(browser, browserDevices[browser], previousChainLast));
+      previousChainLast = `audits-list-data-${browser}`;
+    }
+
+    return projects;
+  })()
 });
