@@ -25,6 +25,6 @@ setup('authenticate', async ({ page, browserName }) => {
   await expect(page).toHaveURL('/audits');
 
   // Store authentication state
-  const stateFile = path.join(__dirname, `storageState.${browserName}.json`);
+  const stateFile = path.join(__dirname, '..', `storageState.${browserName}.json`);
   await page.context().storageState({ path: stateFile });
 });

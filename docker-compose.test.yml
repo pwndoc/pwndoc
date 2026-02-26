@@ -36,10 +36,7 @@ services:
       dockerfile: Dockerfile.test
     volumes:
       - ./frontend/tests/e2e:/app/e2e
-      - ./frontend/tests/playwright.config.js:/app/playwright.config.js
-      - ./frontend/tests/package.json:/app/package.json
-      - ./frontend/tests/package-lock.json:/app/package-lock.json
-      - ./backend/report-templates:/app/backend/report-templates
+      - ./backend/report-templates:/app/report-templates:ro
     environment:
       - BASE_URL=https://pwndoc-frontend:8443
     depends_on:

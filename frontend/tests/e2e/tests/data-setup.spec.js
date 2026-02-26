@@ -262,7 +262,7 @@ test.describe('Templates', () => {
 
       await page.getByTestId('create-template-name-input').fill('E2E Full Template');
 
-      const templatePath = path.resolve(__dirname, '/app/backend/report-templates/Default Template.docx');
+      const templatePath = path.resolve(__dirname, '/app/report-templates/Default Template.docx');
       const fileInput = page.getByTestId('create-template-file-uploader').locator('input[type="file"]');
       await fileInput.setInputFiles(templatePath);
 
@@ -277,7 +277,7 @@ test.describe('Templates', () => {
 
       await page.getByTestId('create-template-name-input').fill('E2E Minimal Template');
 
-      const templatePath = path.resolve(__dirname, '/app/backend/report-templates/Default Template.docx');
+      const templatePath = path.resolve(__dirname, '/app/report-templates/Default Template.docx');
       const fileInput = page.getByTestId('create-template-file-uploader').locator('input[type="file"]');
       await fileInput.setInputFiles(templatePath);
 
@@ -325,7 +325,7 @@ test.describe('Templates', () => {
       await page.getByRole('button', { name: /create template/i }).click();
       await page.getByTestId('create-template-name-input').fill('DeleteMe Template');
 
-      const templatePath = path.resolve(__dirname, '/app/backend/report-templates/Default Template.docx');
+      const templatePath = path.resolve(__dirname, '/app/report-templates/Default Template.docx');
       const fileInput = page.getByTestId('create-template-file-uploader').locator('input[type="file"]');
       await fileInput.setInputFiles(templatePath);
 

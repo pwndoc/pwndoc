@@ -7,9 +7,10 @@ import path from 'path';
  */
 
 const uiChromiumOnly = process.env.PW_UI_CHROMIUM_ONLY === '1';
+const artifactsRoot = process.env.PW_ARTIFACTS_DIR || '/tmp/pw';
 
 function browserChain(browser, browserDevices, prevChainLast) {
-  const storageState = path.join(__dirname, 'e2e', `storageState.${browser}.json`);
+  const storageState = path.join(__dirname, `storageState.${browser}.json`);
   const use = { ...browserDevices };
   const useWithAuth = { ...browserDevices, storageState };
 
@@ -147,7 +148,8 @@ function browserChain(browser, browserDevices, prevChainLast) {
 }
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests',
+  outputDir: path.join(artifactsRoot, 'test-results'),
   /* Run tests sequentially within each project */
   fullyParallel: false,
   /* Single worker to prevent interleaving between projects */
@@ -160,7 +162,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['html', {open: 'never'}],
+    ['html', { outputFolder: path.join(artifactsRoot, 'playwright-report'), open: 'never' }],
     ['list']
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

@@ -22,7 +22,7 @@ export const test = base.extend({
     await use(page);
 
     // After the test finishes, persist the (possibly refreshed) cookies.
-    const stateFile = path.join(__dirname, `storageState.${browserName}.json`);
+    const stateFile = path.join(__dirname, '..', `storageState.${browserName}.json`);
     await page.context().storageState({ path: stateFile });
   },
 });
