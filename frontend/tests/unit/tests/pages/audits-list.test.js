@@ -532,6 +532,22 @@ describe('Audits List Page', () => {
         })
       )
     })
+
+    it('should call deleteAudit when dialog is confirmed', async () => {
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      const deleteAuditSpy = vi.spyOn(wrapper.vm, 'deleteAudit')
+
+      wrapper.vm.confirmDeleteAudit({ _id: 'audit1', name: 'My Audit' })
+
+      // Manually trigger the onOk callback
+      if (Dialog._onOkCb) {
+        Dialog._onOkCb()
+      }
+
+      expect(deleteAuditSpy).toHaveBeenCalledWith('audit1')
+    })
   })
 
   describe('cleanErrors', () => {
@@ -833,6 +849,56 @@ describe('Audits List Page', () => {
 
       localStorage.removeItem('system_language')
     })
+
+    it('should not hide when language locale is empty', async () => {
+      DataService.getLanguages.mockResolvedValue({ data: { datas: [{ locale: '', language: 'English' }] } })
+      localStorage.setItem('system_language', 'en')
+
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      expect(wrapper.vm.shouldHideLanguageField).toBe(false)
+
+      localStorage.removeItem('system_language')
+    })
+
+    it('should not hide when language locale is undefined', async () => {
+      DataService.getLanguages.mockResolvedValue({ data: { datas: [{ language: 'English' }] } })
+      localStorage.setItem('system_language', 'en')
+
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      expect(wrapper.vm.shouldHideLanguageField).toBe(false)
+
+      localStorage.removeItem('system_language')
+    })
+  })
+
+  describe('languages watcher', () => {
+    it('should auto-select language when only one language is set', async () => {
+      DataService.getLanguages.mockResolvedValue({ data: { datas: [{ locale: 'fr', language: 'French' }] } })
+
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      // The watcher should have set the language automatically
+      expect(wrapper.vm.currentAudit.language).toBe('fr')
+    })
+
+    it('should not change language if already set to the same value', async () => {
+      DataService.getLanguages.mockResolvedValue({ data: { datas: [{ locale: 'en', language: 'English' }] } })
+
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      wrapper.vm.currentAudit.language = 'en'
+
+      // Manually trigger watcher
+      wrapper.vm.$options.watch.languages.handler.call(wrapper.vm, [{ locale: 'en', language: 'English' }])
+
+      expect(wrapper.vm.currentAudit.language).toBe('en')
+    })
   })
 
   describe('dblClick', () => {
@@ -845,6 +911,110 @@ describe('Audits List Page', () => {
       wrapper.vm.dblClick({}, { _id: 'audit123' })
 
       expect(pushSpy).toHaveBeenCalledWith('/audits/audit123')
+    })
+  })
+
+  describe('BlobReader', () => {
+    it('should read blob as text successfully', async () => {
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      const textContent = 'Test blob content'
+      const blob = new Blob([textContent], { type: 'text/plain' })
+
+      const result = await wrapper.vm.BlobReader(blob)
+      expect(result).toBe(textContent)
+    })
+
+    it('should handle blob reader errors', async () => {
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      // Create a blob that will cause an error
+      const mockBlob = {}
+
+      await expect(wrapper.vm.BlobReader(mockBlob)).rejects.toThrow()
+    })
+  })
+
+  describe('generateReport', () => {
+    it('should generate report successfully', async () => {
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      const mockLink = {
+        href: '',
+        download: '',
+        click: vi.fn(),
+        remove: vi.fn()
+      }
+      const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockLink)
+      const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => {})
+      const createObjectURLSpy = vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:url')
+
+      const mockResponse = {
+        data: new ArrayBuffer(8),
+        headers: { 'content-disposition': 'attachment; filename="report.docx"' }
+      }
+
+      AuditService.generateAuditReport.mockResolvedValue(mockResponse)
+
+      await wrapper.vm.generateReport('audit123')
+
+      expect(AuditService.generateAuditReport).toHaveBeenCalledWith('audit123')
+      expect(Notify.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Generating the Report',
+          timeout: 0
+        })
+      )
+
+      createElementSpy.mockRestore()
+      appendChildSpy.mockRestore()
+      createObjectURLSpy.mockRestore()
+    })
+
+    it('should handle report generation error with blob response', async () => {
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      const errorMessage = 'Template generation failed'
+      const errorBlob = new Blob([JSON.stringify({ datas: errorMessage })], { type: 'application/json' })
+
+      AuditService.generateAuditReport.mockRejectedValue({
+        response: {
+          data: errorBlob
+        }
+      })
+
+      await wrapper.vm.generateReport('audit123')
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      // Should show error notification
+      expect(Notify.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: errorMessage,
+          type: 'negative'
+        })
+      )
+    })
+
+    it('should handle report generation error without response data', async () => {
+      const wrapper = createWrapper()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      AuditService.generateAuditReport.mockRejectedValue(new Error('Network error'))
+
+      await wrapper.vm.generateReport('audit123')
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      // Should show default error message
+      expect(Notify.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Error generating template',
+          type: 'negative'
+        })
+      )
     })
   })
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createTestWrapper } from '../utils/test-utils'
+import { createTestWrapper } from '../../test-utils'
 import Breadcrumb from '@/components/breadcrumb.vue'
 
 describe('Breadcrumb Component', () => {

@@ -10,10 +10,10 @@
   "scripts": {
     "build": "export NODE_OPTIONS=--openssl-legacy-provider && quasar build",
     "dev": "export NODE_OPTIONS=--openssl-legacy-provider && quasar dev",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
-    "test:run": "vitest run"
+    "test": "vitest --config ./tests/unit/vitest.config.js",
+    "test:ui": "vitest --config ./tests/unit/vitest.config.js --ui",
+    "test:coverage": "vitest --config ./tests/unit/vitest.config.js --coverage run && node ./tests/unit/generate-coverage-threshold-report.mjs",
+    "test:run": "vitest --config ./tests/unit/vitest.config.js run"
   },
   "dependencies": {
     "@quasar/extras": "^1.17.0",

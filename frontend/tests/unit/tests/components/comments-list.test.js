@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createTestWrapper } from '../utils/test-utils'
+import { createTestWrapper } from '../../test-utils'
 import CommentsList from '@/components/comments-list.vue'
 
 // Mock the user store with vi.hoisted

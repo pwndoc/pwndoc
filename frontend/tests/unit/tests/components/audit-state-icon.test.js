@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createTestWrapper } from '../utils/test-utils'
+import { createTestWrapper } from '../../test-utils'
 import AuditStateIcon from '@/components/audit-state-icon.vue'
 
 describe('AuditStateIcon Component', () => {

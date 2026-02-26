@@ -24,7 +24,7 @@ export function createTestWrapper(component, options = {}) {
     }
   })
 
-  // Use global plugins from config (set up in setup.js and installQuasarPlugin)
+  // Use global plugins from config (set up in tests/unit/setup.js).
   // Only add instance-specific plugins that aren't already global
   const defaultOptions = {
     global: {

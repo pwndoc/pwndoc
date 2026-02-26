@@ -61,7 +61,6 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/tests/unit:/app/tests/unit
-      - ./frontend/vitest.config.js:/app/vitest.config.js
       - ./frontend/coverage:/app/coverage
     entrypoint: ["npm", "run", "test:run"]
     restart: "no"

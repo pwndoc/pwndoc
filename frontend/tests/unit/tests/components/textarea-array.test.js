@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createTestWrapper } from '../utils/test-utils'
+import { createTestWrapper } from '../../test-utils'
 import TextareaArray from '@/components/textarea-array.vue'
 
 describe('TextareaArray Component', () => {

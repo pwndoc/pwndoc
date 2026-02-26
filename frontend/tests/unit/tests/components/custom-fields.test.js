@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createTestWrapper } from '../utils/test-utils'
+import { createTestWrapper } from '../../test-utils'
 import CustomFields from '@/components/custom-fields.vue'
 
 // Stub the BasicEditor component to avoid complex dependency loading
@@ -329,6 +329,171 @@ describe('CustomFields Component', () => {
     it('should default fieldHighlighted to empty string', () => {
       const wrapper = createWrapper()
       expect(wrapper.vm.fieldHighlighted).toBe('')
+    })
+  })
+
+  describe('validate method', () => {
+    it('should exist and be callable', () => {
+      const wrapper = createWrapper()
+      expect(typeof wrapper.vm.validate).toBe('function')
+      // The validate method is tested indirectly through requiredFieldsEmpty tests
+    })
+  })
+
+  describe('field type rendering', () => {
+    it('should render text field type', () => {
+      const field = makeField({
+        customField: { _id: 'cf1', label: 'Text Field', fieldType: 'text', required: false },
+        text: '<p>Rich text</p>'
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('should render date field type', () => {
+      const field = makeField({
+        customField: { _id: 'cf1', label: 'Date Field', fieldType: 'date', required: false },
+        text: '2024-01-15'
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('should render select field type', () => {
+      const field = makeField({
+        customField: {
+          _id: 'cf1',
+          label: 'Select Field',
+          fieldType: 'select',
+          options: [
+            { locale: 'en-US', value: 'Option 1' },
+            { locale: 'en-US', value: 'Option 2' }
+          ],
+          required: false
+        },
+        text: 'Option 1'
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('should render select-multiple field type', () => {
+      const field = makeField({
+        customField: {
+          _id: 'cf1',
+          label: 'Multi Select',
+          fieldType: 'select-multiple',
+          options: [
+            { locale: 'en-US', value: 'Option 1' },
+            { locale: 'en-US', value: 'Option 2' }
+          ],
+          required: false
+        },
+        text: ['Option 1']
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('should render checkbox field type', () => {
+      const field = makeField({
+        customField: {
+          _id: 'cf1',
+          label: 'Checkboxes',
+          fieldType: 'checkbox',
+          options: [
+            { locale: 'en-US', value: 'Check 1' },
+            { locale: 'en-US', value: 'Check 2' }
+          ],
+          inline: true,
+          required: false
+        },
+        text: ['Check 1']
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('should render radio field type', () => {
+      const field = makeField({
+        customField: {
+          _id: 'cf1',
+          label: 'Radio Buttons',
+          fieldType: 'radio',
+          options: [
+            { locale: 'en-US', value: 'Radio 1' },
+            { locale: 'en-US', value: 'Radio 2' }
+          ],
+          inline: false,
+          required: false
+        },
+        text: 'Radio 1'
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      expect(wrapper.exists()).toBe(true)
+    })
+
+    it('should render field with size and offset', () => {
+      const field = makeField({
+        customField: {
+          _id: 'cf1',
+          label: 'Sized Field',
+          fieldType: 'input',
+          size: 6,
+          offset: 3,
+          required: false
+        },
+        text: 'value'
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      expect(wrapper.exists()).toBe(true)
+    })
+  })
+
+  describe('requiredFieldsEmpty with different field types', () => {
+    it('should return true for required select-multiple with empty array', () => {
+      const field = makeField({
+        customField: {
+          _id: 'cf1',
+          label: 'Multi Select',
+          fieldType: 'select-multiple',
+          required: true
+        },
+        text: []
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      vi.spyOn(wrapper.vm, 'validate').mockImplementation(() => {})
+      expect(wrapper.vm.requiredFieldsEmpty()).toBe(true)
+    })
+
+    it('should return true for required checkbox with empty array', () => {
+      const field = makeField({
+        customField: {
+          _id: 'cf1',
+          label: 'Checkboxes',
+          fieldType: 'checkbox',
+          required: true
+        },
+        text: []
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      vi.spyOn(wrapper.vm, 'validate').mockImplementation(() => {})
+      expect(wrapper.vm.requiredFieldsEmpty()).toBe(true)
+    })
+
+    it('should return false for required select-multiple with values', () => {
+      const field = makeField({
+        customField: {
+          _id: 'cf1',
+          label: 'Multi Select',
+          fieldType: 'select-multiple',
+          required: true
+        },
+        text: ['Option 1']
+      })
+      const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
+      vi.spyOn(wrapper.vm, 'validate').mockImplementation(() => {})
+      expect(wrapper.vm.requiredFieldsEmpty()).toBe(false)
     })
   })
 })

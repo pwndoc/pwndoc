@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createTestWrapper } from '../utils/test-utils'
+import { createTestWrapper } from '../../test-utils'
 import LanguageSelector from '@/components/language-selector.vue'
 
 describe('LanguageSelector Component', () => {
