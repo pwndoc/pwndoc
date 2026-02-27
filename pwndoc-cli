@@ -6,6 +6,10 @@ ENV="prod"
 ONLY_BACKEND=false
 ONLY_FRONTEND=false
 TEST_UI=false
+TEST_COVERAGE=false
+E2E_CHROMIUM=false
+E2E_FIREFOX=false
+E2E_WEBKIT=false
 
 # Test-specific flags (combinable)
 RUN_BACKEND=false
@@ -52,6 +56,11 @@ get_services() {
 # Check if targeting an environment with no running containers while another env is running
 check_env() {
     local current_project other_project other_env_hint
+
+    # test commands manage their own ephemeral stack; skip dev/prod cross-env guard
+    if [ "$ENV" = "test" ]; then
+        return 0
+    fi
 
     if [ "$ENV" = "dev" ]; then
         current_project="pwndoc-dev"
@@ -174,9 +183,13 @@ function update {
 function test_backend {
     ENV=test
     $(dc_cmd) build pwndoc-backend
-    $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api
+    if [ "$TEST_COVERAGE" = true ]; then
+        $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api -- --coverage
+    else
+        $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api
+    fi
     rc=$?
-    $(dc_cmd) down
+    $(dc_cmd) down -v --remove-orphans
     return $rc
 }
 
@@ -188,32 +201,79 @@ function test_backend_debug {
 
 function test_frontend_e2e {
     ENV=test
-    $(dc_cmd) down
+    local selected_browsers=()
+    local pw_browsers=""
+
+    if [ "$E2E_CHROMIUM" = true ]; then
+        selected_browsers+=(chromium)
+    fi
+    if [ "$E2E_FIREFOX" = true ]; then
+        selected_browsers+=(firefox)
+    fi
+    if [ "$E2E_WEBKIT" = true ]; then
+        selected_browsers+=(webkit)
+    fi
+    if [ ${#selected_browsers[@]} -gt 0 ]; then
+        pw_browsers=$(IFS=,; echo "${selected_browsers[*]}")
+    fi
+
+    $(dc_cmd) down -v --remove-orphans
 
     $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests
     $(dc_cmd) up -d pwndoc-backend pwndoc-frontend
 
     if [ "$TEST_UI" = true ]; then
-        $(dc_cmd) up frontend-tests-ui
+        if [ -z "$pw_browsers" ]; then
+            $(dc_cmd) run --rm --service-ports -e PW_UI_CHROMIUM_ONLY=1 frontend-tests-ui
+        else
+            $(dc_cmd) run --rm --service-ports -e PW_BROWSERS="$pw_browsers" frontend-tests-ui
+        fi
     else
-        $(dc_cmd) run --rm frontend-tests
+        if [ -z "$pw_browsers" ]; then
+            $(dc_cmd) run --rm frontend-tests
+        else
+            $(dc_cmd) run --rm -e PW_BROWSERS="$pw_browsers" frontend-tests
+        fi
     fi
 
     rc=$?
-    $(dc_cmd) down
+    $(dc_cmd) down -v --remove-orphans
     return $rc
 }
 
 function test_frontend_unit {
     ENV=test
     $(dc_cmd) build frontend-unit-tests
-    $(dc_cmd) run --rm frontend-unit-tests
+    if [ "$TEST_COVERAGE" = true ]; then
+        $(dc_cmd) run --rm --entrypoint npm frontend-unit-tests run test:coverage
+    else
+        $(dc_cmd) run --rm frontend-unit-tests
+    fi
     rc=$?
-    $(dc_cmd) down
+    $(dc_cmd) down -v --remove-orphans
     return $rc
 }
 
 function run_tests {
+    if [ "$TEST_COVERAGE" = true ] && [ "$RUN_FRONTEND_E2E" = true ]; then
+        echo "Error: --coverage is not supported with --frontend-e2e."
+        return 1
+    fi
+
+    # Coverage mode defaults to backend + frontend-unit only.
+    if [ "$TEST_COVERAGE" = true ] && [ "$RUN_ALL" = true ]; then
+        RUN_ALL=false
+        RUN_BACKEND=true
+        RUN_FRONTEND_UNIT=true
+        RUN_FRONTEND_E2E=false
+    fi
+
+    if [ "$RUN_ALL" != true ] && [ "$RUN_FRONTEND_E2E" != true ] && \
+       { [ "$E2E_CHROMIUM" = true ] || [ "$E2E_FIREFOX" = true ] || [ "$E2E_WEBKIT" = true ]; }; then
+        echo "Error: --chromium/--firefox/--webkit require --frontend-e2e (or no suite flags)."
+        return 1
+    fi
+
     if [ "$RUN_ALL" = true ]; then
         RUN_BACKEND=true
         RUN_FRONTEND_UNIT=true
@@ -256,7 +316,7 @@ _pwndoc_cli() {
     local cmd="${COMP_WORDS[1]}"
     case "$cmd" in
         test)
-            COMPREPLY=($(compgen -W "--backend --frontend-unit --frontend-e2e --ui" -- "$cur"))
+            COMPREPLY=($(compgen -W "--backend --frontend-unit --frontend-e2e --ui --coverage --chromium --firefox --webkit" -- "$cur"))
             ;;
         build)
             COMPREPLY=($(compgen -W "--dev --prod-local --backend-only --frontend-only" -- "$cur"))
@@ -303,9 +363,14 @@ Test-specific options (only with command 'test'):
   --frontend-unit             Run Vitest unit tests (Docker, no browser needed)
   --frontend-e2e              Run Playwright E2E tests (Docker, full stack)
   --ui                        Start Playwright in UI mode (implies --frontend-e2e)
+  --coverage                  Collect coverage for supported suites (backend + frontend-unit)
+  --chromium                  Run E2E tests on Chromium only
+  --firefox                   Run E2E tests on Firefox only
+  --webkit                    Run E2E tests on WebKit only
 
   No flags runs all tests (backend + frontend-unit + frontend-e2e).
-  Flags are combinable: --backend --frontend-unit runs both.
+  In coverage mode, no suite flags runs backend + frontend-unit only.
+  Flags are combinable: --backend --frontend-unit runs both, and browser flags can be combined.
 
 Other options:
   --backend-only              Operate only on backend services
@@ -325,8 +390,12 @@ Examples:
   ./pwndoc-cli test --backend
   ./pwndoc-cli test --frontend-unit
   ./pwndoc-cli test --frontend-e2e
+  ./pwndoc-cli test --frontend-e2e --chromium
+  ./pwndoc-cli test --frontend-e2e --chromium --firefox
   ./pwndoc-cli test --backend --frontend-unit
   ./pwndoc-cli test --frontend-e2e --ui
+  ./pwndoc-cli test --coverage
+  ./pwndoc-cli test --backend --coverage
 
 Enable tab completion:
   source <(./pwndoc-cli completion)
@@ -407,6 +476,34 @@ while [[ "$#" -gt 0 ]]; do
             TEST_UI=true
             RUN_FRONTEND_E2E=true
             RUN_ALL=false
+            ;;
+        --coverage)
+            if [[ "$COMMAND" != "test" ]]; then
+                print_help
+                exit 1
+            fi
+            TEST_COVERAGE=true
+            ;;
+        --chromium)
+            if [[ "$COMMAND" != "test" ]]; then
+                print_help
+                exit 1
+            fi
+            E2E_CHROMIUM=true
+            ;;
+        --firefox)
+            if [[ "$COMMAND" != "test" ]]; then
+                print_help
+                exit 1
+            fi
+            E2E_FIREFOX=true
+            ;;
+        --webkit)
+            if [[ "$COMMAND" != "test" ]]; then
+                print_help
+                exit 1
+            fi
+            E2E_WEBKIT=true
             ;;
         *)
             print_help

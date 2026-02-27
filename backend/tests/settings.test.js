@@ -1,6 +1,7 @@
 module.exports = function(request, app) {
     describe('Application settings', () => {
       var userToken = '';
+      var Settings = require('mongoose').model('Settings')
       beforeAll(async () => {
         var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'})
         userToken = response.body.datas.token
@@ -251,6 +252,57 @@ module.exports = function(request, app) {
       expect(response.status).toBe(200);
       expect(response.type).toEqual('application/json');
       expect(response.headers['content-disposition'].indexOf('attachment; filename=')).toBe(0);
+    })
+
+    it('Returns internal error when loading full settings fails', async () => {
+      var spy = jest.spyOn(Settings, 'getAll').mockRejectedValueOnce(new Error('getAll failed'))
+      var response = await request(app).get('/api/settings')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+      expect(response.status).toBe(500)
+      spy.mockRestore()
+    })
+
+    it('Returns internal error when loading public settings fails', async () => {
+      var spy = jest.spyOn(Settings, 'getPublic').mockRejectedValueOnce(new Error('getPublic failed'))
+      var response = await request(app).get('/api/settings/public')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+      expect(response.status).toBe(500)
+      spy.mockRestore()
+    })
+
+    it('Returns internal error when settings update fails', async () => {
+      var spy = jest.spyOn(Settings, 'update').mockRejectedValueOnce(new Error('update failed'))
+      var response = await request(app).put('/api/settings')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+        .send({ reviews: { public: { minReviewers: 2 } } })
+      expect(response.status).toBe(500)
+      spy.mockRestore()
+    })
+
+    it('Returns internal error when restoring defaults fails', async () => {
+      var spy = jest.spyOn(Settings, 'restoreDefaults').mockRejectedValueOnce(new Error('restore failed'))
+      var response = await request(app).put('/api/settings/revert')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+      expect(response.status).toBe(500)
+      spy.mockRestore()
+    })
+
+    it('Returns internal error when exporting settings fails', async () => {
+      var spy = jest.spyOn(Settings, 'getAll').mockRejectedValueOnce(new Error('export failed'))
+      var response = await request(app).get('/api/settings/export')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+      expect(response.status).toBe(500)
+      spy.mockRestore()
     })
 
     })

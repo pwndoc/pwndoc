@@ -91,7 +91,7 @@
 
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
-                        <q-btn v-if="userStore.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                        <q-btn data-testid="edit-collaborator-button" v-if="userStore.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">Edit</q-tooltip>
                         </q-btn>
                     </q-td>
@@ -132,6 +132,7 @@
             
             <q-card-section>
                 <q-input
+                data-testid="create-collaborator-username-input"
                 :label="$t('username')+' *'"
                 autofocus
                 class="col-md-12"
@@ -145,6 +146,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-collaborator-firstname-input"
                 :label="$t('firstname')+' *'"
                 class="col-md-12"
                 :error="!!errors.firstname"
@@ -154,9 +156,10 @@
                 v-model="currentCollab.firstname"
                 outlined
                 />
-            </q-card-section>  
+            </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-collaborator-lastname-input"
                 :label="$t('lastname')+' *'"
                 class="col-md-12"
                 :error="!!errors.lastname"
@@ -169,6 +172,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-collaborator-email-input"
                 :label="$t('email')"
                 class="col-md-12"
                 hide-bottom-space
@@ -179,6 +183,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-collaborator-phone-input"
                 :label="$t('phone')"
                 class="col-md-12"
                 hide-bottom-space
@@ -189,6 +194,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-collaborator-jobtitle-input"
                 :label="$t('jobTitle')"
                 class="col-md-12"
                 hide-bottom-space
@@ -199,6 +205,7 @@
             </q-card-section>
             <q-card-section>
                 <q-select
+                data-testid="create-collaborator-role-select"
                 :label="$t('role')+' *'"
                 class="col-md-12"
                 v-model="currentCollab.role"
@@ -210,11 +217,12 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="create-collaborator-password-input"
                 ref="pwdCreateRef"
-                v-model="currentCollab.password" 
+                v-model="currentCollab.password"
                 :label="$t('password')+' *'"
                 type="password"
-                :error="!!errors.password" 
+                :error="!!errors.password"
                 :error-message="errors.password"
                 hide-bottom-space
                 @keyup.enter="createCollab()"
@@ -222,12 +230,12 @@
                 :rules="(currentCollab.password) ? strongPassword : ['']"
                 />
             </q-card-section>
-    
+
             <q-separator />
-    
+
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="createCollab()">{{$t('btn.create')}}</q-btn>
+                <q-btn data-testid="create-collaborator-submit-button" color="secondary" unelevated @click="createCollab()">{{$t('btn.create')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -244,6 +252,7 @@
             
             <q-card-section>
                 <q-input
+                data-testid="edit-collaborator-username-input"
                 :label="$t('username')+' *'"
                 autofocus
                 class="col-md-12"
@@ -257,6 +266,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="edit-collaborator-firstname-input"
                 :label="$t('firstname')+' *'"
                 class="col-md-12"
                 :error="!!errors.firstname"
@@ -266,9 +276,10 @@
                 v-model="currentCollab.firstname"
                 outlined
                 />
-            </q-card-section>  
+            </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="edit-collaborator-lastname-input"
                 :label="$t('lastname')+' *'"
                 class="col-md-12"
                 :error="!!errors.lastname"
@@ -281,6 +292,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="edit-collaborator-email-input"
                 :label="$t('email')"
                 class="col-md-12"
                 hide-bottom-space
@@ -291,6 +303,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="edit-collaborator-phone-input"
                 :label="$t('phone')"
                 class="col-md-12"
                 hide-bottom-space
@@ -301,6 +314,7 @@
             </q-card-section>
             <q-card-section>
                 <q-input
+                data-testid="edit-collaborator-jobtitle-input"
                 :label="$t('jobTitle')"
                 class="col-md-12"
                 hide-bottom-space
@@ -311,6 +325,7 @@
             </q-card-section>
             <q-card-section>
                 <q-select
+                data-testid="edit-collaborator-role-select"
                 :label="$t('role')+' *'"
                 class="col-md-12"
                 v-model="currentCollab.role"
@@ -319,12 +334,13 @@
                 options-sanitize
                 outlined
                 />
-            </q-card-section>   
+            </q-card-section>
             <q-card-section>
-                <q-input 
+                <q-input
+                data-testid="edit-collaborator-password-input"
                 ref="pwdUpdateRef"
-                v-model="currentCollab.password" 
-                :label="$t('password')" 
+                v-model="currentCollab.password"
+                :label="$t('password')"
                 type="password"
                 @keyup.enter="updateCollab()"
                 outlined
@@ -338,16 +354,17 @@
                 </div>
 
                 <q-toggle
-                v-model="currentCollab.enabled" 
+                data-testid="edit-collaborator-enabled-toggle"
+                v-model="currentCollab.enabled"
                 :label="currentCollab.enabled ? $t('btn.accountEnabled') : $t('btn.accountDisabled')"
                 />
             </q-card-section>
-            
+
             <q-separator />
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="updateCollab()">{{$t('btn.update')}}</q-btn>
+                <q-btn data-testid="edit-collaborator-submit-button" color="secondary" unelevated @click="updateCollab()">{{$t('btn.update')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

@@ -56,13 +56,13 @@
     </breadcrumb>
 
     <div class="row" v-if="auditParent.type === 'default'">
-        <q-tabs v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width top-fixed">
+        <q-tabs data-testid="finding-tabs-bar" v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width top-fixed">
             <q-tab name="definition" default :label="$t('definition')" />
             <q-tab name="proofs" :label="$t('proofs')"/>
             <q-tab name="details" :label="$t('details')" />
             <template v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"> 
             <q-separator vertical />
-            <q-toggle :label="$t('completed')" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
+            <q-toggle data-testid="finding-completed-toggle" :label="$t('completed')" v-model="finding.status" :true-value=0 :false-value=1 checked-icon="check" unchecked-icon="clear" color="green" />
             </template>
             <q-space />
         </q-tabs>

@@ -17,6 +17,7 @@ services:
       - ./backend/tests:/app/tests
       - ./backend/src:/app/src
       - ./backend/jest.config.js:/app/jest.config.js
+      - ./backend/coverage:/app/coverage
     depends_on:
       mongodb:
         condition: service_healthy
@@ -35,13 +36,12 @@ services:
       dockerfile: Dockerfile.test
     volumes:
       - ./frontend/tests/e2e:/app/e2e
-      - ./frontend/tests/playwright.config.js:/app/playwright.config.js
-      - ./frontend/tests/package.json:/app/package.json
-      - ./frontend/tests/package-lock.json:/app/package-lock.json
+      - ./backend/report-templates:/app/report-templates:ro
     environment:
       - BASE_URL=https://pwndoc-frontend:8443
     depends_on:
       - pwndoc-frontend
+      - pwndoc-languagetools
     networks:
       - frontend-internal
 
@@ -59,6 +59,6 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/tests/unit:/app/tests/unit
-      - ./frontend/vitest.config.js:/app/vitest.config.js
+      - ./frontend/coverage:/app/coverage
     entrypoint: ["npm", "run", "test:run"]
     restart: "no"

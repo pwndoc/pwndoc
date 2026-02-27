@@ -116,6 +116,7 @@
 							<q-item-section v-else>{{$t('findings')}} ({{audit.findings.length || 0}})</q-item-section>
 							<q-item-section avatar>
 								<q-btn
+								data-testid="add-finding-button"
 								@click="$router.push('/audits/'+auditId+'/findings/add').catch(err=>{})"
 								icon="add"
 								round
@@ -166,7 +167,7 @@
 										<q-item-label header>{{categoryFindings.category}}</q-item-label>
 									</q-item-section>
 									<q-item-section avatar>
-										<q-btn icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
+										<q-btn data-testid="sort-options-button" icon="sort" flat v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
 											<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.sortOptions')}}</q-tooltip>
 											<q-menu style="width: 300px" anchor="bottom middle" self="top left">
 												<q-item>
@@ -246,7 +247,7 @@
 											:to="'/audits/'+auditId+'/findings/'+finding._id"
 											>
 												<q-item-section side v-if="!categoryFindings.sortOption.sortAuto && frontEndAuditState === AUDIT_VIEW_STATE.EDIT">
-													<q-icon name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
+													<q-icon data-testid="finding-drag-handle" name="mdi-arrow-split-horizontal" class="cursor-pointer handle" color="grey" />
 												</q-item-section>
 												<q-item-section side>
 													<q-chip
@@ -446,18 +447,19 @@ export default {
 					var sortOption = this.audit.sortFindings.find(option => option.category === key) // Get sort option saved in audit
 					
 					if (!sortOption) { // no option for category in audit
-						sortOption = this.vulnCategories.find(e => e.name === key) // Get sort option from default in vulnerability category
-						if (sortOption) // found sort option from vuln categories
-							sortOption.category = sortOption.name
-						else // no default option or category don't exist
+						var defaultSortOption = this.vulnCategories.find(e => e.name === key) // Get sort option from default in vulnerability category
+						if (defaultSortOption) { // found sort option from vuln categories
+							sortOption = {
+								category: defaultSortOption.name,
+								sortValue: defaultSortOption.sortValue,
+								sortOrder: defaultSortOption.sortOrder,
+								sortAuto: defaultSortOption.sortAuto
+							}
+						}
+						else { // no default option or category don't exist
 							sortOption = {category: key, sortValue: 'cvssScore', sortOrder: 'desc', sortAuto: true} // set a default sort option
-						
-						this.audit.sortFindings.push({
-							category: sortOption.category,
-							sortValue: sortOption.sortValue,
-							sortOrder: sortOption.sortOrder,
-							sortAuto: sortOption.sortAuto
-						})
+						}
+						this.audit.sortFindings.push(sortOption)
 					}
 					
 					return {category: key, findings: value, sortOption: sortOption}
@@ -561,17 +563,18 @@ export default {
 		},
 
 		getMenuSection: function() {
-			if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'general')
+			const currentRoute = this.$router.currentRoute?.value || this.$router.currentRoute || {}
+			if (currentRoute.name && currentRoute.name === 'general')
 				return {menu: 'general', room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'network')
+			else if (currentRoute.name && currentRoute.name === 'network')
 				return {menu: 'network', room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addFindings')
+			else if (currentRoute.name && currentRoute.name === 'addFindings')
 				return {menu: 'addFindings', room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editFinding' && this.$router.currentRoute.params.findingId)
-				return {menu: 'editFinding', finding: this.$router.currentRoute.params.findingId, room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'editSection' && this.$router.currentRoute.params.sectionId)
-				return {menu: 'editSection', section: this.$router.currentRoute.params.sectionId, room: this.auditId}
-			else if (this.$router.currentRoute.name && this.$router.currentRoute.name === 'addAudits')
+			else if (currentRoute.name && currentRoute.name === 'editFinding' && currentRoute.params?.findingId)
+				return {menu: 'editFinding', finding: currentRoute.params.findingId, room: this.auditId}
+			else if (currentRoute.name && currentRoute.name === 'editSection' && currentRoute.params?.sectionId)
+				return {menu: 'editSection', section: currentRoute.params.sectionId, room: this.auditId}
+			else if (currentRoute.name && currentRoute.name === 'addAudits')
 				return {menu: 'addAudits', room: this.auditId}
 			
 			return {menu: 'undefined', room: this.auditId}

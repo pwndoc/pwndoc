@@ -59,11 +59,12 @@
 
                 <template v-slot:body-cell-ruleXml="props">
                     <q-td>
-                        <q-btn 
-                            size="sm" 
-                            flat 
-                            color="primary" 
-                            icon="visibility" 
+                        <q-btn
+                            data-testid="view-rule-button"
+                            size="sm"
+                            flat
+                            color="primary"
+                            icon="visibility"
                             :label="$t('view')"
                             @click="viewRule(props.row)"
                         />
@@ -72,11 +73,12 @@
 
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
-                        <q-btn 
-                            size="sm" 
-                            flat 
-                            color="negative" 
-                            icon="delete" 
+                        <q-btn
+                            data-testid="delete-rule-button"
+                            size="sm"
+                            flat
+                            color="negative"
+                            icon="delete"
                             v-if="canEdit"
                             @click="confirmDeleteRule(props.row)"
                         >
@@ -157,7 +159,7 @@
             </q-card-section>
 
             <q-card-actions align="right">
-                <q-btn color="primary" unelevated @click="$refs.viewModal.hide()">{{$t('btn.close')}}</q-btn>
+                <q-btn data-testid="view-rule-close-button" color="primary" unelevated @click="$refs.viewModal.hide()">{{$t('btn.close')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -175,6 +177,7 @@
             <q-card-section>
                 <div class="row q-col-gutter-md">
                     <q-select
+                        data-testid="create-rule-language-select"
                         :label="$t('language') + ' *'"
                         class="col-md-12"
                         v-model="newRule.language"
@@ -187,6 +190,7 @@
                         map-options
                         />
                     <q-input
+                        data-testid="create-rule-xml-input"
                         :label="$t('ruleXml') + ' *'"
                         class="col-md-12"
                         v-model="newRule.ruleXml"
@@ -219,7 +223,7 @@
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="createRule()" :loading="creating">{{$t('btn.create')}}</q-btn>
+                <q-btn data-testid="create-rule-submit-button" color="secondary" unelevated @click="createRule()" :loading="creating">{{$t('btn.create')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

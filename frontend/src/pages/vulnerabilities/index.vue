@@ -69,8 +69,9 @@
                 <template v-slot:top-row="props">
                     <q-tr>
                         <q-td style="width: 60%">
-                            <q-input 
+                            <q-input
                             dense
+                            data-testid="search-vulnerability-title"
                             :label="$t('search')"
                             v-model="search.title"
                             clearable
@@ -116,17 +117,17 @@
                             {{getDtType(props.row)}}
                         </q-td>
                         <q-td key="action" :props="props" style="width:1px">
-                            <q-btn v-if="userStore.isAllowed('vulnerabilities:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
-                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>                                                    
+                            <q-btn v-if="userStore.isAllowed('vulnerabilities:update')" data-testid="edit-vulnerability-button" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
+                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                             </q-btn>
                             <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); $refs.editModal.show()">
-                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.view')}}</q-tooltip>                            
+                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.view')}}</q-tooltip>
                             </q-btn>
                             <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
-                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.findAudits')}}</q-tooltip>                            
+                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.findAudits')}}</q-tooltip>
                             </q-btn>
-                            <q-btn v-if="userStore.isAllowed('vulnerabilities:delete')" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
-                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>                            
+                            <q-btn v-if="userStore.isAllowed('vulnerabilities:delete')" data-testid="delete-vulnerability-button" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
+                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                             </q-btn>
                         </q-td>
                     </q-tr>
@@ -173,6 +174,7 @@
                     stack-label
                     class="col-md-8"
                     autofocus
+                    data-testid="create-vulnerability-title"
                     :error="!!errors.title"
                     :error-message="errors.title"
                     hide-bottom-space
@@ -344,6 +346,7 @@
                     stack-label
                     class="col-md-8"
                     autofocus
+                    data-testid="edit-vulnerability-title"
                     :error="!!errors.title"
                     :error-message="errors.title"
                     hide-bottom-space

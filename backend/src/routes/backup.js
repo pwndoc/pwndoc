@@ -3,7 +3,6 @@ module.exports = function(app) {
     const path = require('path')
     const tar = require('tar-stream')
     const zlib = require('zlib')
-    const diskusage = require('diskusage')
 
     const Response = require('../lib/httpResponse.js');
     const acl = require('../lib/auth.js').acl;
@@ -40,6 +39,13 @@ module.exports = function(app) {
     const VulnerabilityCategory = require('mongoose').model('VulnerabilityCategory');
     const VulnerabilityType = require('mongoose').model('VulnerabilityType');
     const VulnerabilityUpdate = require('mongoose').model('VulnerabilityUpdate');
+    const DISK_SAFETY_MARGIN_BYTES = 1024 * 1024 * 1024
+
+    function getMaxWritableBackupBytes() {
+        const stats = fs.statfsSync('/')
+        const availableBytes = Number(stats.bavail) * Number(stats.bsize)
+        return Math.max(0, availableBytes - DISK_SAFETY_MARGIN_BYTES)
+    }
  
     function getBackupState() {
         try {
@@ -227,8 +233,7 @@ module.exports = function(app) {
     // Upload backup file
     app.post("/api/backups/upload", acl.hasPermission('backups:create'), function(req, res) {
         const fileSize = req.headers['content-length'] || 0
-        const diskUsage = diskusage.checkSync('/')
-        const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
+        const maxFileSize = getMaxWritableBackupBytes() // Free space - 1GB
         if (fileSize > maxFileSize) {
             Response.BadParameters(res, 'Backup too large. Not enough space on disk')
             return
@@ -670,8 +675,7 @@ module.exports = function(app) {
             return
         }
 
-        const diskUsage = diskusage.checkSync('/')
-        const maxFileSize = diskUsage.available - (1024 * 1024 * 1024) // Free space - 1GB
+        const maxFileSize = getMaxWritableBackupBytes() // Free space - 1GB
         const fileSize = fs.statSync(`${backupPath}/${filename}`).size
         if ((fileSize * 3) > maxFileSize) {
             Response.BadParameters(res, 'Not enough space on disk for restauration')

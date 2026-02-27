@@ -7,7 +7,10 @@
 */
 
 module.exports = function(request, app) {
+  var OTPAuth = require('otpauth')
+
   var userToken = '';
+  var refreshToken = '';
 
   describe('Users Suite Tests', () => {
 
@@ -58,8 +61,10 @@ module.exports = function(request, app) {
         expect(response.status).toBe(200)
         expect(response.body.datas.token).toBeDefined()
         expect(response.body.datas.token).toContain('eyJ')
+        expect(response.body.datas.refreshToken).toBeDefined()
 
         userToken = response.body.datas.token
+        refreshToken = response.body.datas.refreshToken
       })
 
     })
@@ -250,6 +255,122 @@ module.exports = function(request, app) {
           ])
 
         expect(response.body.datas).toEqual(expect.objectContaining(expected))
+      })
+
+      it('Get users list and reviewers list', async () => {
+        var response = await request(app).get('/api/users')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.status).toBe(200)
+        expect(response.body.datas.length).toBeGreaterThanOrEqual(4)
+
+        response = await request(app).get('/api/users/reviewers')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.status).toBe(200)
+        expect(Array.isArray(response.body.datas)).toBeTruthy()
+        response.body.datas.forEach(user => {
+          expect(user.username).toBeDefined()
+        })
+      })
+
+      it('Rejects authentication requests with missing or invalid password payloads', async () => {
+        var response = await request(app).post('/api/users/token').send({username: 'admin'})
+        expect(response.status).toBe(422)
+
+        response = await request(app).post('/api/users/token').send({username: 'admin', password: {invalid: true}})
+        expect(response.status).toBe(422)
+      })
+
+      it('Refresh token endpoints', async () => {
+        var response = await request(app).get('/api/users/refreshtoken')
+          .set('Cookie', [
+            `refreshToken=${refreshToken}`
+          ])
+        expect(response.status).toBe(200)
+        expect(response.body.datas.token).toBeDefined()
+        expect(response.body.datas.refreshToken).toBeDefined()
+        refreshToken = response.body.datas.refreshToken
+
+        response = await request(app).delete('/api/users/refreshtoken')
+          .set('Cookie', [
+            'refreshToken=invalid-token'
+          ])
+        expect(response.status).toBe(401)
+
+        response = await request(app).delete('/api/users/refreshtoken')
+          .set('Cookie', [
+            `refreshToken=${refreshToken}`
+          ])
+        expect(response.status).toBe(200)
+      })
+
+      it('TOTP setup and cancel flow', async () => {
+        var response = await request(app).get('/api/users/totp')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.status).toBe(200)
+        expect(response.body.datas.totpSecret).toBeDefined()
+
+        var totpSecret = response.body.datas.totpSecret
+        var totp = new OTPAuth.TOTP({
+          issuer: 'PwnDoc',
+          label: 'admin',
+          algorithm: 'SHA1',
+          digits: 6,
+          period: 30,
+          secret: totpSecret
+        })
+        var validToken = totp.generate()
+
+        response = await request(app).post('/api/users/totp')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({totpSecret: totpSecret})
+        expect(response.status).toBe(422)
+
+        response = await request(app).post('/api/users/totp')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({totpToken: '000000', totpSecret: totpSecret})
+        expect(response.status).toBe(401)
+
+        response = await request(app).post('/api/users/totp')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({totpToken: validToken, totpSecret: totpSecret})
+        expect(response.status).toBe(200)
+
+        response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'})
+        expect(response.status).toBe(422)
+
+        response = await request(app).delete('/api/users/totp')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({})
+        expect(response.status).toBe(422)
+
+        response = await request(app).delete('/api/users/totp')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({totpToken: '000000'})
+        expect(response.status).toBe(401)
+
+        validToken = totp.generate()
+        response = await request(app).delete('/api/users/totp')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({totpToken: validToken})
+        expect(response.status).toBe(200)
       })
     })
 

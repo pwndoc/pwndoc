@@ -42,3 +42,9 @@ app-settings.json
 # Frontend test files
 storageState.*
 copilot-context.md
+
+# Coverage reports
+coverage
+
+# AI configs
+.agents

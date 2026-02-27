@@ -1,7 +1,7 @@
 <template>
 <q-card flat bordered class="editor full-width" :style="(editable)?'':'border: 1px dashed lightgrey'">
     <div v-sticky="!noAffix && !diff" sticky-offset="affixOffset" class="bg-grey-4">
-        <q-toolbar class="editor-toolbar">
+        <q-toolbar data-testid="editor-toolbar" class="editor-toolbar">
             <template v-if="editable">
                 <div v-if="toolbar.indexOf('format') !== -1">
                     <q-tooltip :delay="500" class="text-bold">Text Format (Ctrl+Alt+[0-6])</q-tooltip>

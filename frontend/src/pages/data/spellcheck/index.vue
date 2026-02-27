@@ -40,7 +40,7 @@
 
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
-                        <q-btn size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteWord(props.row)" v-if="canEdit">
+                        <q-btn data-testid="delete-spellcheck-button" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteWord(props.row)" v-if="canEdit">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                         </q-btn>
                     </q-td>
@@ -82,13 +82,14 @@
             <q-card-section>
                 <div class="row q-col-gutter-md">
                     <q-input
+                        data-testid="create-spellcheck-word-input"
                         :label="$t('word')+' *'"
                         autofocus
                         class="col-md-12"
                         :error="!!errors.name"
                         :error-message="errors.name"
                         @keyup.enter="createWord()"
-                        v-model="currentWord.word" 
+                        v-model="currentWord.word"
                         outlined
                         hide-bottom-space
                         />
@@ -97,7 +98,7 @@
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="createWord()">{{$t('btn.create')}}</q-btn>
+                <q-btn data-testid="create-spellcheck-submit-button" color="secondary" unelevated @click="createWord()">{{$t('btn.create')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

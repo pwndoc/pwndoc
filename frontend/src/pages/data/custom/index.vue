@@ -23,6 +23,7 @@
                                 <q-item-section>
                                     <q-input
                                     ref="validate-language"
+                                    data-testid="create-language-name-input"
                                     :label="$t('language')"
                                     v-model="newLanguage.language"
                                     clearable
@@ -35,6 +36,7 @@
                                 <q-item-section>
                                     <q-input
                                     ref="validate-locale"
+                                    data-testid="create-language-locale-input"
                                     :label="$t('locale')"
                                     v-model="newLanguage.locale"
                                     clearable
@@ -45,7 +47,7 @@
                                     />
                                 </q-item-section>
                                 <q-item-section side>
-                                    <q-btn color="secondary" unelevated label="+" size="md" @click="createLanguage" />
+                                    <q-btn data-testid="create-language-submit-button" color="secondary" unelevated label="+" size="md" @click="createLanguage" />
                                 </q-item-section>
                             </q-item>
                         </div>
@@ -110,7 +112,7 @@
                                                 />
                                             </q-item-section>
                                             <q-item-section side >
-                                                <q-btn color="red" unelevated label="x" size="md" class="q-mt-md" @click="removeLanguage(language.locale)"/>
+                                                <q-btn :data-testid="`delete-language-${language.locale}`" color="red" unelevated label="x" size="md" class="q-mt-md" @click="removeLanguage(language.locale)"/>
                                             </q-item-section>
                                         </q-item>
                                       </template>
@@ -467,6 +469,7 @@
                             <q-item class="row">
                                 <q-item-section class="col-md-4 col-12">
                                     <q-select 
+                                    data-testid="create-vuln-type-locale-select"
                                     v-model="newVulnType.locale" 
                                     :label="$t('language')" 
                                     :options="languages" 
@@ -482,6 +485,7 @@
                             <q-item>
                                 <q-item-section>
                                     <q-input
+                                    data-testid="create-vuln-type-name-input"
                                     :label="$t('name')"
                                     v-model="newVulnType.name"
                                     clearable
@@ -492,7 +496,7 @@
                                     />
                                 </q-item-section>
                                 <q-item-section side>
-                                    <q-btn color="secondary" unelevated label="+" size="md" @click="createVulnerabilityType" />
+                                    <q-btn data-testid="create-vuln-type-submit-button" color="secondary" unelevated label="+" size="md" @click="createVulnerabilityType" />
                                 </q-item-section>
                             </q-item>
                         </div>
@@ -540,7 +544,7 @@
                                                     />
                                                 </q-item-section>
                                                 <q-item-section side >
-                                                    <q-btn color="red" unelevated label="x" size="md" class="q-mt-md" @click="removeVulnType(vulnType)"/>
+                                                    <q-btn :data-testid="`delete-vuln-type-${vulnType.name}`" color="red" unelevated label="x" size="md" class="q-mt-md" @click="removeVulnType(vulnType)"/>
                                                 </q-item-section>
                                             </q-item>
                                         </template>
@@ -570,6 +574,7 @@
                             <q-item>
                                 <q-item-section>
                                     <q-input
+                                    data-testid="create-vuln-category-name-input"
                                     :label="$t('name')"
                                     v-model="newVulnCat.name"
                                     clearable
@@ -586,6 +591,7 @@
                             <q-item>
                                 <q-item-section>
                                     <q-select
+                                    data-testid="create-vuln-category-sort-by"
                                     :label="$t('sortBy')"
                                     v-model="newVulnCat.sortValue"
                                     :options="sortValueOptions"
@@ -596,6 +602,7 @@
                                 </q-item-section>
                                 <q-item-section>
                                     <q-select
+                                    data-testid="create-vuln-category-sort-order"
                                     :label="$t('sortOrder')"
                                     v-model="newVulnCat.sortOrder"
                                     :options="sortOrderOptions"
@@ -606,6 +613,7 @@
                                 </q-item-section>
                                 <q-item-section>
                                     <q-toggle 
+                                    data-testid="create-vuln-category-auto-sorting"
                                     v-model="newVulnCat.sortAuto" 
                                     :label="$t('automaticSorting')"
                                     />
@@ -613,7 +621,7 @@
                             </q-item>
                             <q-separator inset class="q-mt-sm" />
                             <q-item>
-                                <q-btn color="secondary" unelevated :label="$t('btn.create')" no-caps size="md" @click="createVulnerabilityCategory" />
+                                <q-btn data-testid="create-vuln-category-submit-button" color="secondary" unelevated :label="$t('btn.create')" no-caps size="md" @click="createVulnerabilityCategory" />
                             </q-item>
                         </div>
 
@@ -713,7 +721,7 @@
                                                     />
                                                 </q-item-section>
                                                 <q-item-section side>
-                                                    <q-btn color="red" unelevated label="x" size="md" @click="removeCategory(vulnCat)"/>
+                                                    <q-btn :data-testid="`delete-vuln-category-${vulnCat.name}`" color="red" unelevated label="x" size="md" @click="removeCategory(vulnCat)"/>
                                                 </q-item-section>
                                             </q-item>
                                         </template>
@@ -951,14 +959,15 @@
                                 <q-item v-if="canDisplayCustomField(field)" :class="`col-md-${field.size||12} col-12 offset-md-${field.offset||0}`">
                                     <q-item-section avatar v-if="userStore.isAllowed('custom-fields:update')">
                                         <q-btn flat color="grey" icon="mdi-arrow-split-horizontal" class="handle" dense size="sm" />
-                                        <q-btn flat color="primary" icon="mdi-pencil" dense size="sm">
+                                        <q-btn flat color="primary" icon="mdi-pencil" :data-testid="`edit-custom-field-${field.label}`" dense size="sm">
                                             <q-menu style="width: 300px" anchor="top left" self="top end">
-                                                
+
                                                 <q-item v-if="field.fieldType !== 'space'">
                                                     <q-item-section>
                                                         <q-input
                                                         :label="$t('label')"
                                                         v-model="field.label"
+                                                        data-testid="edit-custom-field-label-input"
                                                         clearable
                                                         outlined dense
                                                         />
@@ -969,6 +978,7 @@
                                                         <q-input
                                                         :label="$t('description')"
                                                         v-model="field.description"
+                                                        data-testid="edit-custom-field-description-input"
                                                         clearable
                                                         @clear="field.description = ''"
                                                         outlined dense
@@ -1039,7 +1049,7 @@
                                                 </q-item>
                                             </q-menu>
                                         </q-btn>
-                                        <q-btn flat color="red" icon="mdi-delete" dense size="sm" @click="deleteCustomField(field)" />
+                                        <q-btn flat color="red" icon="mdi-delete" :data-testid="`delete-custom-field-${field.label}`" dense size="sm" @click="deleteCustomField(field)" />
                                     </q-item-section>
                                     <q-item-section>
                                         <q-field 
@@ -1216,6 +1226,7 @@
                             <q-item>
                                 <q-item-section>
                                     <q-input
+                                    data-testid="create-section-name-input"
                                     :label="$t('name')"
                                     v-model="newSection.name"
                                     clearable
@@ -1228,6 +1239,7 @@
                                 </q-item-section>
                                 <q-item-section>
                                     <q-input
+                                    data-testid="create-section-field-input"
                                     :label="$t('fieldForTemplate')"
                                     v-model="newSection.field"
                                     clearable
@@ -1253,7 +1265,7 @@
                                     </q-input>
                                 </q-item-section>
                                 <q-item-section side>
-                                    <q-btn color="secondary" unelevated label="+" size="md" @click="createSection" />
+                                    <q-btn data-testid="create-section-submit-button" color="secondary" unelevated label="+" size="md" @click="createSection" />
                                 </q-item-section>
                             </q-item>
                         </div>
@@ -1347,7 +1359,7 @@
                                                     </q-input>
                                                 </q-item-section>
                                                 <q-item-section side >
-                                                    <q-btn color="red" unelevated label="x" size="md" @click="removeSection(index)"/>
+                                                    <q-btn :data-testid="`delete-section-${section.field}`" color="red" unelevated label="x" size="md" @click="removeSection(index)"/>
                                                 </q-item-section>
                                             </q-item>
                                         </template>

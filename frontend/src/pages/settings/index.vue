@@ -38,7 +38,7 @@
                         <br/>
                         <q-item>
                             <q-item-section class="col-md-2">
-                                <q-toggle :label="$t('btn.enable')" v-model="settings.report.private.imageBorder" />
+                                <q-toggle data-testid="image-border-toggle" :label="$t('btn.enable')" v-model="settings.report.private.imageBorder" />
                             </q-item-section>
                             <q-item-section class="col-md-1">
                                 <input :disabled="!settings.report.private.imageBorder" type="color" id="colorpicker" v-model="settings.report.private.imageBorderColor" />
@@ -478,10 +478,11 @@
                             <q-btn 
                             class="col-md-2"
                             v-if="userStore.isAllowed('backups:create')"
+                            data-testid="create-backup-button"
                             unelevated
                             :loading="backupStatus.operation !== 'idle' || uploadBackupLoading"
                             :label="$t('createBackup')"
-                            color="secondary" 
+                            color="secondary"
                             no-caps
                             @click="$refs.createBackupModal.show()"
                             >
@@ -524,11 +525,12 @@
                     <template v-slot:body-cell-action="props">
                         <q-td style="width:1px">
                             <q-btn
-                            v-if="userStore.isAllowed('backups:update')" 
-                            size="sm" 
-                            flat 
-                            color="info" 
-                            icon="fa fa-download" 
+                            v-if="userStore.isAllowed('backups:update')"
+                            data-testid="download-backup-button"
+                            size="sm"
+                            flat
+                            color="info"
+                            icon="fa fa-download"
                             @click="downloadBackup(props.row)"
                             :disabled="backupStatus.operation !== 'idle'"
                             >
@@ -582,11 +584,12 @@
                         <q-card-section>
                             <q-input
                             :label="$t('name')+' *'"
+                            data-testid="create-backup-name-input"
                             autofocus
                             class="col-md-12 col-12"
                             stack-label
                             @keyup.enter="createBackup()"
-                            v-model="currentBackup.name" 
+                            v-model="currentBackup.name"
                             outlined
                             />
                         </q-card-section>

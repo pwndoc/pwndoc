@@ -47,9 +47,13 @@ Ports: Frontend 8443 (nginx), Backend 4242, MongoDB 27017, LanguageTool 8010/802
 ./pwndoc-cli test --frontend-e2e               # Frontend Playwright E2E tests (full stack)
 ./pwndoc-cli test --frontend-e2e --ui          # Playwright UI mode (port 8082)
 ./pwndoc-cli test --backend --frontend-unit    # Combine flags to run specific suites
+./pwndoc-cli test --coverage                   # Coverage mode: backend + frontend-unit
+./pwndoc-cli test --backend --coverage         # Backend coverage only
+./pwndoc-cli test --frontend-unit --coverage   # Frontend unit coverage only
 ```
 
 Backend tests spin up an ephemeral MongoDB (dropped before each run). Frontend unit tests run in a lightweight Node container (no browser/backend needed). E2E tests build and start the full stack.
+Coverage reports are written to `backend/coverage/` and `frontend/coverage/`.
 
 ### Test file structure
 - Backend: `backend/tests/index.test.js` (Jest)
