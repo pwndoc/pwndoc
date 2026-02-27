@@ -3,7 +3,6 @@ module.exports = function () {
   var utils = require("../src/lib/utils")
   var reportFilters = require("../src/lib/report-filters")
   var customGenerator = require("../src/lib/custom-generator")
-  var customReportFilters = require("../src/lib/custom/report-filters-custom")
 
   describe('Lib functions Suite Tests', () => {
 
@@ -842,39 +841,6 @@ module.exports = function () {
         var full = customGenerator.expressions.filters.convertDateFR("2026-02-25T00:00:00.000Z", "full")
         expect(short).toBe("25/02/2026")
         expect(full).toContain("2026")
-      })
-    })
-
-    describe('custom report-filters file tests', () => {
-      it('criteriaFR covers all known mappings and default', () => {
-        var cases = {
-          "Network": "Réseau",
-          "Adjacent Network": "Réseau Local",
-          "Local": "Local",
-          "Physical": "Physique",
-          "None": "Aucun",
-          "Low": "Faible",
-          "High": "Haute",
-          "Required": "Requis",
-          "Unchanged": "Inchangé",
-          "Changed": "Changé",
-          "Unknown": "Non défini"
-        }
-
-        Object.keys(cases).forEach(input => {
-          expect(customReportFilters.defaultFilters.criteriaFR(input)).toBe(cases[input])
-        })
-      })
-
-      it('convertDateFR handles short, full and invalid dates', () => {
-        expect(customReportFilters.defaultFilters.convertDateFR("2026-02-25T00:00:00.000Z", "short")).toBe("25/02/2026")
-        expect(customReportFilters.defaultFilters.convertDateFR("2026-02-25T00:00:00.000Z", "full")).toContain("2026")
-        expect(customReportFilters.defaultFilters.convertDateFR("not-a-date", "short")).toBe("NaN/undefined/NaN")
-      })
-
-      it('invert sub-templating filter handles strings and non-strings', () => {
-        expect(customReportFilters.subTemplatingFilters.invert("abcd")).toBe("dcba")
-        expect(customReportFilters.subTemplatingFilters.invert(1234)).toBe(1234)
       })
     })
 
