@@ -893,6 +893,94 @@ test.describe('Custom Data Setup Page', () => {
     });
   });
 
+  test.describe('Custom Fields (requires sections)', () => {
+    test('should navigate to custom fields tab', async ({ page }) => {
+      await page.getByRole('tab', { name: 'Custom Fields' }).click();
+      await expect(page.getByText('Create and manage Custom Fields')).toBeVisible();
+    });
+
+    test('should create a text custom field for the Executive Summary section', async ({ page }) => {
+      await page.getByRole('tab', { name: 'Custom Fields' }).click();
+
+      // Select view: Audit Section
+      await page.getByLabel('Select View').click();
+      await page.getByRole('option', { name: 'Audit Section' }).click();
+
+      // Select section: Executive Summary (visible after choosing Audit Section)
+      await page.getByLabel('Select Section').click();
+      await page.getByRole('option', { name: 'Executive Summary' }).click();
+
+      // Select component type: Editor (rich-text)
+      await page.getByLabel('Select Component').click();
+      await page.getByRole('option', { name: 'Editor' }).click();
+
+      // Enter label
+      await page.getByLabel('Label').fill('Content');
+
+      // Submit
+      await page.getByRole('button', { name: 'Add' }).click();
+
+      await expect(page.getByText('Custom Field created successfully')).toBeVisible();
+    });
+
+    test('should not create a custom field without required fields', async ({ page }) => {
+      await page.getByRole('tab', { name: 'Custom Fields' }).click();
+
+      // Click Add without selecting a component type or entering a label
+      await page.getByRole('button', { name: 'Add' }).click();
+
+      // Validation errors should appear for both missing fields
+      await expect(page.getByText('Field is required').first()).toBeVisible();
+    });
+
+    test('should edit a custom field', async ({ page }) => {
+      await page.getByRole('tab', { name: 'Custom Fields' }).click();
+
+      // Select filters to display the Content field in the preview
+      await page.getByLabel('Select View').click();
+      await page.getByRole('option', { name: 'Audit Section' }).click();
+      await page.getByLabel('Select Section').click();
+      await page.getByRole('option', { name: 'Executive Summary' }).click();
+
+      // Click the pencil (edit) button on the Content field row
+      await page.getByTestId('edit-custom-field-Content').click();
+
+      // Edit the description inside the inline menu
+      await page.getByTestId('edit-custom-field-description-input').fill('E2E section content');
+
+      // Close the menu then save
+      await page.keyboard.press('Escape');
+      await page.getByRole('button', { name: 'Save' }).click();
+
+      await expect(page.getByText('Custom Fields updated successfully')).toBeVisible();
+    });
+
+    test('should delete a custom field', async ({ page }) => {
+      await page.getByRole('tab', { name: 'Custom Fields' }).click();
+
+      // Select filters so the preview shows Executive Summary fields
+      await page.getByLabel('Select View').click();
+      await page.getByRole('option', { name: 'Audit Section' }).click();
+      await page.getByLabel('Select Section').click();
+      await page.getByRole('option', { name: 'Executive Summary' }).click();
+
+      // Create a temp field to delete
+      await page.getByLabel('Select Component').click();
+      await page.getByRole('option', { name: 'Input' }).click();
+      await page.getByLabel('Label').fill('TempField');
+      await page.getByRole('button', { name: 'Add' }).click();
+      await expect(page.getByText('Custom Field created successfully')).toBeVisible();
+
+      // Click the delete button on the TempField row in the preview
+      await page.getByTestId('delete-custom-field-TempField').click();
+
+      // Confirm deletion
+      await page.getByRole('button', { name: 'Confirm' }).click();
+
+      await expect(page.getByText(/TempField.*deleted successfully/)).toBeVisible();
+    });
+  });
+
   test.describe('Tab Navigation', () => {
     test('should switch between all tabs', async ({ page }) => {
       // Languages (default)
