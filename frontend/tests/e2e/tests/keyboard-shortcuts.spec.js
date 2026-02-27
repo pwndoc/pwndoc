@@ -50,9 +50,13 @@ test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
 
   test('Ctrl+S saves a custom section', async ({ page }) => {
     await page.goto(`/audits/${auditId}/sections/${sectionId}`);
+    // Wait for EDIT state: Save button only renders when frontEndAuditState === EDIT,
+    // which happens after the audit API call completes. Without this, Ctrl+S fires
+    // while frontEndAuditState is still EDIT_READONLY and the save is skipped.
+    await expect(page.getByRole('button', { name: /ctrl\+s/i })).toBeVisible();
+
     const editor = page.getByRole('textbox').first();
     if ((await editor.count()) > 0) {
-      await expect(editor).toBeVisible();
       await editor.click();
       await page.keyboard.type(' kb');
     } else {
