@@ -1,7 +1,7 @@
 import { test, expect } from './base.js';
 import path from 'path';
 
-test.describe.skip('Collaborators', () => {
+test.describe('Collaborators', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/data/collaborators');
   });
@@ -88,7 +88,7 @@ test.describe.skip('Collaborators', () => {
   });
 });
 
-test.describe.skip('Companies', () => {
+test.describe('Companies', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/data/companies');
     });
@@ -162,7 +162,7 @@ test.describe.skip('Companies', () => {
     });
 });
 
-test.describe.skip('Clients', () => {
+test.describe('Clients', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/data/clients');
     });
@@ -340,7 +340,7 @@ test.describe('Templates', () => {
     });
 });
 
-test.describe.skip('Spellcheck Dictionary', () => {
+test.describe('Spellcheck Dictionary', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/data/spellcheck');
     });
@@ -392,7 +392,7 @@ test.describe.skip('Spellcheck Dictionary', () => {
     });
 });
 
-test.describe.skip('LanguageTool Rules', () => {
+test.describe('LanguageTool Rules', () => {
     test.beforeEach(async ({ page }) => {
       await page.goto('/data/languagetool-rules');
     });
@@ -500,8 +500,8 @@ test.describe.skip('LanguageTool Rules', () => {
       const row = page.getByRole('row').filter({ hasText: 'E2E_TEMP_RULE' });
       await row.getByTestId('delete-rule-button').click();
       await page.getByRole('button', { name: /delete|confirm|ok/i }).click();
-
-      await expect(page.getByText(/deleted successfully/i)).toBeVisible();
+      await expect(page.getByText(/rule deleted successfully|deleted successfully/i)).toBeVisible();
+      await expect(page.getByRole('row').filter({ hasText: 'E2E_TEMP_RULE' })).toHaveCount(0);
     });
 });
 
@@ -511,7 +511,7 @@ test.describe('Custom Data Setup Page', () => {
     await page.goto('/data/custom');
   });
 
-  test.describe.skip('Page Layout', () => {
+  test.describe('Page Layout', () => {
     test('should display navigation and tab elements', async ({ page }) => {
       // Verify top nav items scoped to the top toolbar to avoid sidebar collisions.
       const toolbarNavItems = page.getByRole('toolbar').getByRole('listitem');
@@ -893,7 +893,7 @@ test.describe('Custom Data Setup Page', () => {
     });
   });
 
-  test.describe.skip('Tab Navigation', () => {
+  test.describe('Tab Navigation', () => {
     test('should switch between all tabs', async ({ page }) => {
       // Languages (default)
       await expect(page.getByRole('tab', { name: 'Languages' })).toHaveAttribute('aria-selected', 'true');
@@ -975,6 +975,12 @@ test.describe('Custom Data Setup Page', () => {
 
       // Wait for dropdown to close before clicking Create
       await expect(page.getByRole('listbox')).toBeHidden();
+
+      // Attach at least one custom section to the audit type so audits inherit sections
+      const sectionsSelect = page.getByLabel(/Add Sections/i);
+      await sectionsSelect.click();
+      await page.getByRole('option', { name: 'Executive Summary' }).click();
+      await expect(sectionsSelect).toHaveValue('Executive Summary');
 
       // Click Create
       await page.getByRole('button', { name: 'Create' }).click();

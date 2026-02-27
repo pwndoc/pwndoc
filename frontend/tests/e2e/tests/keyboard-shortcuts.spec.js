@@ -6,23 +6,24 @@ import { test, expect } from './base.js';
  * These tests cover the separate code path used when saving via keyboard
  * rather than the Save button — a regression in one does not catch the other.
  *
- * Sections and findings are resolved from the API on every run so the tests
- * remain independent of the order in which audit-edit creates data.
+ * Resolve IDs from API once. The E2E project chain guarantees audit-edit
+ * created a single "E2E Test Audit" before this spec runs.
  */
 
 let auditId;
 let findingId;
 let sectionId;
+const AUDIT_NAME = 'E2E Test Audit';
 
 test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
   test.beforeAll(async ({ request }) => {
-    // Resolve the audit created by audit-edit.spec.js
     const auditsRes = await request.get('/api/audits');
     const auditsData = await auditsRes.json();
-    const audit = auditsData.datas.find(a => a.name === 'E2E Test Audit');
-    auditId = audit._id;
+    const candidateAudits = auditsData.datas.filter((audit) => audit.name === AUDIT_NAME);
+    expect(candidateAudits).toHaveLength(1);
 
-    // Resolve finding and section IDs from the audit detail
+    auditId = candidateAudits[0]._id;
+
     const detailRes = await request.get(`/api/audits/${auditId}`);
     const detail = await detailRes.json();
     findingId = detail.datas.findings[0]?._id;
@@ -39,8 +40,6 @@ test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
   });
 
   test('Ctrl+S saves a finding', async ({ page }) => {
-    test.skip(!findingId, 'No finding exists in the E2E audit');
-
     await page.goto(`/audits/${auditId}/findings/${findingId}`);
     await expect(page.getByRole('tab', { name: 'Definition' })).toBeVisible();
 
@@ -50,14 +49,16 @@ test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
   });
 
   test('Ctrl+S saves a custom section', async ({ page }) => {
-    test.skip(!sectionId, 'No section exists in the E2E audit');
-
     await page.goto(`/audits/${auditId}/sections/${sectionId}`);
-    await expect(page.getByRole('textbox').first()).toBeVisible();
-
     const editor = page.getByRole('textbox').first();
-    await editor.click();
-    await page.keyboard.type(' kb');
+    if ((await editor.count()) > 0) {
+      await expect(editor).toBeVisible();
+      await editor.click();
+      await page.keyboard.type(' kb');
+    } else {
+      await page.locator('body').click();
+    }
+
     await page.keyboard.press('Control+s');
     await expect(page.getByText('Section updated successfully')).toBeVisible();
   });

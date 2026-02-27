@@ -1,6 +1,6 @@
 import { test, expect } from './base.js';
 
-test.describe.skip('Vulnerabilities Page', () => {
+test.describe('Vulnerabilities Page', () => {
 
   // Cleanup: remove test vulnerabilities (languages persist from data-setup)
   test.afterAll(async ({ request }) => {
