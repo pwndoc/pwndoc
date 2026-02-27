@@ -3,9 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 const frontendRoot = path.resolve(__dirname, '../..')
-const unitCoverageWorkDir = '/tmp/pwndoc-unit-coverage'
 
 export const UNIT_COVERAGE_EXCLUDE = [
   'node_modules/',
@@ -55,7 +55,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'html'],
-      reportsDirectory: unitCoverageWorkDir,
+      reportsDirectory: path.join(frontendRoot, 'coverage', 'unit'),
       exclude: UNIT_COVERAGE_EXCLUDE,
       thresholds: {
         ...UNIT_COVERAGE_THRESHOLDS.global,

@@ -5,11 +5,10 @@ import { UNIT_COVERAGE_EXCLUDE, UNIT_COVERAGE_THRESHOLDS } from './vitest.config
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '../..')
-const coverageWorkDir = '/tmp/pwndoc-unit-coverage'
 const coverageOutDir = path.join(rootDir, 'coverage', 'unit')
-const summaryPath = path.join(coverageWorkDir, 'coverage-summary.json')
-const reportPath = path.join(coverageWorkDir, 'thresholds.html')
-const indexPath = path.join(coverageWorkDir, 'index.html')
+const summaryPath = path.join(coverageOutDir, 'coverage-summary.json')
+const reportPath = path.join(coverageOutDir, 'thresholds.html')
+const indexPath = path.join(coverageOutDir, 'index.html')
 
 function escapeHtml(value) {
   return String(value)
@@ -270,9 +269,6 @@ async function run() {
     process.exitCode = 1
   }
 
-  await fs.rm(coverageOutDir, { recursive: true, force: true })
-  await fs.mkdir(path.dirname(coverageOutDir), { recursive: true })
-  await fs.cp(coverageWorkDir, coverageOutDir, { recursive: true })
 }
 
 run().catch((error) => {
