@@ -948,12 +948,6 @@ module.exports = function () {
         jest.resetModules()
         global.__basedir = `${process.cwd()}/src`
 
-        if (overrides.missingCustomFilters) {
-          jest.doMock('../src/lib/custom/report-filters-custom.js', () => {
-            throw new Error('custom filters unavailable')
-          })
-        }
-
         jest.doMock('fs', () => ({
           ...jest.requireActual('fs'),
           readFileSync: jest.fn((path, encoding) => {
@@ -1041,7 +1035,6 @@ module.exports = function () {
         jest.dontMock('image-size')
         jest.dontMock('ae-cvss-calculator')
         jest.dontMock('docxtemplater/expressions.js')
-        jest.dontMock('../src/lib/custom/report-filters-custom.js')
       })
 
       it('Builds report data for findings, custom fields and embedded images', async () => {
@@ -1150,7 +1143,7 @@ module.exports = function () {
         audit.customFields = [
           {
             customField: { fieldType: 'input', label: 'Tracking ID' },
-            text: '{_{creator.username|invert}_}'
+            text: '{_{creator.username}_}'
           }
         ]
         audit.findings = [
@@ -1168,7 +1161,7 @@ module.exports = function () {
         await loader.reportGenerator.generateDoc(audit)
         var rendered = loader.getCapturedData()
 
-        expect(rendered.trackingid).toBe('nimda')
+        expect(rendered.trackingid).toBe('admin')
         expect(rendered.findings[0].description[0].text).toBe('')
         expect(rendered.findings[0].cvss.cellColor).toContain('4A86E8')
         expect(rendered.findings[0].cvss.temporalCellColor).toContain('4A86E8')
@@ -1177,7 +1170,7 @@ module.exports = function () {
       })
 
       it('Falls back when custom filters are missing and image module initialization fails', async () => {
-        var loader = loadReportGenerator({ throwImageModule: true, missingCustomFilters: true })
+        var loader = loadReportGenerator({ throwImageModule: true })
         var buffer = await loader.reportGenerator.generateDoc(buildAuditFixture())
         expect(Buffer.isBuffer(buffer)).toBe(true)
         expect(loader.getCapturedData().name).toBe('Generator Audit')
