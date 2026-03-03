@@ -1076,5 +1076,39 @@ test.describe('Custom Data Setup Page', () => {
       // Verify success
       await expect(page.getByText('Audit type created successfully')).toBeVisible();
     });
+
+    test('should create a retest audit type', async ({ page }) => {
+      await page.getByRole('tab', { name: 'Audit Types' }).click();
+
+      // Select the Retest stage radio (use first() to avoid the disabled radio in existing audit type listing)
+      await page.getByRole('radio', { name: 'Retest' }).first().click();
+
+      // Fill in the name
+      const nameInput = page.getByLabel(/Name/);
+      await nameInput.fill('E2E Retest');
+
+      // Select template for English language
+      const templateEnglishSelect = page.getByLabel(/English Template/).first();
+      await templateEnglishSelect.click();
+      await page.getByRole('option', { name: 'E2E Full Template Updated' }).click();
+
+      // Wait for the first dropdown to close before opening the second
+      await expect(page.getByRole('listbox')).toBeHidden();
+
+      // Select template for French language
+      const templateFrenchSelect = page.getByLabel(/French Template/).first();
+      await templateFrenchSelect.click();
+      await expect(page.getByRole('option', { name: 'E2E Full Template Updated' })).toBeVisible();
+      await page.getByRole('option', { name: 'E2E Full Template Updated' }).click();
+
+      // Wait for dropdown to close before clicking Create
+      await expect(page.getByRole('listbox')).toBeHidden();
+
+      // Click Create
+      await page.getByRole('button', { name: 'Create' }).click();
+
+      // Verify success
+      await expect(page.getByText('Audit type created successfully')).toBeVisible();
+    });
   });
 });

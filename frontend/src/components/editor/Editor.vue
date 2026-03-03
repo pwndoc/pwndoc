@@ -1,8 +1,8 @@
 <template>
 <q-card flat bordered class="editor full-width" :style="(editable)?'':'border: 1px dashed lightgrey'">
-    <div v-sticky="!noAffix && !diff" sticky-offset="affixOffset" class="bg-grey-4">
-        <q-toolbar data-testid="editor-toolbar" class="editor-toolbar">
-            <template v-if="editable">
+    <div v-sticky="!noAffix && !diff && editable" sticky-offset="affixOffset" class="bg-grey-4">
+        <template v-if="editable">
+            <q-toolbar data-testid="editor-toolbar" class="editor-toolbar">
                 <div v-if="toolbar.indexOf('format') !== -1">
                     <q-tooltip :delay="500" class="text-bold">Text Format (Ctrl+Alt+[0-6])</q-tooltip>
                     <q-btn-dropdown size="sm" unelevated dense :icon="formatIcon" :label="formatLabel" style="width:42px" class="text-bold">
@@ -204,16 +204,17 @@
                         <q-icon name="add_comment" />
                     </q-btn>
                 </template>
-
-            </template>
-            <div v-if="diff !== undefined && (diff || modelValue) && modelValue !== diff">
+            </q-toolbar>
+        </template>
+        <template v-if="diff !== undefined && (diff || modelValue) && modelValue !== diff">
+            <q-toolbar data-testid="editor-toolbar" class="editor-toolbar">
                 <q-btn flat size="sm" dense
                 :class="{'is-active': toggleDiff}"
                 label="toggle diff"
                 @click="toggleDiff = !toggleDiff"
                 />
-            </div>
-        </q-toolbar>
+            </q-toolbar>
+        </template>
     </div>
     <q-separator />
     <bubble-menu
@@ -449,7 +450,9 @@ export default {
     computed: {
         affixOffset: function() {
             if (this.$route.name === "editFinding") {
-                return {top: 148, bottom: 40}
+                // Classic edit has tabs bar (.top-fixed) adding ~48px; retest does not
+                const hasTabs = !!document.querySelector('.top-fixed')
+                return {top: hasTabs ? 148 : 100, bottom: 40}
             }
             else if (this.$route.name === "editSection") {
                 return {top: 100, bottom: 40}
