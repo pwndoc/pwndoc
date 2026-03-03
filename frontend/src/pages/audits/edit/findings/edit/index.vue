@@ -431,8 +431,8 @@
             :disable="!retestSplitView"
             >
                 <template v-slot:before>
-                    <div class="row">
-                        <q-card>
+                    <div class="row full-width">
+                        <q-card class="full-width">
                             <!-- <q-card :class="(retestSplitView) ? '' :'col-xl-8 col-12 offset-xl-2'"> -->
                             <q-card-section class="row q-col-gutter-md">
                                 <q-input
@@ -508,7 +508,7 @@
                     <q-icon color="primary" name="fas fa-grip-lines-vertical" size="sm" />
                 </template>
                 <template v-slot:after>
-                    <q-card>
+                    <q-card v-if="retestSplitView">
                         <q-card-section class="row q-col-gutter-md">
                             <q-input
                             class="col-md-8 col-12" 
