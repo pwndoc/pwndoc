@@ -36,9 +36,9 @@ test.describe('Double-Click to Edit', () => {
 
   test('double-click audit row navigates to audit edit page', async ({ page }) => {
     await page.goto('/audits');
-    await expect(page.getByRole('row').filter({ hasText: 'E2E Test Audit' })).toBeVisible();
+    await expect(page.getByRole('row').filter({ hasText: 'E2E Test Audit' }).first()).toBeVisible();
 
-    const row = page.getByRole('row').filter({ hasText: 'E2E Test Audit' });
+    const row = page.getByRole('row').filter({ hasText: 'E2E Test Audit' }).first();
     await row.dblclick();
 
     // Should navigate to the audit edit page

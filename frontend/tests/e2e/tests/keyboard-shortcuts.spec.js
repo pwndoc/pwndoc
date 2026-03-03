@@ -19,7 +19,7 @@ test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
   test.beforeAll(async ({ request }) => {
     const auditsRes = await request.get('/api/audits');
     const auditsData = await auditsRes.json();
-    const candidateAudits = auditsData.datas.filter((audit) => audit.name === AUDIT_NAME);
+    const candidateAudits = auditsData.datas.filter((audit) => audit.name === AUDIT_NAME && audit.type === 'default');
     expect(candidateAudits).toHaveLength(1);
 
     auditId = candidateAudits[0]._id;

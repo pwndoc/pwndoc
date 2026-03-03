@@ -15,7 +15,7 @@ test.describe('Audits List Page (with data)', () => {
 
   test('should display the audits table with the created audit', async ({ page }) => {
     // The audit created by audit-edit spec should appear in the table
-    await expect(page.getByRole('cell', { name: 'E2E Test Audit' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'E2E Test Audit' }).first()).toBeVisible();
     await expect(page.getByRole('cell', { name: 'E2E Pentest' })).toBeVisible();
   });
 
@@ -33,11 +33,11 @@ test.describe('Audits List Page (with data)', () => {
   });
 
   test('should show audit count in table footer', async ({ page }) => {
-    await expect(page.getByText(/1 audit/i)).toBeVisible();
+    await expect(page.getByText(/2 audit/i)).toBeVisible();
   });
 
   test('should have edit and delete actions on audit row', async ({ page }) => {
-    const row = page.getByRole('row').filter({ hasText: 'E2E Test Audit' });
+    const row = page.getByRole('row').filter({ hasText: 'E2E Test Audit' }).first();
     await expect(row.getByTestId('edit-audit-button')).toBeVisible();
     await expect(row.getByTestId('delete-audit-button')).toBeVisible();
   });

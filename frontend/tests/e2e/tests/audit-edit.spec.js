@@ -222,4 +222,26 @@ test.describe('Audit Edit Page', () => {
       await expect(page.getByText('admin (me)').first()).toBeVisible();
     });
   });
+
+  test.describe('Retest Creation', () => {
+
+    test('should create a retest from the audit', async ({ page }) => {
+      await page.goto(`/audits/${auditId}`);
+      // Wait for the sidebar to render
+      await expect(page.getByText('Findings')).toBeVisible();
+
+      // Click "Create Retest" button in the sidebar header
+      await page.getByRole('button', { name: 'Create Retest' }).click();
+
+      // With only one retest type, the retest is created directly.
+      // Wait for navigation to the new retest audit page.
+      await page.waitForURL(/\/audits\/[a-f0-9]+/);
+
+      // The sidebar should show the "Retest" chip
+      await expect(page.getByText('Retest').first()).toBeVisible();
+
+      // The retest should inherit the finding from the original audit
+      await expect(page.getByText('Test SQL Injection Finding')).toBeVisible();
+    });
+  });
 });

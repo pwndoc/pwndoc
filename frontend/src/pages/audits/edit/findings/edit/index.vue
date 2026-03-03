@@ -40,6 +40,7 @@
             />
             <q-btn
             v-if="auditParent.type === 'retest'"
+            data-testid="retest-split-view-toggle"
             color="primary"
             :flat="!retestSplitView" 
             :outline="retestSplitView"
@@ -508,7 +509,7 @@
                     <q-icon color="primary" name="fas fa-grip-lines-vertical" size="sm" />
                 </template>
                 <template v-slot:after>
-                    <q-card v-if="retestSplitView">
+                    <q-card v-if="retestSplitView" data-testid="retest-original-panel">
                         <q-card-section class="row q-col-gutter-md">
                             <q-input
                             class="col-md-8 col-12" 
