@@ -53,8 +53,8 @@ export default {
             errors: {title: ''},
             // Selected or New Vulnerability
             currentVulnerability: {
-                cvss: '',
-                cvss4: '',
+                cvssv3: '',
+                cvssv4: '',
                 priority: '',
                 remediationComplexity: '',
                 details: [] 
@@ -359,8 +359,8 @@ export default {
 
         cleanCurrentVulnerability: function() {
             this.cleanErrors();
-            this.currentVulnerability.cvss = '';
-            this.currentVulnerability.cvss4 = '';
+            this.currentVulnerability.cvssv3 = '';
+            this.currentVulnerability.cvssv4 = '';
             this.currentVulnerability.priority = '';
             this.currentVulnerability.remediationComplexity = '';
             this.currentVulnerability.details = [];

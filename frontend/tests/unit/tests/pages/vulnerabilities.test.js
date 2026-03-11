@@ -431,13 +431,15 @@ describe('Vulnerabilities Page', () => {
       const wrapper = createWrapper()
       await flushPromises()
 
-      wrapper.vm.currentVulnerability.cvss = 'CVSS:3.1/AV:N'
+      wrapper.vm.currentVulnerability.cvssv3 = 'CVSS:3.1/AV:N'
+      wrapper.vm.currentVulnerability.cvssv4 = 'CVSS:4.0/AV:N'
       wrapper.vm.currentVulnerability.priority = 3
       wrapper.vm.currentVulnerability.remediationComplexity = 2
 
       wrapper.vm.cleanCurrentVulnerability()
 
-      expect(wrapper.vm.currentVulnerability.cvss).toBe('')
+      expect(wrapper.vm.currentVulnerability.cvssv3).toBe('')
+      expect(wrapper.vm.currentVulnerability.cvssv4).toBe('')
       expect(wrapper.vm.currentVulnerability.priority).toBe('')
       expect(wrapper.vm.currentVulnerability.remediationComplexity).toBe('')
       expect(wrapper.vm.currentVulnerability.details.length).toBeGreaterThan(0)

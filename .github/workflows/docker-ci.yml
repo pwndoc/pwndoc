@@ -9,6 +9,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME_BACKEND: ghcr.io/${{ github.repository }}-backend
   IMAGE_NAME_FRONTEND: ghcr.io/${{ github.repository }}-frontend
+  IMAGE_NAME_LANGUAGETOOLS: ghcr.io/${{ github.repository }}-languagetools
 
 jobs:
   run-tests:
@@ -83,3 +84,19 @@ jobs:
           context: ./frontend
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
+
+      - name: Extract metadata (tags, labels) for LanguageTools
+        id: meta-languagetools
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME_LANGUAGETOOLS }}
+          tags: |
+            type=semver,pattern={{version}},prefix=
+            type=raw,value=latest
+
+      - name: Build & Push LanguageTools Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./languagetool
+          push: true
+          tags: ${{ steps.meta-languagetools.outputs.tags }}
