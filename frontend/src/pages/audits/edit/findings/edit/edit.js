@@ -308,11 +308,11 @@ export default {
                     this.overrideLeaveCheck = true
                     var currentIndex = this.auditParent.findings.findIndex(e => e._id === this.findingId)
                     if (this.auditParent.findings.length === 1)
-                        this.$router.push(`/audits/${this.auditParentId}/findings/add`)
+                        this.$router.push(`/audits/${this.auditParent._id}/findings/add`)
                     else if (currentIndex === this.auditParent.findings.length - 1)
-                        this.$router.push(`/audits/${this.auditParentId}/findings/${this.auditParent.findings[currentIndex - 1]._id}`)
+                        this.$router.push(`/audits/${this.auditParent._id}/findings/${this.auditParent.findings[currentIndex - 1]._id}`)
                     else
-                        this.$router.push(`/audits/${this.auditParentId}/findings/${this.auditParent.findings[currentIndex + 1]._id}`)
+                        this.$router.push(`/audits/${this.auditParent._id}/findings/${this.auditParent.findings[currentIndex + 1]._id}`)
                 })
                 .catch((err) => {
                     Notify.create({
