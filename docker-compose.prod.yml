@@ -15,3 +15,6 @@ services:
     image: ghcr.io/pwndoc/pwndoc-frontend:latest
     ports:
       - ${APP_PORT:-8443}:8443
+
+  pwndoc-languagetools:
+    image: ghcr.io/pwndoc/pwndoc-languagetools:latest
