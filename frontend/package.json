@@ -27,7 +27,7 @@
     "ae-cvss-calculator": "^1.0.9",
     "axios": "^0.18.1",
     "core-js": "^3.47.0",
-    "diff": "^8.0.2",
+    "diff": "^8.0.3",
     "dompurify": "^3.3.1",
     "highlight.js": "^11.11.1",
     "js-yaml": "^4.1.1",
