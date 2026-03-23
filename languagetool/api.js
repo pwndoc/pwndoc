@@ -30,6 +30,8 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://pwndoc-backend:4242';
 let languageToolProcess = null;
 let languageToolPid = null;
 let isShuttingDown = false;
+let intentionalStop = false;
+let isRestarting = false;
 let restartTimer = null;
 let restartAttempts = 0;
 
@@ -183,7 +185,6 @@ function ensureGrammarXmlBackup(lang) {
     if (!fs.existsSync(backupPath)) {
         const content = fs.readFileSync(grammarXmlPath, 'utf8');
         fs.writeFileSync(backupPath, content, 'utf8');
-        console.log(`Created backup of grammar.xml for language ${lang}`);
     }
 }
 
@@ -338,8 +339,8 @@ function startLanguageTool() {
         return { process: languageToolProcess, pid: languageToolPid };
     }
     // Build Java arguments
-    const Xms = process.env.Java_Xms || '256m';
-    const Xmx = process.env.Java_Xmx || '512m';
+    const Xms = process.env.LT_JAVA_XMS || process.env.Java_Xms || '256m';
+    const Xmx = process.env.LT_JAVA_XMX || process.env.Java_Xmx || '512m';
     
     const prioArgs = [
         `-Xms${Xms}`,
@@ -359,23 +360,32 @@ function startLanguageTool() {
         '--allow-origin', '*'
     ];
     
-    // Spawn the Java process
+    // Spawn the Java process in its own process group so we can kill the whole
+    // group (Java + fasttext children) at once and avoid zombie fasttext processes
     const javaProcess = spawn('java', [...prioArgs, ...ltArgs], {
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: false
+        detached: true
     });
+    javaProcess.ref(); // keep the event loop alive while Java is running
     
     // Store process reference and PID
     languageToolProcess = javaProcess;
     languageToolPid = javaProcess.pid;
     
-    // Handle process events
+    // Forward only errors/warnings from the Java process (skip verbose INFO lines)
+    const logJavaLine = (line) => {
+        if (!line) return;
+        if (/ (ERROR|WARN) /.test(line) || line.includes('Exception') || line.includes('OutOfMemory')) {
+            console.error(`[LanguageTool] ${line}`);
+        }
+    };
+
     javaProcess.stdout.on('data', (data) => {
-        console.log(`[LanguageTool] ${data.toString().trim()}`);
+        data.toString().split('\n').forEach(line => logJavaLine(line.trim()));
     });
-    
+
     javaProcess.stderr.on('data', (data) => {
-        console.error(`[LanguageTool] ${data.toString().trim()}`);
+        data.toString().split('\n').forEach(line => logJavaLine(line.trim()));
     });
     
     javaProcess.on('exit', (code, signal) => {
@@ -383,7 +393,9 @@ function startLanguageTool() {
         console.log(`[LanguageTool] Process exited with ${reason}`);
         languageToolProcess = null;
         languageToolPid = null;
-        scheduleRestart(reason);
+        if (!intentionalStop) {
+            scheduleRestart(reason);
+        }
     });
     
     javaProcess.on('error', (err) => {
@@ -404,26 +416,36 @@ function startLanguageTool() {
  */
 async function stopLanguageTool() {
     clearRestartTimer();
+    intentionalStop = true;
+
     if (languageToolProcess && languageToolPid) {
+        // Save references locally — the exit handler nulls the globals mid-loop
+        const pid = languageToolPid;
+        const proc = languageToolProcess;
+
         try {
             // Check if process is still alive
             try {
-                process.kill(languageToolPid, 0); // Signal 0 just checks if process exists
+                process.kill(pid, 0);
             } catch (err) {
-                // Process already dead
                 languageToolProcess = null;
                 languageToolPid = null;
+                clearRestartTimer();
                 return { success: true, message: 'LanguageTool process was already stopped' };
             }
-            
-            // Send SIGTERM for graceful shutdown
-            languageToolProcess.kill('SIGTERM');
-            
+
+            // Send SIGTERM to the entire process group (kills Java + fasttext children)
+            try {
+                process.kill(-pid, 'SIGTERM');
+            } catch (err) {
+                proc.kill('SIGTERM'); // fallback if not a group leader
+            }
+
             // Wait for graceful shutdown (max 5 seconds)
             let waited = 0;
             while (waited < 5000) {
                 try {
-                    process.kill(languageToolPid, 0); // Check if still alive
+                    process.kill(pid, 0);
                     await new Promise(resolve => setTimeout(resolve, 100));
                     waited += 100;
                 } catch (err) {
@@ -431,23 +453,30 @@ async function stopLanguageTool() {
                     break;
                 }
             }
-            
-            // If still running, force kill
+
+            // If still running, force kill the entire group
             try {
-                process.kill(languageToolPid, 0);
-                languageToolProcess.kill('SIGKILL');
+                process.kill(pid, 0);
+                try {
+                    process.kill(-pid, 'SIGKILL');
+                } catch (err) {
+                    proc.kill('SIGKILL');
+                }
                 await new Promise(resolve => setTimeout(resolve, 500));
             } catch (err) {
                 // Process already dead, ignore
             }
-            
+
             languageToolProcess = null;
             languageToolPid = null;
+            // Clear again in case the exit handler set a new timer during the race
+            clearRestartTimer();
             return { success: true, message: 'LanguageTool process stopped' };
         } catch (err) {
             console.error(`Error stopping LanguageTool: ${err.message}`);
             languageToolProcess = null;
             languageToolPid = null;
+            clearRestartTimer();
             return { success: false, message: err.toString() };
         }
     }
@@ -458,34 +487,44 @@ async function stopLanguageTool() {
  * Restart LanguageTool Java process
  */
 async function restartLanguageTool() {
+    if (isRestarting) {
+        return { success: false, message: 'Restart already in progress' };
+    }
+    isRestarting = true;
+
     try {
-        // Stop existing process
+        // Stop existing process (sets intentionalStop = true internally)
         await stopLanguageTool();
-        
+
+        // Reset so the new process's exit handler can auto-restart on crashes
+        intentionalStop = false;
+
         // Wait a bit before starting new process
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Start new process
-        const result = startLanguageTool();
-        
+        startLanguageTool();
+
         // Wait a bit for the process to initialize
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         // Verify the process is still running
         if (!languageToolProcess || !languageToolPid) {
             return { success: false, message: 'LanguageTool process failed to start' };
         }
-        
+
         // Check if process is still alive
         try {
-            process.kill(languageToolPid, 0); // Signal 0 just checks if process exists
+            process.kill(languageToolPid, 0);
         } catch (err) {
             return { success: false, message: 'LanguageTool process died immediately after start' };
         }
-        
+
         return { success: true, message: 'LanguageTool process restarted successfully', pid: languageToolPid };
     } catch (err) {
         return { success: false, message: err.toString() };
+    } finally {
+        isRestarting = false;
     }
 }
 
@@ -557,20 +596,16 @@ if (require.main === module) {
     (async () => {
         try {
             // Create backups for all languages before starting LanguageTool
-            console.log('Creating backups of grammar.xml files...');
             const languages = getSupportedLanguages();
             for (const lang of languages) {
                 try {
-                    // Always create backup first (if it doesn't exist)
                     ensureGrammarXmlBackup(lang);
-                    console.log(`Backup created/verified for language: ${lang}`);
                 } catch (err) {
                     console.error(`Error creating backup for language ${lang}:`, err);
                 }
             }
-            
+
             // Fetch all rules from backend and update grammar.xml files
-            console.log('Fetching rules from backend and updating grammar.xml files...');
             try {
                 // Wait a bit for backend to be ready (if it's starting up)
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -606,20 +641,20 @@ if (require.main === module) {
             // Handle graceful shutdown
             process.on('SIGTERM', async () => {
                 console.log('Received SIGTERM, shutting down gracefully...');
+                isShuttingDown = true;
                 await stopLanguageTool();
                 process.exit(0);
             });
-            
+
             process.on('SIGINT', async () => {
                 console.log('Received SIGINT, shutting down gracefully...');
+                isShuttingDown = true;
                 await stopLanguageTool();
                 process.exit(0);
             });
 
             app.listen(API_PORT, '0.0.0.0', () => {
-                console.log(`LanguageTool Rule Management API listening on port ${API_PORT}`);
-                console.log(`LanguageTool Java process PID: ${languageToolPid || 'starting...'}`);
-                console.log(`Supported languages: ${getSupportedLanguages().join(', ')}`);
+                console.log(`LanguageTool API listening on port ${API_PORT}, Java PID: ${languageToolPid || 'starting...'}`);
             });
         } catch (err) {
             console.error('Failed to start API:', err);

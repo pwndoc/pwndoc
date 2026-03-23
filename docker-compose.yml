@@ -33,9 +33,12 @@ services:
     build:
       context: ./languagetool/
       dockerfile: Dockerfile
+    init: true
     restart: always
     environment:
       - BACKEND_URL=https://pwndoc-backend:4242
+      - LT_JAVA_XMS=${LT_JAVA_XMS:-512m}
+      - LT_JAVA_XMX=${LT_JAVA_XMX:-1g}
     depends_on:
       - pwndoc-backend
     volumes:
