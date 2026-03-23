@@ -24,7 +24,7 @@ const httpsAgent = new https.Agent({
 const GRAMMAR_XML_BASE = '/LanguageTool';
 const GRAMMAR_XML_BASE_PATH = path.join(GRAMMAR_XML_BASE, 'org', 'languagetool', 'rules');
 const API_PORT = parseInt(process.env.LT_API_PORT || '8020', 10);
-const BACKEND_URL = process.env.BACKEND_URL || 'http://pwndoc-backend:4242';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://pwndoc-backend:4242';
 
 // LanguageTool process tracking
 let languageToolProcess = null;
@@ -108,7 +108,7 @@ function scheduleRestart(reason) {
  */
 function getSupportedLanguages() {
     const languages = [];
-    if (fs.existsSync(GRAMMAR_XML_BASE)) {
+    if (fs.existsSync(GRAMMAR_XML_BASE_PATH)) {
         const entries = fs.readdirSync(GRAMMAR_XML_BASE_PATH);
         for (const entry of entries) {
             const entryPath = path.join(GRAMMAR_XML_BASE_PATH, entry);
@@ -259,15 +259,10 @@ async function ensureGrammarXmlIncludesCustomRules(lang, rules = []) {
     const grammarXmlPath = getGrammarXmlPath(lang);
     const backupPath = getGrammarXmlBackupPath(lang);
 
-    // Ensure backup exists
+    // Ensure backup exists (creates it or throws if grammar.xml is missing)
     ensureGrammarXmlBackup(lang);
 
-    // Always restore from backup first to ensure clean state
-    if (!fs.existsSync(backupPath)) {
-        throw new Error(`Backup grammar.xml not found for language ${lang}`);
-    }
-
-    // Restore from backup
+    // Restore from backup to ensure clean state
     const backupContent = fs.readFileSync(backupPath, 'utf8');
     fs.writeFileSync(grammarXmlPath, backupContent, 'utf8');
 
