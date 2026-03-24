@@ -48,10 +48,21 @@ module.exports = function(request, app) {
             var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'});
             userToken = response.body.datas.token;
             adminToken = userToken; // Admin has all permissions
+
+            // Configure a LT URL so getLanguageToolConfig() returns a non-null config
+            await request(app)
+                .put('/api/settings')
+                .set('Cookie', [`token=JWT ${adminToken}`])
+                .send({ report: { private: { languageToolUrl: 'http://localhost:8020' } } });
         });
 
-        afterAll(() => {
+        afterAll(async () => {
             global.fetch = originalFetch;
+            // Clear the LT URL so other tests start clean
+            await request(app)
+                .put('/api/settings')
+                .set('Cookie', [`token=JWT ${adminToken}`])
+                .send({ report: { private: { languageToolUrl: '' } } });
         });
 
         beforeEach(() => {
