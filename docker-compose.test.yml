@@ -41,7 +41,6 @@ services:
       - BASE_URL=https://pwndoc-frontend:8443
     depends_on:
       - pwndoc-frontend
-      - pwndoc-languagetools
     networks:
       - frontend-internal
 
@@ -56,7 +55,6 @@ services:
       - BASE_URL=https://pwndoc-frontend:8443
     depends_on:
       - pwndoc-frontend
-      - pwndoc-languagetools
     networks:
       - frontend-internal
     ports:

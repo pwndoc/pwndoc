@@ -23,8 +23,11 @@ COPY api.js package.json /app/lt-api/
 WORKDIR /app/lt-api
 RUN npm install --production
 
-# Expose LanguageTool port and API port
-EXPOSE 8010 8020
+# Create data directory for API key persistence
+RUN mkdir -p /data && chown languagetool:languagetool /data
+
+# Expose single API port (Java LT on 8010 is internal only)
+EXPOSE 8020
 
 USER languagetool
 

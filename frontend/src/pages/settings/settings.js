@@ -1,6 +1,7 @@
 import { Notify, Dialog } from 'quasar'
 
 import SettingsService from '@/services/settings'
+import SpellcheckService from '@/services/spellcheck'
 import { useUserStore } from 'src/stores/user'
 import BackupService from '@/services/backup'
 import Utils from '@/services/utils'
@@ -88,11 +89,20 @@ export default {
             restoreMode: 'revert',
             uploadBackupFile: null,
             uploadBackupLoading: false,
-            uploadProgress: 0
+            uploadProgress: 0,
+            // LanguageTool connection test
+            testingLtConnection: false,
+            ltConnectionResult: null
         }
     },
     components: {
         LanguageSelector
+    },
+
+    watch: {
+        'settings.report.private.languageToolUrl'() { this.ltConnectionResult = null },
+        'settings.report.private.languageToolApiKey'() { this.ltConnectionResult = null },
+        'settings.report.private.languageToolUsername'() { this.ltConnectionResult = null },
     },
 
     beforeRouteLeave (to, from , next) {
@@ -152,7 +162,41 @@ export default {
             })
         },
 
-        updateSettings: function() {
+        updateSettings: async function() {
+            const origLt = this.settingsOrig.report?.private
+            const currLt = this.settings.report?.private
+            const ltChanged = origLt && currLt && (
+                origLt.languageToolUrl !== currLt.languageToolUrl ||
+                origLt.languageToolApiKey !== currLt.languageToolApiKey ||
+                origLt.languageToolUsername !== currLt.languageToolUsername
+            )
+            if (ltChanged && currLt.languageToolUrl) {
+                this.testingLtConnection = true
+                try {
+                    const data = await SpellcheckService.testConnection(
+                        currLt.languageToolUrl,
+                        currLt.languageToolApiKey,
+                        currLt.languageToolUsername
+                    )
+                    const result = data.data.datas
+                    this.ltConnectionResult = result
+                    if (!result.reachable) {
+                        Notify.create({ message: $t('msg.ltConnectionFailed'), color: 'negative', textColor: 'white', position: 'top-right' })
+                        return
+                    }
+                    if (result.authValid === false || result.requiresApiKey) {
+                        Notify.create({ message: $t('msg.ltAuthFailed'), color: 'negative', textColor: 'white', position: 'top-right' })
+                        return
+                    }
+                } catch (err) {
+                    this.ltConnectionResult = { reachable: false }
+                    Notify.create({ message: err.response?.data?.datas || $t('msg.languageToolConnectionFailed'), color: 'negative', textColor: 'white', position: 'top-right' })
+                    return
+                } finally {
+                    this.testingLtConnection = false
+                }
+            }
+
             var min = 1;
             var max = 99;
             if(this.settings.reviews.public.minReviewers < min || this.settings.reviews.public.minReviewers > max) {
@@ -250,6 +294,29 @@ export default {
             document.body.appendChild(link);
             link.click();
             link.remove();
+        },
+
+        testLanguageToolConnection: async function() {
+            this.testingLtConnection = true;
+            this.ltConnectionResult = null;
+            try {
+                const data = await SpellcheckService.testConnection(
+                    this.settings.report.private.languageToolUrl,
+                    this.settings.report.private.languageToolApiKey,
+                    this.settings.report.private.languageToolUsername
+                );
+                this.ltConnectionResult = data.data.datas;
+            } catch (err) {
+                this.ltConnectionResult = { reachable: false, supportsCustomRules: false, authValid: null };
+                Notify.create({
+                    message: err.response?.data?.datas || $t('msg.languageToolConnectionFailed'),
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                });
+            } finally {
+                this.testingLtConnection = false;
+            }
         },
 
         unsavedChanges() {

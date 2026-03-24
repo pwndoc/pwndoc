@@ -273,30 +273,12 @@ module.exports = function(request, app) {
             });
         });
 
-        describe('GET /api/internal/languagetool-rules', () => {
-            it('Should not require authentication (internal endpoint)', async () => {
+        describe('GET /api/internal/languagetool-rules (removed)', () => {
+            it('Should return 404 (endpoint removed)', async () => {
                 var response = await request(app)
                     .get('/api/internal/languagetool-rules');
 
-                // Should succeed (no auth required) or return empty array
-                expect([200, 500]).toContain(response.status);
-            });
-
-            it('Should return all rules in expected format', async () => {
-                var response = await request(app)
-                    .get('/api/internal/languagetool-rules');
-
-                if (response.status === 200) {
-                    expect(response.body.status).toBe('success');
-                    expect(Array.isArray(response.body.datas)).toBe(true);
-                    if (response.body.datas.length > 0) {
-                        expect(response.body.datas[0]).toHaveProperty('_id');
-                        expect(response.body.datas[0]).toHaveProperty('id');
-                        expect(response.body.datas[0]).toHaveProperty('name');
-                        expect(response.body.datas[0]).toHaveProperty('language');
-                        expect(response.body.datas[0]).toHaveProperty('ruleXml');
-                    }
-                }
+                expect(response.status).toBe(404);
             });
         });
     });
