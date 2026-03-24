@@ -42,8 +42,6 @@ services:
       - LT_JAVA_XMX=${LT_JAVA_XMX:-1g}
       - API_KEY=${LT_API_KEY:-}
       - REQUIRE_API_KEY=${LT_REQUIRE_API_KEY:-true}
-    ports:
-      - "${LT_PORT:-8020}:8020"
     volumes:
       - languagetools-data:/data
     networks:

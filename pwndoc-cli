@@ -104,7 +104,9 @@ function up {
 }
 
 function down {
-    $(dc_cmd) down
+    # Always activate the languagetools profile so any running LT containers are torn down,
+    # even if --with-lt was not passed (profile-guarded services aren't stopped otherwise)
+    $(dc_cmd) --profile languagetools down
 }
 
 function restart {
@@ -205,7 +207,8 @@ function update {
 
 function test_backend {
     ENV=test
-    $(dc_cmd) build pwndoc-backend
+    $(dc_cmd) build pwndoc-backend pwndoc-languagetools
+    $(dc_cmd) up -d pwndoc-languagetools
     if [ "$TEST_COVERAGE" = true ]; then
         $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api -- --coverage
     else
@@ -242,8 +245,8 @@ function test_frontend_e2e {
 
     $(dc_cmd) down -v --remove-orphans
 
-    $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests
-    $(dc_cmd) up -d pwndoc-backend pwndoc-frontend
+    $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests pwndoc-languagetools
+    $(dc_cmd) up -d pwndoc-backend pwndoc-frontend pwndoc-languagetools
 
     if [ "$TEST_UI" = true ]; then
         if [ -z "$pw_browsers" ]; then
@@ -397,7 +400,7 @@ Test-specific options (only with command 'test'):
   Flags are combinable: --backend --frontend-unit runs both, and browser flags can be combined.
 
 Other options:
-  --with-lt        Include optional LanguageTool service
+  --with-lt                   Include optional LanguageTool service (up/down; always on for test)
   --backend-only              Operate only on backend services
   --frontend-only             Operate only on frontend services
 

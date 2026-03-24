@@ -71,3 +71,10 @@ services:
       - ./frontend/coverage:/app/coverage
     entrypoint: ["npm", "run", "test:run"]
     restart: "no"
+
+  pwndoc-languagetools:
+    image: pwndoc/languagetools:test
+    build:
+      context: ./languagetool/
+      dockerfile: Dockerfile
+    restart: "no"
