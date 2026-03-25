@@ -49,9 +49,6 @@ const SettingSchema = new Schema({
         private: {
             imageBorder: { type: Boolean, default: false },
             imageBorderColor: { type: String, default: "#000000", validate: [colorValidator, 'Invalid color'] },
-            languageToolUrl: { type: String, default: '' },
-            languageToolApiKey: { type: String, default: '' },
-            languageToolUsername: { type: String, default: '' },
         }
      },
     reviews: {

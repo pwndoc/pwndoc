@@ -6,74 +6,25 @@
  */
 const express = require('express');
 const cors = require('cors');
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-const http = require('http');
+const https = require('https');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+
+// HTTPS agent that ignores certificate errors (for self-signed/expired certs)
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: false,
+});
 
 // Configuration
 const GRAMMAR_XML_BASE = '/LanguageTool';
 const GRAMMAR_XML_BASE_PATH = path.join(GRAMMAR_XML_BASE, 'org', 'languagetool', 'rules');
 const API_PORT = parseInt(process.env.LT_API_PORT || '8020', 10);
-const LT_JAVA_PORT = 8010;
-const REQUIRE_API_KEY = (process.env.REQUIRE_API_KEY || 'true').toLowerCase() !== 'false';
-const API_KEY_FILE = process.env.API_KEY_FILE || '/data/api-key';
-const VERSION = '1.0.0';
-
-// API key management
-let apiKey = null;
-
-function loadOrGenerateApiKey() {
-    // Explicit env var takes precedence
-    if (process.env.API_KEY) {
-        apiKey = process.env.API_KEY;
-        console.log('Using API key from environment variable');
-        return;
-    }
-
-    // Try to load from file
-    try {
-        if (fs.existsSync(API_KEY_FILE)) {
-            apiKey = fs.readFileSync(API_KEY_FILE, 'utf8').trim();
-            console.log('Loaded API key from file');
-            return;
-        }
-    } catch (err) {
-        console.warn('Failed to read API key file:', err.message);
-    }
-
-    // Generate new key
-    apiKey = crypto.randomBytes(32).toString('hex');
-    try {
-        const dir = path.dirname(API_KEY_FILE);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(API_KEY_FILE, apiKey, 'utf8');
-        console.log('Generated and saved new API key');
-    } catch (err) {
-        console.warn('Failed to save API key to file:', err.message);
-    }
-
-    console.log(`\n========================================`);
-    console.log(`API Key: ${apiKey}`);
-    console.log(`Use this key in PwnDoc settings.`);
-    console.log(`========================================\n`);
-}
-
-function validateApiKey(req, res, next) {
-    if (!REQUIRE_API_KEY) return next();
-
-    const key = req.headers['x-api-key'] || req.body?.apiKey || req.query?.apiKey;
-    if (!key || key !== apiKey) {
-        return res.status(401).json({ error: 'Invalid or missing API key' });
-    }
-    next();
-}
+const BACKEND_URL = process.env.BACKEND_URL || 'https://pwndoc-backend:4242';
 
 // LanguageTool process tracking
 let languageToolProcess = null;
@@ -177,7 +128,70 @@ function isLanguageSupported(lang) {
     return fs.existsSync(langPath) && fs.statSync(langPath).isDirectory();
 }
 
-// fetchAllRulesFromBackend removed — PwnDoc now pushes rules to this service
+/**
+ * Fetch all rules from the backend API (internal endpoint, no auth required)
+ */
+async function fetchAllRulesFromBackend() {
+    try {
+        const url = new URL(`${BACKEND_URL}/api/internal/languagetool-rules`);
+
+        return new Promise((resolve, reject) => {
+            const options = {
+                hostname: url.hostname,
+                port: url.port || 443,
+                path: url.pathname + url.search,
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                agent: httpsAgent
+            };
+
+            const req = https.request(options, (res) => {
+                let data = '';
+
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                res.on('end', () => {
+                    try {
+                        const jsonData = JSON.parse(data);
+                        // Backend returns { status: "success", datas: [...] }
+                        const rules = jsonData.datas || [];
+
+                        // Group rules by language
+                        const rulesByLanguage = {};
+                        for (const rule of rules) {
+                            if (!rulesByLanguage[rule.language]) {
+                                rulesByLanguage[rule.language] = [];
+                            }
+                            // Convert rule format to match what ensureGrammarXmlIncludesCustomRules expects
+                            rulesByLanguage[rule.language].push({
+                                name: rule.name,
+                                xml: rule.ruleXml || rule.xml
+                            });
+                        }
+
+                        resolve(rulesByLanguage);
+                    } catch (err) {
+                        reject(new Error(`Failed to parse response: ${err.message}`));
+                    }
+                });
+            });
+
+            req.on('error', (err) => {
+                reject(err);
+            });
+
+            req.end();
+        });
+    } catch (err) {
+        console.error('Error fetching rules from backend:', err);
+        // Return empty object if backend is not available (might be starting up)
+        return {};
+    }
+}
 
 /**
  * Get the grammar.xml file path for a language
@@ -592,61 +606,21 @@ async function restartLanguageTool() {
 
 // ==================== API ROUTES ====================
 
-// Health check (no auth required)
+// Health check
 app.get('/health', (req, res) => {
     const isHealthy = languageToolStatus === 'ok' || languageToolStatus === 'starting';
-    res.status(isHealthy ? 200 : 503).json({
-        status: isHealthy ? 'ok' : 'error',
-        type: 'pwndoc-languagetools',
-        version: VERSION
-    });
-});
-
-// Proxy /v2/check to Java LanguageTool (auth via apiKey form param)
-app.post('/v2/check', validateApiKey, (req, res) => {
-    // Build params, stripping apiKey before forwarding to Java LT
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(req.body)) {
-        if (key !== 'apiKey') params.append(key, value);
-    }
-
-    const postData = params.toString();
-    const options = {
-        hostname: 'localhost',
-        port: LT_JAVA_PORT,
-        path: '/v2/check',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': Buffer.byteLength(postData)
-        }
-    };
-
-    const proxyReq = http.request(options, (proxyRes) => {
-        res.status(proxyRes.statusCode);
-        for (const [key, value] of Object.entries(proxyRes.headers)) {
-            res.setHeader(key, value);
-        }
-        proxyRes.pipe(res);
-    });
-
-    proxyReq.on('error', (err) => {
-        res.status(502).json({ error: `LanguageTool Java process unreachable: ${err.message}` });
-    });
-
-    proxyReq.write(postData);
-    proxyReq.end();
+    res.status(isHealthy ? 200 : 503).json({ status: isHealthy ? 'ok' : 'error' });
 });
 
 // Get supported languages
-app.get('/api/languages', validateApiKey, (req, res) => {
+app.get('/api/languages', (req, res) => {
     const languages = getSupportedLanguages();
     res.json({ languages });
 });
 
 // Update grammar.xml for a language (called by backend)
 // Body: { language: string, rules: array of rule objects with xml property }
-app.post('/api/rules/update-grammar', validateApiKey, async (req, res) => {
+app.post('/api/rules/update-grammar', async (req, res) => {
     try {
         const { language, rules = [] } = req.body;
 
@@ -675,7 +649,7 @@ app.post('/api/rules/update-grammar', validateApiKey, async (req, res) => {
 });
 
 // Restart LanguageTool process
-app.post('/api/rules/restart', validateApiKey, async (req, res) => {
+app.post('/api/rules/restart', async (req, res) => {
     try {
         const restartResult = await restartLanguageTool();
 
@@ -698,9 +672,6 @@ if (require.main === module) {
     // Start server only if run directly (not in tests)
     (async () => {
         try {
-            // Initialize API key
-            loadOrGenerateApiKey();
-
             // Create backups for all languages before starting LanguageTool
             const languages = getSupportedLanguages();
             for (const lang of languages) {
@@ -711,8 +682,36 @@ if (require.main === module) {
                 }
             }
 
+            // Fetch all rules from backend and update grammar.xml files
+            try {
+                // Wait a bit for backend to be ready (if it's starting up)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                const rulesByLanguage = await fetchAllRulesFromBackend();
+
+                if (Object.keys(rulesByLanguage).length === 0) {
+                    console.log('No rules found in backend (backend may still be starting up)');
+                } else {
+                    // Update grammar.xml for each language that has rules
+                    for (const [lang, rules] of Object.entries(rulesByLanguage)) {
+                        try {
+                            if (isLanguageSupported(lang)) {
+                                await ensureGrammarXmlIncludesCustomRules(lang, rules);
+                                console.log(`Updated grammar.xml for language: ${lang} (${rules.length} rules)`);
+                            } else {
+                                console.warn(`Language ${lang} is not supported, skipping`);
+                            }
+                        } catch (err) {
+                            console.error(`Error updating grammar.xml for language ${lang}:`, err);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching/updating rules from backend:', err);
+                console.log('Continuing startup without rules (backend may not be ready yet)');
+            }
+
             // Start LanguageTool when API starts
-            // Rules will be pushed by PwnDoc backend after its startup
             console.log('Starting LanguageTool Java process...');
             startLanguageTool();
 

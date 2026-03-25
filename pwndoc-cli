@@ -10,7 +10,6 @@ TEST_COVERAGE=false
 E2E_CHROMIUM=false
 E2E_FIREFOX=false
 E2E_WEBKIT=false
-WITH_LANGUAGETOOLS=false
 
 # Test-specific flags (combinable)
 RUN_BACKEND=false
@@ -19,31 +18,26 @@ RUN_FRONTEND_E2E=false
 RUN_ALL=true
 
 # Service groups for targeting with --backend-only / --frontend-only
-BACKEND_SERVICES="mongodb pwndoc-backend"
+BACKEND_SERVICES="mongodb pwndoc-backend pwndoc-languagetools"
 FRONTEND_SERVICES="pwndoc-frontend"
 DEV_FRONTEND_SERVICES="pwndoc-frontend pwndoc-frontend-nginx"
 
 # Build the base docker compose command for the current environment
 dc_cmd() {
-    local cmd
     case "$ENV" in
         prod)
-            cmd="docker compose -f docker-compose.yml -f docker-compose.prod.yml -p pwndoc"
+            echo "docker compose -f docker-compose.yml -f docker-compose.prod.yml -p pwndoc"
             ;;
         prod-local)
-            cmd="docker compose -f docker-compose.yml -f docker-compose.prod.local.yml -p pwndoc"
+            echo "docker compose -f docker-compose.yml -f docker-compose.prod.local.yml -p pwndoc"
             ;;
         dev)
-            cmd="docker compose -f docker-compose.yml -f docker-compose.dev.yml -p pwndoc-dev"
+            echo "docker compose -f docker-compose.yml -f docker-compose.dev.yml -p pwndoc-dev"
             ;;
         test)
-            cmd="docker compose -f docker-compose.yml -f docker-compose.test.yml -p pwndoc-test"
+            echo "docker compose -f docker-compose.yml -f docker-compose.test.yml -p pwndoc-test"
             ;;
     esac
-    if [ "$WITH_LANGUAGETOOLS" = true ]; then
-        cmd="$cmd --profile languagetools"
-    fi
-    echo "$cmd"
 }
 
 # Get targeted services based on flags and environment
@@ -104,9 +98,7 @@ function up {
 }
 
 function down {
-    # Always activate the languagetools profile so any running LT containers are torn down,
-    # even if --with-lt was not passed (profile-guarded services aren't stopped otherwise)
-    $(dc_cmd) --profile languagetools down
+    $(dc_cmd) down
 }
 
 function restart {
@@ -127,23 +119,6 @@ function logs {
 
 function status {
     $(dc_cmd) ps
-}
-
-function lt_apikey {
-    local container
-    container=$(docker ps --filter "name=pwndoc-languagetools" --format "{{.Names}}" | head -1)
-    if [ -z "$container" ]; then
-        echo "Error: No running languagetools container found."
-        echo "Start it with: ./pwndoc-cli up --with-lt"
-        exit 1
-    fi
-    local key
-    key=$(docker exec "$container" cat /data/api-key 2>/dev/null)
-    if [ -z "$key" ]; then
-        echo "Error: Could not read API key from container '$container'."
-        exit 1
-    fi
-    echo "$key"
 }
 
 function update {
@@ -207,8 +182,7 @@ function update {
 
 function test_backend {
     ENV=test
-    $(dc_cmd) build pwndoc-backend pwndoc-languagetools
-    $(dc_cmd) up -d pwndoc-languagetools
+    $(dc_cmd) build pwndoc-backend
     if [ "$TEST_COVERAGE" = true ]; then
         $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api -- --coverage
     else
@@ -245,8 +219,8 @@ function test_frontend_e2e {
 
     $(dc_cmd) down -v --remove-orphans
 
-    $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests pwndoc-languagetools
-    $(dc_cmd) up -d pwndoc-backend pwndoc-frontend pwndoc-languagetools
+    $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests
+    $(dc_cmd) up -d pwndoc-backend pwndoc-frontend
 
     if [ "$TEST_UI" = true ]; then
         if [ -z "$pw_browsers" ]; then
@@ -329,8 +303,8 @@ _pwndoc_cli() {
     local cur commands options
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    commands="up deploy down destroy build update stop start restart logs ps status lt-apikey test help completion"
-    options="--dev --prod-local --with-lt --backend-only --frontend-only"
+    commands="up deploy down destroy build update stop start restart logs ps status test help completion"
+    options="--dev --prod-local --backend-only --frontend-only"
 
     # Complete command (first argument)
     if [ "$COMP_CWORD" -eq 1 ]; then
@@ -375,7 +349,6 @@ Commands:
   restart                     Restart containers
   logs                        Follow container logs
   ps|status                   Show container status
-  lt-apikey                   Print the LanguageTool API key
   test                        Run tests
   help                        Show this help message
 
@@ -400,7 +373,6 @@ Test-specific options (only with command 'test'):
   Flags are combinable: --backend --frontend-unit runs both, and browser flags can be combined.
 
 Other options:
-  --with-lt                   Include optional LanguageTool service (up/down; always on for test)
   --backend-only              Operate only on backend services
   --frontend-only             Operate only on frontend services
 
@@ -413,8 +385,6 @@ Examples:
   ./pwndoc-cli update --prod-local
   ./pwndoc-cli logs --backend-only
   ./pwndoc-cli status
-  ./pwndoc-cli up --with-lt
-  ./pwndoc-cli lt-apikey
   ./pwndoc-cli restart --dev --backend-only
   ./pwndoc-cli test
   ./pwndoc-cli test --backend
@@ -465,9 +435,6 @@ while [[ "$#" -gt 0 ]]; do
                 exit 1
             fi
             ENV="prod-local"
-            ;;
-        --with-lt)
-            WITH_LANGUAGETOOLS=true
             ;;
         --backend-only)
             ONLY_BACKEND=true
@@ -586,9 +553,6 @@ case "$COMMAND" in
     ps|status)
         check_env
         status
-        ;;
-    lt-apikey)
-        lt_apikey
         ;;
     test)
         echo "Running tests..."

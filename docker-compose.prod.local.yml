@@ -12,9 +12,3 @@ services:
     image: pwndoc/frontend:prod-local
     ports:
       - ${APP_PORT:-8443}:8443
-
-  pwndoc-languagetools:
-    image: pwndoc/languagetools:prod-local
-    build:
-      context: ./languagetool/
-      dockerfile: Dockerfile

@@ -1,14 +1,6 @@
 import { api } from 'boot/axios'
 
 export default {
-  getCapabilities: function() {
-    return api.get(`spellcheck/capabilities`)
-  },
-
-  testConnection: function(url, apiKey, username) {
-    return api.post('spellcheck/test', { url, apiKey, username })
-  },
-
   getWords: function() {
     return api.get(`spellcheck/dict`)
   },
