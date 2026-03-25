@@ -47,6 +47,16 @@ var getObjectPaths = (obj, prefix = '') =>
   }, [])
 exports.getObjectPaths = getObjectPaths
 
+function isHttpUrl(urlString) {
+    try {
+        const { protocol } = new URL(urlString);
+        return protocol === 'http:' || protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+exports.isHttpUrl = isHttpUrl
+
 function getSockets(io, room) {
   var result = []
   io.sockets.sockets.forEach((data) => {

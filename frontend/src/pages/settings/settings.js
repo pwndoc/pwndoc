@@ -170,7 +170,7 @@ export default {
                 origLt.languageToolApiKey !== currLt.languageToolApiKey ||
                 origLt.languageToolUsername !== currLt.languageToolUsername
             )
-            if (ltChanged && currLt.languageToolUrl) {
+            if (this.settings.report?.public?.enableSpellCheck && ltChanged && currLt.languageToolUrl) {
                 this.testingLtConnection = true
                 try {
                     const data = await SpellcheckService.testConnection(
@@ -182,6 +182,10 @@ export default {
                     this.ltConnectionResult = result
                     if (!result.reachable) {
                         Notify.create({ message: $t('msg.ltConnectionFailed'), color: 'negative', textColor: 'white', position: 'top-right' })
+                        return
+                    }
+                    if (!result.isLanguageTool) {
+                        Notify.create({ message: $t('msg.ltNotLanguageTool'), color: 'negative', textColor: 'white', position: 'top-right' })
                         return
                     }
                     if (result.authValid === false || result.requiresApiKey) {
@@ -214,8 +218,9 @@ export default {
                 })
             })
             .catch((err) => {
+                console.log(err.response)
                 Notify.create({
-                    message: err.message || err.response.data.datas,
+                    message: err.response.data.datas || err.message,
                     color: 'negative',
                     textColor:'white',
                     position: 'top-right'
@@ -307,7 +312,7 @@ export default {
                 );
                 this.ltConnectionResult = data.data.datas;
             } catch (err) {
-                this.ltConnectionResult = { reachable: false, supportsCustomRules: false, authValid: null };
+                this.ltConnectionResult = { reachable: false, isLanguageTool: false, supportsCustomRules: false, authValid: null };
                 Notify.create({
                     message: err.response?.data?.datas || $t('msg.languageToolConnectionFailed'),
                     color: 'negative',

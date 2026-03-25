@@ -2,6 +2,7 @@ const Response = require('../lib/httpResponse.js');
 const SpellingDictionary = require("../models/dictionary");
 const acl = require('../lib/auth').acl
 const { getLanguageToolConfig } = require('../lib/languagetool-config');
+const { testLanguageToolConnection } = require('../lib/languagetool-test');
 
 module.exports = function(app) {
 
@@ -40,78 +41,13 @@ module.exports = function(app) {
     // ---------------------------
     // Live connection test (uses request body, not saved settings)
     // ---------------------------
-    app.post("/api/spellcheck/test", acl.hasPermission("spellcheck:read"), async (req, res) => {
+    app.post("/api/spellcheck/test", acl.hasPermission("settings:update"), async (req, res) => {
         try {
             const { url, apiKey, username } = req.body;
-            if (!url) {
-                return Response.BadParameters(res, "url is required");
-            }
-
-            const baseUrl = url.replace(/\/+$/, '');
-            let reachable = false;
-            let supportsCustomRules = false;
-            let authValid = null; // null = no credentials provided / not tested
-
-            // Step 1: probe /health to identify service type
-            let isPwndocLT = false;
-            try {
-                const healthRes = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(5000) });
-                if (healthRes.ok) {
-                    reachable = true;
-                    try {
-                        const healthData = await healthRes.json();
-                        isPwndocLT = healthData.type === 'pwndoc-languagetools';
-                        supportsCustomRules = isPwndocLT;
-                    } catch (_) {}
-                }
-            } catch (_) {}
-
-            // Step 2: fallback — try /v2/languages for vanilla LT or public API
-            if (!reachable) {
-                try {
-                    const langRes = await fetch(`${baseUrl}/v2/languages`, { signal: AbortSignal.timeout(5000) });
-                    if (langRes.ok) reachable = true;
-                } catch (_) {}
-            }
-
-            if (!reachable) {
-                return Response.Ok(res, { reachable: false, supportsCustomRules: false, authValid: null, requiresApiKey: false });
-            }
-
-            // Step 3: validate credentials if provided
-            let requiresApiKey = false;
-            if (isPwndocLT) {
-                // Always probe admin endpoint — tells us if key is required even when none provided
-                const headers = {};
-                if (apiKey) headers['X-Api-Key'] = apiKey;
-                try {
-                    const rulesRes = await fetch(`${baseUrl}/api/languages`, {
-                        headers,
-                        signal: AbortSignal.timeout(5000)
-                    });
-                    if (rulesRes.status === 401) {
-                        authValid = false;
-                        if (!apiKey) requiresApiKey = true;
-                    } else {
-                        authValid = true;
-                    }
-                } catch (_) {}
-            } else if (!isPwndocLT && apiKey && username) {
-                // Public LT Premium: both apiKey and username are required together
-                const params = new URLSearchParams({ text: 'test', language: 'en', apiKey, username });
-                try {
-                    const checkRes = await fetch(`${baseUrl}/v2/check`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: params,
-                        signal: AbortSignal.timeout(8000)
-                    });
-                    // 401/403 = bad credentials; 200 or 4xx for bad input = auth ok
-                    authValid = checkRes.status !== 401 && checkRes.status !== 403;
-                } catch (_) {}
-            }
-
-            Response.Ok(res, { reachable, supportsCustomRules, authValid, requiresApiKey });
+            const result = await testLanguageToolConnection(url, apiKey, username);
+            if (result.error) return Response.BadParameters(res, result.error);
+            const { valid, ...data } = result;
+            Response.Ok(res, data);
         } catch (err) {
             Response.Internal(res, err);
         }

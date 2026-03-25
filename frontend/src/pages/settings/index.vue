@@ -403,15 +403,22 @@
                                         <q-badge :color="ltConnectionResult.reachable ? 'positive' : 'negative'" class="q-mr-sm">
                                             {{ ltConnectionResult.reachable ? $t('reachable') : $t('notReachable') }}
                                         </q-badge>
-                                        <q-badge v-if="ltConnectionResult.reachable && ltConnectionResult.requiresApiKey" color="warning" class="q-mr-sm">
-                                            {{ $t('apiKeyRequired') }}
-                                        </q-badge>
-                                        <q-badge v-else-if="ltConnectionResult.reachable && ltConnectionResult.authValid !== null" :color="ltConnectionResult.authValid ? 'positive' : 'negative'" class="q-mr-sm">
-                                            {{ ltConnectionResult.authValid ? $t('authValid') : $t('authInvalid') }}
-                                        </q-badge>
-                                        <q-badge v-if="ltConnectionResult.reachable" :color="ltConnectionResult.supportsCustomRules ? 'positive' : 'grey'" class="q-mr-sm">
-                                            {{ ltConnectionResult.supportsCustomRules ? $t('customRulesSupported') : $t('customRulesNotSupported') }}
-                                        </q-badge>
+                                        <template v-if="ltConnectionResult.reachable">
+                                            <q-badge :color="ltConnectionResult.isLanguageTool ? 'positive' : 'negative'" class="q-mr-sm">
+                                                {{ ltConnectionResult.isLanguageTool ? $t('validLanguageTool') : $t('notLanguageTool') }}
+                                            </q-badge>
+                                            <template v-if="ltConnectionResult.isLanguageTool">
+                                                <q-badge v-if="ltConnectionResult.requiresApiKey" color="warning" class="q-mr-sm">
+                                                    {{ $t('apiKeyRequired') }}
+                                                </q-badge>
+                                                <q-badge v-else-if="ltConnectionResult.authValid !== null" :color="ltConnectionResult.authValid ? 'positive' : 'negative'" class="q-mr-sm">
+                                                    {{ ltConnectionResult.authValid ? $t('authValid') : $t('authInvalid') }}
+                                                </q-badge>
+                                                <q-badge :color="ltConnectionResult.supportsCustomRules ? 'positive' : 'grey'" class="q-mr-sm">
+                                                    {{ ltConnectionResult.supportsCustomRules ? $t('customRulesSupported') : $t('customRulesNotSupported') }}
+                                                </q-badge>
+                                            </template>
+                                        </template>
                                     </div>
                                 </q-item-section>
                             </q-item>
