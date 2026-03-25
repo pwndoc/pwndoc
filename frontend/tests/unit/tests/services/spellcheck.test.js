@@ -76,4 +76,59 @@ describe('SpellcheckService', () => {
       await expect(SpellcheckService.deleteWord('nonexistent')).rejects.toEqual(mockError)
     })
   })
+
+  describe('getCapabilities', () => {
+    it('should call the correct API endpoint', async () => {
+      const mockResponse = { data: { datas: { enabled: true, configured: true, hasApiKey: false, supportsCustomRules: false } } }
+      api.get.mockResolvedValue(mockResponse)
+
+      const result = await SpellcheckService.getCapabilities()
+
+      expect(api.get).toHaveBeenCalledWith('spellcheck/capabilities')
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should handle errors', async () => {
+      const mockError = new Error('Network error')
+      api.get.mockRejectedValue(mockError)
+
+      await expect(SpellcheckService.getCapabilities()).rejects.toEqual(mockError)
+    })
+  })
+
+  describe('testConnection', () => {
+    it('should call the correct API endpoint with url, apiKey, and username', async () => {
+      const mockResponse = { data: { datas: { reachable: true, supportsCustomRules: true, authValid: true, requiresApiKey: false } } }
+      api.post.mockResolvedValue(mockResponse)
+
+      const result = await SpellcheckService.testConnection('http://lt:8020', 'mykey', 'myuser')
+
+      expect(api.post).toHaveBeenCalledWith('spellcheck/test', {
+        url: 'http://lt:8020',
+        apiKey: 'mykey',
+        username: 'myuser'
+      })
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should pass undefined values when not provided', async () => {
+      const mockResponse = { data: { datas: { reachable: true } } }
+      api.post.mockResolvedValue(mockResponse)
+
+      await SpellcheckService.testConnection('http://lt:8020')
+
+      expect(api.post).toHaveBeenCalledWith('spellcheck/test', {
+        url: 'http://lt:8020',
+        apiKey: undefined,
+        username: undefined
+      })
+    })
+
+    it('should handle errors', async () => {
+      const mockError = { response: { status: 422, data: { datas: 'url is required' } } }
+      api.post.mockRejectedValue(mockError)
+
+      await expect(SpellcheckService.testConnection()).rejects.toEqual(mockError)
+    })
+  })
 })

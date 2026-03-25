@@ -62,6 +62,9 @@ module.exports = function(request, app) {
             "private": {
               "imageBorder": false,
               "imageBorderColor": "#000000",
+              "languageToolUrl": "",
+              "languageToolApiKey": "",
+              "languageToolUsername": "",
             },
             "public": {
               "captions": [
@@ -139,6 +142,9 @@ module.exports = function(request, app) {
               "private": {
                 "imageBorder": true,
                 "imageBorderColor": "#123456",
+                "languageToolUrl": "",
+                "languageToolApiKey": "",
+                "languageToolUsername": "",
               },
               "public": {
                 "captions": [
