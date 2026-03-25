@@ -74,18 +74,49 @@ const stringOffsetToEditorPos = (stringOffset, offsetMap) => {
   return offsetMap[0]?.editorPos + stringOffset
 }
 
-const fetchMatchesForChunk = async (apiUrl, text) => {
-  const postOptions = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-    },
-    body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
-  }
+// Circuit breaker: stops hammering the backend when LT is unreachable
+const _cb = {
+  failures: 0,
+  openUntil: 0,
+  threshold: 3,      // consecutive failures before opening
+  cooldown: 30000,   // ms to wait before retrying
+}
 
-  const ltRes = await (await fetch(apiUrl, postOptions)).json()
-  return ltRes.datas?.matches || []
+const fetchMatchesForChunk = async (apiUrl, text) => {
+  if (Date.now() < _cb.openUntil) return []
+
+  try {
+    const postOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
+    }
+
+    const res = await fetch(apiUrl, postOptions)
+
+    // 429 = LT is up but rate-limited — don't count as a failure
+    if (res.status === 429) return []
+
+    // 5xx means backend couldn't reach LT — count as failure
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+    const ltRes = await res.json()
+    _cb.failures = 0
+    return ltRes.datas?.matches || []
+  } catch (err) {
+    _cb.failures++
+    if (_cb.failures >= _cb.threshold) {
+      _cb.openUntil = Date.now() + _cb.cooldown
+      console.warn(`Spellcheck: service unreachable, pausing checks for ${_cb.cooldown / 1000}s`)
+      _cb.failures = 0
+    } else {
+      console.warn('Spellcheck request failed:', err.message || err)
+    }
+    return []
+  }
 }
 
 const getMatchAndSetDecorations = async (storage, doc, text, originalFrom, offsetMap = null) => {
@@ -134,7 +165,7 @@ const getMatchAndSetDecorations = async (storage, doc, text, originalFrom, offse
 const createDebouncedGetMatchAndSetDecorations = (storage) => {
   return debounce((doc, text, originalFrom) => {
     getMatchAndSetDecorations(storage, doc, text, originalFrom)
-  }, 300)
+  }, 1500)
 }
 
 const proofreadAndDecorateWholeDoc = async (storage, doc) => {
@@ -211,10 +242,15 @@ const proofreadAndDecorateWholeDoc = async (storage, doc) => {
 
   storage.editorView.dispatch(storage.editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, true))
 
-  Promise.all(requests).then(() => {
-    if (storage.editorView) storage.editorView.dispatch(storage.editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
-    storage.proofReadInitially = true
-  })
+  Promise.all(requests)
+    .then(() => {
+      if (storage.editorView) storage.editorView.dispatch(storage.editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
+      storage.proofReadInitially = true
+    })
+    .catch((err) => {
+      console.warn('Spellcheck proofread failed:', err.message || err)
+      if (storage.editorView) storage.editorView.dispatch(storage.editorView.state.tr.setMeta(LanguageToolHelpingWords.LoadingTransactionName, false))
+    })
 }
 
 export const LanguageTool = Extension.create({
@@ -225,6 +261,7 @@ export const LanguageTool = Extension.create({
       language: 'auto',
       apiUrl: '/api/spellcheck',
       automaticMode: true,
+      active: true,
       maxSuggestions: 5,
     }
   },
@@ -234,7 +271,7 @@ export const LanguageTool = Extension.create({
       match: undefined,
       loading: false,
       matchRange: { from: -1, to: -1 },
-      active: true,
+      active: this.options.active,
       // Per-instance state
       apiUrl: null,
       maxSuggestions: null,
@@ -242,7 +279,6 @@ export const LanguageTool = Extension.create({
       decorationSet: null,
       proofReadInitially: false,
       forceFullProofread: false,
-      lastOriginalFrom: 0,
       debouncedGetMatchAndSetDecorations: null,
       debouncedProofreadAndDecorate: null,
     }
@@ -348,7 +384,7 @@ export const LanguageTool = Extension.create({
             return this.storage.decorationSet
           },
 
-          apply: (tr, oldEditorState) => {
+          apply: (tr, _oldEditorState) => {
             if (!this.storage.active) return DecorationSet.empty
 
             const loading = tr.getMeta(LanguageToolHelpingWords.LoadingTransactionName)
@@ -380,23 +416,13 @@ export const LanguageTool = Extension.create({
                     selectedNode = { node, pos }
                 })
 
-                if (selectedNode && this.storage.editorView) {
+                if (selectedNode && this.storage.editorView && this.storage.debouncedGetMatchAndSetDecorations) {
                   const originalFrom = selectedNode.pos + 1
-                  if (originalFrom !== this.storage.lastOriginalFrom) {
-                    getMatchAndSetDecorations(
-                      this.storage,
-                      selectedNode.node,
-                      selectedNode.node.textContent,
-                      originalFrom
-                    )
-                  } else if (this.storage.debouncedGetMatchAndSetDecorations) {
-                    this.storage.debouncedGetMatchAndSetDecorations(
-                      selectedNode.node,
-                      selectedNode.node.textContent,
-                      originalFrom
-                    )
-                  }
-                  this.storage.lastOriginalFrom = originalFrom
+                  this.storage.debouncedGetMatchAndSetDecorations(
+                    selectedNode.node,
+                    selectedNode.node.textContent,
+                    originalFrom
+                  )
                 }
               }
             }
@@ -437,7 +463,7 @@ export const LanguageTool = Extension.create({
           if (!this.storage.debouncedProofreadAndDecorate) {
             this.storage.debouncedProofreadAndDecorate = debounce((doc) => {
               proofreadAndDecorateWholeDoc(this.storage, doc)
-            }, 500)
+            }, 1500)
 
             // Trigger initial proofread if automatic mode is enabled
             if (this.options.automaticMode && !this.storage.proofReadInitially) {

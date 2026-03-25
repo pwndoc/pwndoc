@@ -6,36 +6,95 @@
  */
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-const https = require('https');
+const http = require('http');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-
-// HTTPS agent that ignores certificate errors (for self-signed/expired certs)
-const httpsAgent = new https.Agent({
-    rejectUnauthorized: false,
-});
+app.use(express.urlencoded({ extended: true }));
 
 // Configuration
 const GRAMMAR_XML_BASE = '/LanguageTool';
 const GRAMMAR_XML_BASE_PATH = path.join(GRAMMAR_XML_BASE, 'org', 'languagetool', 'rules');
 const API_PORT = parseInt(process.env.LT_API_PORT || '8020', 10);
-const BACKEND_URL = process.env.BACKEND_URL || 'http://pwndoc-backend:4242';
+const LT_JAVA_PORT = 8010;
+const REQUIRE_API_KEY = (process.env.REQUIRE_API_KEY || 'true').toLowerCase() !== 'false';
+const API_KEY_FILE = process.env.API_KEY_FILE || '/data/api-key';
+const VERSION = '1.0.0';
+
+// API key management
+let apiKey = null;
+
+function loadOrGenerateApiKey() {
+    // Explicit env var takes precedence
+    if (process.env.API_KEY) {
+        apiKey = process.env.API_KEY;
+        console.log('Using API key from environment variable');
+        return;
+    }
+
+    // Try to load from file
+    try {
+        if (fs.existsSync(API_KEY_FILE)) {
+            apiKey = fs.readFileSync(API_KEY_FILE, 'utf8').trim();
+            console.log('Loaded API key from file');
+            return;
+        }
+    } catch (err) {
+        console.warn('Failed to read API key file:', err.message);
+    }
+
+    // Generate new key
+    apiKey = crypto.randomBytes(32).toString('hex');
+    try {
+        const dir = path.dirname(API_KEY_FILE);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(API_KEY_FILE, apiKey, 'utf8');
+        console.log('Generated and saved new API key');
+    } catch (err) {
+        console.warn('Failed to save API key to file:', err.message);
+    }
+
+    console.log(`\n========================================`);
+    console.log(`API Key: ${apiKey}`);
+    console.log(`Use this key in PwnDoc settings.`);
+    console.log(`========================================\n`);
+}
+
+function validateApiKey(req, res, next) {
+    if (!REQUIRE_API_KEY) return next();
+
+    const key = req.headers['x-api-key'] || req.body?.apiKey || req.query?.apiKey;
+    if (!key || key !== apiKey) {
+        return res.status(401).json({ error: 'Invalid or missing API key' });
+    }
+    next();
+}
 
 // LanguageTool process tracking
 let languageToolProcess = null;
 let languageToolPid = null;
 let isShuttingDown = false;
+let intentionalStop = false;
+let isRestarting = false;
 let restartTimer = null;
+let stabilityTimer = null;
 let restartAttempts = 0;
+let rapidCrashCount = 0;
+let lastStartTime = null;
+let languageToolStatus = 'crashed';
+let crashLoopDetected = false;
+let lastExitReason = null;
 
 const RESTART_BASE_DELAY_MS = parseInt(process.env.LT_RESTART_BASE_DELAY_MS || '1000', 10);
 const RESTART_MAX_DELAY_MS = parseInt(process.env.LT_RESTART_MAX_DELAY_MS || '30000', 10);
 const RESTART_MAX_ATTEMPTS = parseInt(process.env.LT_RESTART_MAX_ATTEMPTS || '10', 10);
+const RAPID_CRASH_WINDOW_MS = parseInt(process.env.LT_RAPID_CRASH_WINDOW_MS || '30000', 10);
+const RAPID_CRASH_THRESHOLD = parseInt(process.env.LT_RAPID_CRASH_THRESHOLD || '5', 10);
 
 function clearRestartTimer() {
     if (restartTimer) {
@@ -44,12 +103,41 @@ function clearRestartTimer() {
     }
 }
 
+function clearStabilityTimer() {
+    if (stabilityTimer) {
+        clearTimeout(stabilityTimer);
+        stabilityTimer = null;
+    }
+}
+
+function markLanguageToolStable(pid) {
+    if (!languageToolProcess || languageToolPid !== pid) {
+        return;
+    }
+
+    stabilityTimer = null;
+    languageToolStatus = 'ok';
+    restartAttempts = 0;
+    rapidCrashCount = 0;
+}
+
+function enterCrashLoop(reason) {
+    crashLoopDetected = true;
+    languageToolStatus = 'crash_loop';
+    clearRestartTimer();
+    console.error(
+        `[LanguageTool] Crash loop detected (${rapidCrashCount} rapid failures). ` +
+        `Check Java memory settings (LT_JAVA_XMS/LT_JAVA_XMX). Not restarting. Last reason: ${reason}`
+    );
+}
+
 function scheduleRestart(reason) {
-    if (isShuttingDown) {
+    if (isShuttingDown || crashLoopDetected) {
         return;
     }
     if (Number.isFinite(RESTART_MAX_ATTEMPTS) && RESTART_MAX_ATTEMPTS >= 0 &&
         restartAttempts >= RESTART_MAX_ATTEMPTS) {
+        languageToolStatus = 'crashed';
         console.error(`[LanguageTool] Restart limit reached (${RESTART_MAX_ATTEMPTS}). Not restarting.`);
         return;
     }
@@ -69,7 +157,7 @@ function scheduleRestart(reason) {
  */
 function getSupportedLanguages() {
     const languages = [];
-    if (fs.existsSync(GRAMMAR_XML_BASE)) {
+    if (fs.existsSync(GRAMMAR_XML_BASE_PATH)) {
         const entries = fs.readdirSync(GRAMMAR_XML_BASE_PATH);
         for (const entry of entries) {
             const entryPath = path.join(GRAMMAR_XML_BASE_PATH, entry);
@@ -89,70 +177,7 @@ function isLanguageSupported(lang) {
     return fs.existsSync(langPath) && fs.statSync(langPath).isDirectory();
 }
 
-/**
- * Fetch all rules from the backend API (internal endpoint, no auth required)
- */
-async function fetchAllRulesFromBackend() {
-    try {
-        const url = new URL(`${BACKEND_URL}/api/internal/languagetool-rules`);
-        
-        return new Promise((resolve, reject) => {
-            const options = {
-                hostname: url.hostname,
-                port: url.port || 443,
-                path: url.pathname + url.search,
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                agent: httpsAgent
-            };
-            
-            const req = https.request(options, (res) => {
-                let data = '';
-                
-                res.on('data', (chunk) => {
-                    data += chunk;
-                });
-                
-                res.on('end', () => {
-                    try {
-                        const jsonData = JSON.parse(data);
-                        // Backend returns { status: "success", datas: [...] }
-                        const rules = jsonData.datas || [];
-                        
-                        // Group rules by language
-                        const rulesByLanguage = {};
-                        for (const rule of rules) {
-                            if (!rulesByLanguage[rule.language]) {
-                                rulesByLanguage[rule.language] = [];
-                            }
-                            // Convert rule format to match what ensureGrammarXmlIncludesCustomRules expects
-                            rulesByLanguage[rule.language].push({
-                                name: rule.name,
-                                xml: rule.ruleXml || rule.xml
-                            });
-                        }
-                        
-                        resolve(rulesByLanguage);
-                    } catch (err) {
-                        reject(new Error(`Failed to parse response: ${err.message}`));
-                    }
-                });
-            });
-            
-            req.on('error', (err) => {
-                reject(err);
-            });
-            
-            req.end();
-        });
-    } catch (err) {
-        console.error('Error fetching rules from backend:', err);
-        // Return empty object if backend is not available (might be starting up)
-        return {};
-    }
-}
+// fetchAllRulesFromBackend removed — PwnDoc now pushes rules to this service
 
 /**
  * Get the grammar.xml file path for a language
@@ -174,16 +199,15 @@ function getGrammarXmlBackupPath(lang) {
 function ensureGrammarXmlBackup(lang) {
     const grammarXmlPath = getGrammarXmlPath(lang);
     const backupPath = getGrammarXmlBackupPath(lang);
-    
+
     if (!fs.existsSync(grammarXmlPath)) {
         throw new Error(`grammar.xml not found for language ${lang}`);
     }
-    
+
     // Create backup if it doesn't exist
     if (!fs.existsSync(backupPath)) {
         const content = fs.readFileSync(grammarXmlPath, 'utf8');
         fs.writeFileSync(backupPath, content, 'utf8');
-        console.log(`Created backup of grammar.xml for language ${lang}`);
     }
 }
 
@@ -196,7 +220,7 @@ function extractDoctype(content) {
     // Find the opening <rules> tag (may have attributes like lang="fr" xsi:noNamespaceSchemaLocation=...)
     // Match <rules followed by optional whitespace and attributes, then >
     const rulesTagMatch = content.match(/<rules(?:\s+[^>]*)?>/);
-    
+
     if (!rulesTagMatch) {
         // No <rules> tag found, return everything as content
         return {
@@ -204,7 +228,7 @@ function extractDoctype(content) {
             xmlContent: content
         };
     }
-    
+
     const rulesIndex = rulesTagMatch.index;
     return {
         doctype: content.substring(0, rulesIndex).trim(),
@@ -220,42 +244,37 @@ function extractDoctype(content) {
 async function ensureGrammarXmlIncludesCustomRules(lang, rules = []) {
     const grammarXmlPath = getGrammarXmlPath(lang);
     const backupPath = getGrammarXmlBackupPath(lang);
-    
-    // Ensure backup exists
+
+    // Ensure backup exists (creates it or throws if grammar.xml is missing)
     ensureGrammarXmlBackup(lang);
-    
-    // Always restore from backup first to ensure clean state
-    if (!fs.existsSync(backupPath)) {
-        throw new Error(`Backup grammar.xml not found for language ${lang}`);
-    }
-    
-    // Restore from backup
+
+    // Restore from backup to ensure clean state
     const backupContent = fs.readFileSync(backupPath, 'utf8');
     fs.writeFileSync(grammarXmlPath, backupContent, 'utf8');
-    
+
     // Now work with the restored content
     const content = backupContent;
-    
+
     // Extract DOCTYPE section (everything before <rules> tag)
     const { doctype, xmlContent } = extractDoctype(content);
-    
+
     // Find and remove existing Custom Rules category using string manipulation
     // This preserves entity references and all other content
     let modifiedContent = xmlContent;
-    
+
     // Pattern to match the Custom Rules category (multiline, with any content inside)
     // Matches: <category id="CUSTOM_RULES" ...>...</category> or <category name="Custom Rules" ...>...</category>
     const customCategoryPattern = /<category\s+[^>]*(?:id\s*=\s*["']CUSTOM_RULES["']|name\s*=\s*["']Custom\s+Rules["'])[^>]*>[\s\S]*?<\/category>/i;
     const customCategoryMatch = modifiedContent.match(customCategoryPattern);
-    
+
     if (customCategoryMatch) {
         // Remove the existing Custom Rules category
         modifiedContent = modifiedContent.replace(customCategoryPattern, '');
     }
-    
+
     // Process rules passed as parameter
     let customRulesXml = '';
-    
+
     try {
         // Sort rules by name
         const sortedRules = [...rules].sort((a, b) => {
@@ -263,10 +282,10 @@ async function ensureGrammarXmlIncludesCustomRules(lang, rules = []) {
             const nameB = (b.name || '').toLowerCase();
             return nameA.localeCompare(nameB);
         });
-        
+
         for (const rule of sortedRules) {
             const ruleXml = rule.xml.trim();
-            
+
             // Extract rule elements from the XML
             // Handle both <rules><rule>...</rule></rules> and standalone <rule>
             let ruleContent = '';
@@ -288,7 +307,7 @@ async function ensureGrammarXmlIncludesCustomRules(lang, rules = []) {
                     ruleContent = ruleMatch[0];
                 }
             }
-            
+
             if (ruleContent) {
                 customRulesXml += ruleContent + '\n';
             }
@@ -296,7 +315,7 @@ async function ensureGrammarXmlIncludesCustomRules(lang, rules = []) {
     } catch (err) {
         console.error(`Error processing rules for language ${lang}:`, err);
     }
-    
+
     // Add Custom Rules category at the end if there are any rules
     if (customRulesXml.trim()) {
         // Find the closing </rules> tag
@@ -304,27 +323,27 @@ async function ensureGrammarXmlIncludesCustomRules(lang, rules = []) {
         if (closingRulesIndex === -1) {
             throw new Error('Invalid grammar.xml structure: no closing </rules> tag found');
         }
-        
+
         // Build the new category XML with ID
         const newCategoryXml = `  <category id="CUSTOM_RULES" name="Custom Rules" type="style">
 ${customRulesXml.trim().split('\n').map(line => '    ' + line).join('\n')}
   </category>`;
-        
+
         // Insert the category before </rules>
-        modifiedContent = modifiedContent.substring(0, closingRulesIndex) + 
-                         newCategoryXml + '\n' + 
+        modifiedContent = modifiedContent.substring(0, closingRulesIndex) +
+                         newCategoryXml + '\n' +
                          modifiedContent.substring(closingRulesIndex);
     }
-    
+
     // Reconstruct the full XML: DOCTYPE + modified content
     let finalXml = '';
-    
+
     if (doctype) {
         finalXml += doctype + '\n';
     }
-    
+
     finalXml += modifiedContent;
-    
+
     // Write back
     fs.writeFileSync(grammarXmlPath, finalXml, 'utf8');
 }
@@ -338,18 +357,18 @@ function startLanguageTool() {
         return { process: languageToolProcess, pid: languageToolPid };
     }
     // Build Java arguments
-    const Xms = process.env.Java_Xms || '256m';
-    const Xmx = process.env.Java_Xmx || '512m';
-    
+    const Xms = process.env.LT_JAVA_XMS || process.env.Java_Xms || '256m';
+    const Xmx = process.env.LT_JAVA_XMX || process.env.Java_Xmx || '512m';
+
     const prioArgs = [
         `-Xms${Xms}`,
         `-Xmx${Xmx}`
     ];
-    
+
     if (fs.existsSync('/LanguageTool/logback.xml')) {
         prioArgs.push('-Dlogback.configurationFile=/LanguageTool/logback.xml');
     }
-    
+
     const ltArgs = [
         '-cp', '/LanguageTool/languagetool-server.jar',
         'org.languagetool.server.HTTPServer',
@@ -358,44 +377,85 @@ function startLanguageTool() {
         '--config', '/LanguageTool/server.properties',
         '--allow-origin', '*'
     ];
-    
-    // Spawn the Java process
+
+    // Spawn the Java process in its own process group so we can kill the whole
+    // group (Java + fasttext children) at once and avoid zombie fasttext processes
     const javaProcess = spawn('java', [...prioArgs, ...ltArgs], {
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: false
+        detached: true
     });
-    
+    javaProcess.ref(); // keep the event loop alive while Java is running
+
+    let handledProcessStop = false;
+    const handleProcessStop = (reason, crashedQuickly) => {
+        if (handledProcessStop) {
+            return;
+        }
+
+        handledProcessStop = true;
+        clearStabilityTimer();
+        languageToolProcess = null;
+        languageToolPid = null;
+        lastExitReason = reason;
+        lastStartTime = null;
+
+        if (intentionalStop) {
+            return;
+        }
+
+        languageToolStatus = 'crashed';
+        if (crashedQuickly) {
+            rapidCrashCount += 1;
+            if (rapidCrashCount >= RAPID_CRASH_THRESHOLD) {
+                enterCrashLoop(reason);
+                return;
+            }
+        } else {
+            rapidCrashCount = 0;
+        }
+
+        scheduleRestart(reason);
+    };
+
     // Store process reference and PID
     languageToolProcess = javaProcess;
     languageToolPid = javaProcess.pid;
-    
-    // Handle process events
+    lastStartTime = Date.now();
+    lastExitReason = null;
+    languageToolStatus = 'starting';
+    clearStabilityTimer();
+    stabilityTimer = setTimeout(() => markLanguageToolStable(javaProcess.pid), RAPID_CRASH_WINDOW_MS);
+
+    // Forward only errors/warnings from the Java process (skip verbose INFO lines)
+    const logJavaLine = (line) => {
+        if (!line) return;
+        if (/ (ERROR|WARN) /.test(line) || line.includes('Exception') || line.includes('OutOfMemory')) {
+            console.error(`[LanguageTool] ${line}`);
+        }
+    };
+
     javaProcess.stdout.on('data', (data) => {
-        console.log(`[LanguageTool] ${data.toString().trim()}`);
+        data.toString().split('\n').forEach(line => logJavaLine(line.trim()));
     });
-    
+
     javaProcess.stderr.on('data', (data) => {
-        console.error(`[LanguageTool] ${data.toString().trim()}`);
+        data.toString().split('\n').forEach(line => logJavaLine(line.trim()));
     });
-    
+
     javaProcess.on('exit', (code, signal) => {
         const reason = `exit code ${code} signal ${signal}`;
+        const crashedQuickly = lastStartTime !== null && (Date.now() - lastStartTime) < RAPID_CRASH_WINDOW_MS;
         console.log(`[LanguageTool] Process exited with ${reason}`);
-        languageToolProcess = null;
-        languageToolPid = null;
-        scheduleRestart(reason);
+        handleProcessStop(reason, crashedQuickly);
     });
-    
+
     javaProcess.on('error', (err) => {
         const reason = `spawn error: ${err.message}`;
         console.error(`[LanguageTool] Failed to start process: ${err.message}`);
-        languageToolProcess = null;
-        languageToolPid = null;
-        scheduleRestart(reason);
+        handleProcessStop(reason, true);
     });
-    
+
     console.log(`[LanguageTool] Started with PID: ${languageToolPid}`);
-    restartAttempts = 0;
     return { process: javaProcess, pid: languageToolPid };
 }
 
@@ -404,26 +464,40 @@ function startLanguageTool() {
  */
 async function stopLanguageTool() {
     clearRestartTimer();
+    clearStabilityTimer();
+    intentionalStop = true;
+    languageToolStatus = 'crashed';
+
     if (languageToolProcess && languageToolPid) {
+        // Save references locally — the exit handler nulls the globals mid-loop
+        const pid = languageToolPid;
+        const proc = languageToolProcess;
+
         try {
             // Check if process is still alive
             try {
-                process.kill(languageToolPid, 0); // Signal 0 just checks if process exists
+                process.kill(pid, 0);
             } catch (err) {
-                // Process already dead
                 languageToolProcess = null;
                 languageToolPid = null;
+                lastStartTime = null;
+                clearRestartTimer();
+                clearStabilityTimer();
                 return { success: true, message: 'LanguageTool process was already stopped' };
             }
-            
-            // Send SIGTERM for graceful shutdown
-            languageToolProcess.kill('SIGTERM');
-            
+
+            // Send SIGTERM to the entire process group (kills Java + fasttext children)
+            try {
+                process.kill(-pid, 'SIGTERM');
+            } catch (err) {
+                proc.kill('SIGTERM'); // fallback if not a group leader
+            }
+
             // Wait for graceful shutdown (max 5 seconds)
             let waited = 0;
             while (waited < 5000) {
                 try {
-                    process.kill(languageToolPid, 0); // Check if still alive
+                    process.kill(pid, 0);
                     await new Promise(resolve => setTimeout(resolve, 100));
                     waited += 100;
                 } catch (err) {
@@ -431,23 +505,34 @@ async function stopLanguageTool() {
                     break;
                 }
             }
-            
-            // If still running, force kill
+
+            // If still running, force kill the entire group
             try {
-                process.kill(languageToolPid, 0);
-                languageToolProcess.kill('SIGKILL');
+                process.kill(pid, 0);
+                try {
+                    process.kill(-pid, 'SIGKILL');
+                } catch (err) {
+                    proc.kill('SIGKILL');
+                }
                 await new Promise(resolve => setTimeout(resolve, 500));
             } catch (err) {
                 // Process already dead, ignore
             }
-            
+
             languageToolProcess = null;
             languageToolPid = null;
+            lastStartTime = null;
+            // Clear again in case the exit handler set a new timer during the race
+            clearRestartTimer();
+            clearStabilityTimer();
             return { success: true, message: 'LanguageTool process stopped' };
         } catch (err) {
             console.error(`Error stopping LanguageTool: ${err.message}`);
             languageToolProcess = null;
             languageToolPid = null;
+            lastStartTime = null;
+            clearRestartTimer();
+            clearStabilityTimer();
             return { success: false, message: err.toString() };
         }
     }
@@ -458,72 +543,129 @@ async function stopLanguageTool() {
  * Restart LanguageTool Java process
  */
 async function restartLanguageTool() {
+    if (isRestarting) {
+        return { success: false, message: 'Restart already in progress' };
+    }
+    isRestarting = true;
+
     try {
-        // Stop existing process
+        // Stop existing process (sets intentionalStop = true internally)
         await stopLanguageTool();
-        
+
+        crashLoopDetected = false;
+        restartAttempts = 0;
+        rapidCrashCount = 0;
+        lastStartTime = null;
+        lastExitReason = null;
+
+        // Reset so the new process's exit handler can auto-restart on crashes
+        intentionalStop = false;
+
         // Wait a bit before starting new process
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Start new process
-        const result = startLanguageTool();
-        
+        startLanguageTool();
+
         // Wait a bit for the process to initialize
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         // Verify the process is still running
         if (!languageToolProcess || !languageToolPid) {
             return { success: false, message: 'LanguageTool process failed to start' };
         }
-        
+
         // Check if process is still alive
         try {
-            process.kill(languageToolPid, 0); // Signal 0 just checks if process exists
+            process.kill(languageToolPid, 0);
         } catch (err) {
             return { success: false, message: 'LanguageTool process died immediately after start' };
         }
-        
+
         return { success: true, message: 'LanguageTool process restarted successfully', pid: languageToolPid };
     } catch (err) {
         return { success: false, message: err.toString() };
+    } finally {
+        isRestarting = false;
     }
 }
 
 // ==================== API ROUTES ====================
 
-// Health check
+// Health check (no auth required)
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'languagetool-rule-api' });
+    const isHealthy = languageToolStatus === 'ok' || languageToolStatus === 'starting';
+    res.status(isHealthy ? 200 : 503).json({
+        status: isHealthy ? 'ok' : 'error',
+        type: 'pwndoc-languagetools',
+        version: VERSION
+    });
+});
+
+// Proxy /v2/check to Java LanguageTool (auth via apiKey form param)
+app.post('/v2/check', validateApiKey, (req, res) => {
+    // Build params, stripping apiKey before forwarding to Java LT
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(req.body)) {
+        if (key !== 'apiKey') params.append(key, value);
+    }
+
+    const postData = params.toString();
+    const options = {
+        hostname: 'localhost',
+        port: LT_JAVA_PORT,
+        path: '/v2/check',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': Buffer.byteLength(postData)
+        }
+    };
+
+    const proxyReq = http.request(options, (proxyRes) => {
+        res.status(proxyRes.statusCode);
+        for (const [key, value] of Object.entries(proxyRes.headers)) {
+            res.setHeader(key, value);
+        }
+        proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', (err) => {
+        res.status(502).json({ error: `LanguageTool Java process unreachable: ${err.message}` });
+    });
+
+    proxyReq.write(postData);
+    proxyReq.end();
 });
 
 // Get supported languages
-app.get('/api/languages', (req, res) => {
+app.get('/api/languages', validateApiKey, (req, res) => {
     const languages = getSupportedLanguages();
     res.json({ languages });
 });
 
 // Update grammar.xml for a language (called by backend)
 // Body: { language: string, rules: array of rule objects with xml property }
-app.post('/api/rules/update-grammar', async (req, res) => {
+app.post('/api/rules/update-grammar', validateApiKey, async (req, res) => {
     try {
         const { language, rules = [] } = req.body;
-        
+
         if (!language) {
             return res.status(400).json({ error: 'Language is required' });
         }
-        
+
         // Validate language
         if (!isLanguageSupported(language)) {
-            return res.status(400).json({ 
-                error: `Language '${language}' is not supported. Supported languages: ${getSupportedLanguages().join(', ')}` 
+            return res.status(400).json({
+                error: `Language '${language}' is not supported. Supported languages: ${getSupportedLanguages().join(', ')}`
             });
         }
-        
+
         // Update grammar.xml with the provided rules
         await ensureGrammarXmlIncludesCustomRules(language, rules);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: `Grammar.xml updated for language ${language}`,
             ruleCount: rules.length
         });
@@ -533,16 +675,16 @@ app.post('/api/rules/update-grammar', async (req, res) => {
 });
 
 // Restart LanguageTool process
-app.post('/api/rules/restart', async (req, res) => {
+app.post('/api/rules/restart', validateApiKey, async (req, res) => {
     try {
         const restartResult = await restartLanguageTool();
-        
+
         if (!restartResult.success) {
             return res.status(500).json({ error: restartResult.message });
         }
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: restartResult.message,
             pid: restartResult.pid
         });
@@ -556,70 +698,41 @@ if (require.main === module) {
     // Start server only if run directly (not in tests)
     (async () => {
         try {
+            // Initialize API key
+            loadOrGenerateApiKey();
+
             // Create backups for all languages before starting LanguageTool
-            console.log('Creating backups of grammar.xml files...');
             const languages = getSupportedLanguages();
             for (const lang of languages) {
                 try {
-                    // Always create backup first (if it doesn't exist)
                     ensureGrammarXmlBackup(lang);
-                    console.log(`Backup created/verified for language: ${lang}`);
                 } catch (err) {
                     console.error(`Error creating backup for language ${lang}:`, err);
                 }
             }
-            
-            // Fetch all rules from backend and update grammar.xml files
-            console.log('Fetching rules from backend and updating grammar.xml files...');
-            try {
-                // Wait a bit for backend to be ready (if it's starting up)
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                const rulesByLanguage = await fetchAllRulesFromBackend();
-                
-                if (Object.keys(rulesByLanguage).length === 0) {
-                    console.log('No rules found in backend (backend may still be starting up)');
-                } else {
-                    // Update grammar.xml for each language that has rules
-                    for (const [lang, rules] of Object.entries(rulesByLanguage)) {
-                        try {
-                            if (isLanguageSupported(lang)) {
-                                await ensureGrammarXmlIncludesCustomRules(lang, rules);
-                                console.log(`Updated grammar.xml for language: ${lang} (${rules.length} rules)`);
-                            } else {
-                                console.warn(`Language ${lang} is not supported, skipping`);
-                            }
-                        } catch (err) {
-                            console.error(`Error updating grammar.xml for language ${lang}:`, err);
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching/updating rules from backend:', err);
-                console.log('Continuing startup without rules (backend may not be ready yet)');
-            }
-            
+
             // Start LanguageTool when API starts
+            // Rules will be pushed by PwnDoc backend after its startup
             console.log('Starting LanguageTool Java process...');
             startLanguageTool();
-            
+
             // Handle graceful shutdown
             process.on('SIGTERM', async () => {
                 console.log('Received SIGTERM, shutting down gracefully...');
+                isShuttingDown = true;
                 await stopLanguageTool();
                 process.exit(0);
             });
-            
+
             process.on('SIGINT', async () => {
                 console.log('Received SIGINT, shutting down gracefully...');
+                isShuttingDown = true;
                 await stopLanguageTool();
                 process.exit(0);
             });
 
             app.listen(API_PORT, '0.0.0.0', () => {
-                console.log(`LanguageTool Rule Management API listening on port ${API_PORT}`);
-                console.log(`LanguageTool Java process PID: ${languageToolPid || 'starting...'}`);
-                console.log(`Supported languages: ${getSupportedLanguages().join(', ')}`);
+                console.log(`LanguageTool API listening on port ${API_PORT}, Java PID: ${languageToolPid || 'starting...'}`);
             });
         } catch (err) {
             console.error('Failed to start API:', err);
@@ -629,3 +742,41 @@ if (require.main === module) {
 }
 
 module.exports = app;
+module.exports.__test = {
+    startLanguageTool,
+    stopLanguageTool,
+    restartLanguageTool,
+    scheduleRestart,
+    getState: () => ({
+        languageToolStatus,
+        restartAttempts,
+        rapidCrashCount,
+        crashLoopDetected,
+        languageToolPid,
+        hasRestartTimer: Boolean(restartTimer),
+        hasStabilityTimer: Boolean(stabilityTimer),
+        lastExitReason
+    }),
+    resetState: () => {
+        clearRestartTimer();
+        clearStabilityTimer();
+        languageToolProcess = null;
+        languageToolPid = null;
+        isShuttingDown = false;
+        intentionalStop = false;
+        isRestarting = false;
+        restartAttempts = 0;
+        rapidCrashCount = 0;
+        lastStartTime = null;
+        languageToolStatus = 'crashed';
+        crashLoopDetected = false;
+        lastExitReason = null;
+    },
+    constants: {
+        RESTART_BASE_DELAY_MS,
+        RESTART_MAX_DELAY_MS,
+        RESTART_MAX_ATTEMPTS,
+        RAPID_CRASH_WINDOW_MS,
+        RAPID_CRASH_THRESHOLD
+    }
+};

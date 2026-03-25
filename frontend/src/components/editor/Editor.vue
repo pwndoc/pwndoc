@@ -364,10 +364,11 @@ export default {
                     }),
                     CommentExtension,
 
-                    LanguageTool.configure({ 
-                        language: 'auto', // it can detect language automatically or you can write your own language like 'en-US'
-                        apiUrl: '/api/spellcheck', // For testing purposes, you can use [Public API](https://dev.languagetool.org/public-http-api), but keep an eye on the rules that they've written there
-                        automaticMode: true, // if true, it will start proofreading immediately otherwise only when you execute `editor.value.commands.proofread()` command of the extension.
+                    LanguageTool.configure({
+                        language: 'auto',
+                        apiUrl: '/api/spellcheck',
+                        automaticMode: !!this.$settings?.report?.public?.enableSpellCheck,
+                        active: !!this.$settings?.report?.public?.enableSpellCheck,
                     })
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {

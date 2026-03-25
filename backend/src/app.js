@@ -163,6 +163,12 @@ app.use((err, req, res, next) => {
 
 // Start server
 
-https.listen(4242)
+https.listen(4242, () => {
+    // Best-effort async: push custom rules to LanguageTool on startup
+    const { syncRulesToLanguageTool } = require('./lib/languagetool-sync');
+    syncRulesToLanguageTool().catch(err => {
+        console.warn('LanguageTool startup sync failed (non-blocking):', err.message);
+    });
+})
 
 module.exports = app;

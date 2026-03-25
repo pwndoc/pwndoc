@@ -31,6 +31,12 @@ vi.mock('@/services/settings', () => ({
   }
 }))
 
+vi.mock('@/services/spellcheck', () => ({
+  default: {
+    testConnection: vi.fn()
+  }
+}))
+
 vi.mock('@/services/backup', () => ({
   default: {
     getBackups: vi.fn(),
@@ -82,6 +88,7 @@ vi.mock('quasar', async () => {
 })
 
 import SettingsService from '@/services/settings'
+import SpellcheckService from '@/services/spellcheck'
 import BackupService from '@/services/backup'
 import { Notify, Dialog } from 'quasar'
 
@@ -136,6 +143,30 @@ const mockSettings = {
       minReviewers: 1
     }
   }
+}
+
+const mockSettingsWithLt = {
+  ...JSON.parse(JSON.stringify({
+    report: {
+      private: {
+        imageBorder: false,
+        imageBorderColor: '#000000',
+        languageToolUrl: 'http://lt:8020',
+        languageToolApiKey: 'original-key',
+        languageToolUsername: ''
+      },
+      public: {
+        cvssColors: { criticalColor: '#ff0000', highColor: '#ff6600', mediumColor: '#ffcc00', lowColor: '#00cc00', noneColor: '#0000ff' },
+        captions: [],
+        highlightWarning: false,
+        highlightWarningColor: '#ffff25',
+        requiredFields: { company: false, client: false, dateStart: false, dateEnd: false, dateReport: false, scope: false, findingType: false, findingDescription: false, findingObservation: false, findingReferences: false, findingProofs: false, findingAffected: false, findingRemediationDifficulty: false, findingPriority: false, findingRemediation: false },
+        scoringMethods: { CVSS3: true, CVSS4: false },
+        enableSpellCheck: true
+      }
+    },
+    reviews: { enabled: false, private: { removeApprovalsUponUpdate: true }, public: { mandatoryReview: false, minReviewers: 1 } }
+  }))
 }
 
 const mockBackups = [
@@ -432,10 +463,143 @@ describe('Settings Page', () => {
 
       expect(Notify.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Network error',
+          message: 'Update failed',
           color: 'negative'
         })
       )
+    })
+
+    describe('LT auto-test on save', () => {
+      beforeEach(() => {
+        SettingsService.getSettings.mockResolvedValue({
+          data: { datas: JSON.parse(JSON.stringify(mockSettingsWithLt)) }
+        })
+        SettingsService.updateSettings.mockResolvedValue({ data: { datas: 'ok' } })
+      })
+
+      it('should test connection when LT URL changes', async () => {
+        SpellcheckService.testConnection.mockResolvedValue({
+          data: { datas: { reachable: true, isLanguageTool: true, supportsCustomRules: false, authValid: null, requiresApiKey: false } }
+        })
+
+        const wrapper = createWrapper()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        // Change the LT URL (differs from settingsOrig)
+        wrapper.vm.settings.report.private.languageToolUrl = 'http://new-lt:8020'
+
+        await wrapper.vm.updateSettings()
+
+        expect(SpellcheckService.testConnection).toHaveBeenCalledWith(
+          'http://new-lt:8020',
+          'original-key',
+          ''
+        )
+        expect(SettingsService.updateSettings).toHaveBeenCalled()
+      })
+
+      it('should block save and show error when LT URL is unreachable', async () => {
+        SpellcheckService.testConnection.mockResolvedValue({
+          data: { datas: { reachable: false, supportsCustomRules: false, authValid: null, requiresApiKey: false } }
+        })
+
+        const wrapper = createWrapper()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        wrapper.vm.settings.report.private.languageToolUrl = 'http://unreachable:8020'
+
+        await wrapper.vm.updateSettings()
+
+        expect(Notify.create).toHaveBeenCalledWith(
+          expect.objectContaining({ color: 'negative' })
+        )
+        expect(SettingsService.updateSettings).not.toHaveBeenCalled()
+      })
+
+      it('should block save and show error when credentials are invalid', async () => {
+        SpellcheckService.testConnection.mockResolvedValue({
+          data: { datas: { reachable: true, supportsCustomRules: true, authValid: false, requiresApiKey: false } }
+        })
+
+        const wrapper = createWrapper()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        wrapper.vm.settings.report.private.languageToolApiKey = 'bad-key'
+
+        await wrapper.vm.updateSettings()
+
+        expect(Notify.create).toHaveBeenCalledWith(
+          expect.objectContaining({ color: 'negative' })
+        )
+        expect(SettingsService.updateSettings).not.toHaveBeenCalled()
+      })
+
+      it('should block save when requiresApiKey is true but no key provided', async () => {
+        SpellcheckService.testConnection.mockResolvedValue({
+          data: { datas: { reachable: true, supportsCustomRules: true, authValid: false, requiresApiKey: true } }
+        })
+
+        const wrapper = createWrapper()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        wrapper.vm.settings.report.private.languageToolApiKey = ''
+
+        await wrapper.vm.updateSettings()
+
+        expect(Notify.create).toHaveBeenCalledWith(
+          expect.objectContaining({ color: 'negative' })
+        )
+        expect(SettingsService.updateSettings).not.toHaveBeenCalled()
+      })
+
+      it('should block save and show error when testConnection throws', async () => {
+        SpellcheckService.testConnection.mockRejectedValue({
+          response: { data: { datas: 'Connection refused' } }
+        })
+
+        const wrapper = createWrapper()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        wrapper.vm.settings.report.private.languageToolUrl = 'http://broken:8020'
+
+        await wrapper.vm.updateSettings()
+
+        expect(Notify.create).toHaveBeenCalledWith(
+          expect.objectContaining({ color: 'negative' })
+        )
+        expect(SettingsService.updateSettings).not.toHaveBeenCalled()
+      })
+
+      it('should skip LT test when LT fields are unchanged', async () => {
+        const wrapper = createWrapper()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        // Don't change any LT fields
+        await wrapper.vm.updateSettings()
+
+        expect(SpellcheckService.testConnection).not.toHaveBeenCalled()
+        expect(SettingsService.updateSettings).toHaveBeenCalled()
+      })
+
+      it('should skip LT test when LT URL is empty after change', async () => {
+        const wrapper = createWrapper()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        // Clear the URL
+        wrapper.vm.settings.report.private.languageToolUrl = ''
+
+        await wrapper.vm.updateSettings()
+
+        expect(SpellcheckService.testConnection).not.toHaveBeenCalled()
+        expect(SettingsService.updateSettings).toHaveBeenCalled()
+      })
     })
   })
 

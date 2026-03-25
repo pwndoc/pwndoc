@@ -35,23 +35,45 @@ module.exports = function(request, app) {
         var originalFetch;
 
         beforeAll(async () => {
-            // Mock fetch globally to prevent real calls to languagetool service
+            // Mock fetch globally to prevent real calls to languagetool service.
+            // The /v2/info response identifies it as LanguageTool so testLanguageToolConnection
+            // returns isLanguageTool:true, allowing the settings PUT to save the LT URL.
             originalFetch = global.fetch;
-            global.fetch = jest.fn(() =>
-                Promise.resolve({
+            global.fetch = jest.fn((url) => {
+                const urlStr = url.toString();
+                if (urlStr.includes('/v2/info')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({ software: { name: 'LanguageTool', version: '6.0' } })
+                    });
+                }
+                return Promise.resolve({
                     ok: true,
                     json: () => Promise.resolve({ success: true })
-                })
-            );
+                });
+            });
 
             // Get regular user token
             var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'});
             userToken = response.body.datas.token;
             adminToken = userToken; // Admin has all permissions
+
+            // Configure a LT URL. Must include enableSpellCheck:true so the settings route
+            // validates and saves the LT URL (the route ignores LT fields when spellcheck is off).
+            await request(app)
+                .put('/api/settings')
+                .set('Cookie', [`token=JWT ${adminToken}`])
+                .send({ report: { public: { enableSpellCheck: true }, private: { languageToolUrl: 'http://localhost:8020' } } });
         });
 
-        afterAll(() => {
+        afterAll(async () => {
             global.fetch = originalFetch;
+            // Clear the LT URL. Sending enableSpellCheck:true with an empty URL bypasses
+            // LT validation (empty URL skips the check) and saves the empty value.
+            await request(app)
+                .put('/api/settings')
+                .set('Cookie', [`token=JWT ${adminToken}`])
+                .send({ report: { public: { enableSpellCheck: true }, private: { languageToolUrl: '', languageToolApiKey: '', languageToolUsername: '' } } });
         });
 
         beforeEach(() => {
@@ -273,30 +295,12 @@ module.exports = function(request, app) {
             });
         });
 
-        describe('GET /api/internal/languagetool-rules', () => {
-            it('Should not require authentication (internal endpoint)', async () => {
+        describe('GET /api/internal/languagetool-rules (removed)', () => {
+            it('Should return 404 (endpoint removed)', async () => {
                 var response = await request(app)
                     .get('/api/internal/languagetool-rules');
 
-                // Should succeed (no auth required) or return empty array
-                expect([200, 500]).toContain(response.status);
-            });
-
-            it('Should return all rules in expected format', async () => {
-                var response = await request(app)
-                    .get('/api/internal/languagetool-rules');
-
-                if (response.status === 200) {
-                    expect(response.body.status).toBe('success');
-                    expect(Array.isArray(response.body.datas)).toBe(true);
-                    if (response.body.datas.length > 0) {
-                        expect(response.body.datas[0]).toHaveProperty('_id');
-                        expect(response.body.datas[0]).toHaveProperty('id');
-                        expect(response.body.datas[0]).toHaveProperty('name');
-                        expect(response.body.datas[0]).toHaveProperty('language');
-                        expect(response.body.datas[0]).toHaveProperty('ruleXml');
-                    }
-                }
+                expect(response.status).toBe(404);
             });
         });
     });

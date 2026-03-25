@@ -1,42 +1,108 @@
 const Response = require('../lib/httpResponse.js');
 const SpellingDictionary = require("../models/dictionary");
 const acl = require('../lib/auth').acl
+const { getLanguageToolConfig } = require('../lib/languagetool-config');
+const { testLanguageToolConnection } = require('../lib/languagetool-test');
 
 module.exports = function(app) {
-    const LT_URL = process.env.LT_URL || "http://pwndoc-languagetools:8010";
+
+    // ---------------------------
+    // Capabilities endpoint
+    // ---------------------------
+    app.get("/api/spellcheck/capabilities", acl.hasPermission("spellcheck:read"), async (req, res) => {
+        try {
+            const Settings = require('mongoose').model('Settings');
+            const settings = await Settings.getAll();
+            const enabled = !!settings?.report?.public?.enableSpellCheck;
+            const config = await getLanguageToolConfig();
+            const configured = !!config?.url;
+            const hasApiKey = !!config?.apiKey;
+
+            let supportsCustomRules = false;
+            if (configured) {
+                try {
+                    const healthUrl = `${config.url}/health`;
+                    const healthRes = await fetch(healthUrl, { signal: AbortSignal.timeout(5000) });
+                    if (healthRes.ok) {
+                        const healthData = await healthRes.json();
+                        supportsCustomRules = healthData.type === 'pwndoc-languagetools';
+                    }
+                } catch (_) {
+                    // Unreachable or timeout — supportsCustomRules stays false
+                }
+            }
+
+            Response.Ok(res, { enabled, configured, hasApiKey, supportsCustomRules });
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    });
+
+    // ---------------------------
+    // Live connection test (uses request body, not saved settings)
+    // ---------------------------
+    app.post("/api/spellcheck/test", acl.hasPermission("settings:update"), async (req, res) => {
+        try {
+            const { url, apiKey, username } = req.body;
+            const result = await testLanguageToolConnection(url, apiKey, username);
+            if (result.error) return Response.BadParameters(res, result.error);
+            const { valid, ...data } = result;
+            Response.Ok(res, data);
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    });
 
     // ---------------------------
     // Spellcheck with MongoDB filtering
     // ---------------------------
     app.post("/api/spellcheck", acl.hasPermission("spellcheck:read"), async (req, res) => {
         try {
-            const { text, language = "en-CA" } = req.body;
+            const { text, language = "en-CA", enabledOnly } = req.body;
             if (!text)
                 return Response.Ok(res, { matches: [] });
+
+            const config = await getLanguageToolConfig();
+            if (!config) {
+                return Response.Ok(res, { matches: [] });
+            }
 
             // Load custom words from MongoDB
             const entries = await SpellingDictionary.find({});
             const dictionary = entries.map(e => e.word);
 
             // Build request to LanguageTool
-            // Custom rules are managed by the LanguageTool container and loaded automatically
             const params = new URLSearchParams({ text, language });
+            if (enabledOnly !== undefined) params.append('enabledOnly', enabledOnly);
+            // Only send apiKey+username as form params when both are present (public LT Premium).
+            // When only apiKey is set (pwndoc-languagetools), use X-Api-Key header instead to
+            // avoid the "apiKey set but username was not" 400 error from vanilla LT.
+            if (config.apiKey && config.username) {
+                params.append('apiKey', config.apiKey);
+                params.append('username', config.username);
+            }
+
+            const ltHeaders = { "Content-Type": "application/x-www-form-urlencoded" };
+            if (config.apiKey) ltHeaders['X-Api-Key'] = config.apiKey;
 
             let ltResponse;
             try {
-                ltResponse = await fetch(`${LT_URL}/v2/check`, {
+                ltResponse = await fetch(`${config.url}/v2/check`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: params
+                    headers: ltHeaders,
+                    body: params,
+                    signal: AbortSignal.timeout(10000),
                 });
             } catch (err) {
                 const cause = err && err.cause ? err.cause : {};
                 const code = cause.code || cause.errno;
                 const detail = cause.message || err.message || String(err);
-                console.error("LanguageTool fetch failed", { url: LT_URL, code, detail });
+                console.error("LanguageTool fetch failed", { url: config.url, code, detail });
                 return Response.Custom(res, "error", 502, `LanguageTool fetch failed${code ? ` (${code})` : ""}: ${detail}`);
+            }
+
+            if (ltResponse.status === 429) {
+                return Response.Ok(res, { matches: [], rateLimited: true });
             }
 
             if (!ltResponse.ok) {
@@ -50,7 +116,7 @@ module.exports = function(app) {
 
             const ltResult = await ltResponse.json();
 
-            // Filter matches
+            // Filter matches against custom dictionary
             ltResult.matches = ltResult.matches.filter(match => {
                 const word = text.substring(match.offset, match.offset + match.length);
                 return !dictionary.includes(word.toLowerCase());

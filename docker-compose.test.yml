@@ -41,7 +41,6 @@ services:
       - BASE_URL=https://pwndoc-frontend:8443
     depends_on:
       - pwndoc-frontend
-      - pwndoc-languagetools
     networks:
       - frontend-internal
 
@@ -56,7 +55,6 @@ services:
       - BASE_URL=https://pwndoc-frontend:8443
     depends_on:
       - pwndoc-frontend
-      - pwndoc-languagetools
     networks:
       - frontend-internal
     ports:
@@ -72,4 +70,11 @@ services:
       - ./frontend/tests/unit:/app/tests/unit
       - ./frontend/coverage:/app/coverage
     entrypoint: ["npm", "run", "test:run"]
+    restart: "no"
+
+  pwndoc-languagetools:
+    image: pwndoc/languagetools:test
+    build:
+      context: ./languagetool/
+      dockerfile: Dockerfile
     restart: "no"

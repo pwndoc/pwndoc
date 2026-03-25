@@ -12,6 +12,7 @@ report-filters-custom.js
 /quasar.config.*.temporary.compiled*
 
 # local .env files
+.env
 .env.local*
 
 # Log files
