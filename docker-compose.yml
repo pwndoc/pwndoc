@@ -19,12 +19,32 @@ services:
     environment:
       - DB_SERVER=mongodb
       - DB_NAME=pwndoc
+      - LT_URL=http://pwndoc-languagetools:8010
+      - LT_API_URL=http://pwndoc-languagetools:8020
     depends_on:
       - mongodb
     restart: always
     networks:
       - backend-internal
       - frontend-internal
+
+  pwndoc-languagetools:
+    image: pwndoc/languagetools:prod
+    build:
+      context: ./languagetool/
+      dockerfile: Dockerfile
+    init: true
+    restart: always
+    environment:
+      - BACKEND_URL=https://pwndoc-backend:4242
+      - LT_JAVA_XMS=${LT_JAVA_XMS:-512m}
+      - LT_JAVA_XMX=${LT_JAVA_XMX:-1g}
+    depends_on:
+      - pwndoc-backend
+    volumes:
+      - ./languagetool/custom-rules:/LanguageTool/custom-rules
+    networks:
+      - backend-internal
 
   pwndoc-frontend:
     restart: always
@@ -33,25 +53,8 @@ services:
     networks:
       - frontend-internal
 
-  pwndoc-languagetools:
-    profiles: [languagetools]
-    init: true
-    restart: always
-    environment:
-      - LT_JAVA_XMS=${LT_JAVA_XMS:-512m}
-      - LT_JAVA_XMX=${LT_JAVA_XMX:-1g}
-      - API_KEY=${LT_API_KEY:-}
-      - REQUIRE_API_KEY=${LT_REQUIRE_API_KEY:-true}
-    volumes:
-      - languagetools-data:/data
-    networks:
-      - backend-internal
-
 networks:
   backend-internal:
     driver: bridge
   frontend-internal:
     driver: bridge
-
-volumes:
-  languagetools-data:

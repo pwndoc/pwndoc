@@ -1,14 +1,7 @@
 <template>
     <div class="row">
         <div class="col-md-10 col-12 offset-md-1 q-mt-md">
-            <q-banner v-if="!checkingCapabilities && !supportsCustomRules" class="bg-warning text-white q-mb-md">
-                <template v-slot:avatar>
-                    <q-icon name="warning" />
-                </template>
-                {{$t('customRulesUnsupportedBanner')}}
-            </q-banner>
-
-            <q-banner v-else-if="rules.length === 0 && !loading" class="bg-info text-white q-mb-md">
+            <q-banner v-if="rules.length === 0 && !loading" class="bg-info text-white q-mb-md">
                 <template v-slot:avatar>
                     <q-icon name="info" />
                 </template>
@@ -27,13 +20,12 @@
             >
                 <template v-slot:top>
                     <q-space />
-                    <q-btn
+                    <q-btn 
                     v-if="canEdit"
-                    flat
+                    flat 
                     :label="$t('btn.create')"
-                    color="primary"
+                    color="primary" 
                     no-caps
-                    :disable="!supportsCustomRules"
                     icon="add"
                     @click="openCreateDialog()"
                     />    

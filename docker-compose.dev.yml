@@ -37,6 +37,12 @@ services:
     ports:
       - 8081:8081
 
+  pwndoc-languagetools:
+    image: pwndoc/languagetools:dev
+    ports:
+      - 8010:8010
+      - 8020:8020
+
   pwndoc-frontend-nginx:
     image: nginx:stable-alpine
     user: root
@@ -51,9 +57,3 @@ services:
       - pwndoc-frontend
     networks:
       - frontend-internal
-
-  pwndoc-languagetools:
-    image: pwndoc/languagetools:dev
-    build:
-      context: ./languagetool/
-      dockerfile: Dockerfile

@@ -2,8 +2,7 @@ module.exports = function(app) {
     var Response = require('../lib/httpResponse.js');
     var acl = require('../lib/auth').acl;
     var Settings = require('mongoose').model('Settings');
-    var { invalidateLanguageToolConfigCache } = require('../lib/languagetool-config');
-
+    
     app.get("/api/settings", acl.hasPermission('settings:read'), function(req, res) {
         Settings.getAll()
         .then(settings => Response.Ok(res, settings))
@@ -18,19 +17,13 @@ module.exports = function(app) {
 
     app.put("/api/settings", acl.hasPermission('settings:update'), function(req, res) {
         Settings.update(req.body)
-        .then(msg => {
-            invalidateLanguageToolConfigCache();
-            Response.Ok(res, msg);
-        })
+        .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err));
     });
 
     app.put("/api/settings/revert", acl.hasPermission('settings:update'), function(req, res) {
         Settings.restoreDefaults()
-        .then(msg => {
-            invalidateLanguageToolConfigCache();
-            Response.Ok(res, msg);
-        })
+        .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err));
     });
 

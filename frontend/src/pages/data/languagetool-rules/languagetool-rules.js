@@ -2,7 +2,6 @@ import { Notify, Dialog } from 'quasar';
 import { useUserStore } from '@/stores/user'
 
 import LanguageToolRulesService from '@/services/languagetool-rules'
-import SpellcheckService from '@/services/spellcheck'
 import Utils from '@/services/utils'
 
 import { $t } from '@/boot/i18n'
@@ -60,15 +59,11 @@ export default {
                 ruleXml: ''
             },
             // Form errors
-            errors: {},
-            // Capabilities
-            supportsCustomRules: true,
-            checkingCapabilities: true
+            errors: {}
         }
     },
 
     mounted: function() {
-        this.checkCapabilities()
         this.getRules()
         if (this.canEdit) {
             this.getLanguages()
@@ -76,18 +71,6 @@ export default {
     },
 
     methods: {
-        checkCapabilities: async function() {
-            try {
-                const data = await SpellcheckService.getCapabilities()
-                const caps = data.data.datas
-                this.supportsCustomRules = !!caps?.supportsCustomRules
-            } catch {
-                this.supportsCustomRules = false
-            } finally {
-                this.checkingCapabilities = false
-            }
-        },
-
         getRules: function() {
             this.loading = true
             LanguageToolRulesService.getAll()

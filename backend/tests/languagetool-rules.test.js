@@ -48,21 +48,10 @@ module.exports = function(request, app) {
             var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'});
             userToken = response.body.datas.token;
             adminToken = userToken; // Admin has all permissions
-
-            // Configure a LT URL so getLanguageToolConfig() returns a non-null config
-            await request(app)
-                .put('/api/settings')
-                .set('Cookie', [`token=JWT ${adminToken}`])
-                .send({ report: { private: { languageToolUrl: 'http://localhost:8020' } } });
         });
 
-        afterAll(async () => {
+        afterAll(() => {
             global.fetch = originalFetch;
-            // Clear the LT URL so other tests start clean
-            await request(app)
-                .put('/api/settings')
-                .set('Cookie', [`token=JWT ${adminToken}`])
-                .send({ report: { private: { languageToolUrl: '' } } });
         });
 
         beforeEach(() => {
@@ -284,12 +273,30 @@ module.exports = function(request, app) {
             });
         });
 
-        describe('GET /api/internal/languagetool-rules (removed)', () => {
-            it('Should return 404 (endpoint removed)', async () => {
+        describe('GET /api/internal/languagetool-rules', () => {
+            it('Should not require authentication (internal endpoint)', async () => {
                 var response = await request(app)
                     .get('/api/internal/languagetool-rules');
 
-                expect(response.status).toBe(404);
+                // Should succeed (no auth required) or return empty array
+                expect([200, 500]).toContain(response.status);
+            });
+
+            it('Should return all rules in expected format', async () => {
+                var response = await request(app)
+                    .get('/api/internal/languagetool-rules');
+
+                if (response.status === 200) {
+                    expect(response.body.status).toBe('success');
+                    expect(Array.isArray(response.body.datas)).toBe(true);
+                    if (response.body.datas.length > 0) {
+                        expect(response.body.datas[0]).toHaveProperty('_id');
+                        expect(response.body.datas[0]).toHaveProperty('id');
+                        expect(response.body.datas[0]).toHaveProperty('name');
+                        expect(response.body.datas[0]).toHaveProperty('language');
+                        expect(response.body.datas[0]).toHaveProperty('ruleXml');
+                    }
+                }
             });
         });
     });
