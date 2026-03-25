@@ -35,34 +35,45 @@ module.exports = function(request, app) {
         var originalFetch;
 
         beforeAll(async () => {
-            // Mock fetch globally to prevent real calls to languagetool service
+            // Mock fetch globally to prevent real calls to languagetool service.
+            // The /v2/info response identifies it as LanguageTool so testLanguageToolConnection
+            // returns isLanguageTool:true, allowing the settings PUT to save the LT URL.
             originalFetch = global.fetch;
-            global.fetch = jest.fn(() =>
-                Promise.resolve({
+            global.fetch = jest.fn((url) => {
+                const urlStr = url.toString();
+                if (urlStr.includes('/v2/info')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({ software: { name: 'LanguageTool', version: '6.0' } })
+                    });
+                }
+                return Promise.resolve({
                     ok: true,
                     json: () => Promise.resolve({ success: true })
-                })
-            );
+                });
+            });
 
             // Get regular user token
             var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'});
             userToken = response.body.datas.token;
             adminToken = userToken; // Admin has all permissions
 
-            // Configure a LT URL so getLanguageToolConfig() returns a non-null config
+            // Configure a LT URL. Must include enableSpellCheck:true so the settings route
+            // validates and saves the LT URL (the route ignores LT fields when spellcheck is off).
             await request(app)
                 .put('/api/settings')
                 .set('Cookie', [`token=JWT ${adminToken}`])
-                .send({ report: { private: { languageToolUrl: 'http://localhost:8020' } } });
+                .send({ report: { public: { enableSpellCheck: true }, private: { languageToolUrl: 'http://localhost:8020' } } });
         });
 
         afterAll(async () => {
             global.fetch = originalFetch;
-            // Clear the LT URL so other tests start clean
+            // Clear the LT URL. Sending enableSpellCheck:true with an empty URL bypasses
+            // LT validation (empty URL skips the check) and saves the empty value.
             await request(app)
                 .put('/api/settings')
                 .set('Cookie', [`token=JWT ${adminToken}`])
-                .send({ report: { private: { languageToolUrl: '' } } });
+                .send({ report: { public: { enableSpellCheck: true }, private: { languageToolUrl: '', languageToolApiKey: '', languageToolUsername: '' } } });
         });
 
         beforeEach(() => {

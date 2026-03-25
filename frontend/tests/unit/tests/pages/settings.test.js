@@ -463,7 +463,7 @@ describe('Settings Page', () => {
 
       expect(Notify.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Network error',
+          message: 'Update failed',
           color: 'negative'
         })
       )
@@ -479,7 +479,7 @@ describe('Settings Page', () => {
 
       it('should test connection when LT URL changes', async () => {
         SpellcheckService.testConnection.mockResolvedValue({
-          data: { datas: { reachable: true, supportsCustomRules: false, authValid: null, requiresApiKey: false } }
+          data: { datas: { reachable: true, isLanguageTool: true, supportsCustomRules: false, authValid: null, requiresApiKey: false } }
         })
 
         const wrapper = createWrapper()

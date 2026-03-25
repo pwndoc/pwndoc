@@ -6,34 +6,45 @@ module.exports = function(request, app) {
         var originalFetch;
 
         beforeAll(async () => {
-            // Mock fetch globally to prevent real calls to languagetool service
+            // Mock fetch globally to prevent real calls to languagetool service.
+            // The /v2/info response identifies it as LanguageTool so testLanguageToolConnection
+            // returns isLanguageTool:true, allowing the settings PUT to save the LT URL.
             originalFetch = global.fetch;
-            global.fetch = jest.fn(() =>
-                Promise.resolve({
+            global.fetch = jest.fn((url) => {
+                const urlStr = url.toString();
+                if (urlStr.includes('/v2/info')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: () => Promise.resolve({ software: { name: 'LanguageTool', version: '6.0' } })
+                    });
+                }
+                return Promise.resolve({
                     ok: true,
                     json: () => Promise.resolve({ matches: [] })
-                })
-            );
+                });
+            });
 
             // Get regular user token
             var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'});
             userToken = response.body.datas.token;
             adminToken = userToken; // Admin has all permissions
 
-            // Configure a LT URL so getLanguageToolConfig() returns a non-null config
+            // Configure a LT URL. Must include enableSpellCheck:true so the settings route
+            // validates and saves the LT URL (the route ignores LT fields when spellcheck is off).
             await request(app)
                 .put('/api/settings')
                 .set('Cookie', [`token=JWT ${adminToken}`])
-                .send({ report: { private: { languageToolUrl: 'http://localhost:8020' } } });
+                .send({ report: { public: { enableSpellCheck: true }, private: { languageToolUrl: 'http://localhost:8020' } } });
         });
 
         afterAll(async () => {
             global.fetch = originalFetch;
-            // Clear the LT URL so other tests start clean
+            // Clear the LT URL. Sending enableSpellCheck:true with an empty URL bypasses
+            // LT validation (empty URL skips the check) and saves the empty value.
             await request(app)
                 .put('/api/settings')
                 .set('Cookie', [`token=JWT ${adminToken}`])
-                .send({ report: { private: { languageToolUrl: '' } } });
+                .send({ report: { public: { enableSpellCheck: true }, private: { languageToolUrl: '', languageToolApiKey: '', languageToolUsername: '' } } });
         });
 
         beforeEach(() => {
@@ -202,7 +213,8 @@ module.exports = function(request, app) {
 
             it('Should return reachable:true for vanilla LT via /health', async () => {
                 global.fetch.mockImplementation((url) => {
-                    if (url.includes('/health')) {
+                    const urlStr = url.toString();
+                    if (urlStr.includes('/health')) {
                         return Promise.resolve({
                             ok: true,
                             json: () => Promise.resolve({ type: 'vanilla-lt' })
@@ -221,11 +233,12 @@ module.exports = function(request, app) {
                 expect(response.body.datas.supportsCustomRules).toBe(false);
             });
 
-            it('Should fall back to /v2/languages when /health is unreachable', async () => {
+            it('Should fall back to /v2/info when /health is unreachable', async () => {
                 global.fetch.mockImplementation((url) => {
-                    if (url.includes('/health')) return Promise.reject(new Error('timeout'));
-                    if (url.includes('/v2/languages')) {
-                        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+                    const urlStr = url.toString();
+                    if (urlStr.includes('/health')) return Promise.reject(new Error('timeout'));
+                    if (urlStr.includes('/v2/info')) {
+                        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
                     }
                     return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
                 });
@@ -242,13 +255,14 @@ module.exports = function(request, app) {
 
             it('Should detect pwndoc-languagetools and validate API key', async () => {
                 global.fetch.mockImplementation((url) => {
-                    if (url.includes('/health')) {
+                    const urlStr = url.toString();
+                    if (urlStr.includes('/health')) {
                         return Promise.resolve({
                             ok: true,
                             json: () => Promise.resolve({ type: 'pwndoc-languagetools' })
                         });
                     }
-                    if (url.includes('/api/languages')) {
+                    if (urlStr.includes('/api/languages')) {
                         return Promise.resolve({
                             ok: true,
                             json: () => Promise.resolve({ languages: ['en'] })
@@ -270,13 +284,14 @@ module.exports = function(request, app) {
 
             it('Should return authValid:false when API key is rejected (401)', async () => {
                 global.fetch.mockImplementation((url) => {
-                    if (url.includes('/health')) {
+                    const urlStr = url.toString();
+                    if (urlStr.includes('/health')) {
                         return Promise.resolve({
                             ok: true,
                             json: () => Promise.resolve({ type: 'pwndoc-languagetools' })
                         });
                     }
-                    if (url.includes('/api/languages')) {
+                    if (urlStr.includes('/api/languages')) {
                         return Promise.resolve({ ok: false, status: 401 });
                     }
                     return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
@@ -294,13 +309,14 @@ module.exports = function(request, app) {
 
             it('Should indicate requiresApiKey when no key provided and LT returns 401', async () => {
                 global.fetch.mockImplementation((url) => {
-                    if (url.includes('/health')) {
+                    const urlStr = url.toString();
+                    if (urlStr.includes('/health')) {
                         return Promise.resolve({
                             ok: true,
                             json: () => Promise.resolve({ type: 'pwndoc-languagetools' })
                         });
                     }
-                    if (url.includes('/api/languages')) {
+                    if (urlStr.includes('/api/languages')) {
                         return Promise.resolve({ ok: false, status: 401 });
                     }
                     return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
@@ -318,13 +334,12 @@ module.exports = function(request, app) {
 
             it('Should validate public LT credentials when apiKey and username both provided', async () => {
                 global.fetch.mockImplementation((url) => {
-                    if (url.includes('/health')) return Promise.reject(new Error('not found'));
-                    if (url.includes('/v2/languages')) {
-                        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-                    }
-                    if (url.includes('/v2/check')) {
+                    const urlStr = url.toString();
+                    if (urlStr.includes('/health')) return Promise.reject(new Error('not found'));
+                    if (urlStr.includes('/v2/check')) {
                         return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ matches: [] }) });
                     }
+                    // /v2/info fallback for reachability
                     return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
                 });
 
@@ -340,10 +355,9 @@ module.exports = function(request, app) {
 
             it('Should not validate credentials when only apiKey but no username (public LT)', async () => {
                 global.fetch.mockImplementation((url) => {
-                    if (url.includes('/health')) return Promise.reject(new Error('not found'));
-                    if (url.includes('/v2/languages')) {
-                        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-                    }
+                    const urlStr = url.toString();
+                    if (urlStr.includes('/health')) return Promise.reject(new Error('not found'));
+                    // /v2/info fallback for reachability
                     return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
                 });
 
