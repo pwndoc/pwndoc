@@ -778,7 +778,6 @@ export default {
     highlightWarning: 'Highlight Warning',
     highlightWarningDescription: `Add a warning message when editing a report and specified color highlighted text is still present.<br />
     Useful for generic text that should be replaced by reporter.`,
-    enableSpellcheck: 'Enable Spell Checking ',
     enableSpellcheckDescription: 'Enable spell checking in the report editor and findings database. Requires a LanguageTool-compatible service URL.',
     languageToolUrl: 'LanguageTool URL',
     languageToolUrlHint: 'URL of any LanguageTool-compatible service (e.g., https://api.languagetoolplus.com or the default self-hosted instance http://pwndoc-languagetools:8020)',
