@@ -394,7 +394,11 @@ test.describe('Spellcheck Dictionary', () => {
 
 test.describe('LanguageTool Rules', () => {
     test.beforeEach(async ({ page }) => {
+      const capabilitiesLoaded = page.waitForResponse(
+        resp => resp.url().includes('/api/spellcheck/capabilities')
+      );
       await page.goto('/data/languagetool-rules');
+      await capabilitiesLoaded;
     });
 
     test('should display languagetool rules page', async ({ page }) => {

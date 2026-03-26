@@ -13,6 +13,8 @@ services:
       context: ./backend/
       dockerfile: Dockerfile.test
     restart: "no"
+    environment:
+      - LT_URL=http://pwndoc-languagetools:8020
     volumes:
       - ./backend/tests:/app/tests
       - ./backend/src:/app/src
@@ -78,3 +80,5 @@ services:
       context: ./languagetool/
       dockerfile: Dockerfile
     restart: "no"
+    environment:
+      - REQUIRE_API_KEY=false
