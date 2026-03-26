@@ -495,5 +495,23 @@ export default {
     twoStepVerification: '两步验证2-Step Verification',
     twoStepVerificationMessage: '打开您的身份验证应用程序并输入它提供的安全码。',
     captions: '标题',
-    captionsDescription: '添加将在报告中使用的标题标签（默认为 \'Figure\'）'
+    captionsDescription: '添加将在报告中使用的标题标签（默认为 \'Figure\'）',
+    spellcheck: '拼写检查',
+    enableSpellcheck: '启用拼写检查',
+    spellcheckCategories: '类别',
+    spellcheckCategory: {
+        CASING: { label: '大小写', description: '大小写错误，如 "english" 应为 "English"' },
+        COMPOUNDING: { label: '复合词', description: '复合词错误，如缺少连字符' },
+        GRAMMAR: { label: '语法', description: '语法错误，如动词形式或主谓一致错误' },
+        TYPOS: { label: '拼写错误', description: '拼写错误和常见的打字错误' },
+        PUNCTUATION: { label: '标点符号', description: '缺失或错误的标点符号' },
+        TYPOGRAPHY: { label: '排版', description: '排版问题，如错误的引号或破折号' },
+        CONFUSED_WORDS: { label: '易混淆词', description: '常见易混淆词，如 "their" 和 "there"' },
+        REPETITIONS: { label: '重复', description: '无意重复的词语或短语' },
+        REDUNDANCY: { label: '冗余', description: '无意义的冗余词' },
+        STYLE: { label: '风格', description: '提高写作清晰度或简洁性的风格建议' },
+        SEMANTICS: { label: '语义', description: '含义使用不当的词语' },
+        COLLOQUIALISMS: { label: '口语表达', description: '非正式或口语化表达' },
+        MISC: { label: '其他', description: '上述类别未涵盖的其他规则' },
+    }
   }

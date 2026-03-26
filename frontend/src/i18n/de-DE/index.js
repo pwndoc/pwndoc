@@ -490,5 +490,23 @@ export default {
     twoStepVerification: '2-Stufige-Verifizierung',
     twoStepVerificationMessage: 'Öffnen Sie Ihre Authentifizierungs-App und geben Sie den angezeigten Sicherheitscode ein.',
     captions: 'Beschriftungen',
-    captionsDescription: 'Fügt Beschriftungslabel hinzu, welche im Bericht genutzt werden (Standard ist \'Abbildung\')'
+    captionsDescription: 'Fügt Beschriftungslabel hinzu, welche im Bericht genutzt werden (Standard ist \'Abbildung\')',
+    spellcheck: 'Rechtschreibprüfung',
+    enableSpellcheck: 'Rechtschreibprüfung aktivieren',
+    spellcheckCategories: 'Kategorien',
+    spellcheckCategory: {
+        CASING: { label: 'Groß-/Kleinschreibung', description: 'Falsche Groß-/Kleinschreibung, z.B. "englisch" statt "Englisch"' },
+        COMPOUNDING: { label: 'Komposition', description: 'Fehler bei Komposita, z.B. fehlende Bindestriche' },
+        GRAMMAR: { label: 'Grammatik', description: 'Grammatikfehler wie falsche Verbformen oder Kongruenzfehler' },
+        TYPOS: { label: 'Tippfehler', description: 'Falsch geschriebene Wörter und häufige Tippfehler' },
+        PUNCTUATION: { label: 'Interpunktion', description: 'Fehlende oder falsche Satzzeichen' },
+        TYPOGRAPHY: { label: 'Typografie', description: 'Typografische Probleme wie falsche Anführungszeichen oder Bindestriche' },
+        CONFUSED_WORDS: { label: 'Verwechslte Wörter', description: 'Häufig verwechselte Wörter' },
+        REPETITIONS: { label: 'Wiederholungen', description: 'Unbeabsichtigte Wiederholung von Wörtern oder Phrasen' },
+        REDUNDANCY: { label: 'Redundanz', description: 'Überflüssige Wörter ohne zusätzliche Bedeutung' },
+        STYLE: { label: 'Stil', description: 'Stilvorschläge für klareres oder prägnanteres Schreiben' },
+        SEMANTICS: { label: 'Semantik', description: 'Wörter mit falscher Bedeutungsverwendung' },
+        COLLOQUIALISMS: { label: 'Umgangssprache', description: 'Umgangssprachliche oder informelle Ausdrücke' },
+        MISC: { label: 'Sonstiges', description: 'Sonstige Regeln, die nicht durch die obigen Kategorien abgedeckt sind' },
+    }
   }

@@ -58,7 +58,7 @@ module.exports = function(app) {
     // ---------------------------
     app.post("/api/spellcheck", acl.hasPermission("spellcheck:read"), async (req, res) => {
         try {
-            const { text, language = "en-CA", enabledOnly } = req.body;
+            const { text, language = "en-CA", enabledOnly, disabledCategories } = req.body;
             if (!text)
                 return Response.Ok(res, { matches: [] });
 
@@ -74,6 +74,7 @@ module.exports = function(app) {
             // Build request to LanguageTool
             const params = new URLSearchParams({ text, language });
             if (enabledOnly !== undefined) params.append('enabledOnly', enabledOnly);
+            if (disabledCategories) params.append('disabledCategories', disabledCategories);
             // Only send apiKey+username as form params when both are present (public LT Premium).
             // When only apiKey is set (pwndoc-languagetools), use X-Api-Key header instead to
             // avoid the "apiKey set but username was not" 400 error from vanilla LT.

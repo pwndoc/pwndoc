@@ -434,5 +434,23 @@ export default {
     restoring_data: 'Restoration des données 3/3',
     restore_error: 'La dernière restauration a généré une erreur',
     // Init restore message
-    restoreFromBackup: 'Ou restaurer depuis un fichier de Sauvegarde'
+    restoreFromBackup: 'Ou restaurer depuis un fichier de Sauvegarde',
+    spellcheck: 'Correcteur orthographique',
+    enableSpellcheck: 'Activer le correcteur',
+    spellcheckCategories: 'Catégories',
+    spellcheckCategory: {
+        CASING: { label: 'Casse', description: 'Mauvaise capitalisation, ex. "anglais" au lieu de "Anglais"' },
+        COMPOUNDING: { label: 'Composition', description: 'Erreurs avec les mots composés, ex. traits d\'union manquants' },
+        GRAMMAR: { label: 'Grammaire', description: 'Erreurs grammaticales telles que formes verbales incorrectes' },
+        TYPOS: { label: 'Fautes de frappe', description: 'Mots mal orthographiés et fautes de frappe courantes' },
+        PUNCTUATION: { label: 'Ponctuation', description: 'Signes de ponctuation manquants ou incorrects' },
+        TYPOGRAPHY: { label: 'Typographie', description: 'Problèmes typographiques comme des guillemets ou tirets incorrects' },
+        CONFUSED_WORDS: { label: 'Mots confondus', description: 'Mots souvent confondus, ex. "a" vs "à"' },
+        REPETITIONS: { label: 'Répétitions', description: 'Mots ou expressions involontairement répétés' },
+        REDUNDANCY: { label: 'Redondance', description: 'Mots redondants n\'ajoutant aucune signification' },
+        STYLE: { label: 'Style', description: 'Suggestions de style pour une écriture plus claire ou concise' },
+        SEMANTICS: { label: 'Sémantique', description: 'Mots utilisés avec un sens incorrect' },
+        COLLOQUIALISMS: { label: 'Expressions familières', description: 'Expressions informelles ou familières' },
+        MISC: { label: 'Divers', description: 'Autres règles non couvertes par les catégories ci-dessus' },
+    }
   }
