@@ -778,7 +778,6 @@ export default {
     highlightWarning: 'Highlight Warning',
     highlightWarningDescription: `Add a warning message when editing a report and specified color highlighted text is still present.<br />
     Useful for generic text that should be replaced by reporter.`,
-    enableSpellcheck: 'Enable Spell Checking ',
     enableSpellcheckDescription: 'Enable spell checking in the report editor and findings database. Requires a LanguageTool-compatible service URL.',
     languageToolUrl: 'LanguageTool URL',
     languageToolUrlHint: 'URL of any LanguageTool-compatible service (e.g., https://api.languagetoolplus.com or the default self-hosted instance http://pwndoc-languagetools:8020)',
@@ -876,5 +875,23 @@ export default {
     warning: 'Warning',
     commentNoSelectedText: 'No text was selected. The comment will be linked to the entire field instead.',
     commentCannotSetMark: 'Unable to apply comment to the selected text. The comment will be linked to the entire field instead.',
-    hintInputComment: 'Tip: Press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to post.'
+    hintInputComment: 'Tip: Press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to post.',
+    spellcheck: 'Spellcheck',
+    enableSpellcheck: 'Enable Spellcheck',
+    spellcheckCategories: 'Categories',
+    spellcheckCategory: {
+        CASING: { label: 'Casing', description: 'Incorrect capitalization, e.g. "english" instead of "English"' },
+        COMPOUNDING: { label: 'Compounding', description: 'Errors with compound words, e.g. missing hyphens' },
+        GRAMMAR: { label: 'Grammar', description: 'Grammatical errors such as wrong verb forms or agreement' },
+        TYPOS: { label: 'Typos', description: 'Misspelled words and common typing mistakes' },
+        PUNCTUATION: { label: 'Punctuation', description: 'Missing or incorrect punctuation marks' },
+        TYPOGRAPHY: { label: 'Typography', description: 'Typographical issues like wrong quotes or dashes' },
+        CONFUSED_WORDS: { label: 'Confused Words', description: 'Commonly confused words, e.g. "their" vs "there"' },
+        REPETITIONS: { label: 'Repetitions', description: 'Unintentional repeated words or phrases' },
+        REDUNDANCY: { label: 'Redundancy', description: 'Redundant words that add no meaning' },
+        STYLE: { label: 'Style', description: 'Style suggestions for clearer or more concise writing' },
+        SEMANTICS: { label: 'Semantics', description: 'Words used with incorrect meaning' },
+        COLLOQUIALISMS: { label: 'Colloquialisms', description: 'Informal or colloquial expressions' },
+        MISC: { label: 'Miscellaneous', description: 'Other rules not covered by the categories above' },
+    },
 }

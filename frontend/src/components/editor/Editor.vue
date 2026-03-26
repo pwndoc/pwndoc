@@ -195,6 +195,46 @@
                     <q-icon name="redo" />
                 </q-btn>
 
+                <template v-if="$settings?.report?.public?.enableSpellCheck">
+                    <q-separator vertical class="q-mx-sm" />
+                    <q-btn-dropdown flat size="sm" dense no-caps
+                        :class="{'is-active': spellcheckStore.isActive(!!$settings?.report?.public?.enableSpellCheck)}"
+                        @hide="onSpellcheckDropdownHide"
+                    >
+                        <template v-slot:label>
+                            <q-tooltip :delay="500" class="text-bold">{{$t('spellcheck')}}</q-tooltip>
+                            <q-icon name="spellcheck" />
+                        </template>
+                        <q-list dense style="min-width: 260px">
+                            <q-item tag="label" dense>
+                                <q-item-section avatar>
+                                    <q-checkbox
+                                        :model-value="spellcheckStore.isActive(!!$settings?.report?.public?.enableSpellCheck)"
+                                        @update:model-value="toggleSpellcheck"
+                                    />
+                                </q-item-section>
+                                <q-item-section>{{$t('enableSpellcheck')}}</q-item-section>
+                            </q-item>
+                            <template v-if="spellcheckStore.isActive(!!$settings?.report?.public?.enableSpellCheck)">
+                                <q-separator />
+                                <q-item-label header class="text-weight-bold">{{$t('spellcheckCategories')}}</q-item-label>
+                                <q-item v-for="cat in spellcheckCategories" :key="cat.id" tag="label" dense>
+                                    <q-item-section avatar>
+                                        <q-checkbox
+                                            :model-value="spellcheckStore.isCategoryEnabled(cat.id)"
+                                            @update:model-value="toggleSpellcheckCategory(cat.id)"
+                                        />
+                                    </q-item-section>
+                                    <q-item-section>
+                                        <q-item-label>{{$t('spellcheckCategory.' + cat.id + '.label')}}</q-item-label>
+                                        <q-item-label caption>{{$t('spellcheckCategory.' + cat.id + '.description')}}</q-item-label>
+                                    </q-item-section>
+                                </q-item>
+                            </template>
+                        </q-list>
+                    </q-btn-dropdown>
+                </template>
+
                 <template v-if="commentMode">
                     <q-separator vertical class="q-mx-sm" />
                     <q-btn unelevated size="sm" dense color="deep-purple"
@@ -224,7 +264,7 @@
         :tippy-options="{ placement: 'bottom', animation: 'fade' }"
         :should-show="({ editor }) => shouldShowSpellcheck({ editor })"
         >
-        <section class="bubble-menu-section-container">
+        <section :class="['bubble-menu-section-container', matchIssueType ? 'lt-' + matchIssueType : '']">
             <section class="message-section">
                 {{ matchMessage }}
             </section>
@@ -233,11 +273,14 @@
                 v-for="(replacement, i) in replacements"
                 @click="() => acceptSuggestion(replacement)"
                 :key="i + replacement.value"
-                class="suggestion"
+                :class="['suggestion', i === 0 ? 'suggestion--primary' : 'suggestion--secondary']"
                 >
                 {{ replacement.value }}
                 </article>
-                <button class="ignore-suggestion-button float-right" @click="ignoreSuggestion">{{$t('tooltip.addToDict')}}</button>
+            </section>
+            <section class="bubble-footer">
+                <q-btn text-color="blue-grey" outline dense no-caps size="sm" icon="star" :label="$t('tooltip.addToDict')" @click="ignoreSuggestion" />
+                <span v-if="matchCategory" class="category-section">{{ matchCategory }}</span>
             </section>
         </section>
     </bubble-menu>
@@ -267,6 +310,7 @@ import CommentExtension from './editor-comment-extension'
 
 import { ref, computed } from 'vue'
 import { LanguageTool } from './editor-spellcheck'
+import { useSpellcheckStore, ALL_CATEGORIES } from '@/stores/spellcheck'
 
 import {Diff} from 'diff';
 
@@ -328,7 +372,14 @@ export default {
         BubbleMenu
     },
     data() {
+        const spellcheckStore = useSpellcheckStore()
+        spellcheckStore.loadFromStorage()
+        const globalSpellcheck = !!this.$settings?.report?.public?.enableSpellCheck
+        const spellcheckActive = spellcheckStore.isActive(globalSpellcheck)
+
         return {
+            spellcheckStore,
+            spellcheckCategories: ALL_CATEGORIES,
             editor: new Editor({
                 extensions: [
                     StarterKit.configure({
@@ -346,7 +397,7 @@ export default {
                         multicolor: true,
                     }),
                     TrailingNode.configure({
-                        node: 'paragraph', 
+                        node: 'paragraph',
                         notAfter: ['paragraph', 'heading', 'bullet_list', 'ordered_list', 'code_block']
                     }),
                     CodeBlockLowlight.extend({
@@ -355,7 +406,7 @@ export default {
                         },
                         marks: "comment"
                     })
-                    .configure({ 
+                    .configure({
                         lowlight,
                         defaultLanguage: 'plaintext',
                     }),
@@ -367,8 +418,8 @@ export default {
                     LanguageTool.configure({
                         language: 'auto',
                         apiUrl: '/api/spellcheck',
-                        automaticMode: !!this.$settings?.report?.public?.enableSpellCheck,
-                        active: !!this.$settings?.report?.public?.enableSpellCheck,
+                        automaticMode: spellcheckActive,
+                        active: spellcheckActive,
                     })
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
@@ -465,6 +516,19 @@ export default {
 
         matchMessage() {
             return this.editor.storage.languagetool.match?.message || 'No Message';
+        },
+
+        matchCategory() {
+            const match = this.editor.storage.languagetool.match
+            if (!match?.rule?.category) return null
+            const id = match.rule.category.id
+            const key = `spellcheckCategory.${id}.label`
+            const translated = this.$t(key)
+            return translated !== key ? translated : match.rule.category.name
+        },
+
+        matchIssueType() {
+            return this.editor.storage.languagetool.match?.rule?.issueType || null
         },
 
         replacements() {
@@ -632,6 +696,25 @@ export default {
             this.editor.commands.ignoreLanguageToolSuggestion()
             this.editor.commands.resetLanguageToolMatch()
             this.editor.commands.setTextSelection(from)
+        },
+
+        toggleSpellcheck() {
+            const globalEnabled = !!this.$settings?.report?.public?.enableSpellCheck
+            const currentlyActive = this.spellcheckStore.isActive(globalEnabled)
+            this.spellcheckStore.setEnabled(!currentlyActive)
+            this.editor.commands.toggleLanguageTool()
+        },
+
+        toggleSpellcheckCategory(categoryId) {
+            this.spellcheckStore.toggleCategory(categoryId)
+            this._spellcheckCategoryDirty = true
+        },
+
+        onSpellcheckDropdownHide() {
+            if (this._spellcheckCategoryDirty) {
+                this._spellcheckCategoryDirty = false
+                this.editor.commands.proofread()
+            }
         }
     }
 }
@@ -973,32 +1056,96 @@ pre .diffadd {
 .bubble-menu > .bubble-menu-section-container {
   display: flex;
   flex-direction: column;
-  background-color: black;
-  color: white;
-  padding: 8px;
+  padding: 10px 12px;
   border-radius: 8px;
-  box-shadow: var(--shadow);
-  max-width: 400px;
+  max-width: 380px;
+  min-width: 200px;
+  border-left: 3px solid transparent;
+
+  &.lt-misspelling   { border-left-color: #e86a69; }
+  &.lt-style         { border-left-color: #9d8eff; }
+  &.lt-grammar,
+  &.lt-typographical { border-left-color: #eeb55c; }
+
+  .message-section {
+    font-size: 0.9em;
+    line-height: 1.45;
+  }
 
   .suggestions-section {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 1em;
+    gap: 6px;
+    margin-top: 8px;
 
     .suggestion {
-      background-color: #229afe;
       border-radius: 4px;
-      color: white;
       cursor: pointer;
       font-weight: 500;
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      font-size: 1.1em;
-      max-width: fit-content;
+      padding: 3px 10px;
+      font-size: 0.9em;
+      transition: background-color 0.15s, color 0.15s;
+
+      &--primary {
+        background-color: #229afe;
+        color: white;
+        &:hover { background-color: #0d8ef0; }
+      }
     }
+  }
+
+  .bubble-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+
+  .category-section {
+    font-size: 0.8em;
+  }
+}
+
+.body--light .bubble-menu > .bubble-menu-section-container {
+  background-color: #ffffff;
+  color: #212121;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+  .suggestions-section .suggestion--secondary {
+    background-color: #ddeeff;
+    color: #1565c0;
+    &:hover { background-color: #c5e0ff; }
+  }
+
+  .bubble-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .category-section {
+    color: rgba(0, 0, 0, 0.45);
+  }
+}
+
+.body--dark .bubble-menu > .bubble-menu-section-container {
+  background-color: #484848;
+  color: #f0f0f0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+
+  .suggestions-section .suggestion--secondary {
+    background-color: rgba(34, 154, 254, 0.2);
+    color: #90caf9;
+    &:hover { background-color: rgba(34, 154, 254, 0.33); }
+  }
+
+  .bubble-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .category-section {
+    color: rgba(255, 255, 255, 0.45);
   }
 }
 

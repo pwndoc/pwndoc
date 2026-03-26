@@ -6,6 +6,7 @@ import { Decoration, DecorationSet } from 'prosemirror-view'
 import { Notify } from 'quasar'
 
 import SpellcheckService from '@/services/spellcheck'
+import { useSpellcheckStore } from '@/stores/spellcheck'
 
 const LanguageToolHelpingWords = {
   LanguageToolTransactionName: 'languageToolTransaction',
@@ -92,7 +93,15 @@ const fetchMatchesForChunk = async (apiUrl, text) => {
         'Content-Type': 'application/x-www-form-urlencoded',
         Accept: 'application/json',
       },
-      body: `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`,
+      body: (() => {
+        let b = `text=${encodeURIComponent(text)}&language=auto&enabledOnly=false`
+        try {
+          const store = useSpellcheckStore()
+          const disabled = store.disabledCategoriesString
+          if (disabled) b += `&disabledCategories=${encodeURIComponent(disabled)}`
+        } catch (_) { /* store not ready */ }
+        return b
+      })(),
     }
 
     const res = await fetch(apiUrl, postOptions)
