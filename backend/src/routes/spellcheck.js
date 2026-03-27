@@ -67,9 +67,9 @@ module.exports = function(app) {
                 return Response.Ok(res, { matches: [] });
             }
 
-            // Load custom words from MongoDB
+            // Load custom words from MongoDB (lowercased for case-insensitive matching)
             const entries = await SpellingDictionary.find({});
-            const dictionary = entries.map(e => e.word);
+            const dictionary = entries.map(e => e.word.toLowerCase());
 
             // Build request to LanguageTool
             const params = new URLSearchParams({ text, language });

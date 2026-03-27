@@ -679,9 +679,15 @@ export default {
             const match = editor.storage.languagetool.match
             const matchRange = editor.storage.languagetool.matchRange
 
-            const { from, to } = editor.state.selection
+            if (!match || !matchRange) return false
 
-            return !!match && !!matchRange && matchRange.from <= from && to <= matchRange.to
+            const { from, to } = editor.state.selection
+            if (!(matchRange.from <= from && to <= matchRange.to)) return false
+
+            // Verify the decoration still exists — if it was removed (word accepted/ignored),
+            // storage.match may be stale and the popup must not appear
+            const decos = editor.storage.languagetool.decorationSet?.find(matchRange.from, matchRange.to)
+            return !!decos && decos.length > 0
         },
 
         acceptSuggestion(sug) {

@@ -28,7 +28,7 @@ SpellingDictionarySchema.statics.create = (word) => {
             return reject({fn: 'BadParameters', message: 'Word is required'});
         }
         
-        const w = word.toLowerCase();
+        const w = word;
         // Use findOneAndUpdate with upsert to handle existing words gracefully
         const query = SpellingDictionary.findOneAndUpdate(
             { word: w },
@@ -52,7 +52,7 @@ SpellingDictionarySchema.statics.delete = (word) => {
             return reject({fn: 'BadParameters', message: 'Word is required'});
         }
         
-        const w = word.toLowerCase();
+        const w = word;
         const query = SpellingDictionary.findOneAndDelete({ word: w });
         query.exec()
         .then((row) => {
