@@ -418,9 +418,9 @@ module.exports = function(request, app) {
                 expect(response.body.datas).toContain("Missing required parameter: word");
             });
 
-            it('Should add word to dictionary (lowercase)', async () => {
+            it('Should add word to dictionary preserving original casing', async () => {
                 const testWord = 'TestWord' + Date.now(); // Unique word
-                
+
                 var response = await request(app)
                     .post('/api/spellcheck/dict')
                     .set('Cookie', [`token=JWT ${adminToken}`])
@@ -428,16 +428,16 @@ module.exports = function(request, app) {
 
                 expect(response.status).toBe(200);
                 expect(response.body.datas.success).toBe(true);
-                expect(response.body.datas.word).toBe(testWord.toLowerCase());
+                expect(response.body.datas.word).toBe(testWord);
 
-                // Verify word was added
+                // Verify word was added with original casing
                 var getResponse = await request(app)
                     .get('/api/spellcheck/dict')
                     .set('Cookie', [`token=JWT ${userToken}`]);
 
                 expect(getResponse.status).toBe(200);
                 const words = getResponse.body.datas.map(w => w.word);
-                expect(words).toContain(testWord.toLowerCase());
+                expect(words).toContain(testWord);
             });
 
             it('Should handle duplicate words gracefully', async () => {
@@ -509,7 +509,7 @@ module.exports = function(request, app) {
 
                 expect(deleteResponse.status).toBe(200);
                 expect(deleteResponse.body.datas.success).toBe(true);
-                expect(deleteResponse.body.datas.removed).toBe(testWord.toLowerCase());
+                expect(deleteResponse.body.datas.removed).toBe(testWord);
 
                 // Verify word was removed
                 var getResponse = await request(app)
@@ -518,7 +518,7 @@ module.exports = function(request, app) {
 
                 expect(getResponse.status).toBe(200);
                 const words = getResponse.body.datas.map(w => w.word);
-                expect(words).not.toContain(testWord.toLowerCase());
+                expect(words).not.toContain(testWord);
             });
 
             it('Should handle deletion of non-existent word gracefully', async () => {
