@@ -32,7 +32,7 @@
     "highlight.js": "^11.11.1",
     "js-yaml": "^4.1.1",
     "jwt-decode": "^4.0.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "lowlight": "^3.3.0",
     "pinia": "^3.0.4",
     "quasar": "2.18.6",
