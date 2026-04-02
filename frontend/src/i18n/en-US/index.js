@@ -126,6 +126,7 @@ export default {
         companyCreatedOk: 'Company created successfully',
         companyUpdatedOk: 'Company updated successfully',
         companyDeletedOk: 'Company deleted successfully',
+        downloadStatsFailed: 'Failed to download statistics',
         templateNotFound: 'Template Not Found',
         templateCreatedOk: 'Template created successfully',
         templateUpdatedOk: 'Template updated successfully',
@@ -684,6 +685,14 @@ export default {
     deleteAllVulnerabilities: 'Delete All Vulnerabilities',
     deleteAllVulnerabilitiesInfo: `Delete all existing vulnerabilities.<br />
     <strong>This action is definitive!!</strong>`,
+    findingStatistics: 'Finding Statistics by Vulnerability Type',
+    findingStatisticsInfo: `Download statistics showing the distribution of findings across all audits, grouped by vulnerability type.<br />
+    This includes counts, percentages, and CVSS severity breakdowns.`,
+    downloadStatistics: 'Download Statistics',
+    exportFormat: 'Format',
+    dateFrom: 'Date From',
+    dateTo: 'Date To',
+    noStatsPermission: 'You do not have permission to view finding statistics.',
     customSections: 'Custom Sections',
     listOfLanguages: 'List of Languages',
     editLanguages: 'Edit Languages',

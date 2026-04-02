@@ -1172,6 +1172,141 @@ AuditSchema.statics.getAuditsImages = (auditsIds = []) => {
     })
 }
 
+AuditSchema.statics.getFindingStatsByType = (isAdmin, userId, filters = {}) => {
+    return new Promise(async (resolve, reject) => {
+        var Settings = mongoose.model('Settings');
+        var settings = await Settings.getAll();
+
+        var pipeline = []
+
+        // Build match filter for access control
+        var matchFilter = {}
+        if (filters.companyId)
+            matchFilter.company = new mongoose.Types.ObjectId(filters.companyId)
+        if (filters.dateFrom || filters.dateTo) {
+            matchFilter.createdAt = {}
+            if (filters.dateFrom) matchFilter.createdAt.$gte = new Date(filters.dateFrom)
+            if (filters.dateTo) matchFilter.createdAt.$lte = new Date(filters.dateTo)
+        }
+        if (filters.auditType)
+            matchFilter.auditType = filters.auditType
+
+        // Apply base filters
+        if (Object.keys(matchFilter).length > 0)
+            pipeline.push({ $match: matchFilter })
+
+        // Apply access control filter if not admin
+        if (!isAdmin) {
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { creator: new mongoose.Types.ObjectId(userId) },
+                        { collaborators: new mongoose.Types.ObjectId(userId) },
+                        { reviewers: new mongoose.Types.ObjectId(userId) }
+                    ]
+                }
+            })
+        }
+
+        // Count total audits before unwinding
+        var auditCountPipeline = [...pipeline]
+
+        // Unwind findings array
+        pipeline.push({ $unwind: { path: '$findings', preserveNullAndEmptyArrays: false } })
+
+        // Project fields needed for grouping and severity calculation
+        pipeline.push({
+            $project: {
+                vulnType: { $ifNull: ['$findings.vulnType', 'Uncategorized'] },
+                cvssv3: '$findings.cvssv3',
+                cvssv4: '$findings.cvssv4'
+            }
+        })
+
+        // Group by vulnType
+        pipeline.push({
+            $group: {
+                _id: '$vulnType',
+                count: { $sum: 1 },
+                findings: { $push: { cvssv3: '$cvssv3', cvssv4: '$cvssv4' } }
+            }
+        })
+
+        // Sort by count descending
+        pipeline.push({ $sort: { count: -1 } })
+
+        try {
+            // Get audit count
+            auditCountPipeline.push({ $count: 'total' })
+            var auditCountResult = await Audit.aggregate(auditCountPipeline)
+            var totalAudits = auditCountResult.length > 0 ? auditCountResult[0].total : 0
+
+            // Get findings grouped by type
+            var rows = await Audit.aggregate(pipeline)
+
+            // Calculate severity breakdown for each type
+            var totalFindings = 0
+            var statisticsByType = rows.map(row => {
+                totalFindings += row.count
+
+                var bySeverity = { critical: 0, high: 0, medium: 0, low: 0, none: 0 }
+
+                row.findings.forEach(finding => {
+                    var score = null
+
+                    // Prefer CVSS v4, fallback to v3
+                    if (settings.report.public.scoringMethods.CVSS4 && finding.cvssv4) {
+                        try {
+                            var cvssObj = new cvss.Cvss4P0(finding.cvssv4).createJsonSchema()
+                            score = cvssObj.baseScore
+                        } catch (e) { /* ignore invalid vectors */ }
+                    } else if (settings.report.public.scoringMethods.CVSS3 && finding.cvssv3) {
+                        try {
+                            var cvssObj = new cvss.Cvss3P1(finding.cvssv3).createJsonSchema()
+                            score = cvssObj.baseScore
+                        } catch (e) { /* ignore invalid vectors */ }
+                    }
+
+                    // Categorize by severity
+                    if (score === null || score === 0) {
+                        bySeverity.none++
+                    } else if (score >= 9.0) {
+                        bySeverity.critical++
+                    } else if (score >= 7.0) {
+                        bySeverity.high++
+                    } else if (score >= 4.0) {
+                        bySeverity.medium++
+                    } else {
+                        bySeverity.low++
+                    }
+                })
+
+                return {
+                    vulnType: row._id,
+                    count: row.count,
+                    bySeverity: bySeverity
+                }
+            })
+
+            // Calculate percentages
+            statisticsByType.forEach(stat => {
+                stat.percentage = totalFindings > 0
+                    ? Math.round((stat.count / totalFindings) * 10000) / 100
+                    : 0
+            })
+
+            resolve({
+                generatedAt: new Date().toISOString(),
+                totalFindings: totalFindings,
+                totalAudits: totalAudits,
+                statisticsByType: statisticsByType
+            })
+        } catch (err) {
+            reject(err)
+        }
+    })
+}
+
 AuditSchema.statics.backup = (path, auditsIds = []) => {
     return new Promise(async (resolve, reject) => {
         const fs = require('fs')

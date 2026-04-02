@@ -119,4 +119,15 @@ export default {
   updateComment: function(auditId, comment) {
     return api.put(`audits/${auditId}/comments/${comment._id}`, comment)
   },
+
+  getFindingStatsByType: function(format = 'json', filters = {}) {
+    var params = { format, ...filters };
+    if (format === 'yaml' || format === 'csv') {
+      return api.get('audits/stats/findings-by-type', {
+        params,
+        responseType: 'blob'
+      });
+    }
+    return api.get('audits/stats/findings-by-type', { params });
+  },
 }
