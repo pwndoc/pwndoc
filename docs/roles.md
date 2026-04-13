@@ -7,32 +7,32 @@
 
 Here is the list of available permissions to access data:
 
-| Audits            | Vulnerabilities               | Data              | Custom Data                     | Settings             |
-|:-----------------:|:-----------------------------:|:-----------------:|:-------------------------------:|:--------------------:|
-| audits:create     | vulnerabilities:create        | users:create      | languages:create                | settings:read        |
-| audits:read       | vulnerabilities:read          | users:read        | languages:read                  | settings:read-public |
-| audits:update     | vulnerabilities:update        | users:update      | languages:update                | settings:update      |
-| audits:delete     | vulnerabilities:delete        | users:delete      | languages:delete                |                      |
-| audits:read-all   | vulnerability-updates:create  | clients:create    | audit-types:create              |                      |
-| audits:update-all |                               | clients:read      | audit-types:read                |                      |
-| audits:delete-all |                               | clients:update    | audit-types:update              |                      |
-| audits:review     |                               | clients:delete    | audit-types:delete              |                      |
-| audits:review-all |                               | companies:create  | vulnerability-types:create      |                      |
-|                   |                               | companies:read    | vulnerability-types:read        |                      |
-|                   |                               | companies:update  | vulnerability-types:update      |                      |
-|                   |                               | companies:delete  | vulnerability-types:delete      |                      |
-|                   |                               | templates:create  | vulnerability-categories:create |                      |
-|                   |                               | templates:read    | vulnerability-categories:read   |                      |
-|                   |                               | templates:update  | vulnerability-categories:update |                      |
-|                   |                               | templates:delete  | vulnerability-categories:delete |                      |
-|                   |                               | roles:read        | custom-fields:create            |                      |
-|                   |                               |                   | custom-fields:read              |                      |
-|                   |                               |                   | custom-fields:update            |                      |
-|                   |                               |                   | custom-fields:delete            |                      |
-|                   |                               |                   | sections:create                 |                      |
-|                   |                               |                   | sections:read                   |                      |
-|                   |                               |                   | sections:update                 |                      |
-|                   |                               |                   | sections:delete                 |                      |
+| Audits                     | Vulnerabilities               | Data              | Custom Data                     | Settings             |
+|:--------------------------:|:-----------------------------:|:-----------------:|:-------------------------------:|:--------------------:|
+| audits:create              | vulnerabilities:create        | users:create      | languages:create                | settings:read        |
+| audits:read                | vulnerabilities:read          | users:read        | languages:read                  | settings:read-public |
+| audits:update              | vulnerabilities:update        | users:update      | languages:update                | settings:update      |
+| audits:delete              | vulnerabilities:delete        | users:delete      | languages:delete                | backups:read         |
+| audits:read-all            | vulnerability-updates:create  | clients:create    | audit-types:create              | backups:create       |
+| audits:update-all          | vulnerabilities:delete-all    | clients:read      | audit-types:read                | spellcheck:read      |
+| audits:delete-all          |                               | clients:update    | audit-types:update              | spellcheck:create    |
+| audits:review              |                               | clients:delete    | audit-types:delete              |                      |
+| audits:review-all          |                               | companies:create  | vulnerability-types:create      |                      |
+| audits:comments:create     |                               | companies:read    | vulnerability-types:read        |                      |
+| audits:comments:create-all |                               | companies:update  | vulnerability-types:update      |                      |
+| audits:comments:update     |                               | companies:delete  | vulnerability-types:delete      |                      |
+| audits:comments:update-all |                               | templates:create  | vulnerability-categories:create |                      |
+| audits:comments:delete     |                               | templates:read    | vulnerability-categories:read   |                      |
+| audits:comments:delete-all |                               | templates:update  | vulnerability-categories:update |                      |
+|                            |                               | templates:delete  | vulnerability-categories:delete |                      |
+|                            |                               | roles:read        | custom-fields:create            |                      |
+|                            |                               | images:create     | custom-fields:read              |                      |
+|                            |                               | images:read       | custom-fields:update            |                      |
+|                            |                               |                   | custom-fields:delete            |                      |
+|                            |                               |                   | sections:create                 |                      |
+|                            |                               |                   | sections:read                   |                      |
+|                            |                               |                   | sections:update                 |                      |
+|                            |                               |                   | sections:delete                 |                      |
 
 
 ## Built-In Roles
@@ -42,12 +42,14 @@ Here is the list of available permissions to access data:
 This role has following permissions:
 
 - audits:create, audits:read, audits:update, audits:delete
+- images:create, images:read
 - vulnerabilities:read, vulnerability-updates:create
 - users:read, roles:read
 - clients:create, clients:read, clients:update, clients:delete
 - companies:create, companies:read, companies:update, companies:delete
 - templates:read
 - languages:read, audit-types:read, vulnerability-types:read, vulnerability-categories:read, sections:read, custom-fields:read
+- spellcheck:read, spellcheck:create
 - settings:read-public
 
 ### admin

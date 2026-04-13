@@ -52,7 +52,7 @@ Proof of Concept / Exploitation of the vulnerability.
 
 **DETAILS**
 
-Other details like affected assets, CVSS, etc.
+Other details like affected assets, CVSS v3, CVSS v4, etc. The scoring panels available in this tab depend on the scoring types enabled in [Settings](/settings.md#scoring-types).
 
 ### Actions
 
@@ -64,11 +64,54 @@ The ![Propose Creation / Update in Vulnerability Database](/_images/finding_upd
 
 Saving can be done with the upper right button or by the most acclaimed feature: <kbd>Ctrl</kbd>+<kbd>S</kbd> or <kbd>&#8984;</kbd>+<kbd>S</kbd>
 
+### Retest Audits
+
+When an audit type uses the `retest` stage, each finding includes additional retest fields:
+
+- **Retest Status** — Set the validation result to `ok` (Corrected), `ko` (Not corrected), `partial` (Partially corrected), or `unknown` (Not verifiable).
+- **Retest Description** — Write the retest response for the finding.
+- **Split View** — Toggle split view to display the original finding data in a read-only panel beside the editable retest response.
+
 ## Custom Sections
 
-Add any Custom Section previously defined in [Custom Data](/data?id=custom-sections).
+Custom Sections are configured on the selected Audit Type in [Custom Data](/data?id=audit-types). When you create an audit, every section attached to that Audit Type is added automatically.
+
+Inside the audit edit page, custom sections appear in the left sidebar with the built-in sections. You can open them there and edit their content, but you cannot add or remove sections from the audit editor itself.
 
 ![Custom Sections](/_images/audit_custom_section_add.png)
+
+## Comments
+
+Each audit has a comment panel accessible from the audit edit page. Comments allow collaborators to leave notes, questions, and feedback directly on the audit without modifying its content.
+
+![Comments panel showing an active comment thread with a reply](/_images/audits-comments-panel.png)
+
+### Adding a Comment
+
+Enable comment mode on the audit edit page, then select text in any editor field to attach a comment to it. Enter your comment text and submit.
+
+### Replies
+
+Click on a comment to focus it, then type in the reply input at the bottom of the comment card and press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit. Replies are threaded under the parent comment.
+
+### Resolving and Reopening
+
+Once a comment has been addressed, mark it as resolved. Resolved comments are visually distinct and can be filtered out of the view. Click the reopen button to reactivate a resolved comment if needed.
+
+### Filtering
+
+Use the filter menu in the comment panel header to show:
+- **All** — active and resolved comments
+- **Active** — open comments only
+- **Resolved** — resolved comments only
+
+### Permissions
+
+| Action | Permission required |
+|--------|-------------------|
+| Create comments and replies | `audits:comments:create` |
+| Edit comments and replies | `audits:comments:update` |
+| Delete comments and replies | `audits:comments:delete` |
 
 ## Reviews
 

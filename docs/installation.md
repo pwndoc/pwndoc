@@ -1,106 +1,201 @@
 # Installation
 
-> PwnDoc uses 3 containers: the backend, the frontend and the database. 
+> PwnDoc uses 4 containers: backend, frontend, database, and optionally LanguageTool for spellcheck.
 
-## Production
+All operations are done through the `./pwndoc-cli` wrapper script. It handles environment selection, Docker Compose orchestration, and testing.
 
-All 3 containers can be run at once using the docker-compose file in the root directory.
+## Prerequisites
 
-!> For production usage make sure to change the certificates in `backend/ssl` folder and optionally to set the JWT secret in `backend/src/lib/auth.js` (`jwtSecret` and `jwtRefreshSecret` in `backend/src/config/config.json`) if you don't want to use random ones.
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- Git (for dev and prod-local environments)
 
-Build and run Docker containers
+## Quick Start
 
-```
-docker-compose up -d --build
-```
+### Production (recommended)
 
-Display backend container logs
-
-```
-docker-compose logs -f pwndoc-backend
-```
-
-Stop/Start containers
+Pulls pre-built images and starts all containers:
 
 ```
-docker-compose stop
-docker-compose start
+./pwndoc-cli up
 ```
 
-Remove containers
+Application is accessible at **https://localhost:8443**
+API is accessible at **https://localhost:8443/api**
+
+### Development
+
+Mounts local source and enables hot-reload:
 
 ```
-docker-compose down
+./pwndoc-cli up --dev
 ```
 
-Update
+Application is accessible at **https://localhost:8081**
+API is accessible at **https://localhost:8081/api**
+
+### Prod-local
+
+Builds images from local source with production configuration:
 
 ```
-docker-compose down
-git pull
-docker-compose up -d --build
+./pwndoc-cli up --prod-local
 ```
 
-Application is accessible through https://localhost:8443  
-API is accessible through https://localhost:8443/api
-## Development
+## Common Operations
 
-For development purposes, specific docker-compose file can be used in each folder (backend/frontend).
+| Command | Description |
+|---------|-------------|
+| `./pwndoc-cli up` | Build and start containers |
+| `./pwndoc-cli down` | Stop and remove containers |
+| `./pwndoc-cli stop` | Stop containers (keep data) |
+| `./pwndoc-cli start` | Start stopped containers |
+| `./pwndoc-cli restart` | Restart containers |
+| `./pwndoc-cli logs` | Follow container logs |
+| `./pwndoc-cli ps` | Show container status |
+| `./pwndoc-cli update` | Update to latest version |
+| `./pwndoc-cli build` | Build images without starting |
 
-> *Source code can be modified live and application will automatically reload on changes.*
-
-Build and run backend and database containers
-
-```
-docker-compose -f backend/docker-compose.dev.yml up -d --build
-```
-
-Display backend container logs
-
-```
-docker-compose -f backend/docker-compose.dev.yml logs -f pwndoc-backend
-```
-
-Stop/Start container
+Add `--backend-only` or `--frontend-only` to target specific services:
 
 ```
-docker-compose -f backend/docker-compose.dev.yml stop
-docker-compose -f backend/docker-compose.dev.yml start
+./pwndoc-cli logs --backend-only
+./pwndoc-cli restart --dev --backend-only
 ```
 
-Remove containers
+## LanguageTool (spellcheck)
+
+Start PwnDoc with the optional LanguageTool container:
 
 ```
-docker-compose -f backend/docker-compose.dev.yml down
+./pwndoc-cli up --with-lt
 ```
 
-Application is accessible through https://localhost:8081  
-API is accessible through https://localhost:8081/api
-
-## Tests
-
-> For now only backend tests have been written (it's a continuous work in progress)
-
-Test files are located in `backend/tests` using Jest testing framework
-
-Script `run_tests.sh` at the root folder can be used to launch tests :
+Once running, retrieve the generated API key:
 
 ```
-Usage:        ./run_tests.sh -q|-f [-h, --help]
-
-Options:
-  -h, --help  Display help
-  -q          Run quick tests (No build)
-  -f          Run full tests (Build with no cache)
+./pwndoc-cli lt-apikey
 ```
 
-!> **Don't use it in production as it will delete the production Database**
+Enter this key in **Settings → Spellcheck** along with the LanguageTool URL (`http://languagetools:8010/v2`).
+
+> When bringing containers down, `./pwndoc-cli down` always removes the LanguageTool container even if `--with-lt` wasn't passed.
+
+## Update
+
+```
+./pwndoc-cli update
+```
+
+- **prod**: pulls the latest pre-built images, then recreates changed containers
+- **dev / prod-local**: runs `git pull`, rebuilds images, then recreates containers
+
+The command verifies all containers are running after update and reports any failures.
+
+```
+./pwndoc-cli update --dev
+./pwndoc-cli update --prod-local
+```
+
+## Security
+
+!> For production usage, replace the self-signed certificates in `backend/ssl/` with your own. You can also set custom JWT secrets in `backend/src/config/config.json` (`jwtSecret` and `jwtRefreshSecret`); if left empty, random secrets are generated on each start.
+
+## Testing
+
+> **Warning:** Tests use an ephemeral database that is wiped before each run. Never run tests against a production instance.
+
+Run all test suites:
+
+```
+./pwndoc-cli test
+```
+
+Run specific suites:
+
+```
+./pwndoc-cli test --backend              # Backend API tests (Jest + ephemeral MongoDB)
+./pwndoc-cli test --frontend-unit        # Frontend unit tests (Vitest, no browser needed)
+./pwndoc-cli test --frontend-e2e         # E2E tests (Playwright, full stack)
+```
+
+Flags are combinable:
+
+```
+./pwndoc-cli test --backend --frontend-unit
+```
+
+### Coverage
+
+```
+./pwndoc-cli test --coverage                      # Backend + frontend-unit coverage
+./pwndoc-cli test --backend --coverage            # Backend only
+./pwndoc-cli test --frontend-unit --coverage      # Frontend unit only
+```
+
+Coverage reports are written to `backend/coverage/` and `frontend/coverage/unit/`.
+
+> Coverage is not supported with `--frontend-e2e`.
+
+### Playwright options
+
+```
+./pwndoc-cli test --frontend-e2e --ui             # Playwright UI mode (port 8082)
+./pwndoc-cli test --frontend-e2e --chromium       # Chromium only
+./pwndoc-cli test --frontend-e2e --firefox        # Firefox only
+./pwndoc-cli test --frontend-e2e --webkit         # WebKit only
+./pwndoc-cli test --frontend-e2e --chromium --firefox   # Multiple browsers
+```
+
+## Tab Completion
+
+Enable bash tab completion for `./pwndoc-cli`:
+
+```
+source <(./pwndoc-cli completion)
+```
+
+Add this line to your `~/.bashrc` or `~/.zshrc` to make it permanent.
 
 ## Backup
 
-It's possible, even recommended, to regularly backup the `backend/mongo-data` folder. It contains all the database.
+The recommended way to create and manage backups is through the in-app **[Settings → Backups](settings.md#backups)** page, which supports encrypted backups, selective restore, and more.
 
-To restore :
-- Stop containers
-- Replace the current `backend/mongo-data` folder with the backed up one
-- Start containers
+As a lower-level fallback, you can back up the raw MongoDB data folder:
+
+```
+# Stop containers first
+./pwndoc-cli stop
+
+# Back up the database folder
+cp -r backend/mongo-data /your/backup/location/
+
+# Restart
+./pwndoc-cli start
+```
+
+To restore from a folder backup: stop containers, replace `backend/mongo-data` with the backup, and start again.
+
+---
+
+## Manual Docker Compose
+
+For users who prefer to run Docker Compose commands directly, here are the equivalents of what `pwndoc-cli` wraps:
+
+**Production:**
+```
+docker compose -f docker-compose.yml -f docker-compose.prod.yml -p pwndoc up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml -p pwndoc down
+docker compose -f docker-compose.yml -f docker-compose.prod.yml -p pwndoc logs -f
+```
+
+**Development:**
+```
+docker compose -f docker-compose.yml -f docker-compose.dev.yml -p pwndoc-dev up -d --build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml -p pwndoc-dev down
+docker compose -f docker-compose.yml -f docker-compose.dev.yml -p pwndoc-dev logs -f
+```
+
+**With LanguageTool (add to any command):**
+```
+--profile languagetools
+```

@@ -14,7 +14,7 @@ A Vulnerability is defined by:
 - Language
 - Description
 - Observation
-- CVSS
+- CVSS (v3 and/or v4, depending on which scoring types are enabled in [Settings](settings.md#scoring-types))
 - Remediation
 - Remediation Complexity
 - Remediation Priority
@@ -31,11 +31,11 @@ There is also the possibility to search Audits containing the Vulnerability in i
 
 Vulnerabilities can be exported/imported in Data menu.
 
-The export format is yaml.
+The export format is yaml. Both CVSSv3 and CVSSv4 strings are included when present.
 
 **Example**
 ```
-- references: 
+- references:
     - reference1
     - reference2
   cvssv3: 'CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N'
