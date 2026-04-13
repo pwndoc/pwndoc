@@ -6,8 +6,8 @@
           <span v-if="alt" class="text-italic">{{alt}}</span>
           <span v-else class="text-italic text-grey-7">Caption</span>
         </div>
-        <q-popup-edit v-model="alt" auto-save>
-          <q-input style="width:600px" autofocus :prefix="label+' - '" v-model="alt" placeholder="Caption" />
+        <q-popup-edit v-model="alt" auto-save v-slot="scope">
+          <q-input style="width:600px" autofocus :prefix="label+' - '" v-model="scope.value" placeholder="Caption" @keyup.enter="scope.set" @keyup.esc="scope.cancel" />
         </q-popup-edit>
       </div>
   </node-view-wrapper>

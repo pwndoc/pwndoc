@@ -4,8 +4,8 @@
       <q-img :src="src" :class="{'selected': selected}" style="max-width:600px;margin-bottom:4px" />
       <div>
         <q-input input-class="text-center cursor-pointer" readonly borderless dense v-model="alt" placeholder="Caption" />
-        <q-popup-edit v-model="alt" auto-save>
-          <q-input input-class="text-center" autofocus v-model="alt" placeholder="Caption" />
+        <q-popup-edit v-model="alt" auto-save v-slot="scope">
+          <q-input input-class="text-center" autofocus v-model="scope.value" placeholder="Caption" @keyup.enter="scope.set" @keyup.esc="scope.cancel" />
         </q-popup-edit>
       </div>
     </figure>
