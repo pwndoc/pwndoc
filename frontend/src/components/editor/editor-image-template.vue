@@ -1,12 +1,27 @@
 <template>
   <node-view-wrapper :class="{'comment-focused': focused, 'comment-enabled': enabled}">
-    <figure style="margin: auto; display: table; width:600px" data-drag-handle>
+    <figure style="margin: 0px auto 16px auto; display: table; width:600px" data-drag-handle>
       <q-img :src="src" :class="{'selected': selected}" style="max-width:600px;margin-bottom:4px" />
-      <div>
-        <q-input input-class="text-center cursor-pointer" readonly borderless dense v-model="alt" placeholder="Caption" />
-        <q-popup-edit v-model="alt" auto-save v-slot="scope">
-          <q-input input-class="text-center" autofocus v-model="scope.value" placeholder="Caption" @keyup.enter="scope.set" @keyup.esc="scope.cancel" />
-        </q-popup-edit>
+      <div style="text-align:center">
+        <div v-if="!editing" class="caption-display" style="justify-content:center" @click="startEdit">
+          <span v-if="alt" class="text-italic">{{alt}}</span>
+          <span v-else class="text-italic text-grey-7">Caption</span>
+          <q-icon name="edit" class="caption-edit-icon" />
+        </div>
+        <template v-else>
+          <textarea
+            ref="input"
+            v-model="draftAlt"
+            class="caption-input"
+            rows="1"
+            placeholder="Caption"
+            @input="autoResize"
+            @keyup.enter.prevent="saveEdit"
+            @keyup.esc="cancelEdit"
+            @blur="saveEdit"
+          />
+          <div class="caption-edit-hint">Editing… press Esc to cancel</div>
+        </template>
       </div>
     </figure>
   </node-view-wrapper>
@@ -20,6 +35,9 @@ export default {
     NodeViewWrapper
   },
   props: nodeViewProps,
+  data() {
+    return { editing: false, draftAlt: '' }
+  },
   computed: {
     src: {
       get() {
@@ -64,6 +82,71 @@ export default {
         });
       }
     }
+  },
+  methods: {
+    startEdit() {
+      this.draftAlt = this.alt || ''
+      this.editing = true
+      this.$nextTick(() => {
+        this.$refs.input.focus()
+        this.autoResize()
+      })
+    },
+    autoResize() {
+      const el = this.$refs.input
+      el.style.height = 'auto'
+      el.style.height = el.scrollHeight + 'px'
+    },
+    saveEdit() {
+      if (!this.editing) return
+      this.alt = this.draftAlt.trim()
+      this.editing = false
+    },
+    cancelEdit() {
+      this.editing = false
+    }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.caption-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 6px;
+
+  .caption-edit-icon {
+    opacity: 0;
+    font-size: 12px;
+  }
+
+  &:hover .caption-edit-icon {
+    opacity: 0.6;
+  }
+}
+
+.caption-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid $primary;
+  outline: none;
+  font-style: italic;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  padding: 2px 4px;
+  resize: none;
+  overflow: hidden;
+  text-align: center;
+}
+
+.caption-edit-hint {
+  font-size: 11px;
+  opacity: 0.45;
+  margin-top: 2px;
+}
+</style>
