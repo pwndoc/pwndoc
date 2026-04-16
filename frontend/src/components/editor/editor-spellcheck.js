@@ -27,13 +27,19 @@ const updateMatchAndRange = (storage, m, range) => {
 }
 
 const createMouseEventsListener = (storage) => (e) => {
-  if (!e.target) return
+  if (!e.target || !storage.editorView) return
 
   const matchString = e.target.getAttribute('match')?.trim()
   if (!matchString) return
 
-  const { match: m, from, to } = JSON.parse(matchString)
-  updateMatchAndRange(storage, m, { from, to })
+  const { match: m } = JSON.parse(matchString)
+  try {
+    const from = storage.editorView.posAtDOM(e.target, 0)
+    const to = storage.editorView.posAtDOM(e.target, e.target.childNodes.length)
+    updateMatchAndRange(storage, m, { from, to })
+  } catch (_) {
+    // Element no longer in editor DOM (decoration removed mid-flight)
+  }
 }
 
 const addEventListenersToDecorations = (storage) => {
@@ -58,7 +64,7 @@ const gimmeDecoration = (from, to, match) =>
   Decoration.inline(from, to, {
     class: `lt lt-${match.rule.issueType}`,
     nodeName: 'span',
-    match: JSON.stringify({ match, from, to }),
+    match: JSON.stringify({ match }),
   })
 
 const moreThan500Words = (s) => s.trim().split(/\s+/).length >= 500
@@ -172,7 +178,9 @@ const getMatchAndSetDecorations = async (storage, doc, text, originalFrom, offse
 }
 
 const createDebouncedGetMatchAndSetDecorations = (storage) => {
-  return debounce((doc, text, originalFrom) => {
+  return debounce((text, originalFrom) => {
+    if (!storage.editorView) return
+    const doc = storage.editorView.state.doc
     getMatchAndSetDecorations(storage, doc, text, originalFrom)
   }, 1500)
 }
@@ -428,7 +436,6 @@ export const LanguageTool = Extension.create({
                 if (selectedNode && this.storage.editorView && this.storage.debouncedGetMatchAndSetDecorations) {
                   const originalFrom = selectedNode.pos + 1
                   this.storage.debouncedGetMatchAndSetDecorations(
-                    selectedNode.node,
                     selectedNode.node.textContent,
                     originalFrom
                   )
