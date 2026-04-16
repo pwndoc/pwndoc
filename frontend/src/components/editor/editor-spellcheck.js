@@ -48,15 +48,18 @@ const addEventListenersToDecorations = (storage) => {
   // Query only within this editor's DOM element
   const decorations = storage.editorView.dom.querySelectorAll('span.lt')
   decorations.forEach((el) => {
-    // Remove old listeners to avoid duplicates
-    if (el._ltMouseHandler) {
-      el.removeEventListener('mouseover', el._ltMouseHandler)
-      el.removeEventListener('mouseenter', el._ltMouseHandler)
+    // Remove old listener to avoid duplicates
+    if (el._ltClickHandler) {
+      el.removeEventListener('mousedown', el._ltClickHandler)
     }
-    // Create and store the handler on the element
-    el._ltMouseHandler = debounce(createMouseEventsListener(storage), 50)
-    el.addEventListener('mouseover', el._ltMouseHandler)
-    el.addEventListener('mouseenter', el._ltMouseHandler)
+    // Use mousedown so the match is set before ProseMirror processes the cursor
+    // placement — the BubbleMenu only re-evaluates on selection changes, so the
+    // match must already be in storage when that transaction fires.
+    el._ltClickHandler = (e) => {
+      storage._pendingClickActivation = true
+      createMouseEventsListener(storage)(e)
+    }
+    el.addEventListener('mousedown', el._ltClickHandler)
   })
 }
 
@@ -286,6 +289,7 @@ export const LanguageTool = Extension.create({
   addStorage() {
     return {
       match: undefined,
+      matchActivated: false,
       loading: false,
       matchRange: { from: -1, to: -1 },
       active: this.options.active,
@@ -298,6 +302,7 @@ export const LanguageTool = Extension.create({
       forceFullProofread: false,
       debouncedGetMatchAndSetDecorations: null,
       debouncedProofreadAndDecorate: null,
+      _pendingClickActivation: false,
     }
   },
 
@@ -423,6 +428,17 @@ export const LanguageTool = Extension.create({
 
             const ltDecorations = tr.getMeta(LanguageToolHelpingWords.LanguageToolTransactionName)
             if (ltDecorations) return this.storage.decorationSet
+
+            // Cursor movement or typing: dismiss popup unless this selection change
+            // was caused by mousedown on an error span (_pendingClickActivation flag).
+            if (!loading && (tr.selectionSet || tr.docChanged)) {
+              if (this.storage._pendingClickActivation) {
+                this.storage._pendingClickActivation = false
+                this.storage.matchActivated = true
+              } else {
+                this.storage.matchActivated = false
+              }
+            }
 
             if (tr.docChanged && this.options.automaticMode) {
               // Full proofread if not done initially or if paste triggered it
