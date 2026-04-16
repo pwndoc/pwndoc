@@ -353,6 +353,20 @@ export const LanguageTool = Extension.create({
           return false
         },
 
+      removeCurrentMatchDecoration:
+        () =>
+        ({ editor }) => {
+          const range = this.storage.matchRange
+          if (!range) return false
+          const toRemove = this.storage.decorationSet.find(range.from, range.to)
+          if (toRemove.length > 0) {
+            this.storage.decorationSet = this.storage.decorationSet.remove(toRemove)
+            const { dispatch, state } = editor.view
+            dispatch(state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
+          }
+          return true
+        },
+
       toggleLanguageTool:
         () =>
         ({ commands }) => {

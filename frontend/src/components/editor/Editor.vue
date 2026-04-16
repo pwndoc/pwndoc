@@ -692,6 +692,7 @@ export default {
 
         acceptSuggestion(sug) {
             const from = this.editor.storage.languagetool.matchRange.from
+            this.editor.commands.removeCurrentMatchDecoration()
             this.editor.commands.insertContentAt(this.editor.storage.languagetool.matchRange, sug.value)
             this.editor.commands.resetLanguageToolMatch()
             this.editor.commands.setTextSelection(from)
