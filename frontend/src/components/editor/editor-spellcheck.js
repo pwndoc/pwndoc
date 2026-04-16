@@ -27,13 +27,19 @@ const updateMatchAndRange = (storage, m, range) => {
 }
 
 const createMouseEventsListener = (storage) => (e) => {
-  if (!e.target) return
+  if (!e.target || !storage.editorView) return
 
   const matchString = e.target.getAttribute('match')?.trim()
   if (!matchString) return
 
-  const { match: m, from, to } = JSON.parse(matchString)
-  updateMatchAndRange(storage, m, { from, to })
+  const { match: m } = JSON.parse(matchString)
+  try {
+    const from = storage.editorView.posAtDOM(e.target, 0)
+    const to = storage.editorView.posAtDOM(e.target, e.target.childNodes.length)
+    updateMatchAndRange(storage, m, { from, to })
+  } catch (_) {
+    // Element no longer in editor DOM (decoration removed mid-flight)
+  }
 }
 
 const addEventListenersToDecorations = (storage) => {
@@ -42,15 +48,18 @@ const addEventListenersToDecorations = (storage) => {
   // Query only within this editor's DOM element
   const decorations = storage.editorView.dom.querySelectorAll('span.lt')
   decorations.forEach((el) => {
-    // Remove old listeners to avoid duplicates
-    if (el._ltMouseHandler) {
-      el.removeEventListener('mouseover', el._ltMouseHandler)
-      el.removeEventListener('mouseenter', el._ltMouseHandler)
+    // Remove old listener to avoid duplicates
+    if (el._ltClickHandler) {
+      el.removeEventListener('mousedown', el._ltClickHandler)
     }
-    // Create and store the handler on the element
-    el._ltMouseHandler = debounce(createMouseEventsListener(storage), 50)
-    el.addEventListener('mouseover', el._ltMouseHandler)
-    el.addEventListener('mouseenter', el._ltMouseHandler)
+    // Use mousedown so the match is set before ProseMirror processes the cursor
+    // placement — the BubbleMenu only re-evaluates on selection changes, so the
+    // match must already be in storage when that transaction fires.
+    el._ltClickHandler = (e) => {
+      storage._pendingClickActivation = true
+      createMouseEventsListener(storage)(e)
+    }
+    el.addEventListener('mousedown', el._ltClickHandler)
   })
 }
 
@@ -58,7 +67,7 @@ const gimmeDecoration = (from, to, match) =>
   Decoration.inline(from, to, {
     class: `lt lt-${match.rule.issueType}`,
     nodeName: 'span',
-    match: JSON.stringify({ match, from, to }),
+    match: JSON.stringify({ match }),
   })
 
 const moreThan500Words = (s) => s.trim().split(/\s+/).length >= 500
@@ -172,7 +181,9 @@ const getMatchAndSetDecorations = async (storage, doc, text, originalFrom, offse
 }
 
 const createDebouncedGetMatchAndSetDecorations = (storage) => {
-  return debounce((doc, text, originalFrom) => {
+  return debounce((text, originalFrom) => {
+    if (!storage.editorView) return
+    const doc = storage.editorView.state.doc
     getMatchAndSetDecorations(storage, doc, text, originalFrom)
   }, 1500)
 }
@@ -278,6 +289,7 @@ export const LanguageTool = Extension.create({
   addStorage() {
     return {
       match: undefined,
+      matchActivated: false,
       loading: false,
       matchRange: { from: -1, to: -1 },
       active: this.options.active,
@@ -290,6 +302,7 @@ export const LanguageTool = Extension.create({
       forceFullProofread: false,
       debouncedGetMatchAndSetDecorations: null,
       debouncedProofreadAndDecorate: null,
+      _pendingClickActivation: false,
     }
   },
 
@@ -343,6 +356,20 @@ export const LanguageTool = Extension.create({
           )
 
           return false
+        },
+
+      removeCurrentMatchDecoration:
+        () =>
+        ({ editor }) => {
+          const range = this.storage.matchRange
+          if (!range) return false
+          const toRemove = this.storage.decorationSet.find(range.from, range.to)
+          if (toRemove.length > 0) {
+            this.storage.decorationSet = this.storage.decorationSet.remove(toRemove)
+            const { dispatch, state } = editor.view
+            dispatch(state.tr.setMeta(LanguageToolHelpingWords.LanguageToolTransactionName, true))
+          }
+          return true
         },
 
       toggleLanguageTool:
@@ -402,6 +429,17 @@ export const LanguageTool = Extension.create({
             const ltDecorations = tr.getMeta(LanguageToolHelpingWords.LanguageToolTransactionName)
             if (ltDecorations) return this.storage.decorationSet
 
+            // Cursor movement or typing: dismiss popup unless this selection change
+            // was caused by mousedown on an error span (_pendingClickActivation flag).
+            if (!loading && (tr.selectionSet || tr.docChanged)) {
+              if (this.storage._pendingClickActivation) {
+                this.storage._pendingClickActivation = false
+                this.storage.matchActivated = true
+              } else {
+                this.storage.matchActivated = false
+              }
+            }
+
             if (tr.docChanged && this.options.automaticMode) {
               // Full proofread if not done initially or if paste triggered it
               if (!this.storage.proofReadInitially || this.storage.forceFullProofread) {
@@ -428,7 +466,6 @@ export const LanguageTool = Extension.create({
                 if (selectedNode && this.storage.editorView && this.storage.debouncedGetMatchAndSetDecorations) {
                   const originalFrom = selectedNode.pos + 1
                   this.storage.debouncedGetMatchAndSetDecorations(
-                    selectedNode.node,
                     selectedNode.node.textContent,
                     originalFrom
                   )

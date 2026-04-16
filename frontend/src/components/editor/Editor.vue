@@ -680,9 +680,7 @@ export default {
             const matchRange = editor.storage.languagetool.matchRange
 
             if (!match || !matchRange) return false
-
-            const { from, to } = editor.state.selection
-            if (!(matchRange.from <= from && to <= matchRange.to)) return false
+            if (!editor.storage.languagetool.matchActivated) return false
 
             // Verify the decoration still exists — if it was removed (word accepted/ignored),
             // storage.match may be stale and the popup must not appear
@@ -692,6 +690,7 @@ export default {
 
         acceptSuggestion(sug) {
             const from = this.editor.storage.languagetool.matchRange.from
+            this.editor.commands.removeCurrentMatchDecoration()
             this.editor.commands.insertContentAt(this.editor.storage.languagetool.matchRange, sug.value)
             this.editor.commands.resetLanguageToolMatch()
             this.editor.commands.setTextSelection(from)
