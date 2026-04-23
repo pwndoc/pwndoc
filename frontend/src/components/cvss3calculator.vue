@@ -951,6 +951,7 @@ export default {
                     switch(elt[0]) {
                         case "CVSS":
                             this.cvssObj.version = elt[1];
+                            break;
                         case "AV":
                             this.cvssObj.AV = elt[1];
                             break;
