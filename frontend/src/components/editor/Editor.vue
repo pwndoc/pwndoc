@@ -151,6 +151,74 @@
                     </q-btn>
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
+
+                <template v-if="toolbar.indexOf('table') !== -1">
+                    <q-separator vertical class="q-mx-sm" />
+                    <div>
+                        <q-btn flat size="sm" dense
+                        @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">Insert Table</q-tooltip>
+                            <q-icon name="mdi-table" />
+                        </q-btn>
+
+                        <q-btn flat size="sm" dense
+                        :disabled="!editor.can().addColumnAfter()"
+                        @click="editor.chain().focus().addColumnAfter().run()"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">Add Column</q-tooltip>
+                            <q-icon name="mdi-table-column-plus-after" />
+                        </q-btn>
+
+                        <q-btn flat size="sm" dense
+                        :disabled="!editor.can().addRowAfter()"
+                        @click="editor.chain().focus().addRowAfter().run()"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">Add Row</q-tooltip>
+                            <q-icon name="mdi-table-row-plus-after" />
+                        </q-btn>
+
+                        <q-btn flat size="sm" dense
+                        :disabled="!editor.can().mergeCells()"
+                        @click="editor.chain().focus().mergeCells().run()"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">Merge Cells</q-tooltip>
+                            <q-icon name="mdi-call-merge" />
+                        </q-btn>
+
+                        <q-btn flat size="sm" dense
+                        :disabled="!editor.can().splitCell()"
+                        @click="editor.chain().focus().splitCell().run()"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">Split Cell</q-tooltip>
+                            <q-icon name="mdi-call-split" />
+                        </q-btn>
+
+                        <q-btn flat size="sm" dense
+                        :disabled="!editor.can().deleteRow()"
+                        @click="editor.chain().focus().deleteRow().run()"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">Delete Row</q-tooltip>
+                            <q-icon name="mdi-table-row-remove" />
+                        </q-btn>
+
+                        <q-btn flat size="sm" dense
+                        :disabled="!editor.can().deleteColumn()"
+                        @click="editor.chain().focus().deleteColumn().run()"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">Delete Column</q-tooltip>
+                            <q-icon name="mdi-table-column-remove" />
+                        </q-btn>
+
+                        <q-btn flat size="sm" dense
+                        :disabled="!editor.can().deleteTable()"
+                        @click="editor.chain().focus().deleteTable().run()"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">Delete Table</q-tooltip>
+                            <q-icon name="mdi-delete-table" />
+                        </q-btn>
+                    </div>
+                </template>
                     
                 <div v-if="toolbar.indexOf('image') !== -1">
                     <q-tooltip :delay="500" class="text-bold">Insert Image</q-tooltip>
@@ -299,6 +367,10 @@ import { Editor, EditorContent, BubbleMenu, VueNodeViewRenderer } from '@tiptap/
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Code from '@tiptap/extension-code'
 import StarterKit from '@tiptap/starter-kit'
+import Table from '@tiptap/extension-table'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import TableRow from '@tiptap/extension-table-row'
 import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
@@ -332,7 +404,7 @@ export default {
         toolbar: {
             type: Array,
             default: function() {
-                return ['format', 'marks', 'list', 'code', 'image', 'caption']
+                return ['format', 'marks', 'list', 'code', 'table', 'image', 'caption']
             }
         },
         noAffix: {
@@ -390,6 +462,12 @@ export default {
                         code: false
                     }),
                     Underline,
+                    Table.configure({
+                        resizable: true
+                    }),
+                    TableRow,
+                    TableHeader,
+                    TableCell,
                     CustomImage,
                     Caption,
                     Comment,

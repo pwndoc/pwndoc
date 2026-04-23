@@ -74,6 +74,19 @@ describe('Utils Service', () => {
       expect(result).toContain('id="comment123"')
     })
 
+    it('should preserve table markup and cell attributes', () => {
+      const html = '<table><colgroup><col style="width: 120px"></colgroup><tbody><tr><th colspan="2" rowspan="1" data-colwidth="120,180"><p>Header</p></th><td data-colwidth="180"><p>Cell</p></td></tr></tbody></table>'
+      const result = Utils.htmlEncode(html)
+      expect(result).toContain('<table>')
+      expect(result).toContain('<tbody>')
+      expect(result).toContain('<th')
+      expect(result).toContain('<td')
+      expect(result).toContain('colspan="2"')
+      expect(result).toContain('rowspan="1"')
+      expect(result).toContain('data-colwidth="120,180"')
+      expect(result).toContain('style="width: 120px"')
+    })
+
     it('should normalize invisible characters', () => {
       const html = '<p>Test\u00A0with\u200Binvisible\u200Ccharacters</p>'
       const result = Utils.htmlEncode(html)
