@@ -795,6 +795,26 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
     })
 }
 
+function getSafeCvssScoreData(settings, finding) {
+    try {
+        if (settings.report.public.scoringMethods.CVSS4 && finding.cvssv4) {
+            var cvssData = new cvss.Cvss4P0(finding.cvssv4).createJsonSchema()
+
+            // Fix for the CVSS 4 -> CVSS 3.1 value mappings
+            cvssData.temporalScore = cvssData.threatScore
+
+            return cvssData
+        }
+
+        if (settings.report.public.scoringMethods.CVSS3 && finding.cvssv3)
+            return new cvss.Cvss3P1(finding.cvssv3).createJsonSchema()
+    } catch (err) {
+        return null
+    }
+
+    return null
+}
+
 // Update audit sort options for findings and run the sorting. If update param is null then just run sorting
 AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
     return new Promise(async (resolve, reject) => {
@@ -850,26 +870,8 @@ AuditSchema.statics.updateSortFindings = (isAdmin, auditId, userId, update) => {
 
                 var tmpFindings = group.findings
                 .sort((a,b) => {
-                    var cvssA = null;
-                    var cvssB = null;
-
-                    if (settings.report.public.scoringMethods.CVSS4 && a.cvssv4) {
-                        var cvssA = new cvss.Cvss4P0(a.cvssv4).createJsonSchema()
-
-                        // Fix for the CVSS 4 -> CVSS 3.1 value mappings
-                        cvssA.temporalScore = cvssA.threatScore
-                    } else if (settings.report.public.scoringMethods.CVSS3 && a.cvssv3) {
-                        var cvssA = new cvss.Cvss3P1(a.cvssv3).createJsonSchema()
-                    }
-
-                    if (settings.report.public.scoringMethods.CVSS4 && b.cvssv4) {
-                        var cvssB = new cvss.Cvss4P0(b.cvssv4).createJsonSchema()
-
-                        // Fix for the CVSS 4 -> CVSS 3.1 value mappings
-                        cvssB.temporalScore = cvssB.threatScore
-                    } else if (settings.report.public.scoringMethods.CVSS3 && b.cvssv3) {
-                        var cvssB = new cvss.Cvss3P1(b.cvssv3).createJsonSchema()
-                    }
+                    var cvssA = getSafeCvssScoreData(settings, a);
+                    var cvssB = getSafeCvssScoreData(settings, b);
 
                     // Get built-in value (findings[sortValue])
                     var left = a[group.sortOption.sortValue]

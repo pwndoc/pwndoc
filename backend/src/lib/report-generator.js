@@ -150,6 +150,28 @@ function parser(tag) {
     return expressionParser(tag);
 }
 
+function getSafeCvss3Data(vectorString) {
+    try {
+        if (!vectorString)
+            return null
+
+        return new cvss.Cvss3P1(vectorString).createJsonSchema()
+    } catch (err) {
+        return null
+    }
+}
+
+function getSafeCvss4Data(vectorString) {
+    try {
+        if (!vectorString)
+            return null
+
+        return new cvss.Cvss4P0(vectorString).createJsonSchema()
+    } catch (err) {
+        return null
+    }
+}
+
 function cvssStrToObject(cvss) {
     var initialState = 'Not Defined'
     var res = {AV:initialState, AC:initialState, PR:initialState, UI:initialState, S:initialState, C:initialState, I:initialState, A:initialState, E:initialState, RL:initialState, RC:initialState, CR:initialState, IR:initialState, AR:initialState, MAV:initialState, MAC:initialState, MPR:initialState, MUI:initialState, MS:initialState, MC:initialState, MI:initialState, MA:initialState};
@@ -598,72 +620,76 @@ async function prepAuditData(data, settings) {
 
         if (settings.report.public.scoringMethods.CVSS3) {
             // Handle CVSS 3.1
-            var tmpCVSS = new cvss.Cvss3P1(finding.cvssv3).createJsonSchema();
+            var tmpCVSS = getSafeCvss3Data(finding.cvssv3);
 
-            if (tmpCVSS.baseSeverity) {
-                tmpCVSS.baseSeverity = tmpCVSS.baseSeverity.charAt(0).toUpperCase() + tmpCVSS.baseSeverity.slice(1).toLowerCase()
-            }
+            if (tmpCVSS) {
+                if (tmpCVSS.baseSeverity) {
+                    tmpCVSS.baseSeverity = tmpCVSS.baseSeverity.charAt(0).toUpperCase() + tmpCVSS.baseSeverity.slice(1).toLowerCase()
+                }
 
-            if (tmpCVSS.temporalSeverity) {
-                tmpCVSS.temporalSeverity = tmpCVSS.temporalSeverity.charAt(0).toUpperCase() + tmpCVSS.temporalSeverity.slice(1).toLowerCase()
-            }
+                if (tmpCVSS.temporalSeverity) {
+                    tmpCVSS.temporalSeverity = tmpCVSS.temporalSeverity.charAt(0).toUpperCase() + tmpCVSS.temporalSeverity.slice(1).toLowerCase()
+                }
 
-            if (tmpCVSS.environmentalSeverity) {
-                tmpCVSS.environmentalSeverity = tmpCVSS.environmentalSeverity.charAt(0).toUpperCase() + tmpCVSS.environmentalSeverity.slice(1).toLowerCase()
-            }
+                if (tmpCVSS.environmentalSeverity) {
+                    tmpCVSS.environmentalSeverity = tmpCVSS.environmentalSeverity.charAt(0).toUpperCase() + tmpCVSS.environmentalSeverity.slice(1).toLowerCase()
+                }
 
-            tmpFinding.cvss = {
-                vectorString: tmpCVSS.vectorString || "",
-                baseMetricScore: tmpCVSS.baseScore || "",
-                baseSeverity: tmpCVSS.baseSeverity || "",
-                temporalMetricScore: tmpCVSS.temporalScore || "",
-                temporalSeverity: tmpCVSS.temporalSeverity || "",
-                environmentalMetricScore: tmpCVSS.environmentalScore || "",
-                environmentalSeverity: tmpCVSS.environmentalSeverity || ""
+                tmpFinding.cvss = {
+                    vectorString: tmpCVSS.vectorString || "",
+                    baseMetricScore: tmpCVSS.baseScore || "",
+                    baseSeverity: tmpCVSS.baseSeverity || "",
+                    temporalMetricScore: tmpCVSS.temporalScore || "",
+                    temporalSeverity: tmpCVSS.temporalSeverity || "",
+                    environmentalMetricScore: tmpCVSS.environmentalScore || "",
+                    environmentalSeverity: tmpCVSS.environmentalSeverity || ""
+                }
+
+                if (tmpCVSS.baseSeverity === "Low") tmpFinding.cvss.cellColor = cellLowColor
+                else if (tmpCVSS.baseSeverity === "Medium") tmpFinding.cvss.cellColor = cellMediumColor
+                else if (tmpCVSS.baseSeverity === "High") tmpFinding.cvss.cellColor = cellHighColor
+                else if (tmpCVSS.baseSeverity === "Critical") tmpFinding.cvss.cellColor = cellCriticalColor
+                else tmpFinding.cvss.cellColor = cellNoneColor
+
+                if (tmpCVSS.temporalSeverity === "Low") tmpFinding.cvss.temporalCellColor = cellLowColor
+                else if (tmpCVSS.temporalSeverity === "Medium") tmpFinding.cvss.temporalCellColor = cellMediumColor
+                else if (tmpCVSS.temporalSeverity === "High") tmpFinding.cvss.temporalCellColor = cellHighColor
+                else if (tmpCVSS.temporalSeverity === "Critical") tmpFinding.cvss.temporalCellColor = cellCriticalColor
+                else tmpFinding.cvss.temporalCellColor = cellNoneColor
+
+                if (tmpCVSS.environmentalSeverity === "Low") tmpFinding.cvss.environmentalCellColor = cellLowColor
+                else if (tmpCVSS.environmentalSeverity === "Medium") tmpFinding.cvss.environmentalCellColor = cellMediumColor
+                else if (tmpCVSS.environmentalSeverity === "High") tmpFinding.cvss.environmentalCellColor = cellHighColor
+                else if (tmpCVSS.environmentalSeverity === "Critical") tmpFinding.cvss.environmentalCellColor = cellCriticalColor
+                else tmpFinding.cvss.environmentalCellColor = cellNoneColor
+
+                tmpFinding.cvssObj = cvssStrToObject(tmpCVSS.vectorString)
             }
-    
-            if (tmpCVSS.baseSeverity === "Low") tmpFinding.cvss.cellColor = cellLowColor
-            else if (tmpCVSS.baseSeverity === "Medium") tmpFinding.cvss.cellColor = cellMediumColor
-            else if (tmpCVSS.baseSeverity === "High") tmpFinding.cvss.cellColor = cellHighColor
-            else if (tmpCVSS.baseSeverity === "Critical") tmpFinding.cvss.cellColor = cellCriticalColor
-            else tmpFinding.cvss.cellColor = cellNoneColor
-    
-            if (tmpCVSS.temporalSeverity === "Low") tmpFinding.cvss.temporalCellColor = cellLowColor
-            else if (tmpCVSS.temporalSeverity === "Medium") tmpFinding.cvss.temporalCellColor = cellMediumColor
-            else if (tmpCVSS.temporalSeverity === "High") tmpFinding.cvss.temporalCellColor = cellHighColor
-            else if (tmpCVSS.temporalSeverity === "Critical") tmpFinding.cvss.temporalCellColor = cellCriticalColor
-            else tmpFinding.cvss.temporalCellColor = cellNoneColor
-    
-            if (tmpCVSS.environmentalSeverity === "Low") tmpFinding.cvss.environmentalCellColor = cellLowColor
-            else if (tmpCVSS.environmentalSeverity === "Medium") tmpFinding.cvss.environmentalCellColor = cellMediumColor
-            else if (tmpCVSS.environmentalSeverity === "High") tmpFinding.cvss.environmentalCellColor = cellHighColor
-            else if (tmpCVSS.environmentalSeverity === "Critical") tmpFinding.cvss.environmentalCellColor = cellCriticalColor
-            else tmpFinding.cvss.environmentalCellColor = cellNoneColor
-    
-            tmpFinding.cvssObj = cvssStrToObject(tmpCVSS.vectorString)
         }
         
         if (settings.report.public.scoringMethods.CVSS4) {
             // Handle CVSS 4.0
-            var tmpCVSS = new cvss.Cvss4P0(finding.cvssv4).createJsonSchema();
+            var tmpCVSS = getSafeCvss4Data(finding.cvssv4);
 
-            if (tmpCVSS.baseSeverity) {
-                tmpCVSS.baseSeverity = tmpCVSS.baseSeverity.charAt(0).toUpperCase() + tmpCVSS.baseSeverity.slice(1).toLowerCase()
+            if (tmpCVSS) {
+                if (tmpCVSS.baseSeverity) {
+                    tmpCVSS.baseSeverity = tmpCVSS.baseSeverity.charAt(0).toUpperCase() + tmpCVSS.baseSeverity.slice(1).toLowerCase()
+                }
+
+                tmpFinding.cvss4 = {
+                    vectorString: tmpCVSS.vectorString || "",
+                    baseScore: tmpCVSS.baseScore || "",
+                    baseSeverity: tmpCVSS.baseSeverity || "",
+                }
+
+                if (tmpCVSS.baseSeverity === "Low") tmpFinding.cvss4.cellColor = cellLowColor
+                else if (tmpCVSS.baseSeverity === "Medium") tmpFinding.cvss4.cellColor = cellMediumColor
+                else if (tmpCVSS.baseSeverity === "High") tmpFinding.cvss4.cellColor = cellHighColor
+                else if (tmpCVSS.baseSeverity === "Critical") tmpFinding.cvss4.cellColor = cellCriticalColor
+                else tmpFinding.cvss4.cellColor = cellNoneColor
+
+                tmpFinding.cvss4Obj = cvss4StrToObject(tmpCVSS.vectorString)
             }
-
-            tmpFinding.cvss4 = {
-                vectorString: tmpCVSS.vectorString || "",
-                baseScore: tmpCVSS.baseScore || "",
-                baseSeverity: tmpCVSS.baseSeverity || "",
-            }
-
-            if (tmpCVSS.baseSeverity === "Low") tmpFinding.cvss4.cellColor = cellLowColor
-            else if (tmpCVSS.baseSeverity === "Medium") tmpFinding.cvss4.cellColor = cellMediumColor
-            else if (tmpCVSS.baseSeverity === "High") tmpFinding.cvss4.cellColor = cellHighColor
-            else if (tmpCVSS.baseSeverity === "Critical") tmpFinding.cvss4.cellColor = cellCriticalColor
-            else tmpFinding.cvss4.cellColor = cellNoneColor
-
-            tmpFinding.cvss4Obj = cvss4StrToObject(tmpCVSS.vectorString)
         }
     
         if (finding.customFields) {
