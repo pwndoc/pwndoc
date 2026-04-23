@@ -1,6 +1,6 @@
 <template>
-  <node-view-wrapper :class="{'comment-focused': focused, 'comment-enabled': enabled}">
-    <figure style="margin: 0px auto 16px auto; display: table; width:600px" data-drag-handle>
+  <node-view-wrapper :class="{'comment-focused': focused, 'comment-enabled': enabled}" :draggable="!editing">
+    <figure style="margin: 0px auto 16px auto; display: table; width:600px" :data-drag-handle="!editing">
       <q-img :src="src" :class="{'selected': selected}" style="max-width:600px;margin-bottom:16px" />
       <div style="text-align:center">
         <div v-if="!editing" class="caption-display" style="justify-content:center" @click="startEdit">
@@ -16,7 +16,7 @@
             rows="1"
             placeholder="Caption"
             @input="autoResize"
-            @keyup.enter.prevent="saveEdit"
+            @keydown.enter.prevent="saveEdit"
             @keyup.esc="cancelEdit"
             @blur="saveEdit"
           />
