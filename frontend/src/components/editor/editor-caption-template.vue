@@ -1,6 +1,6 @@
 <template>
-  <node-view-wrapper :class="{'comment-focused': focused, 'comment-enabled': enabled}">
-    <div data-drag-handle="" class="editor-caption" style="margin: 0px auto 16px auto; display: table; width:600px">
+  <node-view-wrapper :class="{'comment-focused': focused, 'comment-enabled': enabled}" :draggable="!editing">
+    <div :data-drag-handle="!editing" class="editor-caption" style="margin: 0px auto 16px auto; display: table; width:600px">
       <div style="max-width:600px; text-align:center">
         <div v-if="!editing" class="caption-display" @click="startEdit">
           <span v-if="alt" class="text-italic"><b>{{label}}</b> - {{alt}}</span>
@@ -17,7 +17,7 @@
               rows="1"
               placeholder="Caption"
               @input="autoResize"
-              @keyup.enter.prevent="saveEdit"
+              @keydown.enter.prevent="saveEdit"
               @keyup.esc="cancelEdit"
               @blur="saveEdit"
             />
