@@ -1,106 +1,126 @@
 # Installation
 
-> PwnDoc uses 3 containers: the backend, the frontend and the database. 
+> PwnDoc uses 3 containers: the backend, the frontend and the database. All operations go through the `./pwndoc-cli` management tool.
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- Git
+
+## Setup
+
+```bash
+git clone https://github.com/pwndoc/pwndoc
+cd pwndoc
+```
 
 ## Production
 
-All 3 containers can be run at once using the docker-compose file in the root directory.
+!> For production usage make sure to change the SSL certificates in `backend/ssl/` and `frontend/ssl/`, and optionally set the JWT secrets in `backend/src/config/config.json` (`jwtSecret` and `jwtRefreshSecret`) if you don't want random ones generated.
 
-!> For production usage make sure to change the certificates in `backend/ssl` folder and optionally to set the JWT secret in `backend/src/lib/auth.js` (`jwtSecret` and `jwtRefreshSecret` in `backend/src/config/config.json`) if you don't want to use random ones.
-
-Build and run Docker containers
+Start containers (pulls pre-built images)
 
 ```
-docker-compose up -d --build
+./pwndoc-cli up
 ```
 
-Display backend container logs
+Application is accessible at https://localhost:8443  
+API is accessible at https://localhost:8443/api
+
+## Development
+
+> Source code can be modified live. The application reloads automatically on changes.
 
 ```
-docker-compose logs -f pwndoc-backend
+./pwndoc-cli up --dev
 ```
 
-Stop/Start containers
+Application is accessible at https://localhost:8081  
+API is accessible at https://localhost:8081/api
+
+## Build from Local Source
+
+To run with production config but built from local source:
 
 ```
-docker-compose stop
-docker-compose start
+./pwndoc-cli up --prod-local
+```
+
+## Common Operations
+
+Follow logs
+
+```
+./pwndoc-cli logs
+./pwndoc-cli logs --backend-only
+./pwndoc-cli logs --frontend-only
+```
+
+Container status
+
+```
+./pwndoc-cli ps
+```
+
+Stop / start / restart
+
+```
+./pwndoc-cli stop
+./pwndoc-cli start
+./pwndoc-cli restart
 ```
 
 Remove containers
 
 ```
-docker-compose down
+./pwndoc-cli down
 ```
 
 Update
 
 ```
-docker-compose down
-git pull
-docker-compose up -d --build
+./pwndoc-cli update
 ```
 
-Application is accessible through https://localhost:8443  
-API is accessible through https://localhost:8443/api
-## Development
+## LanguageTool (Spellcheck)
 
-For development purposes, specific docker-compose file can be used in each folder (backend/frontend).
-
-> *Source code can be modified live and application will automatically reload on changes.*
-
-Build and run backend and database containers
+LanguageTool is an optional spellcheck service. Start it alongside the main stack:
 
 ```
-docker-compose -f backend/docker-compose.dev.yml up -d --build
+./pwndoc-cli up --with-lt
 ```
 
-Display backend container logs
+Retrieve the API key once running:
 
 ```
-docker-compose -f backend/docker-compose.dev.yml logs -f pwndoc-backend
+./pwndoc-cli lt-apikey
 ```
 
-Stop/Start container
-
-```
-docker-compose -f backend/docker-compose.dev.yml stop
-docker-compose -f backend/docker-compose.dev.yml start
-```
-
-Remove containers
-
-```
-docker-compose -f backend/docker-compose.dev.yml down
-```
-
-Application is accessible through https://localhost:8081  
-API is accessible through https://localhost:8081/api
+Per-user spellcheck configuration is available in the application Settings page.
 
 ## Tests
 
-> For now only backend tests have been written (it's a continuous work in progress)
-
-Test files are located in `backend/tests` using Jest testing framework
-
-Script `run_tests.sh` at the root folder can be used to launch tests :
+Run all test suites
 
 ```
-Usage:        ./run_tests.sh -q|-f [-h, --help]
-
-Options:
-  -h, --help  Display help
-  -q          Run quick tests (No build)
-  -f          Run full tests (Build with no cache)
+./pwndoc-cli test
 ```
 
-!> **Don't use it in production as it will delete the production Database**
+Run specific suites
+
+```
+./pwndoc-cli test --backend         # Backend API tests (Jest)
+./pwndoc-cli test --frontend-unit   # Frontend unit tests (Vitest)
+./pwndoc-cli test --frontend-e2e    # E2E tests (Playwright, full stack)
+```
+
+See [pwndoc-cli](pwndoc-cli.md) for the full list of test options.
 
 ## Backup
 
-It's possible, even recommended, to regularly backup the `backend/mongo-data` folder. It contains all the database.
+It is recommended to regularly back up the `backend/mongo-data` folder. It contains the entire database.
 
-To restore :
+To restore:
 - Stop containers
-- Replace the current `backend/mongo-data` folder with the backed up one
+- Replace `backend/mongo-data` with the backed-up folder
 - Start containers
