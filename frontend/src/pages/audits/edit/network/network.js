@@ -4,6 +4,8 @@ import Breadcrumb from 'components/breadcrumb';
 
 import AuditService from '@/services/audit';
 import Utils from '@/services/utils';
+import { useUserStore } from 'src/stores/user'
+import { createDraftRecovery } from '@/composables/useDraftRecovery';
 
 import { $t } from '@/boot/i18n'
 
@@ -34,7 +36,8 @@ export default {
                 rowsPerPage: 20,
                 sortBy: 'port'
             },
-            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+            draftRecovery: null
         }
     },
 
@@ -61,6 +64,8 @@ export default {
 
     unmounted: function() {
         document.removeEventListener('keydown', this._listener, false)
+        if (this.draftRecovery)
+            this.draftRecovery.stop()
     },
 
     beforeRouteLeave (to, from , next) {
@@ -107,6 +112,8 @@ export default {
                 this.audit = data.data.datas;
                 // Object.assign(this.audit, data.data.datas);
                 this.auditOrig = this.$_.cloneDeep(this.audit);
+                this.setupDraftRecovery()
+                this.draftRecovery.maybePromptRecovery()
             })
             .catch((err) => {
                 console.log(err)
@@ -118,6 +125,8 @@ export default {
             AuditService.updateAuditNetwork(this.auditId, this.audit)
             .then(() => {
                 this.auditOrig = this.$_.cloneDeep(this.audit);
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 Notify.create({
                     message: $t('msg.auditUpdateOk'),
                     color: 'positive',
@@ -132,6 +141,24 @@ export default {
                     textColor:'white',
                     position: 'top-right'
                 })
+            })
+        },
+
+        setupDraftRecovery: function() {
+            if (this.draftRecovery)
+                return
+
+            this.draftRecovery = createDraftRecovery(this, {
+                scope: () => 'audit-network',
+                refKey: () => this.auditId,
+                userId: () => useUserStore().id,
+                getCurrent: () => this.audit,
+                setCurrent: (data) => {
+                    this.audit = data
+                },
+                getOriginal: () => this.auditOrig,
+                isDirty: () => !this.$_.isEqual(this.audit, this.auditOrig),
+                isReadOnly: () => this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT
             })
         },
 

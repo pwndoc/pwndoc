@@ -513,5 +513,17 @@ export default {
         SEMANTICS: { label: '语义', description: '含义使用不当的词语' },
         COLLOQUIALISMS: { label: '口语表达', description: '非正式或口语化表达' },
         MISC: { label: '其他', description: '上述类别未涵盖的其他规则' },
+    },
+    draftRecovery: {
+        title: 'Unsaved draft found',
+        message: 'A local draft was saved for this form. Restore it or discard it before continuing.',
+        savedAt: 'Saved locally at',
+        restore: 'Restore',
+        discard: 'Discard',
+        viewDiff: 'View Diff',
+        hideDiff: 'Hide Diff',
+        currentVersion: 'Current version',
+        draftVersion: 'Your draft',
+        noDifferences: 'No differences found'
     }
   }

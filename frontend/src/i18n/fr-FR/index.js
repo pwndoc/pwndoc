@@ -452,5 +452,17 @@ export default {
         SEMANTICS: { label: 'Sémantique', description: 'Mots utilisés avec un sens incorrect' },
         COLLOQUIALISMS: { label: 'Expressions familières', description: 'Expressions informelles ou familières' },
         MISC: { label: 'Divers', description: 'Autres règles non couvertes par les catégories ci-dessus' },
+    },
+    draftRecovery: {
+        title: 'Unsaved draft found',
+        message: 'A local draft was saved for this form. Restore it or discard it before continuing.',
+        savedAt: 'Saved locally at',
+        restore: 'Restore',
+        discard: 'Discard',
+        viewDiff: 'View Diff',
+        hideDiff: 'Hide Diff',
+        currentVersion: 'Current version',
+        draftVersion: 'Your draft',
+        noDifferences: 'No differences found'
     }
   }

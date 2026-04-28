@@ -9,6 +9,7 @@ import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils';
+import { createDraftRecovery } from '@/composables/useDraftRecovery';
 
 import { $t } from '@/boot/i18n'
 
@@ -38,7 +39,8 @@ export default {
                 day: '2-digit',
                 hour: 'numeric',
                 minute: '2-digit',
-            }
+            },
+            draftRecovery: null
         }
     },
 
@@ -101,6 +103,8 @@ export default {
         document.removeEventListener('keydown', this._listener, false)
         document.removeEventListener('comment-added', this.editorCommentAdded)
         document.removeEventListener('comment-clicked', this.editorCommentClicked)
+        if (this.draftRecovery)
+            this.draftRecovery.stop()
     },
 
     beforeRouteLeave (to, from , next) {
@@ -121,7 +125,11 @@ export default {
             cancel: {label: $t('btn.cancel'), color: 'white'},
             focus: 'cancel'
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else if (!this.commentMode && displayHighlightWarning) {
             Dialog.create({
@@ -131,7 +139,11 @@ export default {
                 ok: {label: $t('btn.leave'), color: 'negative'},
                 cancel: {label: $t('btn.stay'), color: 'white'},
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else
             next()
@@ -150,7 +162,11 @@ export default {
             cancel: {label: $t('btn.cancel'), color: 'white'},
             focus: 'cancel'
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else if (!this.commentMode && displayHighlightWarning) {
             Dialog.create({
@@ -160,7 +176,11 @@ export default {
                 ok: {label: $t('btn.leave'), color: 'negative'},
                 cancel: {label: $t('btn.stay'), color: 'white'},
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else
             next()
@@ -193,6 +213,8 @@ export default {
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.sectionOrig = this.$_.cloneDeep(this.section);                
+                    this.setupDraftRecovery()
+                    this.draftRecovery.maybePromptRecovery()
                 })
             })
             .catch((err) => {
@@ -217,6 +239,8 @@ export default {
                 AuditService.updateSection(this.auditId, this.sectionId, this.section)
                 .then(() => {
                     this.sectionOrig = this.$_.cloneDeep(this.section);
+                    if (this.draftRecovery)
+                        this.draftRecovery.clearDraft()
                     Notify.create({
                         message: $t('msg.sectionUpdateOk'),
                         color: 'positive',
@@ -232,6 +256,27 @@ export default {
                         position: 'top-right'
                     })
                 })
+            })
+        },
+
+        setupDraftRecovery: function() {
+            if (this.draftRecovery)
+                return
+
+            this.draftRecovery = createDraftRecovery(this, {
+                scope: () => 'audit-section',
+                refKey: () => `${this.auditId}:${this.sectionId}`,
+                userId: () => userStore.id,
+                getCurrent: () => this.section,
+                setCurrent: (data) => {
+                    this.section = data
+                },
+                getOriginal: () => this.sectionOrig,
+                isDirty: () => this.unsavedChanges(),
+                isReadOnly: () => this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT,
+                afterRestore: async () => {
+                    await this.$nextTick()
+                }
             })
         },
 

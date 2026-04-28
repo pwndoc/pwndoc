@@ -7,6 +7,7 @@ import DataService from '@/services/data'
 import Utils from '@/services/utils'
 import TemplateService from '@/services/template'
 import { useUserStore } from 'src/stores/user'
+import { createDraftRecovery } from '@/composables/useDraftRecovery'
 
 import { $t } from '@/boot/i18n'
 
@@ -91,6 +92,7 @@ export default {
             errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: '', fieldLabel: '', fieldType: ''},
 
             selectedTab: "languages",
+            draftRecovery: null,
         }
     },
 
@@ -108,6 +110,22 @@ export default {
         this.getVulnerabilityCategories()
         this.getSections()
         this.getCustomFields()
+        this.setupDraftRecovery()
+        this.draftRecovery.maybePromptRecovery()
+    },
+
+    unmounted: function() {
+        if (this.draftRecovery)
+            this.draftRecovery.stop()
+    },
+
+    watch: {
+        selectedTab: async function() {
+            if (this.draftRecovery) {
+                await this.draftRecovery.flushPendingWrite()
+                await this.draftRecovery.maybePromptRecovery()
+            }
+        }
     },
 
     computed: {
@@ -176,6 +194,8 @@ export default {
 
             DataService.createLanguage(this.newLanguage)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newLanguage.locale = "";
                 this.newLanguage.language = "";
                 this.getLanguages();
@@ -244,6 +264,8 @@ export default {
 
             DataService.createAuditType(this.newAuditType)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newAuditType.name = "";
                 this.newAuditType.templates = [];
                 this.newAuditType.sections = [];
@@ -324,6 +346,8 @@ export default {
 
             DataService.createVulnerabilityType(this.newVulnType)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newVulnType.name = "";
                 this.getVulnerabilityTypes();
                 Notify.create({
@@ -395,6 +419,8 @@ export default {
 
             DataService.createVulnerabilityCategory(this.newVulnCat)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newVulnCat = {name: "", sortValue: "cvssScore", sortOrder: "desc", sortAuto: true}
                 this.getVulnerabilityCategories();
                 Notify.create({
@@ -489,6 +515,8 @@ export default {
             this.newCustomField.position = this.customFields.length
             DataService.createCustomField(this.newCustomField)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newCustomField.label = ""
                 this.newCustomField.options = []
                 this.getCustomFields()
@@ -653,6 +681,8 @@ export default {
 
             DataService.createSection(this.newSection)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newSection.field = "";
                 this.newSection.name = "";
                 this.newSection.icon = ""
@@ -713,6 +743,93 @@ export default {
             this.errors.fieldType = ''
             this.errors.sectionField = ''
             this.errors.sectionName = ''
+        },
+
+        setupDraftRecovery: function() {
+            if (this.draftRecovery)
+                return
+
+            this.draftRecovery = createDraftRecovery(this, {
+                scope: () => this.getCustomDraftScope(),
+                refKey: () => '_new',
+                userId: () => userStore.id,
+                getCurrent: () => this.getCustomDraftCurrent(),
+                setCurrent: (data) => this.setCustomDraftCurrent(data),
+                getOriginal: () => this.getCustomDraftOriginal(),
+                isDirty: () => !this.$_.isEqual(this.getCustomDraftCurrent(), this.getCustomDraftOriginal()),
+                isReadOnly: () => !userStore.isAllowed(`${this.getCustomPermissionBase()}:create`)
+            })
+        },
+
+        getCustomDraftScope: function() {
+            return {
+                languages: 'custom-language',
+                'audit-types': 'custom-audit-type',
+                'vulnerability-types': 'custom-vuln-type',
+                'vulnerability-categories': 'custom-vuln-category',
+                'custom-fields': 'custom-field',
+                'custom-sections': 'custom-section'
+            }[this.selectedTab]
+        },
+
+        getCustomPermissionBase: function() {
+            return {
+                languages: 'languages',
+                'audit-types': 'audit-types',
+                'vulnerability-types': 'vulnerability-types',
+                'vulnerability-categories': 'vulnerability-categories',
+                'custom-fields': 'custom-fields',
+                'custom-sections': 'sections'
+            }[this.selectedTab]
+        },
+
+        getCustomDraftCurrent: function() {
+            return this.$_.cloneDeep({
+                languages: this.newLanguage,
+                'audit-types': this.newAuditType,
+                'vulnerability-types': this.newVulnType,
+                'vulnerability-categories': this.newVulnCat,
+                'custom-fields': this.newCustomField,
+                'custom-sections': this.newSection
+            }[this.selectedTab] || {})
+        },
+
+        setCustomDraftCurrent: function(data) {
+            if (this.selectedTab === 'languages')
+                this.newLanguage = data
+            else if (this.selectedTab === 'audit-types')
+                this.newAuditType = data
+            else if (this.selectedTab === 'vulnerability-types')
+                this.newVulnType = data
+            else if (this.selectedTab === 'vulnerability-categories')
+                this.newVulnCat = data
+            else if (this.selectedTab === 'custom-fields')
+                this.newCustomField = data
+            else if (this.selectedTab === 'custom-sections')
+                this.newSection = data
+        },
+
+        getCustomDraftOriginal: function() {
+            return this.$_.cloneDeep({
+                languages: {locale: "", language: ""},
+                'audit-types': {name: "", templates: [], sections: [], hidden: [], stage: 'default'},
+                'vulnerability-types': {name: "", locale: this.languages[0]?.locale || ""},
+                'vulnerability-categories': {name: "", sortValue: "cvssScore", sortOrder: "desc", sortAuto: true},
+                'custom-fields': {
+                    label: "",
+                    fieldType: "",
+                    display: "general",
+                    displaySub: "",
+                    size: 12,
+                    offset: 0,
+                    required: false,
+                    inline: false,
+                    description: '',
+                    text: [],
+                    options: []
+                },
+                'custom-sections': {field: "", name: "", icon: ""}
+            }[this.selectedTab] || {})
         }
     }
 }

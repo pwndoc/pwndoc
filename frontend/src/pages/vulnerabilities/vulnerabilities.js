@@ -11,6 +11,7 @@ import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
+import { createDraftRecovery } from '@/composables/useDraftRecovery'
 
 import { $t } from 'boot/i18n'
 
@@ -59,6 +60,7 @@ export default {
                 remediationComplexity: '',
                 details: [] 
             },
+            currentVulnerabilityOrig: null,
             currentLanguage: "",
             displayFilters: {valid: true, new: true, updates: true},
             dtLanguage: "",
@@ -77,7 +79,9 @@ export default {
             vulnCategories: [],
             currentCategory: null,
             // Custom Fields
-            customFields: []
+            customFields: [],
+            draftRecovery: null,
+            draftRecoveryPaused: false
         }
     },
 
@@ -96,6 +100,7 @@ export default {
         this.getVulnerabilities()
         this.getVulnerabilityCategories()
         this.getCustomFields()
+        this.setupDraftRecovery()
     },
 
     watch: {
@@ -226,6 +231,8 @@ export default {
 
             VulnerabilityService.createVulnerabilities([this.currentVulnerability])
             .then(() => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.getVulnerabilities();
                 this.$refs.createModal.hide();
                 Notify.create({
@@ -256,6 +263,8 @@ export default {
 
             VulnerabilityService.updateVulnerability(this.vulnerabilityId, this.currentVulnerability)
             .then(() => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.getVulnerabilities();
                 this.$refs.editModal.hide();
                 this.$refs.updatesModal.hide();
@@ -328,11 +337,40 @@ export default {
             this.cleanCurrentVulnerability();
             
             this.currentVulnerability = this.$_.cloneDeep(row)
+            this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
             this.setCurrentDetails();
             
             this.vulnerabilityId = row._id;
             if (userStore.isAllowed('vulnerabilities:update'))
                 this.getVulnUpdates(this.vulnerabilityId);
+        },
+
+        openVulnerability: async function(row) {
+            this.clone(row)
+            await this.draftRecovery.maybePromptRecovery()
+            if (userStore.isAllowed('vulnerabilities:update') && row.status === 2)
+                this.$refs.updatesModal.show()
+            else
+                this.$refs.editModal.show()
+        },
+
+        openCreateVulnerability: async function(category) {
+            this.currentCategory = category ? this.$_.cloneDeep(category) : null
+            this.vulnerabilityId = ''
+            this.cleanCurrentVulnerability()
+            this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
+            await this.draftRecovery.maybePromptRecovery()
+            this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
+            this.$refs.createModal.show()
+        },
+
+        cleanupCurrentVulnerability: function() {
+            this.draftRecoveryPaused = true
+            this.cleanCurrentVulnerability()
+            this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
+            this.$nextTick(() => {
+                this.draftRecoveryPaused = false
+            })
         },
 
         editChangeCategory: function(category) {
@@ -371,6 +409,30 @@ export default {
                 this.currentVulnerability.category = null
 
             this.setCurrentDetails();
+        },
+
+        setupDraftRecovery: function() {
+            if (this.draftRecovery)
+                return
+
+            this.draftRecovery = createDraftRecovery(this, {
+                scope: () => this.vulnerabilityId ? 'vuln-modal-edit' : 'vuln-modal-create',
+                refKey: () => this.vulnerabilityId || `_new:${this.currentCategory?.name || 'none'}`,
+                userId: () => userStore.id,
+                getCurrent: () => this.currentVulnerability,
+                setCurrent: (data) => {
+                    this.currentVulnerability = data
+                    if (!this.vulnerabilityId && data.category)
+                        this.currentCategory = { name: data.category }
+                    this.setCurrentDetails()
+                },
+                getOriginal: () => this.currentVulnerabilityOrig,
+                isDirty: () => !!this.currentVulnerabilityOrig && !this.$_.isEqual(this.currentVulnerability, this.currentVulnerabilityOrig),
+                isReadOnly: () => this.draftRecoveryPaused || (this.vulnerabilityId ? !userStore.isAllowed('vulnerabilities:update') : !userStore.isAllowed('vulnerabilities:create')),
+                afterRestore: async () => {
+                    await this.$nextTick()
+                }
+            })
         },
 
         // Create detail if locale doesn't exist else set the currentDetailIndex
@@ -509,11 +571,7 @@ export default {
         },
 
         dblClick: function(row) {
-            this.clone(row)
-            if (userStore.isAllowed('vulnerabilities:update') && row.status === 2)
-                this.$refs.updatesModal.show()
-            else
-                this.$refs.editModal.show()
+            this.openVulnerability(row)
         }
     }
 }

@@ -10,6 +10,7 @@ export default defineConfig((ctx) => {
       'axios',
       'affix',
       'auth',
+      'draft-recovery',
       'i18n',
       'darkmode',
       'lodash',

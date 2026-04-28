@@ -12,6 +12,8 @@ import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
+import { useUserStore } from 'src/stores/user'
+import { createDraftRecovery } from '@/composables/useDraftRecovery';
 
 import { $t } from '@/boot/i18n'
 
@@ -58,7 +60,8 @@ export default {
             auditTypes: [],
             // List of CustomFields
             customFields: [],
-            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE
+            AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+            draftRecovery: null
         }
     },
 
@@ -89,6 +92,8 @@ export default {
 
     unmounted: function() {
         document.removeEventListener('keydown', this._listener, false)
+        if (this.draftRecovery)
+            this.draftRecovery.stop()
     },
 
     beforeRouteLeave (to, from , next) {
@@ -109,7 +114,11 @@ export default {
                 cancel: {label: $t('btn.cancel'), color: 'white'},
                 focus: 'cancel'
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else if (displayHighlightWarning) {
             Dialog.create({
@@ -144,6 +153,8 @@ export default {
             .then((data) => {
                 this.audit = data.data.datas;
                 this.auditOrig = this.$_.cloneDeep(this.audit);
+                this.setupDraftRecovery()
+                this.draftRecovery.maybePromptRecovery()
                 this.getCollaborators();
                 this.getReviewers();
                 this.getClients();
@@ -171,6 +182,8 @@ export default {
                 AuditService.updateAuditGeneral(this.auditId, this.audit)
                 .then(() => {
                     this.auditOrig = this.$_.cloneDeep(this.audit);
+                    if (this.draftRecovery)
+                        this.draftRecovery.clearDraft()
                     Notify.create({
                         message: $t('msg.auditUpdateOk'),
                         color: 'positive',
@@ -186,6 +199,24 @@ export default {
                         position: 'top-right'
                     })
                 })
+            })
+        },
+
+        setupDraftRecovery: function() {
+            if (this.draftRecovery)
+                return
+
+            this.draftRecovery = createDraftRecovery(this, {
+                scope: () => 'audit-general',
+                refKey: () => this.auditId,
+                userId: () => useUserStore().id,
+                getCurrent: () => this.audit,
+                setCurrent: (data) => {
+                    this.audit = data
+                },
+                getOriginal: () => this.auditOrig,
+                isDirty: () => !this.$_.isEqual(this.audit, this.auditOrig),
+                isReadOnly: () => this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT
             })
         },
 

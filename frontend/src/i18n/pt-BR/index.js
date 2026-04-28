@@ -548,4 +548,16 @@ spellcheckCategory: {
     COLLOQUIALISMS: { label: 'Coloquialismos', description: 'Expressões informais ou coloquiais' },
     MISC: { label: 'Miscelânea', description: 'Outras regras não cobertas pelas categorias acima' },
 },
+draftRecovery: {
+    title: 'Unsaved draft found',
+    message: 'A local draft was saved for this form. Restore it or discard it before continuing.',
+    savedAt: 'Saved locally at',
+    restore: 'Restore',
+    discard: 'Discard',
+    viewDiff: 'View Diff',
+    hideDiff: 'Hide Diff',
+    currentVersion: 'Current version',
+    draftVersion: 'Your draft',
+    noDifferences: 'No differences found'
+},
 }
