@@ -4,64 +4,79 @@
     outline no-caps dense
     class="q-ml-sm"
     :color="status.type === 'local_draft' ? 'orange' : 'primary'"
-    :class="status.type === 'local_draft' ? 'bg-orange-1': 'bg-grey-3'"
+    :class="status.type === 'local_draft' ? 'bg-orange-1' : 'bg-grey-3'"
     dropdown-icon="keyboard_arrow_down"
   >
-    <template v-slot:label>
-      <div class="row items-center no-wrap status-label">
-        <q-icon left name="mdi-database-outline" />
-        <span class="status-main-label">{{ mainLabel }}</span>
-        <span 
-          class="status-meta-label q-ml-sm"
-          :class="status.type === 'local_draft' ? 'text-brown-6' : 'primary'"
-        >
-          {{ metaLabel }}
-        </span>
-      </div>
+    <template #label>
+      <q-icon left name="mdi-database-outline" />
+      <span class="text-weight-bold">{{ mainLabel }}</span>
+      <span
+        class="status-meta-label q-ml-sm"
+        :class="status.type === 'local_draft' ? 'text-brown-6' : 'text-primary'"
+      >
+        {{ metaLabel }}
+      </span>
     </template>
 
-    <div class="draft-panel">
+    <q-list class="draft-panel">
       <!-- Info banner -->
-      <div class="draft-banner" :class="bannerClass">
-        <q-icon name="info" size="16px" class="draft-icon-fixed" />
-        <div class="q-ml-sm">
-          <div class="draft-action-title">{{ bannerLine1 }}</div>
-          <div class="text-caption text-grey-8 q-mt-xs">{{ bannerLine2 }}</div>
-        </div>
-      </div>
+      <q-item >
+        <q-item-section side top class="q-py-sm" :class="status.type === 'local_draft' ? 'bg-amber-1' : 'bg-grey-3'">
+          <q-icon
+            name="o_info"
+            size="xs"
+            :color="status.type === 'local_draft' ? 'brown-6' : 'primary'"
+          />
+        </q-item-section>
+        <q-item-section class="q-py-sm" :class="status.type === 'local_draft' ? 'text-brown-6 bg-amber-1' : 'bg-grey-3'">
+          <q-item-label class="text-weight-medium">{{ bannerLine1 }}</q-item-label>
+          <q-item-label caption>{{ bannerLine2 }}</q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-separator inset />
 
       <!-- Expiry -->
-      <div class="draft-info-row">
-        <q-icon name="schedule" size="16px" color="grey-6" class="draft-icon-fixed" />
-        <div class="q-ml-sm">
-          <div class="draft-action-title text-dark">{{ expiryLabel }}</div>
-          <div class="text-caption text-grey-6">{{ $t('draftRecovery.clearedAfterInactivity') }}</div>
-        </div>
-      </div>
+      <q-item >
+        <q-item-section side top>
+          <q-icon name="schedule" size="xs" color="primary"/>
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="text-weight-medium">{{ expiryLabel }}</q-item-label>
+          <q-item-label caption>{{ $t('draftRecovery.clearedAfterInactivity') }}</q-item-label>
+        </q-item-section>
+      </q-item>
 
-      <q-separator />
+      <q-separator inset />
 
       <!-- Actions -->
       <template v-for="(action, index) in actionConfigs" :key="action.id">
-        <q-separator v-if="index > 0" />
-        <div class="draft-action" v-close-popup @click="action.handler && action.handler()">
-          <q-icon :name="action.icon" size="18px" :color="action.iconColor" class="draft-icon-fixed" />
-          <div class="q-ml-sm">
-            <div class="draft-action-title" :class="`text-${action.labelColor}`">{{ action.label }}</div>
-            <div class="text-caption text-grey-6">{{ action.description }}</div>
-          </div>
-        </div>
+        <q-item clickable v-close-popup @click="action.handler && action.handler()">
+          <q-item-section side top>
+            <q-icon :name="action.icon" size="18px" :color="action.iconColor" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-weight-medium" :class="`text-${action.labelColor}`">
+              {{ action.label }}
+            </q-item-label>
+            <q-item-label caption>{{ action.description }}</q-item-label>
+          </q-item-section>
+        </q-item>
       </template>
 
       <!-- Footer hint for local draft -->
       <template v-if="status.type === 'local_draft'">
-        <q-separator />
-        <div class="draft-hint">
-          <q-icon name="lightbulb_outline" size="14px" color="grey-5" />
-          <span class="text-caption text-grey-6 q-ml-xs">{{ $t('draftRecovery.saveHint') }}</span>
-        </div>
+        <q-separator inset />
+        <q-item dense>
+          <q-item-section side>
+            <q-icon name="lightbulb_outline" size="14px" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label caption>{{ $t('draftRecovery.saveHint') }}</q-item-label>
+          </q-item-section>
+        </q-item>
       </template>
-    </div>
+    </q-list>
   </q-btn-dropdown>
 </template>
 
@@ -71,10 +86,10 @@ import DraftRecoveryService from '@/services/draft-recovery'
 const TTL_DAYS = 7
 
 const ACTION_ICON_MAP = {
-  discard:          { icon: 'delete',      iconColor: 'negative', labelColor: 'negative' },
-  restore:          { icon: 'restore',     iconColor: 'primary',  labelColor: 'primary'  },
-  delete_permanently: { icon: 'delete',    iconColor: 'negative', labelColor: 'negative' },
-  view_changes:     { icon: 'difference',  iconColor: 'grey-7',   labelColor: 'grey-8'   }
+  discard:            { icon: 'restore',      iconColor: 'blue',     labelColor: 'blue' },
+  restore:            { icon: 'restore',      iconColor: 'blue',     labelColor: 'blue'  },
+  delete_permanently: { icon: 'delete',       iconColor: 'negative', labelColor: 'negative' },
+  view_changes:       { icon: 'o_difference', iconColor: 'primary',  labelColor: 'primary'   }
 }
 
 export default {
@@ -97,12 +112,6 @@ export default {
       if (this.status.type === 'server_version')
         return this.$t('draftRecovery.localDraftExists')
       return this.formatRelativeTime(this.status.draft.updatedAt)
-    },
-
-    bannerClass() {
-      return this.status?.type === 'local_draft'
-        ? 'draft-banner--warning'
-        : 'draft-banner--neutral'
     },
 
     bannerLine1() {
@@ -187,71 +196,14 @@ export default {
 }
 </script>
 
-<style scoped>
-.draft-recovery-status {
-  font-size: 12px;
-}
+<style lang="scss" scoped>
+@use "quasar/src/css/variables" as q;
 
-.status-main-label {
-  font-weight: bold;
-  font-size: 13px;
-  
+.draft-panel {
+  min-width: 310px;
 }
 
 .status-meta-label {
   font-size: 11px;
-}
-
-.draft-panel {
-  width: 310px;
-}
-
-.draft-banner {
-  display: flex;
-  align-items: flex-start;
-  padding: 12px 14px;
-}
-
-.draft-banner--warning {
-  background: #fff8e1;
-}
-
-.draft-banner--neutral {
-  background: #f5f5f5;
-}
-
-.draft-info-row {
-  display: flex;
-  align-items: flex-start;
-  padding: 12px 14px;
-}
-
-.draft-action {
-  display: flex;
-  align-items: flex-start;
-  padding: 10px 14px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.draft-action:hover {
-  background: #f5f5f5;
-}
-
-.draft-hint {
-  display: flex;
-  align-items: center;
-  padding: 10px 14px;
-  gap: 4px;
-}
-
-.draft-icon-fixed {
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.draft-action-title {
-  font-size: 13px;
-  font-weight: 500;
 }
 </style>

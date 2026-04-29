@@ -1,9 +1,14 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide">
     <q-card class="draft-recovery-dialog">
+      <q-card-section class="row items-center q-pb-none">
+        <q-icon name="history" size="sm" class="q-mr-sm" />
+        <span class="text-h6">{{ $t('draftRecovery.title') }}</span>
+        <q-space />
+        <q-btn icon="close" flat round dense @click="onDialogHide" />
+      </q-card-section>
       <q-card-section>
-        <div class="text-h6">{{ $t('draftRecovery.title') }}</div>
-        <div class="text-body2 text-grey-7 q-mt-sm">
+        <div class="text-body2 text-grey-7">
           {{ $t('draftRecovery.message') }}
         </div>
         <div class="text-caption text-grey-7 q-mt-sm">
@@ -19,11 +24,6 @@
           :draft="draft.data"
         />
       </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn flat no-caps color="negative" :label="$t('draftRecovery.discard')" @click="discard" />
-        <q-btn unelevated no-caps color="primary" :label="$t('draftRecovery.restore')" @click="restore" />
-      </q-card-actions>
     </q-card>
   </q-dialog>
 </template>

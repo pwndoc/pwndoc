@@ -1,10 +1,21 @@
 <template>
   <div class="draft-diff">
-    <div class="row justify-end q-mb-sm">
-      <q-btn
-        flat dense no-caps size="sm" color="primary"
-        :label="splitView ? $t('draftRecovery.unifiedView') : $t('draftRecovery.splitView')"
-        @click="splitView = !splitView"
+    <div class="row items-center q-gutter-sm q-mb-sm">
+      <span class="text-body2 text-grey-8">View</span>
+      <q-btn-toggle
+        v-model="splitView"
+        no-caps
+        dense
+        unelevated
+        toggle-color="grey-3"
+        toggle-text-color="grey-9"
+        color="white"
+        text-color="grey-7"
+        class="view-toggle"
+        :options="[
+          { label: 'Inline', value: false, icon: 'view_list' },
+          { label: 'Side-by-side', value: true, icon: 'view_column' }
+        ]"
       />
     </div>
 
@@ -13,7 +24,7 @@
       :key="section.key"
       class="draft-section"
     >
-      <div class="draft-section__title">{{ section.label }}</div>
+      <div v-if="diffSections.length > 1" class="draft-section__title">{{ section.label }}</div>
 
       <template v-if="!splitView">
         <!-- Unified view -->
@@ -548,6 +559,12 @@ export default {
 </script>
 
 <style scoped>
+.view-toggle {
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
 .draft-diff {
   display: flex;
   flex-direction: column;
@@ -555,12 +572,6 @@ export default {
 }
 
 .draft-section {
-  border-top: 1px solid #e0e0e0;
-  padding-top: 12px;
-}
-
-.draft-section:first-child {
-  border-top: 0;
   padding-top: 0;
 }
 
