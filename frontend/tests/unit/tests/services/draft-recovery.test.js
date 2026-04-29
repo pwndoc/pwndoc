@@ -39,6 +39,32 @@ describe('DraftRecoveryService', () => {
     })
 
     expect(draft.data).toEqual({ name: 'Draft Audit' })
+    expect(draft.status).toBe(DraftRecoveryService.DRAFT_STATUS.ACTIVE)
+  })
+
+  it('marks discarded drafts without deleting them', async () => {
+    await DraftRecoveryService.saveDraft({
+      userId: 'user1',
+      scope: 'audit-general',
+      refKey: 'audit1',
+      data: { name: 'Draft Audit' }
+    })
+
+    await expect(DraftRecoveryService.markDraftDiscarded({
+      userId: 'user1',
+      scope: 'audit-general',
+      refKey: 'audit1'
+    })).resolves.toEqual({ ok: true })
+
+    const draft = await DraftRecoveryService.loadDraft({
+      userId: 'user1',
+      scope: 'audit-general',
+      refKey: 'audit1'
+    })
+
+    expect(draft).not.toBeNull()
+    expect(draft.status).toBe(DraftRecoveryService.DRAFT_STATUS.DISCARDED)
+    expect(draft.data).toEqual({ name: 'Draft Audit' })
   })
 
   it('ignores unknown draft schema versions', async () => {

@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" persistent @hide="onDialogHide">
+  <q-dialog ref="dialogRef" @hide="onDialogHide">
     <q-card class="draft-recovery-dialog">
       <q-card-section>
         <div class="text-h6">{{ $t('draftRecovery.title') }}</div>
@@ -14,17 +14,7 @@
       <q-separator />
 
       <q-card-section>
-        <q-btn
-          flat
-          dense
-          no-caps
-          color="primary"
-          :label="showDiff ? $t('draftRecovery.hideDiff') : $t('draftRecovery.viewDiff')"
-          @click="showDiff = !showDiff"
-        />
         <draft-diff
-          v-if="showDiff"
-          class="q-mt-md"
           :current="current"
           :draft="draft.data"
         />
@@ -69,10 +59,6 @@ export default {
       ...useDialogPluginComponent()
     }
   },
-
-  data: () => ({
-    showDiff: false
-  }),
 
   computed: {
     savedAt() {

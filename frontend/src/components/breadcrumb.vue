@@ -8,6 +8,9 @@
         <div v-if="$settings.reviews.enabled && state !== 'EDIT'">
             <audit-state-icon class="q-mx-sm" :approvals="approvals" :state="state"/>
         </div>
+        <div>
+            <draft-recovery-status />
+        </div>
         <q-space />
         <slot name="buttons"></slot>
     </q-bar>
@@ -15,13 +18,15 @@
 
 <script>
 import AuditStateIcon from 'components/audit-state-icon';
+import DraftRecoveryStatus from 'components/draft-recovery-status.vue';
 
 export default {
     name: 'breadcrumb',
     props: ['buttons', 'title', 'approvals', 'state', 'path', 'pathName'],
 
     components: {
-        AuditStateIcon
+        AuditStateIcon,
+        DraftRecoveryStatus
     },
 
     data: function() {

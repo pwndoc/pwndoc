@@ -6,6 +6,7 @@ import Cvss3Calculator from 'components/cvss3calculator'
 import Cvss4Calculator from 'components/cvss4calculator'
 import TextareaArray from 'components/textarea-array'
 import CustomFields from 'components/custom-fields'
+import DraftRecoveryStatus from 'components/draft-recovery-status.vue'
 
 import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
@@ -91,7 +92,8 @@ export default {
         Cvss3Calculator,
         Cvss4Calculator,
         TextareaArray,
-        CustomFields
+        CustomFields,
+        DraftRecoveryStatus
     },
 
     mounted: function() {

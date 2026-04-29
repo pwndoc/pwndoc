@@ -1,40 +1,250 @@
 <template>
   <div class="draft-diff">
-    <q-expansion-item
-      v-for="field in changedFields"
-      :key="field.path"
-      default-opened
-      dense
-      expand-separator
-      :label="field.path"
-      header-class="text-weight-medium"
+    <div class="row justify-end q-mb-sm">
+      <q-btn
+        flat dense no-caps size="sm" color="primary"
+        :label="splitView ? $t('draftRecovery.unifiedView') : $t('draftRecovery.splitView')"
+        @click="splitView = !splitView"
+      />
+    </div>
+
+    <div
+      v-for="section in diffSections"
+      :key="section.key"
+      class="draft-section"
     >
-      <div class="row q-col-gutter-md q-pa-sm">
-        <div class="col-12 col-md-6">
-          <div class="text-caption text-grey-7 q-mb-xs">{{ $t('draftRecovery.currentVersion') }}</div>
-          <div v-if="isHtmlField(field.path)" class="draft-preview" v-html="htmlEncode(field.current)"></div>
-          <pre v-else class="draft-raw">{{ formatValue(field.current) }}</pre>
-          <pre v-if="isHtmlField(field.path)" class="draft-raw q-mt-sm">{{ formatValue(field.current) }}</pre>
+      <div class="draft-section__title">{{ section.label }}</div>
+
+      <template v-if="!splitView">
+        <!-- Unified view -->
+        <div
+          v-for="field in section.fields"
+          :key="field.key"
+          class="diff-block"
+        >
+          <div class="diff-block__header">@@ {{ field.label }} @@</div>
+          <div class="diff-block__body">
+            <div
+              v-for="(chunk, i) in field.chunks"
+              :key="i"
+              class="diff-line"
+              :class="{
+                'diff-line--removed': chunk.removed,
+                'diff-line--added': chunk.added,
+                'diff-line--context': !chunk.removed && !chunk.added
+              }"
+            >
+              <span class="diff-line__glyph">{{ chunk.removed ? '-' : chunk.added ? '+' : ' ' }}</span>
+              <span class="diff-line__content" v-html="chunk.lineHtml"></span>
+            </div>
+          </div>
         </div>
-        <div class="col-12 col-md-6">
-          <div class="text-caption text-grey-7 q-mb-xs">{{ $t('draftRecovery.draftVersion') }}</div>
-          <div v-if="isHtmlField(field.path)" class="draft-preview" v-html="htmlEncode(field.draft)"></div>
-          <pre v-else class="draft-raw">{{ formatValue(field.draft) }}</pre>
-          <pre v-if="isHtmlField(field.path)" class="draft-raw q-mt-sm">{{ formatValue(field.draft) }}</pre>
+      </template>
+
+      <template v-else>
+        <!-- Split view -->
+        <div
+          v-for="field in section.fields"
+          :key="field.key"
+          class="draft-field"
+        >
+          <div class="draft-field__label">{{ field.label }}</div>
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-6">
+              <div class="text-caption text-grey-7 q-mb-xs">{{ $t('draftRecovery.currentVersion') }}</div>
+              <div class="draft-preview" v-html="field.currentHtml"></div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="text-caption text-grey-7 q-mb-xs">{{ $t('draftRecovery.draftVersion') }}</div>
+              <div class="draft-preview" v-html="field.draftHtml"></div>
+            </div>
+          </div>
         </div>
-      </div>
-    </q-expansion-item>
-    <div v-if="changedFields.length === 0" class="text-grey-7 q-pa-sm">
+      </template>
+    </div>
+
+    <div v-if="diffSections.length === 0" class="text-grey-7 q-pa-sm">
       {{ $t('draftRecovery.noDifferences') }}
     </div>
   </div>
 </template>
 
 <script>
-import Utils from '@/services/utils'
+import { Diff, diffLines, diffWords } from 'diff'
 import _ from 'lodash'
 
-const HTML_FIELDS = ['description', 'observation', 'remediation', 'poc', 'text']
+const HTML_FIELDS = ['description', 'observation', 'remediation', 'poc', 'text', 'retestDescription']
+const DETAIL_KEYS = ['title', 'vulnType', 'description', 'observation', 'remediation', 'references', 'customFields']
+const EXCLUDED_TOP_LEVEL_KEYS = ['_id', 'id', 'details']
+
+const FIELD_LABELS = {
+  auditType: 'Audit Type',
+  category: 'Category',
+  client: 'Client',
+  collaborators: 'Collaborators',
+  company: 'Company',
+  createdAt: 'Created At',
+  customFields: 'Custom Fields',
+  cvssv3: 'CVSS v3',
+  cvssv4: 'CVSS v4',
+  description: 'Description',
+  findings: 'Findings',
+  language: 'Language',
+  locale: 'Locale',
+  name: 'Name',
+  observation: 'Observation',
+  poc: 'Proof of Concept',
+  priority: 'Priority',
+  references: 'References',
+  remediation: 'Remediation',
+  remediationComplexity: 'Remediation Complexity',
+  retestDescription: 'Retest Description',
+  retestStatus: 'Retest Status',
+  reviewers: 'Reviewers',
+  scope: 'Scope',
+  status: 'Status',
+  template: 'Template',
+  text: 'Text',
+  title: 'Title',
+  updatedAt: 'Updated At',
+  vulnType: 'Type'
+}
+
+const UNSET_HTML = '<span class="diff-unset">Not set</span>'
+
+function htmlEscape(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function stripTags(html) {
+  return (html || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .trim()
+}
+
+function buildHtmlDiff() {
+  const d = new Diff(true)
+  d.tokenize = function(value) {
+    return value
+      .replace(/<code[^>]*>/g, '<code>')
+      .split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/)
+  }
+  return d
+}
+
+function injectSpan(value, cls) {
+  return value
+    .replace(/(<p>)(.+?)(<\/p>|$)/g, `$1<span class="${cls}">$2</span>$3`)
+    .replace(/(<pre><code>)(.+?)(<\/code><\/pre>|$)/g, `$1<span class="${cls}">$2</span>$3`)
+    .replace(/(^[^<].*?)(<|$)/g, `<span class="${cls}">$1</span>$2`)
+}
+
+function computeSplitSidesHtml(currentText, draftText) {
+  const d = buildHtmlDiff()
+  const changes = d.diff(currentText, draftText)
+
+  let currentHtml = ''
+  let draftHtml = ''
+
+  changes.forEach(part => {
+    const val = part.value.replace(/<p><\/p>/g, '<p><br></p>')
+    if (part.added) {
+      draftHtml += injectSpan(val, 'diffadd')
+    } else if (part.removed) {
+      currentHtml += injectSpan(val, 'diffrem')
+    } else {
+      currentHtml += val
+      draftHtml += val
+    }
+  })
+
+  return { currentHtml, draftHtml }
+}
+
+function computeSplitSidesText(currentText, draftText) {
+  const d = new Diff(true)
+  const changes = d.diff(currentText, draftText)
+
+  let currentHtml = ''
+  let draftHtml = ''
+
+  changes.forEach(part => {
+    const escaped = htmlEscape(part.value)
+    if (part.added) {
+      draftHtml += `<span class="diffadd">${escaped}</span>`
+    } else if (part.removed) {
+      currentHtml += `<span class="diffrem">${escaped}</span>`
+    } else {
+      currentHtml += escaped
+      draftHtml += escaped
+    }
+  })
+
+  return { currentHtml: `<span>${currentHtml}</span>`, draftHtml: `<span>${draftHtml}</span>` }
+}
+
+function pushIntraLines(result, wordChanges, isRemovedSide) {
+  const markCls = isRemovedSide ? 'diff-word-rem' : 'diff-word-add'
+  let currentLine = ''
+
+  wordChanges.forEach(part => {
+    if (isRemovedSide ? !!part.added : !!part.removed) return
+    const highlighted = isRemovedSide ? !!part.removed : !!part.added
+    const segments = part.value.split('\n')
+
+    segments.forEach((segment, idx) => {
+      if (idx > 0) {
+        result.push({ lineHtml: currentLine, removed: isRemovedSide, added: !isRemovedSide })
+        currentLine = ''
+      }
+      if (segment) {
+        const escaped = htmlEscape(segment)
+        currentLine += highlighted ? `<mark class="${markCls}">${escaped}</mark>` : escaped
+      }
+    })
+  })
+
+  result.push({ lineHtml: currentLine, removed: isRemovedSide, added: !isRemovedSide })
+}
+
+function computeUnifiedChunks(currentText, draftText) {
+  const a = currentText.endsWith('\n') ? currentText : currentText + '\n'
+  const b = draftText.endsWith('\n') ? draftText : draftText + '\n'
+  const lineChanges = diffLines(a, b)
+  const result = []
+  let i = 0
+
+  while (i < lineChanges.length) {
+    const curr = lineChanges[i]
+
+    if (curr.removed && i + 1 < lineChanges.length && lineChanges[i + 1].added) {
+      const wordChanges = diffWords(
+        curr.value.replace(/\n$/, ''),
+        lineChanges[i + 1].value.replace(/\n$/, '')
+      )
+      pushIntraLines(result, wordChanges, true)
+      pushIntraLines(result, wordChanges, false)
+      i += 2
+    } else {
+      curr.value.replace(/\n$/, '').split('\n').forEach(line => {
+        result.push({ lineHtml: htmlEscape(line), added: !!curr.added, removed: !!curr.removed })
+      })
+      i++
+    }
+  }
+
+  return result
+}
 
 export default {
   name: 'DraftDiff',
@@ -50,76 +260,430 @@ export default {
     }
   },
 
+  data: () => ({
+    splitView: false
+  }),
+
   computed: {
-    changedFields() {
-      const fields = []
-      this.collectDiffs('', this.current, this.draft, fields)
-      return fields
+    diffSections() {
+      const sections = []
+      const mainFields = this.buildMainFields(this.current || {}, this.draft || {})
+
+      if (mainFields.length) {
+        sections.push({
+          key: 'main',
+          label: 'Main fields',
+          fields: mainFields
+        })
+      }
+
+      sections.push(...this.buildDetailSections(this.current?.details, this.draft?.details))
+
+      return sections
     }
   },
 
   methods: {
-    collectDiffs(path, current, draft, fields) {
-      if (_.isEqual(current, draft))
-        return
+    buildMainFields(current, draft) {
+      const fields = []
+      const keys = this.sortedKeys(current, draft)
+        .filter(key => !EXCLUDED_TOP_LEVEL_KEYS.includes(key))
 
-      const currentIsObject = current && typeof current === 'object' && !Array.isArray(current)
-      const draftIsObject = draft && typeof draft === 'object' && !Array.isArray(draft)
+      keys.forEach((key) => {
+        if (_.isEqual(current[key], draft[key]))
+          return
 
-      if (currentIsObject && draftIsObject) {
-        const keys = Array.from(new Set([...Object.keys(current), ...Object.keys(draft)]))
-        keys.forEach(key => this.collectDiffs(path ? `${path}.${key}` : key, current[key], draft[key], fields))
-        return
+        if (key === 'customFields') {
+          fields.push(...this.buildCustomFieldItems('customFields', current[key], draft[key]))
+          return
+        }
+
+        fields.push(this.createField(key, key, current[key], draft[key]))
+      })
+
+      return fields
+    },
+
+    buildDetailSections(currentDetails = [], draftDetails = []) {
+      if (!Array.isArray(currentDetails) && !Array.isArray(draftDetails))
+        return []
+
+      const currentByKey = this.indexDetails(currentDetails)
+      const draftByKey = this.indexDetails(draftDetails)
+      const detailKeys = Array.from(new Set([...Object.keys(currentByKey), ...Object.keys(draftByKey)]))
+
+      return detailKeys.map((key) => {
+        const current = currentByKey[key] || {}
+        const draft = draftByKey[key] || {}
+        const fields = []
+
+        DETAIL_KEYS.forEach((fieldKey) => {
+          if (_.isEqual(current[fieldKey], draft[fieldKey]))
+            return
+
+          if (fieldKey === 'customFields') {
+            fields.push(...this.buildCustomFieldItems(`${key}.customFields`, current[fieldKey], draft[fieldKey]))
+            return
+          }
+
+          fields.push(this.createField(`${key}.${fieldKey}`, fieldKey, current[fieldKey], draft[fieldKey]))
+        })
+
+        this.sortedKeys(current, draft)
+          .filter(fieldKey => !DETAIL_KEYS.includes(fieldKey) && !['_id', 'id', 'locale'].includes(fieldKey))
+          .forEach((fieldKey) => {
+            if (!_.isEqual(current[fieldKey], draft[fieldKey]))
+              fields.push(this.createField(`${key}.${fieldKey}`, fieldKey, current[fieldKey], draft[fieldKey]))
+          })
+
+        return {
+          key: `details-${key}`,
+          label: `Details (${this.detailLabel(current, draft, key)})`,
+          fields
+        }
+      }).filter(section => section.fields.length)
+    },
+
+    buildCustomFieldItems(prefix, currentFields, draftFields) {
+      const currentByKey = this.indexCustomFields(currentFields)
+      const draftByKey = this.indexCustomFields(draftFields)
+      const keys = Array.from(new Set([...Object.keys(currentByKey), ...Object.keys(draftByKey)]))
+
+      return keys.reduce((items, key) => {
+        const current = currentByKey[key]
+        const draft = draftByKey[key]
+        const currentValue = this.customFieldValue(current)
+        const draftValue = this.customFieldValue(draft)
+
+        if (!_.isEqual(currentValue, draftValue)) {
+          items.push(this.createField(
+            `${prefix}.${key}`,
+            this.customFieldLabel(current, draft),
+            currentValue,
+            draftValue
+          ))
+        }
+
+        return items
+      }, [])
+    },
+
+    createField(key, labelKey, current, draft) {
+      const isHtml = this.isHtmlField(labelKey) || this.isHtmlValue(current) || this.isHtmlValue(draft)
+      const currentEmpty = this.isEmpty(current)
+      const draftEmpty = this.isEmpty(draft)
+
+      // --- Split view sides ---
+      let currentHtml, draftHtml
+
+      if (isHtml) {
+        const currentText = current || ''
+        const draftText = draft || ''
+        if (currentEmpty && !draftEmpty) {
+          currentHtml = UNSET_HTML
+          draftHtml = injectSpan(draftText, 'diffadd')
+        } else if (!currentEmpty && draftEmpty) {
+          currentHtml = injectSpan(currentText, 'diffrem')
+          draftHtml = UNSET_HTML
+        } else {
+          ;({ currentHtml, draftHtml } = computeSplitSidesHtml(currentText, draftText))
+        }
+      } else {
+        const currentText = this.formatValue(current)
+        const draftText = this.formatValue(draft)
+        if (currentEmpty && !draftEmpty) {
+          currentHtml = UNSET_HTML
+          draftHtml = `<span class="diffadd">${htmlEscape(draftText)}</span>`
+        } else if (!currentEmpty && draftEmpty) {
+          currentHtml = `<span class="diffrem">${htmlEscape(currentText)}</span>`
+          draftHtml = UNSET_HTML
+        } else {
+          ;({ currentHtml, draftHtml } = computeSplitSidesText(currentText, draftText))
+        }
       }
 
-      fields.push({
-        path: path || 'value',
-        current,
-        draft
-      })
+      // --- Unified view chunks ---
+      const toPlainText = (val, empty) => {
+        if (empty) return ''
+        return isHtml ? stripTags(val || '') : this.formatValue(val)
+      }
+      const chunks = computeUnifiedChunks(
+        toPlainText(current, currentEmpty),
+        toPlainText(draft, draftEmpty)
+      )
+
+      return {
+        key,
+        label: FIELD_LABELS[labelKey] || this.humanize(labelKey),
+        currentHtml,
+        draftHtml,
+        chunks
+      }
+    },
+
+    isEmpty(value) {
+      return value === undefined || value === null || value === '' ||
+        (Array.isArray(value) && value.length === 0)
+    },
+
+    sortedKeys(current = {}, draft = {}) {
+      return Array.from(new Set([
+        ...Object.keys(current || {}),
+        ...Object.keys(draft || {})
+      ])).sort((a, b) => this.fieldOrder(a) - this.fieldOrder(b) || a.localeCompare(b))
+    },
+
+    fieldOrder(key) {
+      const order = [
+        'title', 'name', 'auditType', 'category', 'vulnType',
+        'description', 'observation', 'poc', 'scope', 'remediation',
+        'references', 'cvssv3', 'cvssv4', 'priority', 'remediationComplexity',
+        'status', 'retestStatus', 'retestDescription', 'customFields'
+      ]
+      const index = order.indexOf(key)
+      return index === -1 ? order.length : index
+    },
+
+    indexDetails(details) {
+      if (!Array.isArray(details))
+        return {}
+
+      return details.reduce((indexed, detail, index) => {
+        const key = detail?.locale || detail?.language || detail?._id || `detail-${index + 1}`
+        indexed[key] = detail || {}
+        return indexed
+      }, {})
+    },
+
+    detailLabel(current, draft, fallback) {
+      const detail = draft?.locale || current?.locale || draft?.language || current?.language || fallback
+      return FIELD_LABELS[detail] || detail
+    },
+
+    indexCustomFields(fields) {
+      if (!Array.isArray(fields))
+        return {}
+
+      return fields.reduce((indexed, field, index) => {
+        const key = field?.customField?._id || field?._id || field?.id || field?.label || field?.name || `field-${index + 1}`
+        indexed[key] = field
+        return indexed
+      }, {})
+    },
+
+    customFieldLabel(current, draft) {
+      const field = draft || current || {}
+      return field?.customField?.label || field?.label || field?.name || FIELD_LABELS.customFields
+    },
+
+    customFieldValue(field) {
+      if (!field)
+        return undefined
+
+      if (Object.prototype.hasOwnProperty.call(field, 'text'))
+        return field.text
+      if (Object.prototype.hasOwnProperty.call(field, 'value'))
+        return field.value
+      if (Object.prototype.hasOwnProperty.call(field, 'values'))
+        return field.values
+      if (Object.prototype.hasOwnProperty.call(field, 'checked'))
+        return field.checked
+
+      return field
     },
 
     isHtmlField(path) {
-      const lastPart = path.split('.').pop()
+      const lastPart = String(path).split('.').pop()
       return HTML_FIELDS.includes(lastPart)
     },
 
-    htmlEncode(value) {
-      return Utils.htmlEncode(typeof value === 'string' ? value : this.formatValue(value))
+    isHtmlValue(value) {
+      return typeof value === 'string' && /^\s*<[a-zA-Z]/.test(value)
     },
 
     formatValue(value) {
-      if (value === undefined)
-        return ''
-      if (value === null)
-        return 'null'
-      if (typeof value === 'string')
-        return value
+      if (value === undefined || value === null || value === '')
+        return 'Not set'
+      if (Array.isArray(value))
+        return value.length ? value.map(item => this.formatListItem(item)).join('\n') : 'Empty'
+      if (typeof value === 'object')
+        return this.formatObject(value)
+      if (typeof value === 'boolean')
+        return value ? 'Yes' : 'No'
+      return String(value)
+    },
+
+    formatListItem(item) {
+      if (item === undefined || item === null || item === '')
+        return 'Not set'
+      if (typeof item === 'object')
+        return this.formatObject(item)
+      return String(item)
+    },
+
+    formatObject(value) {
+      if (!value || typeof value !== 'object')
+        return this.formatValue(value)
+
+      if (value.firstname || value.lastname)
+        return [value.firstname, value.lastname].filter(Boolean).join(' ')
+
+      const preferredKey = ['title', 'name', 'label', 'username', 'email', 'value', 'text', 'locale', 'language']
+        .find(key => value[key] !== undefined && value[key] !== null && value[key] !== '')
+
+      if (preferredKey)
+        return this.formatValue(value[preferredKey])
+
       return JSON.stringify(value, null, 2)
+    },
+
+    humanize(value) {
+      return String(value || 'Value')
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/[-_.]/g, ' ')
+        .replace(/\b\w/g, char => char.toUpperCase())
     }
   }
 }
 </script>
 
 <style scoped>
-.draft-raw {
-  max-height: 260px;
+.draft-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.draft-section {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 12px;
+}
+
+.draft-section:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.draft-section__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* ---- Unified view ---- */
+
+.diff-block {
+  border: 1px solid var(--diff-block-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.diff-block:last-child {
+  margin-bottom: 0;
+}
+
+.diff-block__header {
+  background: var(--diff-block-header-bg);
+  border-bottom: 1px solid var(--diff-block-border);
+  padding: 4px 10px;
+  color: var(--diff-block-header-color);
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.diff-block__body {
+  max-height: 300px;
   overflow: auto;
+}
+
+.diff-line {
+  display: flex;
   white-space: pre-wrap;
   word-break: break-word;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 8px;
-  background: #fafafa;
-  margin: 0;
+  line-height: 1.5;
+  min-height: 20px;
+}
+
+.diff-line--removed { background: var(--diff-removed-line-bg); }
+.diff-line--added   { background: var(--diff-added-line-bg); }
+.diff-line--context { background: var(--diff-context-line-bg); }
+
+.diff-line__glyph {
+  min-width: 20px;
+  padding: 1px 6px;
+  text-align: center;
+  user-select: none;
+  flex-shrink: 0;
+  border-right: 1px solid var(--diff-block-border);
+  font-weight: bold;
+}
+
+.diff-line--removed .diff-line__glyph { color: var(--diff-removed-glyph-color); background: var(--diff-removed-glyph-bg); }
+.diff-line--added   .diff-line__glyph { color: var(--diff-added-glyph-color);   background: var(--diff-added-glyph-bg); }
+.diff-line--context .diff-line__glyph { color: var(--diff-context-glyph-color); }
+
+.diff-line--removed .diff-line__content :deep(mark.diff-word-rem) {
+  background: var(--diff-word-rem-bg);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.diff-line--added .diff-line__content :deep(mark.diff-word-add) {
+  background: var(--diff-word-add-bg);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.diff-line__content {
+  flex: 1;
+  padding: 1px 8px;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Split view ---- */
+
+.draft-field {
+  margin-bottom: 14px;
+}
+
+.draft-field:last-child {
+  margin-bottom: 0;
+}
+
+.draft-field__label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
 .draft-preview {
-  max-height: 260px;
+  min-height: 42px;
+  max-height: 220px;
   overflow: auto;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--diff-preview-border);
   border-radius: 4px;
   padding: 8px;
-  background: white;
+  background: var(--diff-preview-bg);
+  word-break: break-word;
+}
+
+.draft-preview :deep(.diff-unset) {
+  color: var(--diff-unset-color);
+  font-style: italic;
+}
+
+.draft-preview :deep(.diffrem) {
+  background-color: var(--diff-removed-glyph-bg);
+  border-radius: 2px;
+}
+
+.draft-preview :deep(.diffadd) {
+  background-color: var(--diff-added-glyph-bg);
+  border-radius: 2px;
 }
 </style>

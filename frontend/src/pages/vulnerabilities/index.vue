@@ -4,6 +4,7 @@
             <p>{{$t('noLanguage')}} <a href="/data/custom">{{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('languages')}}</a></p>
         </div>
         <div v-else class="col-xl-8 col-12 offset-xl-2 q-pa-md">
+            <draft-recovery-status class="q-mb-sm" />
             <q-table
                 class="sticky-header-table"
                 :columns="dtHeaders"
@@ -163,6 +164,7 @@
                     <span v-if="currentCategory">{{$t('addVulnerability')}} ({{currentCategory.name}})</span>
                     <span v-else>{{$t('addVulnerability')}} ({{$t('noCategory')}})</span>
                 </div>
+                <draft-recovery-status />
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
@@ -308,6 +310,7 @@
                     <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
                     <span v-else>{{$t('editVulnerability')}} ({{$t('noCategory')}})</span>
                 </div>
+                <draft-recovery-status />
                 <q-separator vertical color="white" class="q-mx-md" />
                 <q-btn-dropdown
                 :label="$t('changeCategory')"

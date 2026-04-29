@@ -3,6 +3,8 @@ import DraftRecoveryDialog from 'components/draft-recovery-dialog.vue'
 import DraftRecoveryService from '@/services/draft-recovery'
 
 const notifiedErrors = new Set()
+const RECOVERY_READY_RETRY_MS = 250
+const RECOVERY_READY_MAX_WAIT_MS = 5000
 
 function cloneData(data) {
   return JSON.parse(JSON.stringify(data))
@@ -34,8 +36,10 @@ export function createDraftRecovery(vm, options) {
   let pendingWrite = null
   let scheduledKeyArgs = null
   let scheduledData = null
+  let recoveryRetryTimer = null
+  let recoveryRetryStartedAt = null
   let stopped = false
-  const promptedKeys = new Set()
+  const notifiedKeys = new Set()
 
   const getScope = () => callOption(options.scope, options.scope)
   const getRefKey = () => callOption(options.refKey, options.refKey)
@@ -49,6 +53,38 @@ export function createDraftRecovery(vm, options) {
     scope: getScope(),
     refKey: getRefKey()
   })
+
+  function recoveryIsReady(keyArgs = getKeyArgs()) {
+    return !!keyArgs.userId && !!keyArgs.scope && !!keyArgs.refKey && !isReadOnly()
+  }
+
+  function scheduleRecoveryRetry() {
+    if (stopped || recoveryRetryTimer)
+      return
+
+    const now = Date.now()
+    if (!recoveryRetryStartedAt)
+      recoveryRetryStartedAt = now
+
+    if (now - recoveryRetryStartedAt >= RECOVERY_READY_MAX_WAIT_MS) {
+      recoveryRetryStartedAt = null
+      return
+    }
+
+    recoveryRetryTimer = setTimeout(() => {
+      recoveryRetryTimer = null
+      if (stopped)
+        return
+
+      if (!recoveryIsReady()) {
+        scheduleRecoveryRetry()
+        return
+      }
+
+      recoveryRetryStartedAt = null
+      maybePromptRecovery().catch(() => {})
+    }, RECOVERY_READY_RETRY_MS)
+  }
 
   async function writeSnapshot(keyArgs, data) {
     if (stopped)
@@ -84,6 +120,7 @@ export function createDraftRecovery(vm, options) {
   }
 
   async function clearDraft() {
+    const keyArgsForStatus = getKeyArgs()
     if (timer) {
       clearTimeout(timer)
       timer = null
@@ -100,7 +137,141 @@ export function createDraftRecovery(vm, options) {
     const result = await DraftRecoveryService.clearDraft(getKeyArgs())
     if (!result.ok)
       notifyStorageError(result.error)
+    else
+      DraftRecoveryService.clearStatus(DraftRecoveryService.buildKey(keyArgsForStatus.userId, keyArgsForStatus.scope, keyArgsForStatus.refKey))
     return result
+  }
+
+  async function clearDraftForKey(keyArgs) {
+    const result = await DraftRecoveryService.clearDraft(keyArgs)
+    if (!result.ok)
+      notifyStorageError(result.error)
+    else
+      DraftRecoveryService.clearStatus(DraftRecoveryService.buildKey(keyArgs.userId, keyArgs.scope, keyArgs.refKey))
+    return result
+  }
+
+  async function markDraftDiscarded(keyArgs) {
+    const result = await DraftRecoveryService.markDraftDiscarded(keyArgs)
+    if (!result.ok)
+      notifyStorageError(result.error)
+    return result
+  }
+
+  function showDiffDialog(draft, current, keyArgs) {
+    Dialog.create({
+      component: DraftRecoveryDialog,
+      componentProps: {
+        draft,
+        current
+      }
+    })
+    .onOk(async (action) => {
+      if (action === 'restore') {
+        await restoreDraft(draft, keyArgs)
+        setRecoveredStatus(draft, current, keyArgs)
+        return
+      }
+
+      if (action === 'discard') {
+        await discardDraft(draft, current, keyArgs)
+      }
+    })
+  }
+
+  function countChangedFields(current, draft) {
+    if (!current || !draft) return 0
+    let count = 0
+    const excluded = new Set(['_id', 'id', 'details'])
+    const allKeys = new Set([...Object.keys(current), ...Object.keys(draft)])
+    for (const key of allKeys) {
+      if (excluded.has(key)) continue
+      if (JSON.stringify(current[key]) !== JSON.stringify(draft[key])) count++
+    }
+    const currentDetails = Array.isArray(current.details) ? current.details : []
+    const draftDetails = Array.isArray(draft.details) ? draft.details : []
+    const detailMap = {}
+    for (const d of currentDetails) {
+      const k = d?.locale || d?.language || d?._id
+      if (k) detailMap[k] = { cur: d }
+    }
+    for (const d of draftDetails) {
+      const k = d?.locale || d?.language || d?._id
+      if (k) {
+        if (detailMap[k]) detailMap[k].dft = d
+        else detailMap[k] = { dft: d }
+      }
+    }
+    for (const entry of Object.values(detailMap)) {
+      if (JSON.stringify(entry.cur) !== JSON.stringify(entry.dft)) count++
+    }
+    return count
+  }
+
+  function setRecoveredStatus(draft, serverVersion, keyArgs) {
+    DraftRecoveryService.setStatus({
+      key: draft.key,
+      type: 'local_draft',
+      draft,
+      changeCount: countChangedFields(serverVersion, draft.data),
+      actions: [
+        {
+          id: 'discard',
+          handler: () => discardDraft(draft, serverVersion, keyArgs)
+        },
+        {
+          id: 'view_changes',
+          handler: () => showDiffDialog(draft, serverVersion, keyArgs)
+        }
+      ]
+    })
+  }
+
+  function setDiscardedStatus(draft, serverVersion, keyArgs) {
+    DraftRecoveryService.setStatus({
+      key: draft.key,
+      type: 'server_version',
+      draft,
+      changeCount: countChangedFields(serverVersion, draft.data),
+      actions: [
+        {
+          id: 'restore',
+          handler: async () => {
+            await restoreDraft(draft, keyArgs)
+            setRecoveredStatus(draft, serverVersion, keyArgs)
+          }
+        },
+        {
+          id: 'delete_permanently',
+          handler: () => clearDraftForKey(keyArgs)
+        },
+        {
+          id: 'view_changes',
+          handler: () => showDiffDialog(draft, serverVersion, keyArgs)
+        }
+      ]
+    })
+  }
+
+  async function restoreDraft(draft, keyArgs = getKeyArgs()) {
+    options.setCurrent(cloneData(draft.data))
+    if (options.afterRestore)
+      await options.afterRestore()
+
+    const result = await DraftRecoveryService.saveDraft({
+      ...keyArgs,
+      data: cloneData(draft.data)
+    })
+    if (!result.ok)
+      notifyStorageError(result.error)
+  }
+
+  async function discardDraft(draft, serverVersion, keyArgs) {
+    await markDraftDiscarded(keyArgs)
+    options.setCurrent(cloneData(serverVersion))
+    if (options.afterRestore)
+      await options.afterRestore()
+    setDiscardedStatus(draft, serverVersion, keyArgs)
   }
 
   function start() {
@@ -114,7 +285,12 @@ export function createDraftRecovery(vm, options) {
           return
 
         if (!isDirty()) {
-          await clearDraft()
+          if (timer) {
+            clearTimeout(timer)
+            timer = null
+            scheduledKeyArgs = null
+            scheduledData = null
+          }
           return
         }
 
@@ -125,15 +301,16 @@ export function createDraftRecovery(vm, options) {
   }
 
   async function maybePromptRecovery() {
-    if (isReadOnly())
-      return null
-
     const keyArgs = getKeyArgs()
-    if (!keyArgs.userId || !keyArgs.scope || !keyArgs.refKey)
+    if (!recoveryIsReady(keyArgs)) {
+      scheduleRecoveryRetry()
       return null
+    }
+
+    recoveryRetryStartedAt = null
 
     const promptKey = DraftRecoveryService.buildKey(keyArgs.userId, keyArgs.scope, keyArgs.refKey)
-    if (promptedKeys.has(promptKey)) {
+    if (notifiedKeys.has(`${promptKey}:checked`)) {
       start()
       return null
     }
@@ -144,38 +321,20 @@ export function createDraftRecovery(vm, options) {
       return null
     }
 
-    promptedKeys.add(promptKey)
+    notifiedKeys.add(`${promptKey}:checked`)
 
-    return new Promise((resolve) => {
-      Dialog.create({
-        component: DraftRecoveryDialog,
-        componentProps: {
-          draft,
-          current: cloneData(getCurrent())
-        }
-      })
-      .onOk(async (action) => {
-        if (action === 'restore') {
-          options.setCurrent(cloneData(draft.data))
-          if (options.afterRestore)
-            await options.afterRestore()
-          start()
-          resolve('restore')
-          return
-        }
+    const serverVersion = cloneData(getCurrent())
 
-        await clearDraft()
-        start()
-        resolve('discard')
-      })
-      .onCancel(() => {
-        start()
-        resolve('cancel')
-      })
-      .onDismiss(() => {
-        start()
-      })
-    })
+    if (draft.status === DraftRecoveryService.DRAFT_STATUS.DISCARDED) {
+      start()
+      setDiscardedStatus(draft, serverVersion, keyArgs)
+      return 'discarded'
+    }
+
+    await restoreDraft(draft, keyArgs)
+    start()
+    setRecoveredStatus(draft, serverVersion, keyArgs)
+    return 'restore'
   }
 
   async function flushPendingWrite() {
@@ -194,6 +353,12 @@ export function createDraftRecovery(vm, options) {
       unwatch = null
     }
     await flushPendingWrite()
+    if (recoveryRetryTimer) {
+      clearTimeout(recoveryRetryTimer)
+      recoveryRetryTimer = null
+    }
+    const keyArgs = getKeyArgs()
+    DraftRecoveryService.clearStatus(DraftRecoveryService.buildKey(keyArgs.userId, keyArgs.scope, keyArgs.refKey))
     stopped = true
   }
 

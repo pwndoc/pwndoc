@@ -1,14 +1,23 @@
 import { openDB, deleteDB } from 'idb'
+import { reactive } from 'vue'
 
 const DB_NAME = 'pwndoc-drafts'
 const DB_VERSION = 1
 const STORE_NAME = 'drafts'
 const DRAFT_VERSION = 1
 const DEFAULT_TTL_DAYS = 7
+const DRAFT_STATUS = {
+  ACTIVE: 'active_draft',
+  DISCARDED: 'discarded_draft',
+  SYNCED: 'synced'
+}
 
 let dbPromise = null
 let dbInstance = null
 let openDbImpl = openDB
+const state = reactive({
+  current: null
+})
 
 function cloneData(data) {
   if (typeof structuredClone === 'function')
@@ -57,6 +66,15 @@ function buildKey(userId, scope, refKey) {
   return `pwndoc.draft.${userId}.${scope}.${refKey}`
 }
 
+function setStatus(status) {
+  state.current = status
+}
+
+function clearStatus(key) {
+  if (!key || state.current?.key === key)
+    state.current = null
+}
+
 async function saveDraft({ userId, scope, refKey, data }) {
   if (!userId || !scope || !refKey)
     return { ok: false, error: 'unavailable' }
@@ -75,6 +93,7 @@ async function saveDraft({ userId, scope, refKey, data }) {
       userId,
       createdAt: existing?.createdAt || now,
       updatedAt: now,
+      status: DRAFT_STATUS.ACTIVE,
       data: cloneData(data)
     })
 
@@ -94,10 +113,35 @@ async function loadDraft({ userId, scope, refKey }) {
     const draft = await db.get(STORE_NAME, buildKey(userId, scope, refKey))
     if (!draft || draft.v !== DRAFT_VERSION)
       return null
+    if (!draft.status)
+      draft.status = DRAFT_STATUS.ACTIVE
     return draft
   }
   catch {
     return null
+  }
+}
+
+async function markDraftDiscarded({ userId, scope, refKey }) {
+  if (!userId || !scope || !refKey)
+    return { ok: true }
+
+  try {
+    const db = await getDb()
+    const key = buildKey(userId, scope, refKey)
+    const draft = await db.get(STORE_NAME, key)
+    if (!draft || draft.v !== DRAFT_VERSION)
+      return { ok: true }
+
+    await db.put(STORE_NAME, {
+      ...draft,
+      status: DRAFT_STATUS.DISCARDED,
+      discardedAt: Date.now()
+    })
+    return { ok: true }
+  }
+  catch (err) {
+    return { ok: false, error: classifyError(err) }
   }
 }
 
@@ -195,10 +239,15 @@ function __setOpenDBForTests(fn) {
 }
 
 export default {
+  DRAFT_STATUS,
+  state,
+  setStatus,
+  clearStatus,
   buildKey,
   saveDraft,
   loadDraft,
   clearDraft,
+  markDraftDiscarded,
   clearScope,
   purgeExpired,
   isStorageAvailable,
