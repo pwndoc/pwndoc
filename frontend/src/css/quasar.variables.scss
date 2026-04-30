@@ -133,6 +133,10 @@ $text-comment-focused: black;
     .bg-orange-2 {
       background: #ff980026 !important; // orange-6
     }
+
+    .bg-amber-1 {
+      background: transparent !important;
+    }
   
     .text-grey-8,
     .text-blue-grey {
@@ -145,7 +149,7 @@ $text-comment-focused: black;
     }
 
     .text-brown-6 {
-      color: q.$brown-3 !important;
+      color: q.$orange-2 !important;
     }
   
     // For field border default

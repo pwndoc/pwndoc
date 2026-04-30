@@ -254,12 +254,13 @@ export function createDraftRecovery(vm, options) {
           }
         },
         {
-          id: 'delete_permanently',
-          handler: () => clearDraftForKey(keyArgs)
-        },
-        {
           id: 'view_changes',
           handler: () => showDiffDialog(draft, serverVersion, keyArgs)
+        },
+        { id: 'separator' },
+        {
+          id: 'delete_permanently',
+          handler: () => clearDraftForKey(keyArgs)
         }
       ]
     })

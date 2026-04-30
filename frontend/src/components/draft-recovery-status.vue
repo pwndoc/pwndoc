@@ -51,7 +51,8 @@
 
       <!-- Actions -->
       <template v-for="(action, index) in actionConfigs" :key="action.id">
-        <q-item clickable v-close-popup @click="action.handler && action.handler()">
+        <q-separator v-if="action.id === 'separator'" inset />
+        <q-item v-else clickable v-close-popup @click="action.handler && action.handler()">
           <q-item-section side top>
             <q-icon :name="action.icon" size="18px" :color="action.iconColor" />
           </q-item-section>
@@ -89,7 +90,7 @@ const ACTION_ICON_MAP = {
   discard:            { icon: 'restore',      iconColor: 'blue',     labelColor: 'blue' },
   restore:            { icon: 'restore',      iconColor: 'blue',     labelColor: 'blue'  },
   delete_permanently: { icon: 'delete',       iconColor: 'negative', labelColor: 'negative' },
-  view_changes:       { icon: 'o_difference', iconColor: 'primary',  labelColor: 'primary'   }
+  view_changes:       { icon: 'o_difference', iconColor: 'primary',  labelColor: ''   }
 }
 
 export default {
@@ -149,6 +150,8 @@ export default {
       const isLocalDraft = this.status.type === 'local_draft'
 
       return this.status.actions.map(action => {
+        if (action.id === 'separator') return { id: 'separator' }
+
         const conf = ACTION_ICON_MAP[action.id] || { icon: 'circle', iconColor: 'grey', labelColor: 'dark' }
         let label = ''
         let description = ''
