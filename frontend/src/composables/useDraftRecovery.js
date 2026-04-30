@@ -386,12 +386,18 @@ export function createDraftRecovery(vm, options) {
     stopped = true
   }
 
+  function resetForKey(keyArgs = getKeyArgs()) {
+    const key = DraftRecoveryService.buildKey(keyArgs.userId, keyArgs.scope, keyArgs.refKey)
+    notifiedKeys.delete(`${key}:checked`)
+  }
+
   return {
     start,
     maybePromptRecovery,
     clearDraft,
     flushPendingWrite,
-    stop
+    stop,
+    resetForKey
   }
 }
 

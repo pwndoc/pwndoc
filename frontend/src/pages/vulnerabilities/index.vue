@@ -4,7 +4,6 @@
             <p>{{$t('noLanguage')}} <a href="/data/custom">{{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('languages')}}</a></p>
         </div>
         <div v-else class="col-xl-8 col-12 offset-xl-2 q-pa-md">
-            <draft-recovery-status class="q-mb-sm" />
             <q-table
                 class="sticky-header-table"
                 :columns="dtHeaders"

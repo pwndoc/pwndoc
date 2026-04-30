@@ -105,6 +105,11 @@ export default {
         this.setupDraftRecovery()
     },
 
+    unmounted: function() {
+        if (this.draftRecovery)
+            this.draftRecovery.stop()
+    },
+
     watch: {
         currentLanguage: function(val, oldVal) {
             this.setCurrentDetails();
@@ -366,13 +371,16 @@ export default {
             this.$refs.createModal.show()
         },
 
-        cleanupCurrentVulnerability: function() {
+        cleanupCurrentVulnerability: async function() {
+            if (this.draftRecovery) {
+                await this.draftRecovery.flushPendingWrite()
+                this.draftRecovery.resetForKey()
+            }
             this.draftRecoveryPaused = true
             this.cleanCurrentVulnerability()
             this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
-            this.$nextTick(() => {
-                this.draftRecoveryPaused = false
-            })
+            await this.$nextTick()
+            this.draftRecoveryPaused = false
         },
 
         editChangeCategory: function(category) {
@@ -404,6 +412,7 @@ export default {
             this.currentVulnerability.priority = '';
             this.currentVulnerability.remediationComplexity = '';
             this.currentVulnerability.details = [];
+            delete this.currentVulnerability.creator;
             this.currentLanguage = this.dtLanguage;
             if (this.currentCategory && this.currentCategory.name) 
                 this.currentVulnerability.category = this.currentCategory.name
