@@ -26,6 +26,15 @@ var cookieParser = require('cookie-parser')
 var utils = require('./lib/utils');
 const config = require('./config/config.json');
 const env = process.env.NODE_ENV || 'dev';
+const reservedUserColor = '#77c84e';
+
+function getSocketUserColor() {
+  var color;
+  do {
+    color = '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6);
+  } while (utils.colorDistance(color, reservedUserColor) < 120)
+  return color;
+}
 
 // Get configuration
 global.__basedir = __dirname;
@@ -70,7 +79,7 @@ io.on('connection', (socket) => {
   socket.on('join', (data) => {
     console.log(`user ${data.username.replace(/\n|\r/g, "")} joined room ${data.room.replace(/\n|\r/g, "")}`)
     socket.username = data.username;
-    do { socket.color = '#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6); } while (socket.color === "#77c84e")
+    socket.color = getSocketUserColor();
     socket.join(data.room);
     io.to(data.room).emit('updateUsers');
   });
@@ -80,15 +89,33 @@ io.on('connection', (socket) => {
     io.to(data.room).emit('updateUsers');
   })
   socket.on('updateUsers', (data) => {
-    var userList = [...new Set(utils.getSockets(io, data.room).map(s => {
-      var user = {};
-      user.username = s.username;
-      user.color = s.color;
+    var usersByUsername = new Map();
+    utils.getSockets(io, data.room).forEach(s => {
+      if (!s.username)
+        return;
+
+      var user = usersByUsername.get(s.username);
+      if (!user) {
+        user = {};
+        user.username = s.username;
+        user.color = s.color;
+        user.sessions = [];
+        usersByUsername.set(s.username, user);
+      }
+
+      var session = {};
+      session.color = s.color;
+      session.menu = s.menu;
       user.menu = s.menu;
       if (s.finding) user.finding = s.finding;
+      else delete user.finding;
       if (s.section) user.section = s.section;
-      return user;
-    }))];
+      else delete user.section;
+      if (s.finding) session.finding = s.finding;
+      if (s.section) session.section = s.section;
+      user.sessions.push(session);
+    });
+    var userList = Array.from(usersByUsername.values());
     io.to(data.room).emit('roomUsers', userList);
   })
   socket.on('menu', (data) => {

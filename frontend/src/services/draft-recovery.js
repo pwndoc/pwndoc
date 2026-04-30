@@ -16,7 +16,8 @@ let dbPromise = null
 let dbInstance = null
 let openDbImpl = openDB
 const state = reactive({
-  current: null
+  current: null,
+  revision: 0
 })
 
 function cloneData(data) {
@@ -75,6 +76,10 @@ function clearStatus(key) {
     state.current = null
 }
 
+function bumpRevision() {
+  state.revision += 1
+}
+
 async function saveDraft({ userId, scope, refKey, data }) {
   if (!userId || !scope || !refKey)
     return { ok: false, error: 'unavailable' }
@@ -97,6 +102,7 @@ async function saveDraft({ userId, scope, refKey, data }) {
       data: cloneData(data)
     })
 
+    bumpRevision()
     return { ok: true }
   }
   catch (err) {
@@ -122,6 +128,41 @@ async function loadDraft({ userId, scope, refKey }) {
   }
 }
 
+async function listDrafts({ userId, scopes, refKeyPrefix, ttlDays = DEFAULT_TTL_DAYS } = {}) {
+  if (!userId)
+    return []
+
+  try {
+    const db = await getDb()
+    const index = db.transaction(STORE_NAME).store.index('by_userId')
+    let cursor = await index.openCursor(userId)
+    const scopeSet = Array.isArray(scopes) && scopes.length ? new Set(scopes) : null
+    const cutoff = Date.now() - ttlDays * 24 * 60 * 60 * 1000
+    const drafts = []
+
+    while (cursor) {
+      const draft = cursor.value
+      if (
+        draft?.v === DRAFT_VERSION &&
+        (!scopeSet || scopeSet.has(draft.scope)) &&
+        (!refKeyPrefix || draft.refKey?.startsWith(refKeyPrefix)) &&
+        (!draft.updatedAt || draft.updatedAt >= cutoff)
+      ) {
+        drafts.push({
+          ...draft,
+          status: draft.status || DRAFT_STATUS.ACTIVE
+        })
+      }
+      cursor = await cursor.continue()
+    }
+
+    return drafts
+  }
+  catch {
+    return []
+  }
+}
+
 async function markDraftDiscarded({ userId, scope, refKey }) {
   if (!userId || !scope || !refKey)
     return { ok: true }
@@ -138,6 +179,7 @@ async function markDraftDiscarded({ userId, scope, refKey }) {
       status: DRAFT_STATUS.DISCARDED,
       discardedAt: Date.now()
     })
+    bumpRevision()
     return { ok: true }
   }
   catch (err) {
@@ -152,6 +194,7 @@ async function clearDraft({ userId, scope, refKey }) {
   try {
     const db = await getDb()
     await db.delete(STORE_NAME, buildKey(userId, scope, refKey))
+    bumpRevision()
     return { ok: true }
   }
   catch (err) {
@@ -179,6 +222,8 @@ async function clearScope({ userId, scope }) {
     }
 
     await tx.done
+    if (count)
+      bumpRevision()
     return { ok: true, count }
   }
   catch (err) {
@@ -202,6 +247,8 @@ async function purgeExpired(ttlDays = DEFAULT_TTL_DAYS) {
     }
 
     await tx.done
+    if (count)
+      bumpRevision()
     return { ok: true, count }
   }
   catch (err) {
@@ -246,6 +293,7 @@ export default {
   buildKey,
   saveDraft,
   loadDraft,
+  listDrafts,
   clearDraft,
   markDraftDiscarded,
   clearScope,

@@ -15,6 +15,7 @@ export default {
         ok: 'ok',
         leave: 'Leave',
         stay: 'Stay',
+        generateAnyway: 'Generate anyway',
         topButtonSection: {
             submitReview: 'Submit Review',
             cancelReview: 'Cancel Review',
@@ -42,6 +43,8 @@ export default {
         usersConnected: 'Users on the Audit:',
         editAudit: 'Edit Audit',
         downloadReport: 'Download Report',
+        downloadReportWithUnsavedDrafts: 'Local recovery changes exist and will not be included in the report until saved',
+        auditDraftUnsavedChanges: 'Local recovery changes exist',
         deleteAudit: 'Delete Audit',
         removeAudit: 'Remove Audit (Audit will not be deleted)',
         topButtonSection: {
@@ -82,6 +85,8 @@ export default {
         findingDeleteOk: 'Finding deleted successfully',
         doYouWantToLeave: 'Do you really want to leave ?',
         thereAreUnsavedChanges: 'There are unsaved changes !',
+        auditDraftDownloadWarningTitle: 'Local recovery changes exist',
+        auditDraftDownloadWarningMessage: 'This audit has local recovery changes that are not saved to the server. They will not be included in the generated report unless you save them first.',
         fieldRequired: 'Please fill all required Fields',
         errorLoading: 'Error loading data',
         errorCreating: 'Error creating rule',

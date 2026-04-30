@@ -74,8 +74,17 @@
 							</q-item-section>
 						</template>
 						<q-item-section side class="topButtonSection">
-							<q-btn flat color="info" @click="generateReport">
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.downloadReport')}}</q-tooltip> 
+							<q-btn class="audit-download-btn" flat color="info" @click="generateReport">
+								<q-badge
+									v-if="hasAnyAuditDraft"
+									data-testid="download-draft-badge"
+									class="audit-download-btn__badge"
+									color="orange"
+									rounded
+								/>
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+									{{ hasAnyAuditDraft ? $t('tooltip.downloadReportWithUnsavedDrafts') : $t('tooltip.downloadReport') }}
+								</q-tooltip> 
 								<i class="fa fa-download fa-lg"></i>
 							</q-btn>
 						</q-item-section>
@@ -86,6 +95,11 @@
 							<q-icon name="fa fa-cog"></q-icon>
 						</q-item-section>
 						<q-item-section>{{$t('generalInformation')}}</q-item-section>
+						<q-item-section side v-if="hasDraftForGeneral">
+							<q-badge data-testid="general-draft-badge" color="orange" rounded>
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+							</q-badge>
+						</q-item-section>
 					</q-item>
 					
 					<div class="row">
@@ -100,6 +114,11 @@
 							<q-icon name="fa fa-globe"></q-icon>
 						</q-item-section>
 						<q-item-section>{{$t('networkScan')}}</q-item-section>
+						<q-item-section side v-if="hasDraftForNetwork">
+							<q-badge data-testid="network-draft-badge" color="orange" rounded>
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+							</q-badge>
+						</q-item-section>
 					</q-item>
 
 					<div class="row">
@@ -260,6 +279,11 @@
 												<q-item-section>
 													<span>{{finding.title}}</span>
 												</q-item-section>
+												<q-item-section side v-if="hasDraftForFinding(finding._id)">
+													<q-badge :data-testid="`finding-draft-badge-${finding._id}`" color="orange" rounded>
+														<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+													</q-badge>
+												</q-item-section>
 												<q-item-section side>
 													<q-icon v-if="audit.type === 'default' && finding.status === 0" name="check" color="green" />
 													<q-icon v-else-if="audit.type === 'retest' && finding.retestStatus === 'ok'" name="check" color="green" />
@@ -289,6 +313,11 @@
 							</q-item-section>
 							<q-item-section>
 								<span>{{section.name}}</span>
+							</q-item-section>
+							<q-item-section side v-if="hasDraftForSection(section._id)">
+								<q-badge :data-testid="`section-draft-badge-${section._id}`" color="orange" rounded>
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+								</q-badge>
 							</q-item-section>
 						</q-item>
 						<div class="row">
@@ -336,6 +365,7 @@ import CommentsList from 'components/comments-list'
 import AuditService from '@/services/audit';
 import { useUserStore } from 'src/stores/user'
 import DataService from '@/services/data';
+import DraftRecoveryService from '@/services/draft-recovery';
 import Utils from '@/services/utils';
 
 import { $t } from '@/boot/i18n';
@@ -383,7 +413,8 @@ export default {
 			editComment: editCommentR,
 			editReply: editReplyR,
             fieldHighlighted: fieldHighlightedR,
-            commentsFilter: "all" // [all, active, resolved]
+            commentsFilter: "all", // [all, active, resolved]
+			auditDrafts: []
 		}
 	},
 
@@ -417,6 +448,7 @@ export default {
 		this.getAudit(); // Calls getSections
 		this.getRetest();
 		this.getAuditChildren();
+		this.refreshAuditDrafts();
 	},
 
 	unmounted: function() {
@@ -480,14 +512,38 @@ export default {
 				this.editReply = null
 				this.commentsFilter = "all"
 			}
+		},
+		draftRecoveryRevision: function() {
+			this.refreshAuditDrafts()
 		}
 	},
 
 	computed: {
-		generalUsers: function() {return this.users.filter(user => user.menu === 'general')},
-		networkUsers: function() {return this.users.filter(user => user.menu === 'network')},
-		findingUsers: function() {return this.users.filter(user => user.menu === 'editFinding')},
-		sectionUsers: function() {return this.users.filter(user => user.menu === 'editSection')},
+		userLocations: function() {
+			var locationsByKey = new Map()
+
+			this.users.forEach(user => {
+				var sessions = (user.sessions && user.sessions.length) ? user.sessions : [user]
+				sessions.forEach(session => {
+					var location = {
+						username: user.username,
+						color: user.color,
+						menu: session.menu,
+						finding: session.finding,
+						section: session.section
+					}
+					var key = [location.username, location.menu, location.finding, location.section].join(':')
+					locationsByKey.set(key, location)
+				})
+			})
+
+			return Array.from(locationsByKey.values())
+		},
+
+		generalUsers: function() {return this.userLocations.filter(user => user.menu === 'general')},
+		networkUsers: function() {return this.userLocations.filter(user => user.menu === 'network')},
+		findingUsers: function() {return this.userLocations.filter(user => user.menu === 'editFinding')},
+		sectionUsers: function() {return this.userLocations.filter(user => user.menu === 'editSection')},
 
 		currentAuditType: function() {
 			return this.auditTypes.find(e => e.name === this.audit.auditType)
@@ -503,7 +559,23 @@ export default {
 
 		commentIdList: function() {
             return this.audit.comments.map(e => e._id)
-        }
+        },
+
+		draftRecoveryRevision: function() {
+			return DraftRecoveryService.state.revision
+		},
+
+		hasDraftForGeneral: function() {
+			return this.hasDraft('audit-general', this.auditId)
+		},
+
+		hasDraftForNetwork: function() {
+			return this.hasDraft('audit-network', this.auditId)
+		},
+
+		hasAnyAuditDraft: function() {
+			return this.auditDrafts.length > 0
+		}
 	},
 
 	methods: {
@@ -580,6 +652,54 @@ export default {
 			return {menu: 'undefined', room: this.auditId}
 		},
 
+		refreshAuditDrafts: async function() {
+			if (!userStore.id || !this.auditId) {
+				this.auditDrafts = []
+				return
+			}
+
+			const drafts = await DraftRecoveryService.listDrafts({
+				userId: userStore.id,
+				scopes: ['audit-general', 'audit-network', 'audit-finding', 'audit-section'],
+				refKeyPrefix: this.auditId
+			})
+
+			this.auditDrafts = drafts.filter(draft => {
+				if (['audit-general', 'audit-network'].includes(draft.scope))
+					return draft.refKey === this.auditId
+				return draft.refKey && draft.refKey.startsWith(`${this.auditId}:`)
+			})
+		},
+
+		hasDraft: function(scope, refKey) {
+			if (this.isCurrentDraft(scope, refKey))
+				return false
+			return this.auditDrafts.some(draft => draft.scope === scope && draft.refKey === refKey)
+		},
+
+		isCurrentDraft: function(scope, refKey) {
+			const currentRoute = this.$router.currentRoute?.value || this.$router.currentRoute || {}
+			const params = currentRoute.params || {}
+
+			if (currentRoute.name === 'general')
+				return scope === 'audit-general' && refKey === this.auditId
+			if (currentRoute.name === 'network')
+				return scope === 'audit-network' && refKey === this.auditId
+			if (currentRoute.name === 'editFinding' && params.findingId)
+				return scope === 'audit-finding' && refKey === `${this.auditId}:${params.findingId}`
+			if (currentRoute.name === 'editSection' && params.sectionId)
+				return scope === 'audit-section' && refKey === `${this.auditId}:${params.sectionId}`
+			return false
+		},
+
+		hasDraftForFinding: function(findingId) {
+			return this.hasDraft('audit-finding', `${this.auditId}:${findingId}`)
+		},
+
+		hasDraftForSection: function(sectionId) {
+			return this.hasDraft('audit-section', `${this.auditId}:${sectionId}`)
+		},
+
 		// Sockets handle
 		handleSocket: function() {
 			this.$socket.emit('join', {username: userStore.username, room: this.auditId});
@@ -588,6 +708,8 @@ export default {
 				this.users = users.map((user,index) => {
 					if (user.username === userStore.username) {
 						user.color = "#77C84E";
+						if (user.sessions)
+							user.sessions.forEach(session => { session.color = "#77C84E" });
 						user.me = true;
 						userIndex = index;
 					}
@@ -742,6 +864,24 @@ export default {
 		},
 
 		generateReport: function() {
+			if (this.hasAnyAuditDraft) {
+				Dialog.create({
+					title: $t('msg.auditDraftDownloadWarningTitle'),
+					message: $t('msg.auditDraftDownloadWarningMessage'),
+					ok: {label: $t('btn.generateAnyway'), color: 'warning'},
+					cancel: {label: $t('btn.cancel'), color: 'white'},
+					focus: 'cancel'
+				})
+				.onOk(() => {
+					this.generateReportDownload()
+				})
+				return
+			}
+
+			this.generateReportDownload()
+		},
+
+		generateReportDownload: function() {
 			const downloadNotif = Notify.create({
 				spinner: QSpinnerGears,
 				message: 'Generating the Report',
@@ -1004,6 +1144,21 @@ export default {
 .topButtonSection {
     padding-left: 0px!important;
 	padding-right: 0px!important;
+}
+
+.audit-download-btn {
+	overflow: visible;
+	position: relative;
+}
+
+.audit-download-btn__badge {
+	position: absolute;
+	right: 2px;
+	top: 2px;
+	min-width: 9px;
+	min-height: 9px;
+	padding: 0;
+	z-index: 1;
 }
 
 .highlighted-border {

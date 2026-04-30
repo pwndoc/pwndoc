@@ -67,6 +67,49 @@ describe('DraftRecoveryService', () => {
     expect(draft.data).toEqual({ name: 'Draft Audit' })
   })
 
+  it('lists drafts by user, scopes, and refKey prefix including discarded drafts', async () => {
+    await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'audit-general', refKey: 'audit1', data: { name: 'General' } })
+    await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'audit-section', refKey: 'audit1:section1', data: { text: 'Section' } })
+    await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'audit-finding', refKey: 'audit1:finding1', data: { title: 'Finding' } })
+    await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'vulnerability', refKey: 'audit1:vuln1', data: { title: 'Vuln' } })
+    await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'audit-section', refKey: 'audit2:section1', data: { text: 'Other Audit' } })
+    await DraftRecoveryService.saveDraft({ userId: 'user2', scope: 'audit-section', refKey: 'audit1:section2', data: { text: 'Other User' } })
+
+    await DraftRecoveryService.markDraftDiscarded({
+      userId: 'user1',
+      scope: 'audit-section',
+      refKey: 'audit1:section1'
+    })
+
+    const drafts = await DraftRecoveryService.listDrafts({
+      userId: 'user1',
+      scopes: ['audit-general', 'audit-section', 'audit-finding'],
+      refKeyPrefix: 'audit1'
+    })
+
+    expect(drafts.map(draft => `${draft.scope}:${draft.refKey}`).sort()).toEqual([
+      'audit-finding:audit1:finding1',
+      'audit-general:audit1',
+      'audit-section:audit1:section1'
+    ])
+    expect(drafts.find(draft => draft.refKey === 'audit1:section1').status)
+      .toBe(DraftRecoveryService.DRAFT_STATUS.DISCARDED)
+  })
+
+  it('does not list deleted drafts', async () => {
+    await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'audit-section', refKey: 'audit1:section1', data: {} })
+    await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'audit-section', refKey: 'audit1:section2', data: {} })
+    await DraftRecoveryService.clearDraft({ userId: 'user1', scope: 'audit-section', refKey: 'audit1:section1' })
+
+    const drafts = await DraftRecoveryService.listDrafts({
+      userId: 'user1',
+      scopes: ['audit-section'],
+      refKeyPrefix: 'audit1'
+    })
+
+    expect(drafts.map(draft => draft.refKey)).toEqual(['audit1:section2'])
+  })
+
   it('ignores unknown draft schema versions', async () => {
     await DraftRecoveryService.saveDraft({
       userId: 'user1',

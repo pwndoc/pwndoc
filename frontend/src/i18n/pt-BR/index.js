@@ -14,6 +14,7 @@ export default {
       ok: 'ok',
       leave: 'Sair',
       stay: 'Permanecer',
+      generateAnyway: 'Gerar mesmo assim',
       topButtonSection: {
           submitReview: 'Enviar Revisão',
           cancelReview: 'Cancelar Revisão',
@@ -40,6 +41,8 @@ export default {
     usersConnected: 'Usuários na Auditoria:',
     editAudit: 'Editar Auditoria',
     downloadReport: 'Baixar Relatório',
+    downloadReportWithUnsavedDrafts: 'Existem alterações locais recuperadas e elas não serão incluídas no relatório até serem salvas',
+    auditDraftUnsavedChanges: 'Existem alterações locais recuperadas',
     deleteAudit: 'Excluir Auditoria',
     removeAudit: 'Remover Auditoria (A auditoria não será excluída)',
     topButtonSection: {
@@ -69,6 +72,8 @@ msg: {
     findingDeleteOk: 'Descoberta excluída com sucesso',
     doYouWantToLeave: 'Você realmente deseja sair?',
     thereAreUnsavedChanges: 'Existem alterações não salvas!',
+    auditDraftDownloadWarningTitle: 'Existem alterações locais recuperadas',
+    auditDraftDownloadWarningMessage: 'Esta auditoria possui alterações locais recuperadas que não foram salvas no servidor. Elas não serão incluídas no relatório gerado a menos que você as salve primeiro.',
     fieldRequired: 'Por favor, preencha todos os campos obrigatórios',
     deleteFindingConfirm: 'Excluir Descoberta atual?',
     deleteFindingNotice: 'Esta ação não pode ser desfeita',

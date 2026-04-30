@@ -11,6 +11,7 @@ export default {
         cancel: '取消',
         confirm: '确认',
         create: '创建',
+        generateAnyway: '仍然生成',
         topButtonSection: {
             submitReview: '提交审核',
             cancelReview: '取消审核',
@@ -35,6 +36,8 @@ export default {
         usersConnected: '正在做审计的用户',
         editAudit: '编辑审计',
         downloadReport: '下载报告',
+        downloadReportWithUnsavedDrafts: '存在本地恢复更改，保存前不会包含在报告中',
+        auditDraftUnsavedChanges: '存在本地恢复更改',
         deleteAudit: '删除审计',
         topButtonSection: {
             submitReview: '标记项目已准备好审核',
@@ -59,6 +62,8 @@ export default {
         findingDeleteOk: '问题删除成功',
         doYouWantToLeave: '你确定要离开吗？',
         thereAreUnsavedChanges: '有未保存的更改！',
+        auditDraftDownloadWarningTitle: '存在本地恢复更改',
+        auditDraftDownloadWarningMessage: '此审计存在尚未保存到服务器的本地恢复更改。除非先保存这些更改，否则它们不会包含在生成的报告中。',
         fieldRequired: '请填写所有必填字段',
         deleteFindingConfirm: '确认删除当前问题？',
         deleteFindingNotice: '此操作无法被取消',

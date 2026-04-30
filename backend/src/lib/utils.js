@@ -67,3 +67,24 @@ function getSockets(io, room) {
   return result
 }
 exports.getSockets = getSockets
+
+function hexToRgb(color) {
+  var normalized = color.replace('#', '')
+  return {
+    r: parseInt(normalized.substring(0, 2), 16),
+    g: parseInt(normalized.substring(2, 4), 16),
+    b: parseInt(normalized.substring(4, 6), 16)
+  }
+}
+
+function colorDistance(colorA, colorB) {
+  var rgbA = hexToRgb(colorA)
+  var rgbB = hexToRgb(colorB)
+
+  return Math.sqrt(
+    Math.pow(rgbA.r - rgbB.r, 2) +
+    Math.pow(rgbA.g - rgbB.g, 2) +
+    Math.pow(rgbA.b - rgbB.b, 2)
+  )
+}
+exports.colorDistance = colorDistance

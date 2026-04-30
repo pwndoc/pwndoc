@@ -15,6 +15,7 @@ export default {
         ok: 'ok',
         leave: 'Partir',
         stay: 'Rester',
+        generateAnyway: 'Générer quand même',
         topButtonSection: {
             submitReview: 'Soumettre les modifications',
             cancelReview: 'Annuler les modifications',
@@ -37,6 +38,8 @@ export default {
         usersConnected: 'Utilisateurs sur l\'Audit:',
         editAudit: 'Modifier l\'Audit',
         downloadReport: 'Télécharger le Rapport',
+        downloadReportWithUnsavedDrafts: 'Des modifications locales récupérées existent et ne seront pas incluses dans le rapport tant qu\'elles ne sont pas enregistrées',
+        auditDraftUnsavedChanges: 'Des modifications locales récupérées existent',
         deleteAudit: 'Supprimer l\'Audit',
         removeAudit: 'Retirer l\'Audit (l\'Audit ne sera pas supprimé)',
         topButtonSection: {
@@ -68,6 +71,8 @@ export default {
         findingDeleteOk: 'Découverte supprimée avec succès',
         doYouWantToLeave: 'Voulez-vous vraiment partir ?',
         thereAreUnsavedChanges: 'Il y a des modifications non enregistrées !',
+        auditDraftDownloadWarningTitle: 'Des modifications locales récupérées existent',
+        auditDraftDownloadWarningMessage: 'Cet audit contient des modifications locales récupérées qui ne sont pas enregistrées sur le serveur. Elles ne seront pas incluses dans le rapport généré tant que vous ne les aurez pas enregistrées.',
         fieldRequired: 'Veuillez remplir tous les champs obligatoires',
         deleteFindingConfirm: 'Supprimer la découverte actuelle ?',
         deleteFindingNotice: 'Cette action ne peut pas être annulée',

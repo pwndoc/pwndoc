@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 let watchCallback
+let recoveries = []
 
 vi.mock('components/draft-recovery-dialog.vue', () => ({
   default: { name: 'DraftRecoveryDialog' }
@@ -88,6 +89,7 @@ function createRecovery(overrides = {}) {
     ...overrides
   })
 
+  recoveries.push(recovery)
   return { recovery, state, setCurrent }
 }
 
@@ -96,10 +98,12 @@ describe('createDraftRecovery', () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     watchCallback = null
+    recoveries = []
     DraftRecoveryService.clearStatus()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    await Promise.all(recoveries.map(recovery => recovery.stop()))
     DraftRecoveryService.clearStatus()
     vi.useRealTimers()
   })
@@ -121,13 +125,68 @@ describe('createDraftRecovery', () => {
     state.current = { title: 'Draft' }
 
     await watchCallback()
-    await vi.advanceTimersByTimeAsync(500)
+    await vi.advanceTimersByTimeAsync(3000)
 
     expect(DraftRecoveryService.saveDraft).toHaveBeenCalledWith({
       userId: 'user1',
       scope: 'scope',
       refKey: 'ref',
       data: { title: 'Draft' }
+    })
+  })
+
+  it('does not save an editor-triggered draft when the synced state is clean', async () => {
+    const syncBeforeCapture = vi.fn()
+    const { recovery } = createRecovery({ syncBeforeCapture })
+    recovery.start()
+
+    document.dispatchEvent(new Event('basic-editor-change'))
+    await vi.advanceTimersByTimeAsync(3000)
+
+    expect(syncBeforeCapture).toHaveBeenCalled()
+    expect(DraftRecoveryService.saveDraft).not.toHaveBeenCalled()
+  })
+
+  it('saves an editor-triggered draft when syncing the editor makes the state dirty', async () => {
+    let stateRef
+    const syncBeforeCapture = vi.fn(() => {
+      stateRef.current = { title: 'Draft from editor' }
+    })
+    const { recovery, state } = createRecovery({ syncBeforeCapture })
+    stateRef = state
+    recovery.start()
+
+    document.dispatchEvent(new Event('basic-editor-change'))
+    await vi.advanceTimersByTimeAsync(3000)
+
+    expect(syncBeforeCapture).toHaveBeenCalled()
+    expect(DraftRecoveryService.saveDraft).toHaveBeenCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'ref',
+      data: { title: 'Draft from editor' }
+    })
+  })
+
+  it('flushes a pending editor-triggered draft on tab close', async () => {
+    let stateRef
+    const syncBeforeCapture = vi.fn(() => {
+      stateRef.current = { title: 'Draft before close' }
+    })
+    const { recovery, state } = createRecovery({ syncBeforeCapture })
+    stateRef = state
+    recovery.start()
+
+    document.dispatchEvent(new Event('basic-editor-change'))
+    window.dispatchEvent(new Event('beforeunload'))
+    await Promise.resolve()
+
+    expect(syncBeforeCapture).toHaveBeenCalled()
+    expect(DraftRecoveryService.saveDraft).toHaveBeenCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'ref',
+      data: { title: 'Draft before close' }
     })
   })
 
@@ -149,6 +208,49 @@ describe('createDraftRecovery', () => {
       key: 'pwndoc.draft.user1.scope.ref',
       type: 'local_draft'
     }))
+  })
+
+  it('clears a loaded draft when it has no changes from the server version', async () => {
+    DraftRecoveryService.loadDraft.mockResolvedValue({
+      key: 'pwndoc.draft.user1.scope.ref',
+      status: 'active_draft',
+      updatedAt: Date.now(),
+      data: { title: 'Server' }
+    })
+    const { recovery, setCurrent } = createRecovery()
+
+    await expect(recovery.maybePromptRecovery()).resolves.toBeNull()
+
+    expect(setCurrent).not.toHaveBeenCalled()
+    expect(DraftRecoveryService.saveDraft).not.toHaveBeenCalled()
+    expect(DraftRecoveryService.clearDraft).toHaveBeenCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'ref'
+    })
+    expect(DraftRecoveryService.state.current).toBeNull()
+  })
+
+  it('clears the recovered draft when the user reverts back to the server version', async () => {
+    DraftRecoveryService.loadDraft.mockResolvedValue({
+      key: 'pwndoc.draft.user1.scope.ref',
+      status: 'active_draft',
+      updatedAt: Date.now(),
+      data: { title: 'Recovered' }
+    })
+    const { recovery, state } = createRecovery()
+
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+    state.current = { title: 'Server' }
+
+    await watchCallback()
+
+    expect(DraftRecoveryService.clearDraft).toHaveBeenCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'ref'
+    })
+    expect(DraftRecoveryService.state.current).toBeNull()
   })
 
   it('retries recovery when user and edit state are not ready on direct page load', async () => {

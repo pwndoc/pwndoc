@@ -11,6 +11,7 @@ export default {
         cancel: 'Abbrechen',
         confirm: 'Bestätigen',
         create: 'Erstellen',
+        generateAnyway: 'Trotzdem generieren',
         topButtonSection: {
             submitReview: 'Zur Prüfung einreichen',
             cancelReview: 'Überprüfung abbrechen',
@@ -31,6 +32,8 @@ export default {
         usersConnected: 'Benutzer im Audit:',
         editAudit: 'Audit bearbeiten',
         downloadReport: 'Report herunterladen',
+        downloadReportWithUnsavedDrafts: 'Lokale Wiederherstellungsänderungen sind vorhanden und werden erst nach dem Speichern in den Bericht aufgenommen',
+        auditDraftUnsavedChanges: 'Lokale Wiederherstellungsänderungen sind vorhanden',
         deleteAudit: 'Audit löschen',
         topButtonSection: {
             submitReview: 'Audit als prüfbereit markieren',
@@ -55,6 +58,8 @@ export default {
         findingDeleteOk: 'Ergebnis erfolgreich gelöscht',
         doYouWantToLeave: 'Möchten Sie die Seite wirklich verlassen ?',
         thereAreUnsavedChanges: 'Es gibt ungespeicherte Änderungen !',
+        auditDraftDownloadWarningTitle: 'Lokale Wiederherstellungsänderungen sind vorhanden',
+        auditDraftDownloadWarningMessage: 'Dieses Audit enthält lokale Wiederherstellungsänderungen, die nicht auf dem Server gespeichert sind. Sie werden erst in den generierten Bericht aufgenommen, wenn Sie sie zuvor speichern.',
         fieldRequired: 'Bitte füllen Sie alle benötigten Felder aus',
         deleteFindingConfirm: 'Aktuelles Ergebnis löschen ?',
         deleteFindingNotice: 'Diese Aktion kann nicht rückgängig gemacht werden',
