@@ -216,7 +216,8 @@ export default {
                 },
                 getOriginal: () => this.auditOrig,
                 isDirty: () => !this.$_.isEqual(this.audit, this.auditOrig),
-                isReadOnly: () => this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT
+                isReadOnly: () => this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT,
+                syncBeforeCapture: () => Utils.syncEditors(this.$refs)
             })
         },
 

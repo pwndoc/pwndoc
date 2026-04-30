@@ -35,7 +35,6 @@ export function createDraftRecovery(vm, options) {
   let timer = null
   let pendingWrite = null
   let scheduledKeyArgs = null
-  let scheduledData = null
   let recoveryRetryTimer = null
   let recoveryRetryStartedAt = null
   let stopped = false
@@ -99,40 +98,53 @@ export function createDraftRecovery(vm, options) {
       notifyStorageError(result.error)
   }
 
+  function syncAndCapture() {
+    if (options.syncBeforeCapture)
+      options.syncBeforeCapture()
+    return cloneData(getCurrent())
+  }
+
   function scheduleWrite() {
     if (timer)
       clearTimeout(timer)
 
     scheduledKeyArgs = getKeyArgs()
-    scheduledData = cloneData(getCurrent())
 
     timer = setTimeout(() => {
       timer = null
       const keyArgs = scheduledKeyArgs
-      const data = scheduledData
       scheduledKeyArgs = null
-      scheduledData = null
+      const data = syncAndCapture()
       pendingWrite = writeSnapshot(keyArgs, data)
         .finally(() => {
           pendingWrite = null
         })
-    }, 500)
+    }, 3000)
+  }
+
+  function flushTimerToWrite() {
+    if (!timer)
+      return
+    clearTimeout(timer)
+    timer = null
+    const keyArgs = scheduledKeyArgs
+    scheduledKeyArgs = null
+    const data = syncAndCapture()
+    pendingWrite = writeSnapshot(keyArgs, data)
+      .finally(() => {
+        pendingWrite = null
+      })
+  }
+
+  function handleEditorChange() {
+    if (stopped || isReadOnly())
+      return
+    scheduleWrite()
   }
 
   async function clearDraft() {
     const keyArgsForStatus = getKeyArgs()
-    if (timer) {
-      clearTimeout(timer)
-      timer = null
-      const keyArgs = scheduledKeyArgs
-      const data = scheduledData
-      scheduledKeyArgs = null
-      scheduledData = null
-      pendingWrite = writeSnapshot(keyArgs, data)
-        .finally(() => {
-          pendingWrite = null
-        })
-    }
+    flushTimerToWrite()
 
     const result = await DraftRecoveryService.clearDraft(getKeyArgs())
     if (!result.ok)
@@ -274,6 +286,15 @@ export function createDraftRecovery(vm, options) {
     setDiscardedStatus(draft, serverVersion, keyArgs)
   }
 
+  function handleBeforeUnload() {
+    flushTimerToWrite()
+  }
+
+  function handleVisibilityChange() {
+    if (document.hidden)
+      flushTimerToWrite()
+  }
+
   function start() {
     if (unwatch || isReadOnly())
       return
@@ -289,7 +310,6 @@ export function createDraftRecovery(vm, options) {
             clearTimeout(timer)
             timer = null
             scheduledKeyArgs = null
-            scheduledData = null
           }
           return
         }
@@ -298,6 +318,10 @@ export function createDraftRecovery(vm, options) {
       },
       { deep: true }
     )
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    document.addEventListener('basic-editor-change', handleEditorChange)
   }
 
   async function maybePromptRecovery() {
@@ -338,11 +362,7 @@ export function createDraftRecovery(vm, options) {
   }
 
   async function flushPendingWrite() {
-    if (timer) {
-      clearTimeout(timer)
-      timer = null
-    }
-
+    flushTimerToWrite()
     if (pendingWrite)
       await pendingWrite
   }
@@ -352,6 +372,9 @@ export function createDraftRecovery(vm, options) {
       unwatch()
       unwatch = null
     }
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    document.removeEventListener('basic-editor-change', handleEditorChange)
     await flushPendingWrite()
     if (recoveryRetryTimer) {
       clearTimeout(recoveryRetryTimer)

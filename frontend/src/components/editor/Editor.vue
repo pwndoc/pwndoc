@@ -423,8 +423,10 @@ export default {
                     })
                 ],
                 onUpdate: ({ getJSON, getHTML }) => {
-                    if (this.noSync)
+                    if (this.noSync) {
+                        this.$el.dispatchEvent(new CustomEvent('basic-editor-change', { bubbles: true }))
                         return
+                    }
                     this.updateHTML()
                 },
                 enableInputRules: false,

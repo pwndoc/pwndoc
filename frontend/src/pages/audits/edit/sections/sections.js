@@ -274,6 +274,7 @@ export default {
                 getOriginal: () => this.sectionOrig,
                 isDirty: () => this.unsavedChanges(),
                 isReadOnly: () => this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT,
+                syncBeforeCapture: () => Utils.syncEditors(this.$refs),
                 afterRestore: async () => {
                     await this.$nextTick()
                 }
