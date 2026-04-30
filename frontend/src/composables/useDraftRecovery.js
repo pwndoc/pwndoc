@@ -135,7 +135,7 @@ export function createDraftRecovery(vm, options) {
         .finally(() => {
           pendingWrite = null
         })
-    }, 3000)
+    }, 1500)
   }
 
   function flushTimerToWrite() {
