@@ -26,6 +26,7 @@ export default {
       backupFinding: 'Propor Criação / Atualização no Banco de Dados de Vulnerabilidades',
       delete: 'Excluir',
       save: 'Salvar',
+      saved: 'Salvo',
       update: 'Atualizar',
       deleteAll: 'Excluir Tudo',
       enable: 'Habilitar',

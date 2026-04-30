@@ -9,6 +9,8 @@ import { createDraftRecovery } from '@/composables/useDraftRecovery';
 
 import { $t } from '@/boot/i18n'
 
+const SAVE_SUCCESS_TIMEOUT_MS = 2000
+
 export default {
     data: () => {
         return {
@@ -37,7 +39,9 @@ export default {
                 sortBy: 'port'
             },
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
-            draftRecovery: null
+            draftRecovery: null,
+            saveSuccess: false,
+            saveSuccessTimer: null
         }
     },
 
@@ -66,6 +70,17 @@ export default {
         document.removeEventListener('keydown', this._listener, false)
         if (this.draftRecovery)
             this.draftRecovery.stop()
+        this.clearSaveSuccess()
+    },
+
+    watch: {
+        audit: {
+            handler() {
+                if (this.saveSuccess && this.hasUnsavedChanges)
+                    this.clearSaveSuccess()
+            },
+            deep: true
+        }
     },
 
     beforeRouteLeave (to, from , next) {
@@ -74,7 +89,7 @@ export default {
             return
         }
         
-        if (this.$_.isEqual(this.audit, this.auditOrig))
+        if (!this.hasUnsavedChanges)
             next();
         else {
             Dialog.create({
@@ -88,6 +103,38 @@ export default {
     },
 
     computed: {
+        hasUnsavedChanges: function() {
+            return !this.$_.isEqual(this.audit, this.auditOrig)
+        },
+
+        saveButtonState: function() {
+            if (this.hasUnsavedChanges)
+                return 'dirty'
+            return this.saveSuccess ? 'saved' : 'idle'
+        },
+
+        saveButtonColor: function() {
+            if (this.saveButtonState === 'dirty')
+                return 'orange'
+            if (this.saveButtonState === 'saved')
+                return 'green-1'
+            return 'primary'
+        },
+
+        saveButtonTextColor: function() {
+            if (this.saveButtonState === 'saved')
+                return 'positive'
+            if (this.saveButtonState === 'dirty')
+                return 'orange'
+            return 'primary'
+        },
+
+        saveButtonLabel: function() {
+            if (this.saveButtonState === 'saved')
+                return $t('btn.saved')
+            return `${$t('btn.save')} (ctrl+s)`
+        },
+
         selectHostsLabel: function() {
             if (this.targetsOptions && this.targetsOptions.length > 0)
                 return $t('msg.selectHost')
@@ -125,14 +172,9 @@ export default {
             AuditService.updateAuditNetwork(this.auditId, this.audit)
             .then(() => {
                 this.auditOrig = this.$_.cloneDeep(this.audit);
+                this.markSaveSuccess()
                 if (this.draftRecovery)
                     this.draftRecovery.clearDraft()
-                Notify.create({
-                    message: $t('msg.auditUpdateOk'),
-                    color: 'positive',
-                    textColor:'white',
-                    position: 'top-right'
-                })
             })
             .catch((err) => {
                 Notify.create({
@@ -142,6 +184,23 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        markSaveSuccess: function() {
+            this.clearSaveSuccess()
+            this.saveSuccess = true
+            this.saveSuccessTimer = setTimeout(() => {
+                this.saveSuccess = false
+                this.saveSuccessTimer = null
+            }, SAVE_SUCCESS_TIMEOUT_MS)
+        },
+
+        clearSaveSuccess: function() {
+            if (this.saveSuccessTimer) {
+                clearTimeout(this.saveSuccessTimer)
+                this.saveSuccessTimer = null
+            }
+            this.saveSuccess = false
         },
 
         setupDraftRecovery: function() {
@@ -157,7 +216,7 @@ export default {
                     this.audit = data
                 },
                 getOriginal: () => this.auditOrig,
-                isDirty: () => !this.$_.isEqual(this.audit, this.auditOrig),
+                isDirty: () => this.hasUnsavedChanges,
                 isReadOnly: () => this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT
             })
         },

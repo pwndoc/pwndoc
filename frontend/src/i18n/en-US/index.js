@@ -27,6 +27,7 @@ export default {
         backupFinding: "Propose Creation / Update in Vulnerability Database",
         delete: 'Delete',
         save: 'Save',
+        saved: 'Saved',
         update: 'Update',
         deleteAll: 'Delete All',
         close: 'Close',

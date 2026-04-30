@@ -27,6 +27,7 @@ export default {
         backupFinding: "Proposer la création  / Mettre à jour dans la base de données",
         delete: 'Supprimer',
         save: 'Sauvegarder',
+        saved: 'Sauvegardé',
         update: 'Modifier',
         deleteAll: 'Tout Supprimer',
         enable: 'Activer',

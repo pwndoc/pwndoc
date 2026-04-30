@@ -21,7 +21,25 @@
             </q-tooltip> 
         </q-btn>
         <q-separator v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" vertical inset class="q-mr-sm" />
-        <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" :label="$t('btn.save')+' (ctrl+s)'" no-caps @click="updateSection" />
+        <q-btn
+        v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+        outline
+        :color="saveButtonColor"
+        :text-color="saveButtonTextColor"
+        unelevated
+        no-caps
+        @click="updateSection"
+        >
+            <q-icon v-if="saveButtonState === 'saved'" name="check" class="q-mr-sm" />
+            <span>{{ saveButtonLabel }}</span>
+            <q-icon
+                v-if="saveButtonState === 'dirty'"
+                data-testid="save-unsaved-badge"
+                name="circle"
+                size="12px"
+                class="q-ml-sm"
+            />
+        </q-btn>
     </template>
 </breadcrumb>
 

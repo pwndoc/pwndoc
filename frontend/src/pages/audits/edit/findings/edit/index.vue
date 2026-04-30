@@ -52,7 +52,25 @@
             >
                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.retestSplitView')}}</q-tooltip> 
             </q-btn>
-            <q-btn color="positive" :label="$t('btn.save')+'(ctrl+s)'" no-caps @click="updateFinding()"  v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
+            <q-btn
+            v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+            outline
+            :color="saveButtonColor"
+            :text-color="saveButtonTextColor"
+            unelevated
+            no-caps
+            @click="updateFinding()"
+            >
+                <q-icon v-if="saveButtonState === 'saved'" name="check" class="q-mr-sm" />
+                <span>{{ saveButtonLabel }}</span>
+                <q-icon
+                    v-if="saveButtonState === 'dirty'"
+                    data-testid="save-unsaved-badge"
+                    name="circle"
+                    size="12px"
+                    class="q-ml-sm"
+                />
+            </q-btn>
         </template>
     </breadcrumb>
 

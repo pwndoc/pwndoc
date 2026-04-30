@@ -21,6 +21,7 @@ export default {
         backupFinding: "Neue Schwachstelle / Änderung in Datenbank vorschlagen",
         delete: 'Löschen',
         save: 'Speichern',
+        saved: 'Gespeichert',
         update: 'Aktualisieren',
         deleteAll: 'Alle löschen',
         enable: 'Aktiviert',

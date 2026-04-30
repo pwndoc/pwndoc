@@ -21,6 +21,7 @@ export default {
         backupFinding: "提议在漏洞库中创建/更新",
         delete: '删除',
         save: '保存',
+        saved: '已保存',
         update: '更新',
         deleteAll: '全部删除',
         enable: '启用',

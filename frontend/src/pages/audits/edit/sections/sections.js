@@ -14,6 +14,7 @@ import { createDraftRecovery } from '@/composables/useDraftRecovery';
 import { $t } from '@/boot/i18n'
 
 const userStore = useUserStore()
+const SAVE_SUCCESS_TIMEOUT_MS = 2000
 
 export default {
     data: () => {
@@ -40,7 +41,9 @@ export default {
                 hour: 'numeric',
                 minute: '2-digit',
             },
-            draftRecovery: null
+            draftRecovery: null,
+            saveSuccess: false,
+            saveSuccessTimer: null
         }
     },
 
@@ -105,6 +108,7 @@ export default {
         document.removeEventListener('comment-clicked', this.editorCommentClicked)
         if (this.draftRecovery)
             this.draftRecovery.stop()
+        this.clearSaveSuccess()
     },
 
     beforeRouteLeave (to, from , next) {
@@ -186,9 +190,47 @@ export default {
             next()
     },
 
+    watch: {
+        section: {
+            handler() {
+                if (this.saveSuccess && this.unsavedChanges())
+                    this.clearSaveSuccess()
+            },
+            deep: true
+        }
+    },
+
     computed: {
         canCreateComment: function() {
             return userStore.isAllowed('audits:comments:create') 
+        },
+
+        saveButtonState: function() {
+            if (this.unsavedChanges())
+                return 'dirty'
+            return this.saveSuccess ? 'saved' : 'idle'
+        },
+
+        saveButtonColor: function() {
+            if (this.saveButtonState === 'dirty')
+                return 'orange'
+            if (this.saveButtonState === 'saved')
+                return 'green-1'
+            return 'primary'
+        },
+
+        saveButtonTextColor: function() {
+            if (this.saveButtonState === 'saved')
+                return 'positive'
+            if (this.saveButtonState === 'dirty')
+                return 'orange'
+            return 'primary'
+        },
+
+        saveButtonLabel: function() {
+            if (this.saveButtonState === 'saved')
+                return $t('btn.saved')
+            return `${$t('btn.save')} (ctrl+s)`
         }
     },
 
@@ -239,14 +281,9 @@ export default {
                 AuditService.updateSection(this.auditId, this.sectionId, this.section)
                 .then(() => {
                     this.sectionOrig = this.$_.cloneDeep(this.section);
+                    this.markSaveSuccess()
                     if (this.draftRecovery)
                         this.draftRecovery.clearDraft()
-                    Notify.create({
-                        message: $t('msg.sectionUpdateOk'),
-                        color: 'positive',
-                        textColor:'white',
-                        position: 'top-right'
-                    })
                 })
                 .catch((err) => {
                     Notify.create({
@@ -257,6 +294,23 @@ export default {
                     })
                 })
             })
+        },
+
+        markSaveSuccess: function() {
+            this.clearSaveSuccess()
+            this.saveSuccess = true
+            this.saveSuccessTimer = setTimeout(() => {
+                this.saveSuccess = false
+                this.saveSuccessTimer = null
+            }, SAVE_SUCCESS_TIMEOUT_MS)
+        },
+
+        clearSaveSuccess: function() {
+            if (this.saveSuccessTimer) {
+                clearTimeout(this.saveSuccessTimer)
+                this.saveSuccessTimer = null
+            }
+            this.saveSuccess = false
         },
 
         setupDraftRecovery: function() {
