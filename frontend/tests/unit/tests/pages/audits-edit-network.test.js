@@ -275,9 +275,7 @@ describe('Audits Edit Network Page', () => {
       expect(AuditService.updateAuditNetwork).toHaveBeenCalledWith('audit-123', wrapper.vm.audit)
     })
 
-    it('should update auditOrig on successful save', async () => {
-      const { Notify } = await import('quasar')
-
+    it('should update auditOrig and mark save button as saved on successful save', async () => {
       AuditService.getAuditNetwork.mockResolvedValue(mockAuditData)
       AuditService.updateAuditNetwork.mockResolvedValue({})
 
@@ -285,16 +283,16 @@ describe('Audits Edit Network Page', () => {
       await wrapper.vm.$nextTick()
       await wrapper.vm.$nextTick()
 
+      wrapper.vm.audit.scope[0].name = 'Updated Scope'
       wrapper.vm.updateAuditNetwork()
       await wrapper.vm.$nextTick()
       await wrapper.vm.$nextTick()
+      await new Promise(resolve => setTimeout(resolve, 10))
 
-      expect(Notify.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: 'msg.auditUpdateOk',
-          color: 'positive'
-        })
-      )
+      expect(wrapper.vm.auditOrig).toEqual(wrapper.vm.audit)
+      expect(wrapper.vm.saveSuccess).toBe(true)
+      expect(wrapper.vm.saveButtonState).toBe('saved')
+      expect(wrapper.vm.saveButtonLabel).toBe('btn.saved')
     })
 
     it('should show error notification on save failure', async () => {

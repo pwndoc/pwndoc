@@ -76,7 +76,12 @@ describe('DraftDiff', () => {
       }
     })
 
-    expect(wrapper.text()).toContain('Details (en)')
+    expect(wrapper.vm.diffSections).toEqual([
+      expect.objectContaining({
+        key: 'details-en',
+        label: 'Details (en)'
+      })
+    ])
     expect(fieldLabels(wrapper)).toEqual(['Title'])
     expect(wrapper.text()).not.toContain('details.0')
     expect(wrapper.text()).not.toContain('Observation')
@@ -118,8 +123,9 @@ describe('DraftDiff', () => {
     expect(wrapper.find('.diff-block').exists()).toBe(true)
     expect(wrapper.find('.draft-field__label').exists()).toBe(false)
 
-    // toggle to split
-    await wrapper.find('button').trigger('click')
+    // q-btn-toggle is stubbed in unit tests, so set the bound model directly.
+    wrapper.vm.splitView = true
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.find('.draft-field__label').exists()).toBe(true)
     expect(wrapper.find('.diff-block').exists()).toBe(false)

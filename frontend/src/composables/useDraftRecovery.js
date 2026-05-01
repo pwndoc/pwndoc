@@ -56,6 +56,12 @@ export function createDraftRecovery(vm, options) {
 
   const getKey = (keyArgs = getKeyArgs()) => DraftRecoveryService.buildKey(keyArgs.userId, keyArgs.scope, keyArgs.refKey)
 
+  function clearStatusForOtherKey(key) {
+    const statusKey = DraftRecoveryService.state.current?.key
+    if (statusKey && statusKey !== key)
+      DraftRecoveryService.clearStatus(statusKey)
+  }
+
   function recoveryIsReady(keyArgs = getKeyArgs()) {
     return !!keyArgs.userId && !!keyArgs.scope && !!keyArgs.refKey && !isReadOnly()
   }
@@ -111,10 +117,8 @@ export function createDraftRecovery(vm, options) {
 
   function captureDirtySnapshot() {
     const data = syncAndCapture()
-    if (!isDirty()) {
-      void clearCleanDraft()
+    if (!isDirty())
       return null
-    }
     return data
   }
 
@@ -160,29 +164,13 @@ export function createDraftRecovery(vm, options) {
     scheduleWrite()
   }
 
-  function shouldClearCleanDraft(keyArgs = getKeyArgs()) {
-    const status = DraftRecoveryService.state.current
-    if (status?.key === getKey(keyArgs) && status.type === 'local_draft')
-      return true
-
-    return storedDraftStatus === DraftRecoveryService.DRAFT_STATUS.ACTIVE
-  }
-
-  async function clearCleanDraft() {
-    const keyArgs = getKeyArgs()
-    if (!shouldClearCleanDraft(keyArgs))
-      return
-
-    const result = await clearDraftForKey(keyArgs)
-    if (result.ok)
-      storedDraftStatus = null
-  }
-
   async function clearDraft() {
     const keyArgsForStatus = getKeyArgs()
     flushTimerToWrite()
+    if (pendingWrite)
+      await pendingWrite
 
-    const result = await DraftRecoveryService.clearDraft(getKeyArgs())
+    const result = await DraftRecoveryService.clearDraft(keyArgsForStatus)
     if (!result.ok)
       notifyStorageError(result.error)
     else {
@@ -357,7 +345,6 @@ export function createDraftRecovery(vm, options) {
             timer = null
             scheduledKeyArgs = null
           }
-          await clearCleanDraft()
           return
         }
 
@@ -381,6 +368,7 @@ export function createDraftRecovery(vm, options) {
     recoveryRetryStartedAt = null
 
     const promptKey = DraftRecoveryService.buildKey(keyArgs.userId, keyArgs.scope, keyArgs.refKey)
+    clearStatusForOtherKey(promptKey)
     if (notifiedKeys.has(`${promptKey}:checked`)) {
       start()
       return null
@@ -388,6 +376,7 @@ export function createDraftRecovery(vm, options) {
 
     const draft = await DraftRecoveryService.loadDraft(keyArgs)
     if (!draft) {
+      DraftRecoveryService.clearStatus(promptKey)
       start()
       return null
     }
@@ -397,7 +386,6 @@ export function createDraftRecovery(vm, options) {
 
     const serverVersion = cloneData(getCurrent())
     if (countChangedFields(serverVersion, draft.data) === 0) {
-      await clearDraftForKey(keyArgs)
       start()
       return null
     }

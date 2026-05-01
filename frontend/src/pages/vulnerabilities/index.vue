@@ -165,7 +165,7 @@
                 </div>
                 <draft-recovery-status />
                 <q-space />
-                <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+                <q-btn dense flat icon="close" data-testid="create-vulnerability-close" @click="$refs.createModal.hide()" />
             </q-bar>
 
             <q-card-section>
@@ -338,7 +338,7 @@
                     </span>
                 </div>
                 <q-space />
-                <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
+                <q-btn dense flat icon="close" data-testid="edit-vulnerability-close" @click="$refs.editModal.hide()" />
             </q-bar>
 
             <q-card-section>

@@ -1,6 +1,7 @@
 <template>
   <q-btn-dropdown
     v-if="status"
+    data-testid="draft-recovery-status"
     outline no-caps dense
     class="q-ml-sm"
     :color="status.type === 'local_draft' ? 'orange' : 'primary'"

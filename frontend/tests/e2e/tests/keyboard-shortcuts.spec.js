@@ -15,6 +15,10 @@ let findingId;
 let sectionId;
 const AUDIT_NAME = 'E2E Test Audit';
 
+async function expectSaveSucceeded(page) {
+  await expect(page.getByRole('button', { name: /Saved/ })).toBeVisible();
+}
+
 test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
   test.beforeAll(async ({ request }) => {
     const auditsRes = await request.get('/api/audits');
@@ -36,7 +40,7 @@ test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
 
     await page.getByLabel(/Name/).first().type(' kb');
     await page.keyboard.press('Control+s');
-    await expect(page.getByText('Audit updated successfully')).toBeVisible();
+    await expectSaveSucceeded(page);
   });
 
   test('Ctrl+S saves a finding', async ({ page }) => {
@@ -45,7 +49,7 @@ test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
 
     await page.getByLabel('Title').first().type(' kb');
     await page.keyboard.press('Control+s');
-    await expect(page.getByText('Finding updated successfully')).toBeVisible();
+    await expectSaveSucceeded(page);
   });
 
   test('Ctrl+S saves a custom section', async ({ page }) => {
@@ -64,7 +68,7 @@ test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
     }
 
     await page.keyboard.press('Control+s');
-    await expect(page.getByText('Section updated successfully')).toBeVisible();
+    await expectSaveSucceeded(page);
   });
 
   test('Ctrl+S saves network scan data', async ({ page }) => {
@@ -76,6 +80,6 @@ test.describe('Keyboard Shortcuts (Ctrl+S)', () => {
 
     await page.locator('body').click();
     await page.keyboard.press('Control+s');
-    await expect(page.getByText('Audit updated successfully')).toBeVisible();
+    await expectSaveSucceeded(page);
   });
 });

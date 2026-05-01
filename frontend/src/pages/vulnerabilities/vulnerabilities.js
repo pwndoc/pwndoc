@@ -367,7 +367,7 @@ export default {
             this.cleanCurrentVulnerability()
             this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
             await this.draftRecovery.maybePromptRecovery()
-            this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
+
             this.$refs.createModal.show()
         },
 

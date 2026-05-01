@@ -190,6 +190,37 @@ describe('createDraftRecovery', () => {
     })
   })
 
+  it('waits for a flushed pending write before clearing a draft', async () => {
+    let resolveSave
+    DraftRecoveryService.saveDraft.mockImplementationOnce(() => new Promise(resolve => {
+      resolveSave = () => resolve({ ok: true })
+    }))
+    const { recovery, state } = createRecovery()
+    recovery.start()
+    state.current = { title: 'Draft before save' }
+
+    await watchCallback()
+    const clearPromise = recovery.clearDraft()
+    await Promise.resolve()
+
+    expect(DraftRecoveryService.saveDraft).toHaveBeenCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'ref',
+      data: { title: 'Draft before save' }
+    })
+    expect(DraftRecoveryService.clearDraft).not.toHaveBeenCalled()
+
+    resolveSave()
+    await clearPromise
+
+    expect(DraftRecoveryService.clearDraft).toHaveBeenCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'ref'
+    })
+  })
+
   it('auto-restores a loaded active draft and keeps an inline status without a toast', async () => {
     DraftRecoveryService.loadDraft.mockResolvedValue({
       key: 'pwndoc.draft.user1.scope.ref',
@@ -210,7 +241,40 @@ describe('createDraftRecovery', () => {
     }))
   })
 
-  it('clears a loaded draft when it has no changes from the server version', async () => {
+  it('clears stale status when checking another key without a draft', async () => {
+    let refKey = 'none'
+    DraftRecoveryService.loadDraft.mockImplementation(({ refKey }) => Promise.resolve(
+      refKey === 'none'
+        ? {
+            key: 'pwndoc.draft.user1.scope.none',
+            status: 'active_draft',
+            updatedAt: Date.now(),
+            data: { title: 'Recovered without category' }
+          }
+        : null
+    ))
+    const { recovery } = createRecovery({
+      refKey: () => refKey
+    })
+
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+    expect(DraftRecoveryService.state.current).toEqual(expect.objectContaining({
+      key: 'pwndoc.draft.user1.scope.none',
+      type: 'local_draft'
+    }))
+
+    refKey = 'category-a'
+    await expect(recovery.maybePromptRecovery()).resolves.toBeNull()
+
+    expect(DraftRecoveryService.loadDraft).toHaveBeenLastCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'category-a'
+    })
+    expect(DraftRecoveryService.state.current).toBeNull()
+  })
+
+  it('leaves a loaded draft in storage when it has no changes from the server version', async () => {
     DraftRecoveryService.loadDraft.mockResolvedValue({
       key: 'pwndoc.draft.user1.scope.ref',
       status: 'active_draft',
@@ -223,15 +287,11 @@ describe('createDraftRecovery', () => {
 
     expect(setCurrent).not.toHaveBeenCalled()
     expect(DraftRecoveryService.saveDraft).not.toHaveBeenCalled()
-    expect(DraftRecoveryService.clearDraft).toHaveBeenCalledWith({
-      userId: 'user1',
-      scope: 'scope',
-      refKey: 'ref'
-    })
+    expect(DraftRecoveryService.clearDraft).not.toHaveBeenCalled()
     expect(DraftRecoveryService.state.current).toBeNull()
   })
 
-  it('clears the recovered draft when the user reverts back to the server version', async () => {
+  it('keeps the recovered draft when the user reverts back to the server version', async () => {
     DraftRecoveryService.loadDraft.mockResolvedValue({
       key: 'pwndoc.draft.user1.scope.ref',
       status: 'active_draft',
@@ -245,12 +305,11 @@ describe('createDraftRecovery', () => {
 
     await watchCallback()
 
-    expect(DraftRecoveryService.clearDraft).toHaveBeenCalledWith({
-      userId: 'user1',
-      scope: 'scope',
-      refKey: 'ref'
-    })
-    expect(DraftRecoveryService.state.current).toBeNull()
+    expect(DraftRecoveryService.clearDraft).not.toHaveBeenCalled()
+    expect(DraftRecoveryService.state.current).toEqual(expect.objectContaining({
+      key: 'pwndoc.draft.user1.scope.ref',
+      type: 'local_draft'
+    }))
   })
 
   it('retries recovery when user and edit state are not ready on direct page load', async () => {
