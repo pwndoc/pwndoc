@@ -94,6 +94,12 @@ function browserChain(browser, browserDevices, prevChainLast) {
       dependencies: deps(prefix('audit-edit')),
     },
     {
+      name: prefix('audit-draft-recovery'),
+      use: useWithAuth,
+      testMatch: ['**/audit-draft-recovery.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    {
       name: prefix('report-generation'),
       use: useWithAuth,
       testMatch: ['**/report-generation.spec.js'],
@@ -134,6 +140,7 @@ function browserChain(browser, browserDevices, prevChainLast) {
         prefix('double-click'),
         prefix('finding-tabs'),
         prefix('unsaved-changes'),
+        prefix('audit-draft-recovery'),
         prefix('report-generation'),
         prefix('sticky-toolbar'),
         prefix('drag-drop'),
