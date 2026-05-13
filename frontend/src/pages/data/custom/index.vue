@@ -4,7 +4,14 @@
         <q-tab name="audit-types" :label="$t('auditTypes')" />
         <q-tab name="vulnerability-types" :label="$t('vulnerabilityTypes')" />
         <q-tab name="vulnerability-categories" :label="$t('vulnerabilityCategories')" />
-        <q-tab name="custom-fields" :label="$t('customFields')" />
+        <q-tab name="custom-fields">
+            <div class="row items-center no-wrap">
+                <span>{{$t('customFields')}}</span>
+                <q-badge v-if="hasAnyCustomFieldDraft" class="q-ml-xs" color="orange" rounded>
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                </q-badge>
+            </div>
+        </q-tab>
         <q-tab name="custom-sections" :label="$t('customSections')" />
     </q-tabs>
 
@@ -741,7 +748,11 @@
             <q-tab-panel name="custom-fields">
                 <q-card>
                     <q-card-section>
-                        <div class="text-grey-8">{{$t('createAndManageCustomFields')}}</div>
+                        <div class="row items-center">
+                            <div class="text-grey-8">{{$t('createAndManageCustomFields')}}</div>
+                            <q-space />
+                            <draft-recovery-status />
+                        </div>
                     </q-card-section>
                     <q-card-section>
                         <q-item>
@@ -754,7 +765,20 @@
                                 map-options
                                 @update:model-value="newCustomField.displaySub = ''"
                                 outlined dense
-                                />
+                                >
+                                    <template v-slot:option="scope">
+                                        <q-item v-bind="scope.itemProps">
+                                            <q-item-section>
+                                                {{scope.opt.label}}
+                                            </q-item-section>
+                                            <q-item-section side v-if="hasCustomFieldDraftForView(scope.opt.value)">
+                                                <q-badge color="orange" rounded>
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                                                </q-badge>
+                                            </q-item-section>
+                                        </q-item>
+                                    </template>
+                                </q-select>
                             </q-item-section>
                             <q-item-section class="col-md-3">
                                 <q-select
@@ -770,7 +794,20 @@
                                 stack-label
                                 clearable
                                 outlined dense
-                                />
+                                >
+                                    <template v-slot:option="scope">
+                                        <q-item v-bind="scope.itemProps">
+                                            <q-item-section>
+                                                {{scope.opt.name}}
+                                            </q-item-section>
+                                            <q-item-section side v-if="hasCustomFieldDraftForSub(newCustomField.display, scope.opt.name)">
+                                                <q-badge color="orange" rounded>
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                                                </q-badge>
+                                            </q-item-section>
+                                        </q-item>
+                                    </template>
+                                </q-select>
                                 <q-select
                                 v-if="newCustomField.display === 'section'"
                                 :label="$t('selectSection')"
@@ -784,7 +821,20 @@
                                 stack-label
                                 clearable
                                 outlined dense
-                                />
+                                >
+                                    <template v-slot:option="scope">
+                                        <q-item v-bind="scope.itemProps">
+                                            <q-item-section>
+                                                {{scope.opt.name}}
+                                            </q-item-section>
+                                            <q-item-section side v-if="hasCustomFieldDraftForSub('section', scope.opt.name)">
+                                                <q-badge color="orange" rounded>
+                                                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                                                </q-badge>
+                                            </q-item-section>
+                                        </q-item>
+                                    </template>
+                                </q-select>
                             </q-item-section>
                         </q-item>
                         <q-item v-if="userStore.isAllowed('custom-fields:create')" class="q-pl-none">
