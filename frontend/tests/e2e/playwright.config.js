@@ -56,10 +56,16 @@ function browserChain(browser, browserDevices, prevChainLast) {
     },
     // Step 3: Vulnerabilities CRUD (uses languages from data-setup)
     {
+      name: prefix('custom-data-draft-recovery'),
+      use: useWithAuth,
+      testMatch: ['**/custom-data-draft-recovery.spec.js'],
+      dependencies: deps(prefix('data-setup')),
+    },
+    {
       name: prefix('vulnerabilities'),
       use: useWithAuth,
       testMatch: ['**/vulnerabilities.spec.js'],
-      dependencies: deps(prefix('data-setup')),
+      dependencies: deps(prefix('custom-data-draft-recovery')),
     },
     // Step 4: Audit editing (uses shared data from data-setup)
     {

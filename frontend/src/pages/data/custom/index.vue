@@ -772,7 +772,7 @@
                                                 {{scope.opt.label}}
                                             </q-item-section>
                                             <q-item-section side v-if="hasCustomFieldDraftForView(scope.opt.value)">
-                                                <q-badge color="orange" rounded>
+                                                <q-badge :data-testid="`custom-field-draft-badge-view-${scope.opt.value}`" color="orange" rounded>
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
                                                 </q-badge>
                                             </q-item-section>
@@ -802,7 +802,7 @@
                                                 {{scope.opt.name}}
                                             </q-item-section>
                                             <q-item-section side v-if="hasCustomFieldDraftForSub(newCustomField.display, scope.opt.name)">
-                                                <q-badge color="orange" rounded>
+                                                <q-badge :data-testid="`custom-field-draft-badge-${newCustomField.display}-${scope.opt.name}`" color="orange" rounded>
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
                                                 </q-badge>
                                             </q-item-section>
@@ -830,7 +830,7 @@
                                                 {{scope.opt.name}}
                                             </q-item-section>
                                             <q-item-section side v-if="hasCustomFieldDraftForSub('section', scope.opt.name)">
-                                                <q-badge color="orange" rounded>
+                                                <q-badge :data-testid="`custom-field-draft-badge-section-${scope.opt.name}`" color="orange" rounded>
                                                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
                                                 </q-badge>
                                             </q-item-section>

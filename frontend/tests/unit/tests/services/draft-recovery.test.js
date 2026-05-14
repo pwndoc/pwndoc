@@ -194,6 +194,29 @@ describe('DraftRecoveryService', () => {
     await expect(DraftRecoveryService.loadDraft({ userId: 'user1', scope: 'a', refKey: 'new' })).resolves.not.toBeNull()
   })
 
+  it('does not load expired drafts even before purge runs', async () => {
+    const now = Date.now()
+    await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'a', refKey: 'expired', data: { old: true } })
+
+    const openReq = indexedDB.open('pwndoc-drafts')
+    const conn = await new Promise((resolve, reject) => {
+      openReq.onsuccess = () => resolve(openReq.result)
+      openReq.onerror = () => reject(openReq.error)
+    })
+    const tx = conn.transaction('drafts', 'readwrite')
+    const store = tx.objectStore('drafts')
+    const oldReq = store.get('pwndoc.draft.user1.a.expired')
+    oldReq.onsuccess = () => {
+      const oldDraft = oldReq.result
+      oldDraft.updatedAt = now - 8 * 24 * 60 * 60 * 1000
+      store.put(oldDraft)
+    }
+    await new Promise(resolve => { tx.oncomplete = resolve })
+    conn.close()
+
+    await expect(DraftRecoveryService.loadDraft({ userId: 'user1', scope: 'a', refKey: 'expired' })).resolves.toBeNull()
+  })
+
   it('clears a single draft and a full scope', async () => {
     await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'a', refKey: '1', data: {} })
     await DraftRecoveryService.saveDraft({ userId: 'user1', scope: 'a', refKey: '2', data: {} })

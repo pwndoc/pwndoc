@@ -190,6 +190,29 @@ describe('createDraftRecovery', () => {
     })
   })
 
+  it('flushes a pending editor-triggered draft when the tab becomes hidden', async () => {
+    let stateRef
+    const syncBeforeCapture = vi.fn(() => {
+      stateRef.current = { title: 'Draft before hide' }
+    })
+    const { recovery, state } = createRecovery({ syncBeforeCapture })
+    stateRef = state
+    recovery.start()
+
+    document.dispatchEvent(new Event('basic-editor-change'))
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(true)
+    document.dispatchEvent(new Event('visibilitychange'))
+    await Promise.resolve()
+
+    expect(syncBeforeCapture).toHaveBeenCalled()
+    expect(DraftRecoveryService.saveDraft).toHaveBeenCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'ref',
+      data: { title: 'Draft before hide' }
+    })
+  })
+
   it('waits for a flushed pending write before clearing a draft', async () => {
     let resolveSave
     DraftRecoveryService.saveDraft.mockImplementationOnce(() => new Promise(resolve => {

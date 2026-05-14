@@ -685,6 +685,36 @@ describe('Audit Edit General Page', () => {
       )
     })
 
+    it('should flush a pending draft write before confirmed route leave', async () => {
+      const wrapper = createWrapper()
+      await wrapper_flushPromises()
+      const flushPendingWrite = vi.fn().mockResolvedValue()
+      const next = vi.fn()
+      let confirmLeave
+
+      wrapper.vm.draftRecovery = { flushPendingWrite, stop: vi.fn() }
+      vi.spyOn(wrapper.vm, 'hasUnsavedChanges', 'get').mockReturnValue(true)
+      Dialog.create.mockImplementationOnce(() => ({
+        onOk(cb) {
+          confirmLeave = cb
+          return this
+        }
+      }))
+
+      wrapper.vm.$options.beforeRouteLeave.call(
+        wrapper.vm,
+        { name: 'audits' },
+        { name: 'audit-general' },
+        next
+      )
+
+      expect(next).not.toHaveBeenCalled()
+      await confirmLeave()
+
+      expect(flushPendingWrite).toHaveBeenCalled()
+      expect(next).toHaveBeenCalled()
+    })
+
     it('should not save when required fields are empty', async () => {
       const wrapper = createWrapper()
       await wrapper_flushPromises()

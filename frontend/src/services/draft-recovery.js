@@ -67,6 +67,10 @@ function buildKey(userId, scope, refKey) {
   return `pwndoc.draft.${userId}.${scope}.${refKey}`
 }
 
+function isExpired(draft, ttlDays = DEFAULT_TTL_DAYS) {
+  return !!draft?.updatedAt && draft.updatedAt < Date.now() - ttlDays * 24 * 60 * 60 * 1000
+}
+
 function setStatus(status) {
   state.current = status
 }
@@ -119,6 +123,8 @@ async function loadDraft({ userId, scope, refKey }) {
     const draft = await db.get(STORE_NAME, buildKey(userId, scope, refKey))
     if (!draft || draft.v !== DRAFT_VERSION)
       return null
+    if (isExpired(draft))
+      return null
     if (!draft.status)
       draft.status = DRAFT_STATUS.ACTIVE
     return draft
@@ -146,7 +152,7 @@ async function listDrafts({ userId, scopes, refKeyPrefix, ttlDays = DEFAULT_TTL_
         draft?.v === DRAFT_VERSION &&
         (!scopeSet || scopeSet.has(draft.scope)) &&
         (!refKeyPrefix || draft.refKey?.startsWith(refKeyPrefix)) &&
-        (!draft.updatedAt || draft.updatedAt >= cutoff)
+        !isExpired(draft, ttlDays)
       ) {
         drafts.push({
           ...draft,
