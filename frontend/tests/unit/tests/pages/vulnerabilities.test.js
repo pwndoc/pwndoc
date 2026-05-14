@@ -7,6 +7,7 @@ import { createI18n } from 'vue-i18n'
 // Must mock stores/user before component import - axios.js calls useUserStore() at module scope
 const { mockUserStore } = vi.hoisted(() => ({
   mockUserStore: {
+    id: '1',
     roles: '',
     isAllowed: vi.fn(() => true)
   }
@@ -48,6 +49,28 @@ vi.mock('@/services/utils', () => ({
   }
 }))
 
+vi.mock('@/services/draft-recovery', async () => {
+  const { reactive } = await vi.importActual('vue')
+  return {
+    default: {
+      state: reactive({ current: null, revision: 0 }),
+      listDrafts: vi.fn().mockResolvedValue([]),
+      loadDraft: vi.fn().mockResolvedValue(null),
+      saveDraft: vi.fn().mockResolvedValue({ ok: true }),
+      clearDraft: vi.fn().mockResolvedValue({ ok: true }),
+      clearStatus: vi.fn(),
+      buildKey: vi.fn((userId, scope, refKey) => `pwndoc.draft.${userId}.${scope}.${refKey}`),
+      markDraftDiscarded: vi.fn().mockResolvedValue({ ok: true }),
+      isStorageAvailable: vi.fn().mockResolvedValue(true),
+      DRAFT_STATUS: {
+        ACTIVE: 'active_draft',
+        DISCARDED: 'discarded_draft',
+        SYNCED: 'synced'
+      }
+    }
+  }
+})
+
 vi.mock('boot/i18n', () => ({
   $t: (key) => key
 }))
@@ -71,6 +94,7 @@ vi.mock('quasar', async () => {
 import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
+import DraftRecoveryService from '@/services/draft-recovery'
 import { Dialog, Notify } from 'quasar'
 import VulnerabilitiesPage from '@/pages/vulnerabilities/index.vue'
 
@@ -163,6 +187,9 @@ function setupDefaultMocks() {
   DataService.getCustomFields.mockResolvedValue({ data: { datas: [] } })
   VulnerabilityService.getVulnerabilities.mockResolvedValue({ data: { datas: mockVulnerabilities } })
   VulnerabilityService.getVulnUpdates.mockResolvedValue({ data: { datas: [] } })
+  DraftRecoveryService.listDrafts.mockResolvedValue([])
+  DraftRecoveryService.state.current = null
+  DraftRecoveryService.state.revision = 0
 }
 
 // Helper to set $refs on Vue 3 component instances (can't assign directly through proxy)
@@ -267,6 +294,29 @@ describe('Vulnerabilities Page', () => {
       }
     })
   }
+
+  const draftIndicatorStubs = () => ({
+    'q-table': {
+      props: ['rows'],
+      template: `
+        <div>
+          <slot name="top" />
+          <div v-for="row in rows" :key="row._id">
+            <slot name="body" :row="row" />
+          </div>
+        </div>
+      `
+    },
+    'q-btn-dropdown': { template: '<div><slot /></div>' },
+    'q-list': { template: '<div><slot /></div>' },
+    'q-item': { template: '<div><slot /></div>' },
+    'q-item-section': { template: '<div><slot /></div>' },
+    'q-item-label': { template: '<div><slot /></div>' },
+    'q-tr': { template: '<div><slot /></div>' },
+    'q-td': { template: '<div><slot /></div>' },
+    'q-badge': { template: '<span v-bind="$attrs"><slot /></span>' },
+    'q-tooltip': { template: '<span><slot /></span>' }
+  })
 
   const flushPromises = async () => {
     await new Promise(resolve => setTimeout(resolve, 0))
@@ -383,6 +433,72 @@ describe('Vulnerabilities Page', () => {
 
       wrapper.vm.dtLanguage = 'en'
       expect(wrapper.vm.vulnTypeOptions).toEqual(['Undefined', 'Web', 'Network'])
+    })
+  })
+
+  describe('Draft Recovery Hints', () => {
+    it('should request vulnerability drafts on mount', async () => {
+      createWrapper()
+      await flushPromises()
+
+      expect(DraftRecoveryService.listDrafts).toHaveBeenCalledWith({
+        userId: '1',
+        scopes: ['vuln-modal-edit', 'vuln-modal-create']
+      })
+    })
+
+    it('should show a row draft badge for vulnerabilities with edit drafts', async () => {
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'vuln-modal-edit', refKey: 'vuln1', status: 'active_draft' }
+      ])
+      const wrapper = createWrapper({ stubs: draftIndicatorStubs() })
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="vulnerability-draft-badge-vuln1"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="vulnerability-draft-badge-vuln2"]').exists()).toBe(false)
+    })
+
+    it('should not show the row draft badge for the currently open vulnerability', async () => {
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'vuln-modal-edit', refKey: 'vuln1', status: 'active_draft' }
+      ])
+      const wrapper = createWrapper({ stubs: draftIndicatorStubs() })
+      await flushPromises()
+
+      wrapper.vm.vulnerabilityId = 'vuln1'
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.find('[data-testid="vulnerability-draft-badge-vuln1"]').exists()).toBe(false)
+    })
+
+    it('should show create category draft badges for no category and matching categories', async () => {
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'vuln-modal-create', refKey: '_new:none', status: 'active_draft' },
+        { scope: 'vuln-modal-create', refKey: '_new:Category2', status: 'discarded_draft' }
+      ])
+      const wrapper = createWrapper({ stubs: draftIndicatorStubs() })
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="create-vulnerability-draft-badge-none"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="create-vulnerability-draft-badge-Category2"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="create-vulnerability-draft-badge-Category1"]').exists()).toBe(false)
+    })
+
+    it('should refresh vulnerability draft indicators when draft recovery revision changes', async () => {
+      DraftRecoveryService.listDrafts.mockResolvedValue([])
+      const wrapper = createWrapper({ stubs: draftIndicatorStubs() })
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="vulnerability-draft-badge-vuln1"]').exists()).toBe(false)
+
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'vuln-modal-edit', refKey: 'vuln1', status: 'active_draft' }
+      ])
+      DraftRecoveryService.state.revision += 1
+      await wrapper.vm.$nextTick()
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="vulnerability-draft-badge-vuln1"]').exists()).toBe(true)
     })
   })
 

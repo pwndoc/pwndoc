@@ -13,6 +13,7 @@ import DataService from '@/services/data'
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
 import { createDraftRecovery } from '@/composables/useDraftRecovery'
+import DraftRecoveryService from '@/services/draft-recovery'
 
 import { $t } from 'boot/i18n'
 
@@ -82,7 +83,8 @@ export default {
             // Custom Fields
             customFields: [],
             draftRecovery: null,
-            draftRecoveryPaused: false
+            draftRecoveryPaused: false,
+            vulnerabilityDrafts: []
         }
     },
 
@@ -103,6 +105,7 @@ export default {
         this.getVulnerabilityCategories()
         this.getCustomFields()
         this.setupDraftRecovery()
+        this.refreshVulnerabilityDrafts()
     },
 
     unmounted: function() {
@@ -113,6 +116,9 @@ export default {
     watch: {
         currentLanguage: function(val, oldVal) {
             this.setCurrentDetails();
+        },
+        draftRecoveryRevision: function() {
+            this.refreshVulnerabilityDrafts()
         }
     },
 
@@ -157,6 +163,10 @@ export default {
                 this.getVulnTitleLocale(vuln, this.mergeLanguageLeft) === 'undefined' &&
                 this.getVulnTitleLocale(vuln, this.mergeLanguageRight) !== 'undefined'
             )
+        },
+
+        draftRecoveryRevision: function() {
+            return DraftRecoveryService.state.revision
         }
     },
 
@@ -377,10 +387,12 @@ export default {
                 this.draftRecovery.resetForKey()
             }
             this.draftRecoveryPaused = true
+            this.vulnerabilityId = ''
             this.cleanCurrentVulnerability()
             this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
             await this.$nextTick()
             this.draftRecoveryPaused = false
+            await this.refreshVulnerabilityDrafts()
         },
 
         editChangeCategory: function(category) {
@@ -444,6 +456,35 @@ export default {
                     await this.$nextTick()
                 }
             })
+        },
+
+        refreshVulnerabilityDrafts: async function() {
+            if (!userStore.id) {
+                this.vulnerabilityDrafts = []
+                return
+            }
+
+            this.vulnerabilityDrafts = await DraftRecoveryService.listDrafts({
+                userId: userStore.id,
+                scopes: ['vuln-modal-edit', 'vuln-modal-create']
+            })
+        },
+
+        hasDraftForVulnerability: function(vulnerabilityId) {
+            if (!vulnerabilityId || this.vulnerabilityId === vulnerabilityId)
+                return false
+            return this.vulnerabilityDrafts.some(draft =>
+                draft.scope === 'vuln-modal-edit' &&
+                draft.refKey === vulnerabilityId
+            )
+        },
+
+        hasCreateDraftForCategory: function(categoryName) {
+            const refKey = `_new:${categoryName || 'none'}`
+            return this.vulnerabilityDrafts.some(draft =>
+                draft.scope === 'vuln-modal-create' &&
+                draft.refKey === refKey
+            )
         },
 
         // Create detail if locale doesn't exist else set the currentDetailIndex

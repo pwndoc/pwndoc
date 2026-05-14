@@ -56,10 +56,20 @@
                                 <q-item-section>
                                 <q-item-label>{{$t('noCategory')}}</q-item-label>
                                 </q-item-section>
+                                <q-item-section side v-if="hasCreateDraftForCategory(null)">
+                                    <q-badge data-testid="create-vulnerability-draft-badge-none" color="orange" rounded>
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                                    </q-badge>
+                                </q-item-section>
                             </q-item>
                             <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="openCreateVulnerability(category)">
                                 <q-item-section>
                                 <q-item-label>{{category.name}}</q-item-label>
+                                </q-item-section>
+                                <q-item-section side v-if="hasCreateDraftForCategory(category.name)">
+                                    <q-badge :data-testid="`create-vulnerability-draft-badge-${category.name}`" color="orange" rounded>
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                                    </q-badge>
                                 </q-item-section>
                             </q-item>
                         </q-list>
@@ -109,6 +119,9 @@
                     <q-tr @dblclick="dblClick(props.row)" v-if="getDtTitle(props.row) !== 'Not defined for this language yet'" :props="props" :class="(props.row.status === 1)?'bg-light-blue-2':(props.row.status === 2)?'bg-orange-2':''">
                         <q-td key="title" :props="props">
                             {{getDtTitle(props.row)}}
+                            <q-badge v-if="hasDraftForVulnerability(props.row._id)" :data-testid="`vulnerability-draft-badge-${props.row._id}`" class="q-ml-xs" color="orange" rounded>
+                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                            </q-badge>
                         </q-td>
                         <q-td key="category" :props="props">
                             {{props.row.category || $t('noCategory')}}

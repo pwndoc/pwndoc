@@ -359,7 +359,10 @@ test.describe('Vulnerabilities Page', () => {
         await page.getByTestId('create-vulnerability-title').fill(noCategoryDraftTitle);
         await closeCreateVulnerability(page);
 
-        await openCreateVulnerability(page);
+        await page.getByRole('button', { name: 'New Vulnerability' }).click();
+        await expect(page.getByText('Select category')).toBeVisible();
+        await expect(page.getByTestId('create-vulnerability-draft-badge-none')).toBeVisible();
+        await page.getByRole('listitem').filter({ hasText: 'No Category' }).click();
         await expect(page.getByTestId('create-vulnerability-title')).toHaveValue(noCategoryDraftTitle);
         await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).toBeVisible();
 
@@ -384,6 +387,10 @@ test.describe('Vulnerabilities Page', () => {
         }).toBe(true);
         await page.getByRole('button', { name: 'Create' }).click();
         await expect(page.getByText('Vulnerability created successfully')).toBeVisible();
+        await page.getByRole('button', { name: 'New Vulnerability' }).click();
+        await expect(page.getByText('Select category')).toBeVisible();
+        await expect(page.getByTestId('create-vulnerability-draft-badge-none')).not.toBeVisible();
+        await page.keyboard.press('Escape');
 
         await expect.poll(async () => {
           const drafts = await listDrafts(page);
@@ -434,6 +441,7 @@ test.describe('Vulnerabilities Page', () => {
         await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).not.toBeVisible();
         await page.getByTestId('edit-vulnerability-title').fill(editADraft);
         await closeEditVulnerability(page);
+        await expect(page.getByTestId(`vulnerability-draft-badge-${editAId}`)).toBeVisible();
 
         await openEditVulnerability(page, editABase);
         await expect(page.getByTestId('edit-vulnerability-title')).toHaveValue(editADraft);
@@ -452,6 +460,7 @@ test.describe('Vulnerabilities Page', () => {
 
         await page.getByRole('button', { name: 'Update' }).click();
         await expect(page.getByText('Vulnerability updated successfully')).toBeVisible();
+        await expect(page.getByTestId(`vulnerability-draft-badge-${editAId}`)).not.toBeVisible();
 
         await expect.poll(async () => {
           const drafts = await listDrafts(page);
