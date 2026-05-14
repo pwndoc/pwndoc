@@ -7,10 +7,6 @@
         no-caps
         dense
         unelevated
-        toggle-color="grey-3"
-        toggle-text-color="grey-9"
-        color="white"
-        text-color="grey-7"
         class="view-toggle"
         :options="[
           { label: 'Inline', value: false, icon: 'view_list' },
