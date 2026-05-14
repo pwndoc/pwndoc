@@ -576,10 +576,11 @@ export default {
         updateCustomFields: function() {
             Utils.syncEditors(this.$refs)
             var position = 0
-            this.customFields.forEach(e => e.position = position++)
-            DataService.updateCustomFields(this.customFields)
+            const customFieldsToSave = this.getCustomFieldsSavePayload()
+            customFieldsToSave.forEach(e => e.position = position++)
+            DataService.updateCustomFields(customFieldsToSave)
             .then(async (data) => {
-                this.customFieldsOrig = this.$_.cloneDeep(this.customFields)
+                this.customFieldsOrig = this.$_.cloneDeep(customFieldsToSave)
                 if (this.draftRecovery)
                     await this.draftRecovery.clearDraft()
                 this.getCustomFields()
@@ -598,6 +599,24 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        getCustomFieldsSavePayload: function() {
+            const display = this.newCustomField.display
+            const displaySub = this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub)
+            const currentContextFields = this.customFields.filter(field =>
+                this.fieldMatchesExactCustomFieldContext(field, display, displaySub)
+            )
+
+            if (!currentContextFields.length)
+                return this.$_.cloneDeep(this.customFieldsOrig.length ? this.customFieldsOrig : this.customFields)
+
+            return this.$_.cloneDeep([
+                ...this.customFieldsOrig.filter(field =>
+                    !this.fieldMatchesExactCustomFieldContext(field, display, displaySub)
+                ),
+                ...currentContextFields
+            ])
         },
 
          // Delete custom field
@@ -648,13 +667,26 @@ export default {
         },
 
         canDisplayCustomField: function(field) {
-            return this.fieldMatchesCustomFieldContext(field, this.newCustomField.display, this.newCustomField.displaySub)
+            return this.fieldMatchesCustomFieldContext(
+                field,
+                this.newCustomField.display,
+                this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub)
+            )
         },
 
         fieldMatchesCustomFieldContext: function(field, display, displaySub) {
+            displaySub = this.normalizeCustomFieldDisplaySub(displaySub)
             return (
                 (display === field.display || (display === 'finding' && field.display === 'vulnerability')) &&
                 (displaySub === field.displaySub || field.displaySub === '')
+            )
+        },
+
+        fieldMatchesExactCustomFieldContext: function(field, display, displaySub) {
+            displaySub = this.normalizeCustomFieldDisplaySub(displaySub)
+            return (
+                (display === field.display || (display === 'finding' && field.display === 'vulnerability')) &&
+                displaySub === this.normalizeCustomFieldDisplaySub(field.displaySub)
             )
         },
 
@@ -799,6 +831,7 @@ export default {
                 getCurrent: () => this.getCustomDraftCurrent(),
                 setCurrent: (data) => this.setCustomDraftCurrent(data),
                 getOriginal: () => this.getCustomDraftOriginal(),
+                diffProps: () => ({ languages: this.languages }),
                 isDirty: () => !this.$_.isEqual(this.getCustomDraftCurrent(), this.getCustomDraftOriginal()),
                 isReadOnly: () => !this.canWriteCustomDraft(),
                 syncBeforeCapture: () => Utils.syncEditors(this.$refs)
@@ -836,10 +869,14 @@ export default {
                 return '_new'
 
             const display = this.newCustomField.display || 'general'
-            const displaySub = this.newCustomField.displaySub || 'none'
+            const displaySub = this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub) || 'none'
             if (display === 'general')
                 return 'general'
             return `${display}:${displaySub}`
+        },
+
+        normalizeCustomFieldDisplaySub: function(displaySub) {
+            return displaySub || ''
         },
 
         getCustomPermissionBase: function() {
@@ -856,7 +893,10 @@ export default {
         getCustomDraftCurrent: function() {
             if (this.selectedTab === 'custom-fields') {
                 return this.$_.cloneDeep({
-                    newCustomField: this.newCustomField,
+                    newCustomField: buildDefaultCustomField({
+                        ...this.newCustomField,
+                        displaySub: this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub)
+                    }),
                     customFields: this.customFields.filter(field => this.canDisplayCustomField(field))
                 })
             }
@@ -903,7 +943,7 @@ export default {
                 return this.$_.cloneDeep({
                     newCustomField: buildDefaultCustomField({
                         display: this.newCustomField.display,
-                        displaySub: this.newCustomField.displaySub
+                        displaySub: this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub)
                     }),
                     customFields: this.customFieldsOrig.filter(field => this.canDisplayCustomField(field))
                 })

@@ -268,6 +268,10 @@ export default {
     draft: {
       type: Object,
       default: () => ({})
+    },
+    languages: {
+      type: Array,
+      default: () => []
     }
   },
 
@@ -365,11 +369,23 @@ export default {
         const draft = draftByKey[key]
         const currentValue = this.customFieldValue(current)
         const draftValue = this.customFieldValue(draft)
+        const label = this.customFieldLabel(current, draft)
+
+        if (this.isLocalizedValueArray(currentValue) || this.isLocalizedValueArray(draftValue)) {
+          items.push(...this.buildLocalizedCustomFieldItems(
+            prefix,
+            key,
+            label,
+            currentValue,
+            draftValue
+          ))
+          return items
+        }
 
         if (!_.isEqual(currentValue, draftValue)) {
           items.push(this.createField(
             `${prefix}.${key}`,
-            this.customFieldLabel(current, draft),
+            label,
             currentValue,
             draftValue
           ))
@@ -379,7 +395,33 @@ export default {
       }, [])
     },
 
-    createField(key, labelKey, current, draft) {
+    buildLocalizedCustomFieldItems(prefix, key, label, currentValue, draftValue) {
+      const currentByLocale = this.indexLocalizedValues(currentValue)
+      const draftByLocale = this.indexLocalizedValues(draftValue)
+      const locales = Array.from(new Set([
+        ...Object.keys(currentByLocale),
+        ...Object.keys(draftByLocale)
+      ]))
+
+      return locales.reduce((items, locale) => {
+        const currentLocaleValue = currentByLocale[locale]
+        const draftLocaleValue = draftByLocale[locale]
+
+        if (!_.isEqual(currentLocaleValue, draftLocaleValue)) {
+          items.push(this.createField(
+            `${prefix}.${key}.${locale}`,
+            label,
+            currentLocaleValue,
+            draftLocaleValue,
+            `${label} (${this.localeLabel(locale)})`
+          ))
+        }
+
+        return items
+      }, [])
+    },
+
+    createField(key, labelKey, current, draft, displayLabel = null) {
       const isHtml = this.isHtmlField(labelKey) || this.isHtmlValue(current) || this.isHtmlValue(draft)
       const currentEmpty = this.isEmpty(current)
       const draftEmpty = this.isEmpty(draft)
@@ -425,7 +467,7 @@ export default {
 
       return {
         key,
-        label: FIELD_LABELS[labelKey] || this.humanize(labelKey),
+        label: displayLabel || FIELD_LABELS[labelKey] || this.humanize(labelKey),
         currentHtml,
         draftHtml,
         chunks
@@ -501,6 +543,30 @@ export default {
         return field.checked
 
       return field
+    },
+
+    isLocalizedValueArray(value) {
+      return Array.isArray(value) && value.length > 0 && value.every(item =>
+        item &&
+        typeof item === 'object' &&
+        Object.prototype.hasOwnProperty.call(item, 'locale') &&
+        Object.prototype.hasOwnProperty.call(item, 'value')
+      )
+    },
+
+    indexLocalizedValues(values) {
+      if (!this.isLocalizedValueArray(values))
+        return {}
+
+      return values.reduce((indexed, item) => {
+        indexed[item.locale] = item.value
+        return indexed
+      }, {})
+    },
+
+    localeLabel(locale) {
+      const language = this.languages.find(item => item.locale === locale)
+      return language?.language || locale
     },
 
     isHtmlField(path) {

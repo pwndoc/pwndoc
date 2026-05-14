@@ -16,6 +16,85 @@ function callOption(option, fallback) {
   return fallback
 }
 
+function valuesEqual(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right)
+}
+
+function isLocalizedValueArray(value) {
+  return Array.isArray(value) && value.length > 0 && value.every(item =>
+    item &&
+    typeof item === 'object' &&
+    Object.prototype.hasOwnProperty.call(item, 'locale') &&
+    Object.prototype.hasOwnProperty.call(item, 'value')
+  )
+}
+
+function indexLocalizedValues(values) {
+  if (!isLocalizedValueArray(values))
+    return {}
+
+  return values.reduce((indexed, item) => {
+    indexed[item.locale] = item.value
+    return indexed
+  }, {})
+}
+
+function indexCustomFields(fields) {
+  if (!Array.isArray(fields))
+    return {}
+
+  return fields.reduce((indexed, field, index) => {
+    const key = field?.customField?._id || field?._id || field?.id || field?.label || field?.name || `field-${index + 1}`
+    indexed[key] = field
+    return indexed
+  }, {})
+}
+
+function customFieldValue(field) {
+  if (!field)
+    return undefined
+
+  if (Object.prototype.hasOwnProperty.call(field, 'text'))
+    return field.text
+  if (Object.prototype.hasOwnProperty.call(field, 'value'))
+    return field.value
+  if (Object.prototype.hasOwnProperty.call(field, 'values'))
+    return field.values
+  if (Object.prototype.hasOwnProperty.call(field, 'checked'))
+    return field.checked
+
+  return field
+}
+
+function countCustomFieldChanges(currentFields, draftFields) {
+  const currentByKey = indexCustomFields(currentFields)
+  const draftByKey = indexCustomFields(draftFields)
+  const keys = new Set([...Object.keys(currentByKey), ...Object.keys(draftByKey)])
+  let count = 0
+
+  for (const key of keys) {
+    const currentValue = customFieldValue(currentByKey[key])
+    const draftValue = customFieldValue(draftByKey[key])
+
+    if (isLocalizedValueArray(currentValue) || isLocalizedValueArray(draftValue)) {
+      const currentByLocale = indexLocalizedValues(currentValue)
+      const draftByLocale = indexLocalizedValues(draftValue)
+      const locales = new Set([...Object.keys(currentByLocale), ...Object.keys(draftByLocale)])
+
+      for (const locale of locales) {
+        if (!valuesEqual(currentByLocale[locale], draftByLocale[locale]))
+          count++
+      }
+      continue
+    }
+
+    if (!valuesEqual(currentValue, draftValue))
+      count++
+  }
+
+  return count
+}
+
 function notifyStorageError(error) {
   const key = error || 'unknown'
   if (notifiedErrors.has(key))
@@ -45,6 +124,8 @@ export function createDraftRecovery(vm, options) {
   const getRefKey = () => callOption(options.refKey, options.refKey)
   const getUserId = () => callOption(options.userId, options.userId)
   const getCurrent = () => options.getCurrent()
+  const getOriginal = () => options.getOriginal ? options.getOriginal() : getCurrent()
+  const getDiffProps = () => callOption(options.diffProps, options.diffProps || {})
   const isReadOnly = () => options.isReadOnly && options.isReadOnly()
   const isDirty = () => options.isDirty && options.isDirty()
 
@@ -206,7 +287,8 @@ export function createDraftRecovery(vm, options) {
       component: DraftRecoveryDialog,
       componentProps: {
         draft,
-        current
+        current,
+        ...getDiffProps()
       }
     })
     .onOk(async (action) => {
@@ -229,7 +311,11 @@ export function createDraftRecovery(vm, options) {
     const allKeys = new Set([...Object.keys(current), ...Object.keys(draft)])
     for (const key of allKeys) {
       if (excluded.has(key)) continue
-      if (JSON.stringify(current[key]) !== JSON.stringify(draft[key])) count++
+      if (key === 'customFields') {
+        count += countCustomFieldChanges(current[key], draft[key])
+        continue
+      }
+      if (!valuesEqual(current[key], draft[key])) count++
     }
     const currentDetails = Array.isArray(current.details) ? current.details : []
     const draftDetails = Array.isArray(draft.details) ? draft.details : []
@@ -370,8 +456,12 @@ export function createDraftRecovery(vm, options) {
     const promptKey = DraftRecoveryService.buildKey(keyArgs.userId, keyArgs.scope, keyArgs.refKey)
     clearStatusForOtherKey(promptKey)
     if (notifiedKeys.has(`${promptKey}:checked`)) {
-      start()
-      return null
+      if (DraftRecoveryService.state.current?.key !== promptKey)
+        notifiedKeys.delete(`${promptKey}:checked`)
+      else {
+        start()
+        return null
+      }
     }
 
     const draft = await DraftRecoveryService.loadDraft(keyArgs)
@@ -384,7 +474,7 @@ export function createDraftRecovery(vm, options) {
     notifiedKeys.add(`${promptKey}:checked`)
     storedDraftStatus = draft.status || DraftRecoveryService.DRAFT_STATUS.ACTIVE
 
-    const serverVersion = cloneData(getCurrent())
+    const serverVersion = cloneData(getOriginal() || getCurrent())
     if (countChangedFields(serverVersion, draft.data) === 0) {
       start()
       return null

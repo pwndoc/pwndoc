@@ -793,6 +793,7 @@
                                 map-options
                                 stack-label
                                 clearable
+                                @clear="newCustomField.displaySub = ''"
                                 outlined dense
                                 >
                                     <template v-slot:option="scope">
@@ -820,6 +821,7 @@
                                 map-options
                                 stack-label
                                 clearable
+                                @clear="newCustomField.displaySub = ''"
                                 outlined dense
                                 >
                                     <template v-slot:option="scope">

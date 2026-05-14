@@ -619,9 +619,11 @@ describe('Data Custom Page', () => {
       await wrapper.vm.$nextTick()
       await wrapper.vm.$nextTick()
 
+      wrapper.vm.newCustomField.display = 'general'
+      wrapper.vm.newCustomField.displaySub = ''
       wrapper.vm.customFields = [
-        { _id: '1', label: 'Field A' },
-        { _id: '2', label: 'Field B' }
+        { _id: '1', label: 'Field A', display: 'general', displaySub: '' },
+        { _id: '2', label: 'Field B', display: 'general', displaySub: '' }
       ]
 
       // Capture the args before getCustomFields() resets customFields after resolution
@@ -637,8 +639,39 @@ describe('Data Custom Page', () => {
       expect(capturedArgs[0].position).toBe(0)
       expect(capturedArgs[1].position).toBe(1)
       expect(capturedArgs).toEqual([
-        { _id: '1', label: 'Field A', position: 0 },
-        { _id: '2', label: 'Field B', position: 1 }
+        { _id: '1', label: 'Field A', display: 'general', displaySub: '', position: 0 },
+        { _id: '2', label: 'Field B', display: 'general', displaySub: '', position: 1 }
+      ])
+    })
+
+    it('should save current custom field context without promoting other recovered contexts', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+      wrapper.vm.newCustomField.display = 'finding'
+      wrapper.vm.newCustomField.displaySub = 'Web'
+      wrapper.vm.customFieldsOrig = [
+        { _id: 'current', label: 'Current saved', display: 'finding', displaySub: 'Web', text: [] },
+        { _id: 'other', label: 'Other saved', display: 'finding', displaySub: '', text: [] }
+      ]
+      wrapper.vm.customFields = [
+        { _id: 'current', label: 'Current draft', display: 'finding', displaySub: 'Web', text: [] },
+        { _id: 'other', label: 'Other recovered draft', display: 'finding', displaySub: '', text: [] }
+      ]
+
+      const payload = wrapper.vm.getCustomFieldsSavePayload()
+
+      expect(payload).toEqual([
+        { _id: 'other', label: 'Other saved', display: 'finding', displaySub: '', text: [] },
+        { _id: 'current', label: 'Current draft', display: 'finding', displaySub: 'Web', text: [] }
+      ])
+
+      wrapper.vm.newCustomField.displaySub = 'Missing Security Control'
+
+      const categoryPayload = wrapper.vm.getCustomFieldsSavePayload()
+
+      expect(categoryPayload).toEqual([
+        { _id: 'current', label: 'Current saved', display: 'finding', displaySub: 'Web', text: [] },
+        { _id: 'other', label: 'Other saved', display: 'finding', displaySub: '', text: [] }
       ])
     })
 
@@ -837,6 +870,16 @@ describe('Data Custom Page', () => {
       wrapper.vm.newCustomField.display = 'section'
       wrapper.vm.newCustomField.displaySub = 'Executive Summary'
       expect(wrapper.vm.getCustomDraftRefKey()).toBe('section:Executive Summary')
+    })
+
+    it('should treat cleared custom field category context as none', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+      wrapper.vm.newCustomField.display = 'finding'
+      wrapper.vm.newCustomField.displaySub = null
+
+      expect(wrapper.vm.getCustomDraftRefKey()).toBe('finding:none')
+      expect(wrapper.vm.getCustomDraftOriginal().newCustomField.displaySub).toBe('')
     })
 
     it('should expose custom field draft indicators by tab, view, and sub context', () => {

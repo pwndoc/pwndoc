@@ -22,6 +22,7 @@
         <draft-diff
           :current="current"
           :draft="draft.data"
+          :languages="languages"
         />
       </q-card-section>
     </q-card>
@@ -47,6 +48,10 @@ export default {
     current: {
       type: Object,
       default: () => ({})
+    },
+    languages: {
+      type: Array,
+      default: () => []
     }
   },
 

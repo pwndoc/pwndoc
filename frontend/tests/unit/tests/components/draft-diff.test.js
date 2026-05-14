@@ -113,6 +113,142 @@ describe('DraftDiff', () => {
     expect(wrapper.text()).toContain('High')
   })
 
+  it('shows localized custom field changes as separate language blocks', () => {
+    const wrapper = createWrapper({
+      current: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Impact',
+            text: [
+              { locale: 'en-US', value: '<p>Low</p>' },
+              { locale: 'fr-FR', value: '<p>Faible</p>' }
+            ]
+          }
+        ]
+      },
+      draft: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Impact',
+            text: [
+              { locale: 'en-US', value: '<p>High</p>' },
+              { locale: 'fr-FR', value: '<p>Eleve</p>' }
+            ]
+          }
+        ]
+      },
+      languages: [
+        { locale: 'en-US', language: 'English' },
+        { locale: 'fr-FR', language: 'French' }
+      ]
+    })
+
+    expect(fieldLabels(wrapper)).toEqual(['Impact (English)', 'Impact (French)'])
+    expect(wrapper.text()).toContain('Low')
+    expect(wrapper.text()).toContain('High')
+    expect(wrapper.text()).toContain('Faible')
+    expect(wrapper.text()).toContain('Eleve')
+  })
+
+  it('omits unchanged localized custom field values', () => {
+    const wrapper = createWrapper({
+      current: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Impact',
+            text: [
+              { locale: 'en-US', value: '<p>Low</p>' },
+              { locale: 'fr-FR', value: '<p>Faible</p>' }
+            ]
+          }
+        ]
+      },
+      draft: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Impact',
+            text: [
+              { locale: 'en-US', value: '<p>High</p>' },
+              { locale: 'fr-FR', value: '<p>Faible</p>' }
+            ]
+          }
+        ]
+      },
+      languages: [
+        { locale: 'en-US', language: 'English' },
+        { locale: 'fr-FR', language: 'French' }
+      ]
+    })
+
+    expect(fieldLabels(wrapper)).toEqual(['Impact (English)'])
+    expect(wrapper.text()).not.toContain('Impact (French)')
+  })
+
+  it('shows added localized custom field values under their locale label', () => {
+    const wrapper = createWrapper({
+      current: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Impact',
+            text: [
+              { locale: 'en-US', value: '<p>Low</p>' }
+            ]
+          }
+        ]
+      },
+      draft: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Impact',
+            text: [
+              { locale: 'en-US', value: '<p>Low</p>' },
+              { locale: 'fr-FR', value: '<p>Eleve</p>' }
+            ]
+          }
+        ]
+      },
+      languages: [
+        { locale: 'en-US', language: 'English' },
+        { locale: 'fr-FR', language: 'French' }
+      ]
+    })
+
+    expect(fieldLabels(wrapper)).toEqual(['Impact (French)'])
+    expect(wrapper.text()).toContain('Eleve')
+  })
+
+  it('falls back to locale when a localized custom field language is unknown', () => {
+    const wrapper = createWrapper({
+      current: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Impact',
+            text: [{ locale: 'de-DE', value: '<p>Niedrig</p>' }]
+          }
+        ]
+      },
+      draft: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Impact',
+            text: [{ locale: 'de-DE', value: '<p>Hoch</p>' }]
+          }
+        ]
+      },
+      languages: []
+    })
+
+    expect(fieldLabels(wrapper)).toEqual(['Impact (de-DE)'])
+  })
+
   it('shows split view when toggled', async () => {
     const wrapper = createWrapper({
       current: { title: 'Old title' },

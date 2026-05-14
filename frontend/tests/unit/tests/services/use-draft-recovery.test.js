@@ -241,6 +241,99 @@ describe('createDraftRecovery', () => {
     }))
   })
 
+  it('counts localized custom field changes separately for the view changes badge', async () => {
+    DraftRecoveryService.loadDraft.mockResolvedValue({
+      key: 'pwndoc.draft.user1.scope.ref',
+      status: 'active_draft',
+      updatedAt: Date.now(),
+      data: {
+        customFields: [
+          {
+            _id: 'field1',
+            label: 'Multiple tmp select',
+            text: [
+              { locale: 'en-US', value: ['option 1'] },
+              { locale: 'fr-FR', value: ['option_fr_1'] }
+            ]
+          },
+          {
+            _id: 'field2',
+            label: 'Exploitation Info',
+            text: [
+              { locale: 'fr-FR', value: "information d'exploitation" }
+            ]
+          },
+          {
+            _id: 'field3',
+            label: 'Mitre Tactics',
+            text: [
+              { locale: 'en-US', value: 'TA0040 - Impact' }
+            ]
+          }
+        ]
+      }
+    })
+    const { recovery, state } = createRecovery()
+    state.original = {
+      customFields: [
+        {
+          _id: 'field1',
+          label: 'Multiple tmp select',
+          text: [
+            { locale: 'en-US', value: ['option 1', 'option 2'] },
+            { locale: 'fr-FR', value: [] }
+          ]
+        },
+        {
+          _id: 'field2',
+          label: 'Exploitation Info',
+          text: [
+            { locale: 'fr-FR', value: '' }
+          ]
+        },
+        {
+          _id: 'field3',
+          label: 'Mitre Tactics',
+          text: [
+            { locale: 'en-US', value: '' }
+          ]
+        }
+      ]
+    }
+    state.current = {
+      customFields: [
+        {
+          _id: 'field1',
+          label: 'Multiple tmp select',
+          text: [
+            { locale: 'en-US', value: ['option 1', 'option 2'] },
+            { locale: 'fr-FR', value: [] }
+          ]
+        },
+        {
+          _id: 'field2',
+          label: 'Exploitation Info',
+          text: [
+            { locale: 'fr-FR', value: '' }
+          ]
+        },
+        {
+          _id: 'field3',
+          label: 'Mitre Tactics',
+          text: [
+            { locale: 'en-US', value: '' }
+          ]
+        }
+      ]
+    }
+
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+
+    expect(DraftRecoveryService.state.current).toEqual(expect.objectContaining({
+      changeCount: 4
+    }))
+  })
+
   it('clears stale status when checking another key without a draft', async () => {
     let refKey = 'none'
     DraftRecoveryService.loadDraft.mockImplementation(({ refKey }) => Promise.resolve(
@@ -272,6 +365,74 @@ describe('createDraftRecovery', () => {
       refKey: 'category-a'
     })
     expect(DraftRecoveryService.state.current).toBeNull()
+  })
+
+  it('reloads a previously checked draft status when returning to its context', async () => {
+    let refKey = 'none'
+    DraftRecoveryService.loadDraft.mockImplementation(({ refKey }) => Promise.resolve({
+      key: `pwndoc.draft.user1.scope.${refKey}`,
+      status: 'active_draft',
+      updatedAt: Date.now(),
+      data: { title: `Recovered ${refKey}` }
+    }))
+    const { recovery } = createRecovery({
+      refKey: () => refKey
+    })
+
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+    expect(DraftRecoveryService.state.current).toEqual(expect.objectContaining({
+      key: 'pwndoc.draft.user1.scope.none',
+      type: 'local_draft'
+    }))
+
+    refKey = 'category-a'
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+    expect(DraftRecoveryService.state.current).toEqual(expect.objectContaining({
+      key: 'pwndoc.draft.user1.scope.category-a',
+      type: 'local_draft'
+    }))
+
+    refKey = 'none'
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+
+    expect(DraftRecoveryService.loadDraft).toHaveBeenLastCalledWith({
+      userId: 'user1',
+      scope: 'scope',
+      refKey: 'none'
+    })
+    expect(DraftRecoveryService.state.current).toEqual(expect.objectContaining({
+      key: 'pwndoc.draft.user1.scope.none',
+      type: 'local_draft'
+    }))
+  })
+
+  it('keeps recovered status when current data already matches the returned draft context', async () => {
+    let refKey = 'none'
+    const draftData = { title: 'Recovered none' }
+    DraftRecoveryService.loadDraft.mockImplementation(({ refKey }) => Promise.resolve({
+      key: `pwndoc.draft.user1.scope.${refKey}`,
+      status: 'active_draft',
+      updatedAt: Date.now(),
+      data: refKey === 'none' ? draftData : { title: 'Recovered category-a' }
+    }))
+    const { recovery, state } = createRecovery({
+      refKey: () => refKey
+    })
+
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+
+    refKey = 'category-a'
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+
+    refKey = 'none'
+    state.current = draftData
+    await expect(recovery.maybePromptRecovery()).resolves.toBe('restore')
+
+    expect(DraftRecoveryService.state.current).toEqual(expect.objectContaining({
+      key: 'pwndoc.draft.user1.scope.none',
+      type: 'local_draft',
+      changeCount: 1
+    }))
   })
 
   it('leaves a loaded draft in storage when it has no changes from the server version', async () => {
