@@ -143,7 +143,6 @@ async function listDrafts({ userId, scopes, refKeyPrefix, ttlDays = DEFAULT_TTL_
     const index = db.transaction(STORE_NAME).store.index('by_userId')
     let cursor = await index.openCursor(userId)
     const scopeSet = Array.isArray(scopes) && scopes.length ? new Set(scopes) : null
-    const cutoff = Date.now() - ttlDays * 24 * 60 * 60 * 1000
     const drafts = []
 
     while (cursor) {
