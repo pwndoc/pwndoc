@@ -357,6 +357,37 @@ describe('createDraftRecovery', () => {
     }))
   })
 
+  it('treats equivalent custom fields with string and object references as unchanged', async () => {
+    DraftRecoveryService.loadDraft.mockResolvedValue({
+      key: 'pwndoc.draft.user1.scope.ref',
+      status: 'active_draft',
+      updatedAt: Date.now(),
+      data: {
+        customFields: [
+          {
+            customField: { _id: 'field1', label: 'Impact' },
+            text: 'Low'
+          }
+        ]
+      }
+    })
+    const { recovery, state, setCurrent } = createRecovery()
+    state.original = {
+      customFields: [
+        {
+          customField: 'field1',
+          text: 'Low'
+        }
+      ]
+    }
+    state.current = state.original
+
+    await expect(recovery.maybePromptRecovery()).resolves.toBeNull()
+
+    expect(setCurrent).not.toHaveBeenCalled()
+    expect(DraftRecoveryService.saveDraft).not.toHaveBeenCalled()
+  })
+
   it('clears stale status when checking another key without a draft', async () => {
     let refKey = 'none'
     DraftRecoveryService.loadDraft.mockImplementation(({ refKey }) => Promise.resolve(

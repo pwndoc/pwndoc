@@ -113,6 +113,32 @@ describe('DraftDiff', () => {
     expect(wrapper.text()).toContain('High')
   })
 
+  it('matches custom fields when one side stores the customField as an id', () => {
+    const wrapper = createWrapper({
+      current: {
+        customFields: [
+          {
+            customField: 'field1',
+            text: 'Low'
+          }
+        ]
+      },
+      draft: {
+        customFields: [
+          {
+            customField: { _id: 'field1', label: 'Impact' },
+            text: 'High'
+          }
+        ]
+      }
+    })
+
+    expect(fieldLabels(wrapper)).toEqual(['Impact'])
+    expect(wrapper.findAll('.diff-block__header')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Low')
+    expect(wrapper.text()).toContain('High')
+  })
+
   it('shows localized custom field changes as separate language blocks', () => {
     const wrapper = createWrapper({
       current: {

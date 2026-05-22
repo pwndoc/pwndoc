@@ -44,7 +44,13 @@ function indexCustomFields(fields) {
     return {}
 
   return fields.reduce((indexed, field, index) => {
-    const key = field?.customField?._id || field?._id || field?.id || field?.label || field?.name || `field-${index + 1}`
+    const customFieldRef = field?.customField
+    const key = (typeof customFieldRef === 'string' ? customFieldRef : customFieldRef?._id) ||
+      field?._id ||
+      field?.id ||
+      field?.label ||
+      field?.name ||
+      `field-${index + 1}`
     indexed[key] = field
     return indexed
   }, {})

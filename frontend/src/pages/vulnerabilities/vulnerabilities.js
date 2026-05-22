@@ -354,8 +354,8 @@ export default {
             this.cleanCurrentVulnerability();
             
             this.currentVulnerability = this.$_.cloneDeep(row)
-            this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
             this.setCurrentDetails();
+            this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
             
             this.vulnerabilityId = row._id;
             if (userStore.isAllowed('vulnerabilities:update'))

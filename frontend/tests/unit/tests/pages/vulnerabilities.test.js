@@ -855,6 +855,39 @@ describe('Vulnerabilities Page', () => {
       expect(wrapper.vm.vulnerabilityId).toBe('vuln1')
       expect(wrapper.vm.currentVulnerability.category).toBe('Category1')
     })
+
+    it('should snapshot the normalized vulnerability as the original version', async () => {
+      Utils.filterCustomFields.mockReturnValueOnce([
+        {
+          customField: { _id: 'field1', label: 'Impact' },
+          text: 'Low'
+        }
+      ])
+      const wrapper = createWrapper()
+      await flushPromises()
+
+      wrapper.vm.currentLanguage = 'en'
+      wrapper.vm.clone({
+        _id: 'vuln1',
+        category: 'Category1',
+        cvssv3: '',
+        cvssv4: '',
+        priority: '',
+        remediationComplexity: '',
+        details: [
+          {
+            locale: 'en',
+            title: 'SQL Injection',
+            customFields: [
+              { customField: 'field1', text: 'Low' }
+            ]
+          }
+        ],
+        status: 0
+      })
+
+      expect(wrapper.vm.currentVulnerabilityOrig).toEqual(wrapper.vm.currentVulnerability)
+    })
   })
 
   describe('customSort', () => {
