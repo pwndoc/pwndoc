@@ -301,29 +301,33 @@
                                 </q-field>
                             </q-card-section>
                         </q-card>
-                        <q-card 
-                        id="cvssField"
-                        class="q-mt-md"
-                        :class="{'highlighted-border': fieldHighlighted == 'cvssField' && commentMode}"
-                        >
+                        <q-card class="q-mt-md">
                             <div class="col-12">
-                                <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
+                                <q-card-section
+                                id="cvss3Field"
+                                v-if="$settings.report.public.scoringMethods.CVSS3"
+                                :class="{'highlighted-border': fieldHighlighted == 'cvss3Field' && commentMode}"
+                                >
                                     <cvss3-calculator 
                                     v-model="finding.cvssv3"
                                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                                     />
-                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
+                                    <q-badge v-if="commentMode && canCreateComment" data-testid="cvss3-comment-button" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvss3Field')">
                                         <q-icon name="add_comment" size="xs" />
                                     </q-badge>
                                 </q-card-section>
                             </div>
                             <div class="col-12">
-                                <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
+                                <q-card-section
+                                id="cvss4Field"
+                                v-if="$settings.report.public.scoringMethods.CVSS4"
+                                :class="{'highlighted-border': fieldHighlighted == 'cvss4Field' && commentMode}"
+                                >
                                     <cvss4-calculator 
                                     v-model="finding.cvssv4"
                                     :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
                                     />
-                                    <q-badge v-if="$parent.commentMode" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvssField')">
+                                    <q-badge v-if="commentMode && canCreateComment" data-testid="cvss4-comment-button" color="deep-purple" floating class="cursor-pointer" @click="createComment('cvss4Field')">
                                         <q-icon name="add_comment" size="xs" />
                                     </q-badge>
                                 </q-card-section>

@@ -395,6 +395,61 @@ describe('Findings Edit Page', () => {
     })
   })
 
+  describe('Rendering', () => {
+    it('should create comments on separate CVSS v3 and v4 fields', async () => {
+      AuditService.createComment.mockResolvedValue({
+        data: { datas: { _id: 'newComment1' } }
+      })
+      AuditService.updateFinding.mockResolvedValue({})
+
+      const wrapper = createWrapper({
+        provide: {
+          commentMode: true
+        },
+        mocks: {
+          $settings: {
+            report: {
+              enabled: false,
+              public: {
+                scoringMethods: { CVSS3: true, CVSS4: true },
+                requiredFields: {},
+                highlightWarning: false,
+                highlightWarningColor: '#ffff00'
+              }
+            }
+          }
+        },
+        stubs: {
+          'q-tab-panels': { template: '<div><slot /></div>' },
+          'q-tab-panel': { template: '<div><slot /></div>' },
+          'q-card': { template: '<div><slot /></div>' },
+          'q-card-section': { template: '<section><slot /></section>' },
+          'q-field': { template: '<div><slot /><slot name="control" /><slot name="label" /></div>' },
+          'q-input': { template: '<div><slot /><slot name="label" /></div>' },
+          'q-select': { template: '<div><slot /><slot name="label" /></div>' },
+          'q-badge': {
+            inheritAttrs: false,
+            emits: ['click'],
+            template: '<button :data-testid="$attrs[\'data-testid\']" type="button" @click="$emit(\'click\')"><slot /></button>'
+          },
+          'q-icon': { template: '<span />' }
+        }
+      })
+      wrapper.vm.updateFinding = vi.fn()
+
+      const cvss3Button = wrapper.find('[data-testid="cvss3-comment-button"]')
+      const cvss4Button = wrapper.find('[data-testid="cvss4-comment-button"]')
+      expect(cvss3Button.exists()).toBe(true)
+      expect(cvss4Button.exists()).toBe(true)
+
+      await cvss3Button.trigger('click')
+      await cvss4Button.trigger('click')
+
+      expect(AuditService.createComment.mock.calls[0][1].fieldName).toBe('cvss3Field')
+      expect(AuditService.createComment.mock.calls[1][1].fieldName).toBe('cvss4Field')
+    })
+  })
+
   describe('convertParagraphsToHTML', () => {
     it('should convert paragraphs with text only', () => {
       const wrapper = createWrapper()

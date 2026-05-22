@@ -536,7 +536,7 @@ export default {
             }
 
             let definitionFields = ["titleField", "typeField", "descriptionField", "observationField", "referencesField"]
-            let detailsFields = ["affectedField", "cvssField", "remediationDifficultyField", "priorityField", "remediationField"]
+            let detailsFields = ["affectedField", "cvssField", "cvss3Field", "cvss4Field", "remediationDifficultyField", "priorityField", "remediationField"]
 
             // Go to definition tab and scrollTo field
             if (this.selectedTab !== 'definition' && (definitionFields.includes(comment.fieldName) || comment.fieldName.startsWith('field-'))) {
