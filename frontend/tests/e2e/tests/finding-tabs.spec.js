@@ -12,6 +12,10 @@ import { test, expect } from './base.js';
 let auditId;
 let findingId;
 
+async function expectSaveSucceeded(page) {
+  await expect(page.getByRole('button', { name: /Saved/ })).toBeVisible();
+}
+
 test.describe('Finding Tab Navigation', () => {
   test.beforeAll(async ({ request }) => {
     const auditsRes = await request.get('/api/audits');
@@ -70,7 +74,7 @@ test.describe('Finding Tab Navigation', () => {
     // Click to flip
     await toggle.click();
     await page.keyboard.press('Control+s');
-    await expect(page.getByText('Finding updated successfully')).toBeVisible();
+    await expectSaveSucceeded(page);
 
     // Reload and verify persistence
     await page.reload();
@@ -81,6 +85,6 @@ test.describe('Finding Tab Navigation', () => {
     // Revert
     await toggle.click();
     await page.keyboard.press('Control+s');
-    await expect(page.getByText('Finding updated successfully')).toBeVisible();
+    await expectSaveSucceeded(page);
   });
 });

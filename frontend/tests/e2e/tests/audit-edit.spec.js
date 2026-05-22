@@ -2,6 +2,10 @@ import { test, expect } from './base.js';
 
 let auditId;
 
+async function expectSaveSucceeded(page) {
+  await expect(page.getByRole('button', { name: /Saved/ })).toBeVisible();
+}
+
 test.describe('Audit Edit Page', () => {
 
   // Setup: create only what data-setup doesn't provide (audit itself)
@@ -95,14 +99,14 @@ test.describe('Audit Edit Page', () => {
       // Click save
       await page.getByRole('button', { name: /Save/ }).click();
 
-      // Verify success notification
-      await expect(page.getByText('Audit updated successfully')).toBeVisible();
+      // Verify saved button state
+      await expectSaveSucceeded(page);
 
       // Revert the name back
       await nameField.clear();
       await nameField.fill('E2E Test Audit');
       await page.getByRole('button', { name: /Save/ }).click();
-      await expect(page.getByText('Audit updated successfully')).toBeVisible();
+      await expectSaveSucceeded(page);
     });
 
     test('should set start and end dates', async ({ page }) => {
@@ -116,7 +120,7 @@ test.describe('Audit Edit Page', () => {
 
       // Save
       await page.getByRole('button', { name: /Save/ }).click();
-      await expect(page.getByText('Audit updated successfully')).toBeVisible();
+      await expectSaveSucceeded(page);
 
       // Verify dates are saved by reloading
       await page.reload();

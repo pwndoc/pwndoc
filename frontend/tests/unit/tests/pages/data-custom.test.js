@@ -162,6 +162,7 @@ describe('Data Custom Page', () => {
           'q-checkbox': true,
           'q-toggle': true,
           'q-chip': true,
+          'q-badge': true,
           'q-list': true,
           'q-field': true,
           'q-menu': true,
@@ -618,9 +619,11 @@ describe('Data Custom Page', () => {
       await wrapper.vm.$nextTick()
       await wrapper.vm.$nextTick()
 
+      wrapper.vm.newCustomField.display = 'general'
+      wrapper.vm.newCustomField.displaySub = ''
       wrapper.vm.customFields = [
-        { _id: '1', label: 'Field A' },
-        { _id: '2', label: 'Field B' }
+        { _id: '1', label: 'Field A', display: 'general', displaySub: '' },
+        { _id: '2', label: 'Field B', display: 'general', displaySub: '' }
       ]
 
       // Capture the args before getCustomFields() resets customFields after resolution
@@ -636,8 +639,39 @@ describe('Data Custom Page', () => {
       expect(capturedArgs[0].position).toBe(0)
       expect(capturedArgs[1].position).toBe(1)
       expect(capturedArgs).toEqual([
-        { _id: '1', label: 'Field A', position: 0 },
-        { _id: '2', label: 'Field B', position: 1 }
+        { _id: '1', label: 'Field A', display: 'general', displaySub: '', position: 0 },
+        { _id: '2', label: 'Field B', display: 'general', displaySub: '', position: 1 }
+      ])
+    })
+
+    it('should save current custom field context without promoting other recovered contexts', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+      wrapper.vm.newCustomField.display = 'finding'
+      wrapper.vm.newCustomField.displaySub = 'Web'
+      wrapper.vm.customFieldsOrig = [
+        { _id: 'current', label: 'Current saved', display: 'finding', displaySub: 'Web', text: [] },
+        { _id: 'other', label: 'Other saved', display: 'finding', displaySub: '', text: [] }
+      ]
+      wrapper.vm.customFields = [
+        { _id: 'current', label: 'Current draft', display: 'finding', displaySub: 'Web', text: [] },
+        { _id: 'other', label: 'Other recovered draft', display: 'finding', displaySub: '', text: [] }
+      ]
+
+      const payload = wrapper.vm.getCustomFieldsSavePayload()
+
+      expect(payload).toEqual([
+        { _id: 'other', label: 'Other saved', display: 'finding', displaySub: '', text: [] },
+        { _id: 'current', label: 'Current draft', display: 'finding', displaySub: 'Web', text: [] }
+      ])
+
+      wrapper.vm.newCustomField.displaySub = 'Missing Security Control'
+
+      const categoryPayload = wrapper.vm.getCustomFieldsSavePayload()
+
+      expect(categoryPayload).toEqual([
+        { _id: 'current', label: 'Current saved', display: 'finding', displaySub: 'Web', text: [] },
+        { _id: 'other', label: 'Other saved', display: 'finding', displaySub: '', text: [] }
       ])
     })
 
@@ -795,6 +829,112 @@ describe('Data Custom Page', () => {
       const idx = wrapper.vm.getFieldLocaleText(0)
 
       expect(wrapper.vm.customFields[0].text[idx]).toEqual({ locale: 'de-DE', value: [] })
+    })
+
+    it('should include new and editable custom fields in draft recovery state', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+      wrapper.vm.newCustomField = {
+        ...wrapper.vm.newCustomField,
+        label: 'Draft Field',
+        fieldType: 'input',
+        display: 'section',
+        displaySub: 'Executive Summary'
+      }
+      wrapper.vm.customFields = [
+        { _id: '1', label: 'Existing Field', description: 'draft description', display: 'section', displaySub: 'Executive Summary', text: [] },
+        { _id: '2', label: 'Other Field', description: 'other description', display: 'general', displaySub: '', text: [] }
+      ]
+
+      expect(wrapper.vm.getCustomDraftCurrent()).toEqual({
+        newCustomField: wrapper.vm.newCustomField,
+        customFields: [wrapper.vm.customFields[0]]
+      })
+    })
+
+    it('should build custom field draft ref keys by selected view context', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+
+      wrapper.vm.newCustomField.display = 'general'
+      wrapper.vm.newCustomField.displaySub = ''
+      expect(wrapper.vm.getCustomDraftRefKey()).toBe('general')
+
+      wrapper.vm.newCustomField.display = 'finding'
+      wrapper.vm.newCustomField.displaySub = ''
+      expect(wrapper.vm.getCustomDraftRefKey()).toBe('finding:none')
+
+      wrapper.vm.newCustomField.displaySub = 'Web'
+      expect(wrapper.vm.getCustomDraftRefKey()).toBe('finding:Web')
+
+      wrapper.vm.newCustomField.display = 'section'
+      wrapper.vm.newCustomField.displaySub = 'Executive Summary'
+      expect(wrapper.vm.getCustomDraftRefKey()).toBe('section:Executive Summary')
+    })
+
+    it('should treat cleared custom field category context as none', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+      wrapper.vm.newCustomField.display = 'finding'
+      wrapper.vm.newCustomField.displaySub = null
+
+      expect(wrapper.vm.getCustomDraftRefKey()).toBe('finding:none')
+      expect(wrapper.vm.getCustomDraftOriginal().newCustomField.displaySub).toBe('')
+    })
+
+    it('should expose custom field draft indicators by tab, view, and sub context', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+      wrapper.vm.newCustomField.display = 'section'
+      wrapper.vm.newCustomField.displaySub = 'Executive Summary'
+      wrapper.vm.customFieldDrafts = [
+        { scope: 'custom-field', refKey: 'general' },
+        { scope: 'custom-field', refKey: 'section:Executive Summary' },
+        { scope: 'custom-field', refKey: 'vulnerability:Web' }
+      ]
+
+      expect(wrapper.vm.hasAnyCustomFieldDraft).toBe(true)
+      expect(wrapper.vm.hasCustomFieldDraftForView('general')).toBe(true)
+      expect(wrapper.vm.hasCustomFieldDraftForView('section')).toBe(true)
+      expect(wrapper.vm.hasCustomFieldDraftForView('finding')).toBe(false)
+      expect(wrapper.vm.hasCustomFieldDraftForSub('vulnerability', 'Web')).toBe(true)
+      expect(wrapper.vm.hasCustomFieldDraftForSub('section', 'Executive Summary')).toBe(false)
+    })
+
+    it('should not treat custom field view selection alone as a draft change', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+      wrapper.vm.newCustomField = {
+        ...wrapper.vm.newCustomField,
+        display: 'section',
+        displaySub: 'Executive Summary'
+      }
+      wrapper.vm.customFields = [
+        { _id: '1', label: 'Existing Field', display: 'section', displaySub: 'Executive Summary', text: [] }
+      ]
+      wrapper.vm.customFieldsOrig = JSON.parse(JSON.stringify(wrapper.vm.customFields))
+
+      expect(wrapper.vm.getCustomDraftCurrent()).toEqual(wrapper.vm.getCustomDraftOriginal())
+
+      wrapper.vm.newCustomField.label = 'Recovered Field'
+
+      expect(wrapper.vm.getCustomDraftCurrent()).not.toEqual(wrapper.vm.getCustomDraftOriginal())
+    })
+
+    it('should restore legacy custom field drafts that only contain the new field form', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.selectedTab = 'custom-fields'
+      wrapper.vm.customFields = [
+        { _id: '1', label: 'Existing Field', display: 'general', displaySub: '', text: [] }
+      ]
+
+      wrapper.vm.setCustomDraftCurrent({ label: 'Legacy Draft', fieldType: 'input', display: 'general' })
+
+      expect(wrapper.vm.newCustomField.label).toBe('Legacy Draft')
+      expect(wrapper.vm.newCustomField.fieldType).toBe('input')
+      expect(wrapper.vm.customFields).toEqual([
+        { _id: '1', label: 'Existing Field', display: 'general', displaySub: '', text: [] }
+      ])
     })
   })
 

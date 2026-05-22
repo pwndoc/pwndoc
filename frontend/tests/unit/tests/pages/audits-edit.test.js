@@ -18,6 +18,13 @@ const { mockUserStore } = vi.hoisted(() => ({
   }
 }))
 
+const { mockDraftRecoveryState } = vi.hoisted(() => ({
+  mockDraftRecoveryState: {
+    current: null,
+    revision: 0
+  }
+}))
+
 // Mock dependencies before importing the component
 vi.mock('@/services/audit', () => ({
   default: {
@@ -43,6 +50,16 @@ vi.mock('@/services/data', () => ({
     getSections: vi.fn()
   }
 }))
+
+vi.mock('@/services/draft-recovery', async () => {
+  const { reactive } = await vi.importActual('vue')
+  return {
+    default: {
+      state: reactive(mockDraftRecoveryState),
+      listDrafts: vi.fn()
+    }
+  }
+})
 
 vi.mock('@/services/utils', () => ({
   default: {
@@ -122,6 +139,7 @@ vi.mock('quasar', async () => {
 
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
+import DraftRecoveryService from '@/services/draft-recovery'
 import AuditEditPage from '@/pages/audits/edit/index.vue'
 import { Dialog, Notify } from 'quasar'
 
@@ -246,6 +264,8 @@ describe('Audit Edit Page', () => {
     AuditService.getAudit.mockResolvedValue({ data: { datas: { ...mockAudit } } })
     AuditService.getAuditChildren.mockResolvedValue({ data: { datas: [] } })
     AuditService.getRetest.mockRejectedValue(new Error('No retest'))
+    DraftRecoveryService.listDrafts.mockResolvedValue([])
+    DraftRecoveryService.state.revision = 0
 
     vi.clearAllMocks()
 
@@ -257,6 +277,7 @@ describe('Audit Edit Page', () => {
     AuditService.getAudit.mockResolvedValue({ data: { datas: JSON.parse(JSON.stringify(mockAudit)) } })
     AuditService.getAuditChildren.mockResolvedValue({ data: { datas: [] } })
     AuditService.getRetest.mockRejectedValue(new Error('No retest'))
+    DraftRecoveryService.listDrafts.mockResolvedValue([])
   })
 
   afterEach(() => {
@@ -265,7 +286,7 @@ describe('Audit Edit Page', () => {
   })
 
   const createWrapper = async (options = {}) => {
-    await router.push(`/audits/audit-123/general`)
+    await router.push(options.route || `/audits/audit-123/general`)
     await router.isReady()
 
     const wrapper = mount(AuditEditPage, {
@@ -280,14 +301,15 @@ describe('Audit Edit Page', () => {
           'q-item-label': { template: '<div><slot /></div>', props: ['header'] },
           'q-icon': true,
           'q-chip': true,
-          'q-btn': true,
+          'q-btn': { template: '<button type="button"><slot /></button>', props: ['flat', 'color', 'icon', 'label'] },
+          'q-badge': { template: '<span><slot /></span>', props: ['color', 'rounded', 'floating'] },
           'q-tooltip': true,
           'q-menu': true,
           'q-separator': true,
           'q-toggle': true,
           'q-option-group': true,
           'router-view': true,
-          'draggable': { template: '<div><slot /></div>', props: ['list', 'handle', 'ghostClass', 'itemKey'] },
+          'draggable': { template: '<div><slot /><slot v-for="element in list" name="item" :element="element" /></div>', props: ['list', 'handle', 'ghostClass', 'itemKey'] },
           'comments-list': true,
           ...(options.stubs || {})
         },
@@ -1047,6 +1069,60 @@ describe('Audit Edit Page', () => {
   })
 
   describe('Report Generation', () => {
+    it('should show draft badges for general, network, findings, sections, and download', async () => {
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'audit-general', refKey: 'audit-123', status: 'discarded_draft' },
+        { scope: 'audit-network', refKey: 'audit-123', status: 'active_draft' },
+        { scope: 'audit-finding', refKey: 'audit-123:f1', status: 'active_draft' },
+        { scope: 'audit-section', refKey: 'audit-123:s2', status: 'discarded_draft' },
+        { scope: 'audit-section', refKey: 'audit-999:s1', status: 'active_draft' }
+      ])
+      const wrapper = await createWrapper({ route: '/audits/audit-123/sections/s1' })
+      await flushPromises()
+
+      expect(DraftRecoveryService.listDrafts).toHaveBeenCalledWith({
+        userId: '1',
+        scopes: ['audit-general', 'audit-network', 'audit-finding', 'audit-section'],
+        refKeyPrefix: 'audit-123'
+      })
+      expect(wrapper.find('[data-testid="general-draft-badge"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="network-draft-badge"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="finding-draft-badge-f1"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="finding-draft-badge-f2"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="section-draft-badge-s1"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="section-draft-badge-s2"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="download-draft-badge"]').exists()).toBe(true)
+    })
+
+    it('should not show a draft badge for the currently open editor', async () => {
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'audit-section', refKey: 'audit-123:s1', status: 'active_draft' },
+        { scope: 'audit-section', refKey: 'audit-123:s2', status: 'active_draft' }
+      ])
+      const wrapper = await createWrapper({ route: '/audits/audit-123/sections/s2' })
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="section-draft-badge-s1"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="section-draft-badge-s2"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="download-draft-badge"]').exists()).toBe(true)
+    })
+
+    it('should refresh audit draft indicators when draft recovery revision changes', async () => {
+      DraftRecoveryService.listDrafts.mockResolvedValue([])
+      const wrapper = await createWrapper({ route: '/audits/audit-123/network' })
+      await flushPromises()
+      expect(wrapper.find('[data-testid="general-draft-badge"]').exists()).toBe(false)
+
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'audit-general', refKey: 'audit-123', status: 'active_draft' }
+      ])
+      DraftRecoveryService.state.revision += 1
+      await wrapper.vm.$nextTick()
+      await flushPromises()
+
+      expect(wrapper.find('[data-testid="general-draft-badge"]').exists()).toBe(true)
+    })
+
     it('should call generateAuditReport API', async () => {
       AuditService.generateAuditReport.mockResolvedValue({
         data: new Blob(),
@@ -1096,6 +1172,65 @@ describe('Audit Edit Page', () => {
           message: 'Generating the Report',
           timeout: 0
         }))
+      } finally {
+        createElementSpy.mockRestore()
+        appendChildSpy.mockRestore()
+        createObjectURLSpy.mockRestore()
+      }
+    })
+
+    it('should show a confirmation dialog before report generation when audit drafts exist', async () => {
+      AuditService.generateAuditReport.mockResolvedValue({
+        data: new Blob(),
+        headers: { 'content-disposition': 'attachment; filename="report.docx"' }
+      })
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'audit-section', refKey: 'audit-123:s1', status: 'discarded_draft' }
+      ])
+      const wrapper = await createWrapper()
+      await flushPromises()
+
+      wrapper.vm.generateReport()
+
+      expect(Dialog.create).toHaveBeenCalledWith(expect.objectContaining({
+        title: 'msg.auditDraftDownloadWarningTitle',
+        message: 'msg.auditDraftDownloadWarningMessage',
+        ok: expect.objectContaining({
+          label: 'btn.generateAnyway',
+          color: 'warning'
+        })
+      }))
+      expect(AuditService.generateAuditReport).not.toHaveBeenCalled()
+    })
+
+    it('should generate the report after confirming the draft warning', async () => {
+      AuditService.generateAuditReport.mockResolvedValue({
+        data: new Blob(),
+        headers: { 'content-disposition': 'attachment; filename="report.docx"' }
+      })
+      DraftRecoveryService.listDrafts.mockResolvedValue([
+        { scope: 'audit-finding', refKey: 'audit-123:f1', status: 'active_draft' }
+      ])
+      Dialog.create.mockReturnValueOnce({
+        onOk: vi.fn((handler) => {
+          handler()
+          return { onOk: vi.fn() }
+        })
+      })
+      const wrapper = await createWrapper()
+      await flushPromises()
+
+      const mockLink = { href: '', download: '', click: vi.fn(), remove: vi.fn() }
+      const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+        if (tagName === 'a') return mockLink
+        return document.createElement(tagName)
+      })
+      const appendChildSpy = vi.spyOn(document.body, 'appendChild')
+      const createObjectURLSpy = vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:url')
+
+      try {
+        wrapper.vm.generateReport()
+        expect(AuditService.generateAuditReport).toHaveBeenCalledWith('audit-123')
       } finally {
         createElementSpy.mockRestore()
         appendChildSpy.mockRestore()

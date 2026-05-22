@@ -56,10 +56,16 @@ function browserChain(browser, browserDevices, prevChainLast) {
     },
     // Step 3: Vulnerabilities CRUD (uses languages from data-setup)
     {
+      name: prefix('custom-data-draft-recovery'),
+      use: useWithAuth,
+      testMatch: ['**/custom-data-draft-recovery.spec.js'],
+      dependencies: deps(prefix('data-setup')),
+    },
+    {
       name: prefix('vulnerabilities'),
       use: useWithAuth,
       testMatch: ['**/vulnerabilities.spec.js'],
-      dependencies: deps(prefix('data-setup')),
+      dependencies: deps(prefix('custom-data-draft-recovery')),
     },
     // Step 4: Audit editing (uses shared data from data-setup)
     {
@@ -91,6 +97,12 @@ function browserChain(browser, browserDevices, prevChainLast) {
       name: prefix('unsaved-changes'),
       use: useWithAuth,
       testMatch: ['**/unsaved-changes.spec.js'],
+      dependencies: deps(prefix('audit-edit')),
+    },
+    {
+      name: prefix('audit-draft-recovery'),
+      use: useWithAuth,
+      testMatch: ['**/audit-draft-recovery.spec.js'],
       dependencies: deps(prefix('audit-edit')),
     },
     {
@@ -134,6 +146,7 @@ function browserChain(browser, browserDevices, prevChainLast) {
         prefix('double-click'),
         prefix('finding-tabs'),
         prefix('unsaved-changes'),
+        prefix('audit-draft-recovery'),
         prefix('report-generation'),
         prefix('sticky-toolbar'),
         prefix('drag-drop'),

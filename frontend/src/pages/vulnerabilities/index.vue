@@ -52,14 +52,24 @@
                     >
                         <q-list separator>
                             <q-item-label header>{{$t('selectCategory')}}</q-item-label>
-                            <q-item clickable v-close-popup @click="currentCategory = null; cleanCurrentVulnerability(); $refs.createModal.show()">
+                            <q-item clickable v-close-popup @click="openCreateVulnerability(null)">
                                 <q-item-section>
                                 <q-item-label>{{$t('noCategory')}}</q-item-label>
                                 </q-item-section>
+                                <q-item-section side v-if="hasCreateDraftForCategory(null)">
+                                    <q-badge data-testid="create-vulnerability-draft-badge-none" color="orange" rounded>
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                                    </q-badge>
+                                </q-item-section>
                             </q-item>
-                            <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="currentCategory = $_.cloneDeep(category); cleanCurrentVulnerability(); $refs.createModal.show()">
+                            <q-item v-for="category of vulnCategories" :key="category.name" clickable v-close-popup @click="openCreateVulnerability(category)">
                                 <q-item-section>
                                 <q-item-label>{{category.name}}</q-item-label>
+                                </q-item-section>
+                                <q-item-section side v-if="hasCreateDraftForCategory(category.name)">
+                                    <q-badge :data-testid="`create-vulnerability-draft-badge-${category.name}`" color="orange" rounded>
+                                        <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                                    </q-badge>
                                 </q-item-section>
                             </q-item>
                         </q-list>
@@ -109,6 +119,9 @@
                     <q-tr @dblclick="dblClick(props.row)" v-if="getDtTitle(props.row) !== 'Not defined for this language yet'" :props="props" :class="(props.row.status === 1)?'bg-light-blue-2':(props.row.status === 2)?'bg-orange-2':''">
                         <q-td key="title" :props="props">
                             {{getDtTitle(props.row)}}
+                            <q-badge v-if="hasDraftForVulnerability(props.row._id)" :data-testid="`vulnerability-draft-badge-${props.row._id}`" class="q-ml-xs" color="orange" rounded>
+                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.auditDraftUnsavedChanges')}}</q-tooltip>
+                            </q-badge>
                         </q-td>
                         <q-td key="category" :props="props">
                             {{props.row.category || $t('noCategory')}}
@@ -117,10 +130,10 @@
                             {{getDtType(props.row)}}
                         </q-td>
                         <q-td key="action" :props="props" style="width:1px">
-                            <q-btn v-if="userStore.isAllowed('vulnerabilities:update')" data-testid="edit-vulnerability-button" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); (props.row.status === 2)?$refs.updatesModal.show():$refs.editModal.show()">
+                            <q-btn v-if="userStore.isAllowed('vulnerabilities:update')" data-testid="edit-vulnerability-button" size="sm" flat color="primary" icon="fa fa-edit" @click="openVulnerability(props.row)">
                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                             </q-btn>
-                            <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="clone(props.row); $refs.editModal.show()">
+                            <q-btn v-else size="sm" flat color="primary" icon="fa fa-eye" @click="openVulnerability(props.row)">
                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.view')}}</q-tooltip>
                             </q-btn>
                             <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
@@ -156,15 +169,16 @@
         </div>
     </div>
 
-    <q-dialog v-if="languages.length > 0" ref="createModal" maximized position="right" persistent @hide="cleanCurrentVulnerability()">
+    <q-dialog v-if="languages.length > 0" ref="createModal" maximized position="right" persistent @hide="cleanupCurrentVulnerability()">
         <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     <span v-if="currentCategory">{{$t('addVulnerability')}} ({{currentCategory.name}})</span>
                     <span v-else>{{$t('addVulnerability')}} ({{$t('noCategory')}})</span>
                 </div>
+                <draft-recovery-status />
                 <q-space />
-                <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+                <q-btn dense flat icon="close" data-testid="create-vulnerability-close" @click="$refs.createModal.hide()" />
             </q-bar>
 
             <q-card-section>
@@ -301,13 +315,14 @@
         </q-card>
     </q-dialog>
 
-    <q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="userStore.isAllowed('vulnerabilities:update')" @hide="cleanCurrentVulnerability()">
+    <q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="userStore.isAllowed('vulnerabilities:update')" @hide="cleanupCurrentVulnerability()">
         <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
                     <span v-else>{{$t('editVulnerability')}} ({{$t('noCategory')}})</span>
                 </div>
+                <draft-recovery-status />
                 <q-separator vertical color="white" class="q-mx-md" />
                 <q-btn-dropdown
                 :label="$t('changeCategory')"
@@ -336,7 +351,7 @@
                     </span>
                 </div>
                 <q-space />
-                <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
+                <q-btn dense flat icon="close" data-testid="edit-vulnerability-close" @click="$refs.editModal.hide()" />
             </q-bar>
 
             <q-card-section>
@@ -471,13 +486,14 @@
         </q-card>
     </q-dialog>
 
-    <q-dialog v-if="languages.length > 0" ref="updatesModal" full-width full-height persistent @hide="cleanCurrentVulnerability()">
+    <q-dialog v-if="languages.length > 0" ref="updatesModal" full-width full-height persistent @hide="cleanupCurrentVulnerability()">
         <q-layout view="lHh lpr lFf" container>
             <q-header elevated>    
                     <q-bar class="bg-fixed-primary text-white">
                     <div class="q-toolbar-title">
                         {{$t('updateVulnerability')}}
                     </div>
+                    <draft-recovery-status />
                     <q-space />
                     <q-btn dense flat icon="close" @click="$refs.updatesModal.hide()" />
                 </q-bar>

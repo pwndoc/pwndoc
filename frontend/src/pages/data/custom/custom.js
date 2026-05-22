@@ -2,15 +2,35 @@ import { Dialog, Notify } from 'quasar';
 import draggable from 'vuedraggable'
 import BasicEditor from 'components/editor/Editor.vue';
 import CustomFields from 'components/custom-fields'
+import DraftRecoveryStatus from 'components/draft-recovery-status.vue'
 
 import DataService from '@/services/data'
 import Utils from '@/services/utils'
 import TemplateService from '@/services/template'
 import { useUserStore } from 'src/stores/user'
+import { createDraftRecovery } from '@/composables/useDraftRecovery'
+import DraftRecoveryService from '@/services/draft-recovery'
 
 import { $t } from '@/boot/i18n'
 
 const userStore = useUserStore()
+
+function buildDefaultCustomField(overrides = {}) {
+    return {
+        label: "",
+        fieldType: "",
+        display: "general",
+        displaySub: "",
+        size: 12,
+        offset: 0,
+        required: false,
+        inline: false,
+        description: '',
+        text: [],
+        options: [],
+        ...overrides
+    }
+}
 
 export default {
     data: () => {
@@ -51,19 +71,8 @@ export default {
             ],
 
             customFields: [],
-            newCustomField: {
-                label: "", 
-                fieldType: "", 
-                display: "general", 
-                displaySub: "", 
-                size: 12,
-                offset: 0,
-                required: false,
-                inline: false,
-                description: '',
-                text: [],
-                options: []
-            },
+            customFieldsOrig: [],
+            newCustomField: buildDefaultCustomField(),
             cfLocale: "",
             cfDisplayOptions: [
                 {label: $t('auditGeneral'), value: 'general'},
@@ -91,12 +100,15 @@ export default {
             errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: '', fieldLabel: '', fieldType: ''},
 
             selectedTab: "languages",
+            draftRecovery: null,
+            customFieldDrafts: [],
         }
     },
 
     components: {
         BasicEditor,
         CustomFields,
+        DraftRecoveryStatus,
         draggable
     },
 
@@ -108,6 +120,33 @@ export default {
         this.getVulnerabilityCategories()
         this.getSections()
         this.getCustomFields()
+        this.setupDraftRecovery()
+        this.draftRecovery.maybePromptRecovery()
+    },
+
+    unmounted: function() {
+        if (this.draftRecovery)
+            this.draftRecovery.stop()
+    },
+
+    watch: {
+        selectedTab: async function() {
+            if (this.draftRecovery) {
+                await this.draftRecovery.flushPendingWrite()
+                await this.draftRecovery.maybePromptRecovery()
+            }
+            if (this.selectedTab === 'custom-fields')
+                this.refreshCustomFieldDrafts()
+        },
+        'newCustomField.display': async function() {
+            await this.handleCustomFieldDraftContextChanged()
+        },
+        'newCustomField.displaySub': async function() {
+            await this.handleCustomFieldDraftContextChanged()
+        },
+        draftRecoveryRevision: function() {
+            this.refreshCustomFieldDrafts()
+        }
     },
 
     computed: {
@@ -123,6 +162,14 @@ export default {
 
         vulnTypesLocale() {
             return this.vulnTypes.filter(e => e.locale === this.newVulnType.locale)
+        },
+
+        draftRecoveryRevision() {
+            return DraftRecoveryService.state.revision
+        },
+
+        hasAnyCustomFieldDraft() {
+            return this.customFieldDrafts.length > 0
         }
     },
 
@@ -176,6 +223,8 @@ export default {
 
             DataService.createLanguage(this.newLanguage)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newLanguage.locale = "";
                 this.newLanguage.language = "";
                 this.getLanguages();
@@ -244,6 +293,8 @@ export default {
 
             DataService.createAuditType(this.newAuditType)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newAuditType.name = "";
                 this.newAuditType.templates = [];
                 this.newAuditType.sections = [];
@@ -324,6 +375,8 @@ export default {
 
             DataService.createVulnerabilityType(this.newVulnType)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newVulnType.name = "";
                 this.getVulnerabilityTypes();
                 Notify.create({
@@ -395,6 +448,8 @@ export default {
 
             DataService.createVulnerabilityCategory(this.newVulnCat)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newVulnCat = {name: "", sortValue: "cvssScore", sortOrder: "desc", sortAuto: true}
                 this.getVulnerabilityCategories();
                 Notify.create({
@@ -470,6 +525,8 @@ export default {
             DataService.getCustomFields()
             .then((data) => {
                 this.customFields = data.data.datas.filter(e => e.display)
+                this.customFieldsOrig = this.$_.cloneDeep(this.customFields)
+                this.refreshCustomFieldDrafts()
             })
             .catch((err) => {
                 console.log(err)
@@ -488,9 +545,15 @@ export default {
 
             this.newCustomField.position = this.customFields.length
             DataService.createCustomField(this.newCustomField)
-            .then((data) => {
-                this.newCustomField.label = ""
-                this.newCustomField.options = []
+            .then(async (data) => {
+                const currentDisplay = this.newCustomField.display
+                const currentDisplaySub = this.newCustomField.displaySub
+                this.newCustomField = buildDefaultCustomField({
+                    display: currentDisplay,
+                    displaySub: currentDisplaySub
+                })
+                if (this.draftRecovery)
+                    await this.draftRecovery.clearDraft()
                 this.getCustomFields()
                 Notify.create({
                     message: 'Custom Field created successfully',
@@ -511,10 +574,15 @@ export default {
 
         // Update Custom Fields
         updateCustomFields: function() {
+            Utils.syncEditors(this.$refs)
             var position = 0
-            this.customFields.forEach(e => e.position = position++)
-            DataService.updateCustomFields(this.customFields)
-            .then((data) => {
+            const customFieldsToSave = this.getCustomFieldsSavePayload()
+            customFieldsToSave.forEach(e => e.position = position++)
+            DataService.updateCustomFields(customFieldsToSave)
+            .then(async (data) => {
+                this.customFieldsOrig = this.$_.cloneDeep(customFieldsToSave)
+                if (this.draftRecovery)
+                    await this.draftRecovery.clearDraft()
                 this.getCustomFields()
                 Notify.create({
                     message: 'Custom Fields updated successfully',
@@ -531,6 +599,24 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        getCustomFieldsSavePayload: function() {
+            const display = this.newCustomField.display
+            const displaySub = this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub)
+            const currentContextFields = this.customFields.filter(field =>
+                this.fieldMatchesExactCustomFieldContext(field, display, displaySub)
+            )
+
+            if (!currentContextFields.length)
+                return this.$_.cloneDeep(this.customFieldsOrig.length ? this.customFieldsOrig : this.customFields)
+
+            return this.$_.cloneDeep([
+                ...this.customFieldsOrig.filter(field =>
+                    !this.fieldMatchesExactCustomFieldContext(field, display, displaySub)
+                ),
+                ...currentContextFields
+            ])
         },
 
          // Delete custom field
@@ -581,9 +667,26 @@ export default {
         },
 
         canDisplayCustomField: function(field) {
+            return this.fieldMatchesCustomFieldContext(
+                field,
+                this.newCustomField.display,
+                this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub)
+            )
+        },
+
+        fieldMatchesCustomFieldContext: function(field, display, displaySub) {
+            displaySub = this.normalizeCustomFieldDisplaySub(displaySub)
             return (
-                (this.newCustomField.display === field.display || (this.newCustomField.display === 'finding' && field.display === 'vulnerability')) && 
-                (this.newCustomField.displaySub === field.displaySub || field.displaySub === '')
+                (display === field.display || (display === 'finding' && field.display === 'vulnerability')) &&
+                (displaySub === field.displaySub || field.displaySub === '')
+            )
+        },
+
+        fieldMatchesExactCustomFieldContext: function(field, display, displaySub) {
+            displaySub = this.normalizeCustomFieldDisplaySub(displaySub)
+            return (
+                (display === field.display || (display === 'finding' && field.display === 'vulnerability')) &&
+                displaySub === this.normalizeCustomFieldDisplaySub(field.displaySub)
             )
         },
 
@@ -653,6 +756,8 @@ export default {
 
             DataService.createSection(this.newSection)
             .then((data) => {
+                if (this.draftRecovery)
+                    this.draftRecovery.clearDraft()
                 this.newSection.field = "";
                 this.newSection.name = "";
                 this.newSection.icon = ""
@@ -713,6 +818,192 @@ export default {
             this.errors.fieldType = ''
             this.errors.sectionField = ''
             this.errors.sectionName = ''
+        },
+
+        setupDraftRecovery: function() {
+            if (this.draftRecovery)
+                return
+
+            this.draftRecovery = createDraftRecovery(this, {
+                scope: () => this.getCustomDraftScope(),
+                refKey: () => this.getCustomDraftRefKey(),
+                userId: () => userStore.id,
+                getCurrent: () => this.getCustomDraftCurrent(),
+                setCurrent: (data) => this.setCustomDraftCurrent(data),
+                getOriginal: () => this.getCustomDraftOriginal(),
+                diffProps: () => ({ languages: this.languages }),
+                isDirty: () => !this.$_.isEqual(this.getCustomDraftCurrent(), this.getCustomDraftOriginal()),
+                isReadOnly: () => !this.canWriteCustomDraft(),
+                syncBeforeCapture: () => Utils.syncEditors(this.$refs)
+            })
+        },
+
+        handleCustomFieldDraftContextChanged: async function() {
+            if (this.selectedTab !== 'custom-fields' || !this.draftRecovery)
+                return
+
+            await this.draftRecovery.flushPendingWrite()
+            await this.refreshCustomFieldDrafts()
+            await this.draftRecovery.maybePromptRecovery()
+        },
+
+        canWriteCustomDraft: function() {
+            if (this.selectedTab === 'custom-fields')
+                return userStore.isAllowed('custom-fields:create') || userStore.isAllowed('custom-fields:update')
+            return userStore.isAllowed(`${this.getCustomPermissionBase()}:create`)
+        },
+
+        getCustomDraftScope: function() {
+            return {
+                languages: 'custom-language',
+                'audit-types': 'custom-audit-type',
+                'vulnerability-types': 'custom-vuln-type',
+                'vulnerability-categories': 'custom-vuln-category',
+                'custom-fields': 'custom-field',
+                'custom-sections': 'custom-section'
+            }[this.selectedTab]
+        },
+
+        getCustomDraftRefKey: function() {
+            if (this.selectedTab !== 'custom-fields')
+                return '_new'
+
+            const display = this.newCustomField.display || 'general'
+            const displaySub = this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub) || 'none'
+            if (display === 'general')
+                return 'general'
+            return `${display}:${displaySub}`
+        },
+
+        normalizeCustomFieldDisplaySub: function(displaySub) {
+            return displaySub || ''
+        },
+
+        getCustomPermissionBase: function() {
+            return {
+                languages: 'languages',
+                'audit-types': 'audit-types',
+                'vulnerability-types': 'vulnerability-types',
+                'vulnerability-categories': 'vulnerability-categories',
+                'custom-fields': 'custom-fields',
+                'custom-sections': 'sections'
+            }[this.selectedTab]
+        },
+
+        getCustomDraftCurrent: function() {
+            if (this.selectedTab === 'custom-fields') {
+                return this.$_.cloneDeep({
+                    newCustomField: buildDefaultCustomField({
+                        ...this.newCustomField,
+                        displaySub: this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub)
+                    }),
+                    customFields: this.customFields.filter(field => this.canDisplayCustomField(field))
+                })
+            }
+
+            return this.$_.cloneDeep({
+                languages: this.newLanguage,
+                'audit-types': this.newAuditType,
+                'vulnerability-types': this.newVulnType,
+                'vulnerability-categories': this.newVulnCat,
+                'custom-fields': this.newCustomField,
+                'custom-sections': this.newSection
+            }[this.selectedTab] || {})
+        },
+
+        setCustomDraftCurrent: function(data) {
+            if (this.selectedTab === 'languages')
+                this.newLanguage = data
+            else if (this.selectedTab === 'audit-types')
+                this.newAuditType = data
+            else if (this.selectedTab === 'vulnerability-types')
+                this.newVulnType = data
+            else if (this.selectedTab === 'vulnerability-categories')
+                this.newVulnCat = data
+            else if (this.selectedTab === 'custom-fields') {
+                const isCompositeDraft = data && (
+                    Object.prototype.hasOwnProperty.call(data, 'newCustomField') ||
+                    Object.prototype.hasOwnProperty.call(data, 'customFields')
+                )
+                if (isCompositeDraft) {
+                    const draftNewCustomField = data.newCustomField || buildDefaultCustomField()
+                    this.newCustomField = draftNewCustomField
+                    this.mergeCustomFieldDraftList(data.customFields || [], draftNewCustomField.display, draftNewCustomField.displaySub)
+                }
+                else {
+                    this.newCustomField = buildDefaultCustomField(data)
+                }
+            }
+            else if (this.selectedTab === 'custom-sections')
+                this.newSection = data
+        },
+
+        getCustomDraftOriginal: function() {
+            if (this.selectedTab === 'custom-fields') {
+                return this.$_.cloneDeep({
+                    newCustomField: buildDefaultCustomField({
+                        display: this.newCustomField.display,
+                        displaySub: this.normalizeCustomFieldDisplaySub(this.newCustomField.displaySub)
+                    }),
+                    customFields: this.customFieldsOrig.filter(field => this.canDisplayCustomField(field))
+                })
+            }
+
+            return this.$_.cloneDeep({
+                languages: {locale: "", language: ""},
+                'audit-types': {name: "", templates: [], sections: [], hidden: [], stage: 'default'},
+                'vulnerability-types': {name: "", locale: this.languages[0]?.locale || ""},
+                'vulnerability-categories': {name: "", sortValue: "cvssScore", sortOrder: "desc", sortAuto: true},
+                'custom-fields': buildDefaultCustomField(),
+                'custom-sections': {field: "", name: "", icon: ""}
+            }[this.selectedTab] || {})
+        },
+
+        mergeCustomFieldDraftList: function(draftFields, display, displaySub) {
+            const draftIds = new Set(draftFields.filter(field => field._id).map(field => field._id))
+            const nonDraftContextFields = this.customFields.filter(field => {
+                if (!this.fieldMatchesCustomFieldContext(field, display, displaySub))
+                    return true
+                return field._id && !draftIds.has(field._id) && !this.customFieldsOrig.some(origField => origField._id === field._id)
+            })
+            this.customFields = [
+                ...nonDraftContextFields,
+                ...this.$_.cloneDeep(draftFields)
+            ]
+        },
+
+        refreshCustomFieldDrafts: async function() {
+            if (!userStore.id) {
+                this.customFieldDrafts = []
+                return
+            }
+
+            this.customFieldDrafts = await DraftRecoveryService.listDrafts({
+                userId: userStore.id,
+                scopes: ['custom-field']
+            })
+        },
+
+        isCurrentCustomFieldDraft: function(refKey) {
+            return this.selectedTab === 'custom-fields' && this.getCustomDraftRefKey() === refKey
+        },
+
+        hasCustomFieldDraft: function(refKey, includeCurrent = false) {
+            if (!includeCurrent && this.isCurrentCustomFieldDraft(refKey))
+                return false
+            return this.customFieldDrafts.some(draft => draft.scope === 'custom-field' && draft.refKey === refKey)
+        },
+
+        hasCustomFieldDraftForView: function(view) {
+            return this.customFieldDrafts.some(draft =>
+                draft.scope === 'custom-field' &&
+                (draft.refKey === view || draft.refKey?.startsWith(`${view}:`))
+            )
+        },
+
+        hasCustomFieldDraftForSub: function(view, displaySub) {
+            const refKey = view === 'general' ? 'general' : `${view}:${displaySub || 'none'}`
+            return this.hasCustomFieldDraft(refKey)
         }
     }
 }

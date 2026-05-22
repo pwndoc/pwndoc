@@ -13,10 +13,12 @@ import DataService from '@/services/data';
 import { useUserStore } from 'src/stores/user'
 import VulnService from '@/services/vulnerability';
 import Utils from '@/services/utils';
+import { createDraftRecovery } from '@/composables/useDraftRecovery';
 
 import { $t } from '@/boot/i18n'
 
 const userStore = useUserStore()
+const SAVE_SUCCESS_TIMEOUT_MS = 2000
 
 export default {
     data: () => {
@@ -40,7 +42,10 @@ export default {
                 day: '2-digit',
                 hour: 'numeric',
                 minute: '2-digit',
-            }
+            },
+            draftRecovery: null,
+            saveSuccess: false,
+            saveSuccessTimer: null
         }
     },
 
@@ -111,6 +116,9 @@ export default {
         document.removeEventListener('keydown', this._listener, false);
         document.removeEventListener('comment-added', this.editorCommentAdded)
         document.removeEventListener('comment-clicked', this.editorCommentClicked)
+        if (this.draftRecovery)
+            this.draftRecovery.stop()
+        this.clearSaveSuccess()
     },
 
     beforeRouteLeave (to, from , next) {
@@ -131,7 +139,11 @@ export default {
             cancel: {label: $t('btn.cancel'), color: 'white'},
             focus: 'cancel'
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else if (!this.commentMode && displayHighlightWarning) {
             Dialog.create({
@@ -141,7 +153,11 @@ export default {
                 ok: {label: $t('btn.leave'), color: 'negative'},
                 cancel: {label: $t('btn.stay'), color: 'white'},
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else
             next()
@@ -160,7 +176,11 @@ export default {
             cancel: {label: $t('btn.cancel'), color: 'white'},
             focus: 'cancel'
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else if (!this.commentMode && displayHighlightWarning) {
             Dialog.create({
@@ -170,10 +190,24 @@ export default {
                 ok: {label: $t('btn.leave'), color: 'negative'},
                 cancel: {label: $t('btn.stay'), color: 'white'},
             })
-            .onOk(() => next())
+            .onOk(async () => {
+                if (this.draftRecovery)
+                    await this.draftRecovery.flushPendingWrite()
+                next()
+            })
         }
         else
             next()
+    },
+
+    watch: {
+        finding: {
+            handler() {
+                if (this.saveSuccess && this.unsavedChanges())
+                    this.clearSaveSuccess()
+            },
+            deep: true
+        }
     },
 
     computed: {
@@ -187,6 +221,34 @@ export default {
 
         canCreateComment: function() {
             return userStore.isAllowed('audits:comments:create') 
+        },
+
+        saveButtonState: function() {
+            if (this.unsavedChanges())
+                return 'dirty'
+            return this.saveSuccess ? 'saved' : 'idle'
+        },
+
+        saveButtonColor: function() {
+            if (this.saveButtonState === 'dirty')
+                return 'orange'
+            if (this.saveButtonState === 'saved')
+                return 'green-1'
+            return 'primary'
+        },
+
+        saveButtonTextColor: function() {
+            if (this.saveButtonState === 'saved')
+                return 'positive'
+            if (this.saveButtonState === 'dirty')
+                return 'orange'
+            return 'primary'
+        },
+
+        saveButtonLabel: function() {
+            if (this.saveButtonState === 'saved')
+                return $t('btn.saved')
+            return `${$t('btn.save')} (ctrl+s)`
         },
     },
 
@@ -225,6 +287,8 @@ export default {
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.findingOrig = this.$_.cloneDeep(this.finding); 
+                    this.setupDraftRecovery()
+                    this.draftRecovery.maybePromptRecovery()
                 })
             })
             .catch((err) => {
@@ -270,12 +334,9 @@ export default {
                 AuditService.updateFinding(this.auditId, this.findingId, this.finding)
                 .then(() => {
                     this.findingOrig = this.$_.cloneDeep(this.finding);
-                    Notify.create({
-                        message: $t('msg.findingUpdateOk'),
-                        color: 'positive',
-                        textColor:'white',
-                        position: 'top-right'
-                    })
+                    this.markSaveSuccess()
+                    if (this.draftRecovery)
+                        this.draftRecovery.clearDraft()
                 })
                 .catch((err) => {
                     Notify.create({
@@ -285,6 +346,45 @@ export default {
                         position: 'top-right'
                     })
                 })
+            })
+        },
+
+        markSaveSuccess: function() {
+            this.clearSaveSuccess()
+            this.saveSuccess = true
+            this.saveSuccessTimer = setTimeout(() => {
+                this.saveSuccess = false
+                this.saveSuccessTimer = null
+            }, SAVE_SUCCESS_TIMEOUT_MS)
+        },
+
+        clearSaveSuccess: function() {
+            if (this.saveSuccessTimer) {
+                clearTimeout(this.saveSuccessTimer)
+                this.saveSuccessTimer = null
+            }
+            this.saveSuccess = false
+        },
+
+        setupDraftRecovery: function() {
+            if (this.draftRecovery)
+                return
+
+            this.draftRecovery = createDraftRecovery(this, {
+                scope: () => 'audit-finding',
+                refKey: () => `${this.auditId}:${this.findingId}`,
+                userId: () => userStore.id,
+                getCurrent: () => this.finding,
+                setCurrent: (data) => {
+                    this.finding = data
+                },
+                getOriginal: () => this.findingOrig,
+                isDirty: () => this.unsavedChanges(),
+                isReadOnly: () => this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT,
+                syncBeforeCapture: () => Utils.syncEditors(this.$refs),
+                afterRestore: async () => {
+                    await this.$nextTick()
+                }
             })
         },
 
@@ -298,6 +398,8 @@ export default {
             .onOk(() => {
                 AuditService.deleteFinding(this.auditId, this.findingId)
                 .then(() => {
+                    if (this.draftRecovery)
+                        this.draftRecovery.clearDraft()
                     Notify.create({
                         message: $t('msg.findingDeleteOk'),
                         color: 'positive',

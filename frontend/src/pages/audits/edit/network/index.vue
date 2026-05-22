@@ -45,7 +45,25 @@
                     </q-item>
                 </q-list>
             </q-btn-dropdown>
-            <q-btn color="positive" :label="$t('btn.save')+' (ctrl+s)'" no-caps @click="updateAuditNetwork" />
+            <q-btn
+                class="save-state-btn"
+                outline
+                :color="saveButtonColor"
+                :text-color="saveButtonTextColor"
+                unelevated
+                no-caps
+                @click="updateAuditNetwork"
+            >
+                <q-icon v-if="saveButtonState === 'saved'" name="check" class="q-mr-sm" />
+                <span>{{ saveButtonLabel }}</span>
+                <q-icon
+                    v-if="saveButtonState === 'dirty'"
+                    data-testid="save-unsaved-badge"
+                    name="circle"
+                    size="12px"
+                    class="q-ml-sm"
+                />
+            </q-btn>
         </template>
     </breadcrumb>
 

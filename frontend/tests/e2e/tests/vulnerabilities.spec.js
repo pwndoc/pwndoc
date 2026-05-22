@@ -1,5 +1,167 @@
 import { test, expect } from './base.js';
 
+const RECOVERY_CATEGORY = 'Critical Findings';
+
+async function openCreateVulnerability(page, category = 'No Category') {
+  await page.getByRole('button', { name: 'New Vulnerability' }).click();
+  await expect(page.getByText('Select category')).toBeVisible();
+  await page.getByRole('listitem').filter({ hasText: category }).click();
+  await expect(page.getByRole('dialog').getByText(/add vulnerability/i)).toBeVisible();
+  await expect(page.getByTestId('create-vulnerability-title')).toBeVisible();
+}
+
+async function closeCreateVulnerability(page) {
+  await page.getByTestId('create-vulnerability-close').click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+}
+
+async function closeEditVulnerability(page) {
+  await page.getByTestId('edit-vulnerability-close').click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+}
+
+async function openRecoveryMenu(page) {
+  await page.getByRole('dialog').getByTestId('draft-recovery-status').click();
+}
+
+async function clickRecoveryAction(page, name) {
+  await openRecoveryMenu(page);
+  if (name instanceof RegExp)
+    await page.getByText(name).click();
+  else
+    await page.getByText(name, { exact: true }).click();
+}
+
+async function listDrafts(page) {
+  return page.evaluate(async () => {
+    const request = indexedDB.open('pwndoc-drafts', 1);
+    const db = await new Promise((resolve, reject) => {
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = () => resolve(request.result);
+    });
+
+    if (!db.objectStoreNames.contains('drafts')) {
+      db.close();
+      return [];
+    }
+
+    const tx = db.transaction('drafts', 'readonly');
+    const drafts = await new Promise((resolve, reject) => {
+      const req = tx.objectStore('drafts').getAll();
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => resolve(req.result || []);
+    });
+    db.close();
+    return drafts;
+  });
+}
+
+async function putDrafts(page, drafts) {
+  await page.evaluate(async (drafts) => {
+    const request = indexedDB.open('pwndoc-drafts', 1);
+    const db = await new Promise((resolve, reject) => {
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('drafts')) {
+          const store = db.createObjectStore('drafts', { keyPath: 'key' });
+          store.createIndex('by_userId', 'userId');
+          store.createIndex('by_updatedAt', 'updatedAt');
+        }
+        resolve(db);
+      };
+    });
+
+    const tx = db.transaction('drafts', 'readwrite');
+    const store = tx.objectStore('drafts');
+    for (const draft of drafts)
+      store.put(draft);
+
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  }, drafts);
+}
+
+async function deleteDrafts(page, predicateSource, arg) {
+  await page.evaluate(async ({ predicateSource, arg }) => {
+    const predicate = new Function('draft', 'arg', `return (${predicateSource})(draft, arg)`);
+    const request = indexedDB.open('pwndoc-drafts', 1);
+    const db = await new Promise((resolve, reject) => {
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onupgradeneeded = () => resolve(request.result);
+    });
+
+    if (!db.objectStoreNames.contains('drafts')) {
+      db.close();
+      return;
+    }
+
+    const tx = db.transaction('drafts', 'readwrite');
+    const store = tx.objectStore('drafts');
+    const drafts = await new Promise((resolve, reject) => {
+      const req = store.getAll();
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => resolve(req.result || []);
+    });
+
+    for (const draft of drafts) {
+      if (predicate(draft, arg))
+        store.delete(draft.key);
+    }
+
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  }, { predicateSource, arg });
+}
+
+async function createVulnerabilityViaApi(request, title, category = null) {
+  const payload = [{
+    category,
+    status: 0,
+    cvssv3: '',
+    cvssv4: '',
+    priority: '',
+    remediationComplexity: '',
+    details: [{
+      locale: 'en',
+      title,
+      vulnType: '',
+      description: '',
+      observation: '',
+      remediation: '',
+      references: [],
+      customFields: [],
+    }],
+  }];
+
+  const createRes = await request.post('/api/vulnerabilities', { data: payload });
+  expect(createRes.ok()).toBeTruthy();
+
+  const listRes = await request.get('/api/vulnerabilities');
+  const list = await listRes.json();
+  const vulnerability = list.datas.find(vuln => vuln.details?.some(detail => detail.title === title));
+  expect(vulnerability).toBeTruthy();
+  return vulnerability._id;
+}
+
+async function openEditVulnerability(page, title) {
+  await page.getByTestId('search-vulnerability-title').fill(title);
+  const row = page.getByRole('row').filter({ hasText: title });
+  await expect(row).toBeVisible();
+  await row.getByTestId('edit-vulnerability-button').click();
+  await expect(page.getByRole('dialog').getByText(/edit vulnerability/i)).toBeVisible();
+  await expect(page.getByTestId('edit-vulnerability-title')).toBeVisible();
+}
+
 test.describe('Vulnerabilities Page', () => {
 
   // Cleanup: remove test vulnerabilities (languages persist from data-setup)
@@ -170,6 +332,160 @@ test.describe('Vulnerabilities Page', () => {
 
       // Verify error message for missing title
       await expect(page.getByText('Title required')).toBeVisible();
+    });
+  });
+
+  test.describe('Draft Recovery', () => {
+    test('should recover new vulnerability drafts independently by category and support revert/restore', async ({ page }) => {
+      const runId = `E2E Recovery ${Date.now()}`;
+      const noCategoryDraftTitle = `${runId} No Category Draft`;
+      const savedNoCategoryTitle = `${runId} No Category Saved`;
+      const categoryDraftTitle = `${runId} Category Draft`;
+      const createRefKeys = ['_new:none', `_new:${RECOVERY_CATEGORY}`];
+      const existingDrafts = await listDrafts(page);
+      const backedUpDrafts = existingDrafts.filter(draft =>
+        draft.scope === 'vuln-modal-create' && createRefKeys.includes(draft.refKey)
+      );
+
+      await deleteDrafts(
+        page,
+        '(draft, refKeys) => draft.scope === "vuln-modal-create" && refKeys.includes(draft.refKey)',
+        createRefKeys
+      );
+
+      try {
+        await openCreateVulnerability(page);
+        await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).not.toBeVisible();
+        await page.getByTestId('create-vulnerability-title').fill(noCategoryDraftTitle);
+        await closeCreateVulnerability(page);
+
+        await page.getByRole('button', { name: 'New Vulnerability' }).click();
+        await expect(page.getByText('Select category')).toBeVisible();
+        await expect(page.getByTestId('create-vulnerability-draft-badge-none')).toBeVisible();
+        await page.getByRole('listitem').filter({ hasText: 'No Category' }).click();
+        await expect(page.getByTestId('create-vulnerability-title')).toHaveValue(noCategoryDraftTitle);
+        await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).toBeVisible();
+
+        await clickRecoveryAction(page, /^View changes/);
+        const diffDialog = page.getByRole('dialog').filter({ hasText: 'Review the differences between your recovered changes and the last saved version.' });
+        await expect(diffDialog.getByText('Recovered changes', { exact: true })).toBeVisible();
+        await diffDialog.getByRole('button').first().click();
+
+        await clickRecoveryAction(page, 'Revert to saved version');
+        await expect(page.getByTestId('create-vulnerability-title')).toHaveValue('');
+
+        await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).toBeVisible();
+        await clickRecoveryAction(page, 'Restore recovered changes');
+        await expect(page.getByTestId('create-vulnerability-title')).toHaveValue(noCategoryDraftTitle);
+
+        await page.getByTestId('create-vulnerability-title').fill(savedNoCategoryTitle);
+        await expect.poll(async () => {
+          const drafts = await listDrafts(page);
+          return drafts.find(draft =>
+            draft.scope === 'vuln-modal-create' && draft.refKey === '_new:none'
+          )?.data?.details?.some(detail => detail.title === savedNoCategoryTitle) || false;
+        }).toBe(true);
+        await page.getByRole('button', { name: 'Create' }).click();
+        await expect(page.getByText('Vulnerability created successfully')).toBeVisible();
+        await page.getByRole('button', { name: 'New Vulnerability' }).click();
+        await expect(page.getByText('Select category')).toBeVisible();
+        await expect(page.getByTestId('create-vulnerability-draft-badge-none')).not.toBeVisible();
+        await page.keyboard.press('Escape');
+
+        await expect.poll(async () => {
+          const drafts = await listDrafts(page);
+          return drafts.some(draft => draft.scope === 'vuln-modal-create' && draft.refKey === '_new:none');
+        }).toBe(false);
+
+        await openCreateVulnerability(page, RECOVERY_CATEGORY);
+        await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).not.toBeVisible();
+        await page.getByTestId('create-vulnerability-title').fill(categoryDraftTitle);
+        await closeCreateVulnerability(page);
+
+        await openCreateVulnerability(page, RECOVERY_CATEGORY);
+        await expect(page.getByTestId('create-vulnerability-title')).toHaveValue(categoryDraftTitle);
+        await closeCreateVulnerability(page);
+
+        await openCreateVulnerability(page);
+        await expect(page.getByTestId('create-vulnerability-title')).toHaveValue('');
+        await closeCreateVulnerability(page);
+
+        await openCreateVulnerability(page, RECOVERY_CATEGORY);
+        await expect(page.getByTestId('create-vulnerability-title')).toHaveValue(categoryDraftTitle);
+        await closeCreateVulnerability(page);
+      }
+      finally {
+        await deleteDrafts(
+          page,
+          '(draft, refKeys) => draft.scope === "vuln-modal-create" && refKeys.includes(draft.refKey)',
+          createRefKeys
+        );
+        await putDrafts(page, backedUpDrafts);
+      }
+    });
+
+    test('should isolate edit drafts per vulnerability and clear only the saved draft', async ({ page, request }) => {
+      const runId = `E2E Recovery ${Date.now()}`;
+      const editABase = `${runId} Edit A Base`;
+      const editBBase = `${runId} Edit B Base`;
+      const editADraft = `${runId} Edit A Draft`;
+      const editBDraft = `${runId} Edit B Draft`;
+      const editAId = await createVulnerabilityViaApi(request, editABase);
+      const editBId = await createVulnerabilityViaApi(request, editBBase, RECOVERY_CATEGORY);
+
+      await page.reload();
+      await expect(page.getByRole('button', { name: 'New Vulnerability' })).toBeVisible();
+
+      try {
+        await openEditVulnerability(page, editABase);
+        await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).not.toBeVisible();
+        await page.getByTestId('edit-vulnerability-title').fill(editADraft);
+        await closeEditVulnerability(page);
+        await expect(page.getByTestId(`vulnerability-draft-badge-${editAId}`)).toBeVisible();
+
+        await openEditVulnerability(page, editABase);
+        await expect(page.getByTestId('edit-vulnerability-title')).toHaveValue(editADraft);
+        await closeEditVulnerability(page);
+
+        await openEditVulnerability(page, editBBase);
+        await page.getByTestId('edit-vulnerability-title').fill(editBDraft);
+        await closeEditVulnerability(page);
+
+        await openEditVulnerability(page, editBBase);
+        await expect(page.getByTestId('edit-vulnerability-title')).toHaveValue(editBDraft);
+        await closeEditVulnerability(page);
+
+        await openEditVulnerability(page, editABase);
+        await expect(page.getByTestId('edit-vulnerability-title')).toHaveValue(editADraft);
+
+        await page.getByRole('button', { name: 'Update' }).click();
+        await expect(page.getByText('Vulnerability updated successfully')).toBeVisible();
+        await expect(page.getByTestId(`vulnerability-draft-badge-${editAId}`)).not.toBeVisible();
+
+        await expect.poll(async () => {
+          const drafts = await listDrafts(page);
+          return {
+            editAExists: drafts.some(draft => draft.scope === 'vuln-modal-edit' && draft.refKey === editAId),
+            editBExists: drafts.some(draft => draft.scope === 'vuln-modal-edit' && draft.refKey === editBId),
+          };
+        }).toEqual({ editAExists: false, editBExists: true });
+
+        await openEditVulnerability(page, editADraft);
+        await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).not.toBeVisible();
+        await closeEditVulnerability(page);
+
+        await openEditVulnerability(page, editBBase);
+        await expect(page.getByTestId('edit-vulnerability-title')).toHaveValue(editBDraft);
+        await expect(page.getByRole('dialog').getByTestId('draft-recovery-status')).toBeVisible();
+        await closeEditVulnerability(page);
+      }
+      finally {
+        await deleteDrafts(
+          page,
+          '(draft, refKeys) => draft.scope === "vuln-modal-edit" && refKeys.includes(draft.refKey)',
+          [editAId, editBId]
+        );
+      }
     });
   });
 });

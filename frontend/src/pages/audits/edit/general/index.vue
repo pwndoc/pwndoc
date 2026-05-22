@@ -8,7 +8,25 @@
         :path-name="(auditParent.type === 'retest') ? $t('originalAudit') : (auditParent.type === 'default') ? $t('multi') : ''"
     >
         <template v-slot:buttons>
-            <q-btn v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" color="positive" :label="$t('btn.save')+' (ctrl+s)'" no-caps @click="updateAuditGeneral" />
+            <q-btn
+                v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                outline
+                :color="saveButtonColor"
+                :text-color="saveButtonTextColor"
+                unelevated
+                no-caps
+                @click="updateAuditGeneral"
+            >
+                <q-icon v-if="saveButtonState === 'saved'" name="check" class="q-mr-sm" />
+                <span>{{ saveButtonLabel }}</span>
+                <q-icon
+                    v-if="saveButtonState === 'dirty'"
+                    data-testid="save-unsaved-badge"
+                    name="circle"
+                    size="12px"
+                    class="q-ml-sm"
+                />
+            </q-btn>
         </template>
     </breadcrumb>
 

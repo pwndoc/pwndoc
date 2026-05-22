@@ -36,6 +36,21 @@ $text-comment-focused: black;
 
 // Light mode
 @mixin light-mode-colors() {
+    --diff-removed-line-bg: #ffebe9;
+    --diff-added-line-bg: #e6ffec;
+    --diff-context-line-bg: #ffffff;
+    --diff-removed-glyph-bg: #ffd7d5;
+    --diff-removed-glyph-color: #cf222e;
+    --diff-added-glyph-bg: #ccffd8;
+    --diff-added-glyph-color: #116329;
+    --diff-context-glyph-color: #8c959f;
+    --diff-block-header-bg: #f6f8fa;
+    --diff-block-header-color: #57606a;
+    --diff-block-border: #d0d7de;
+    --diff-word-rem-bg: #f97583;
+    --diff-word-add-bg: #85e89d;
+    --diff-unset-color: #8c959f;
+
     // Diff background color
     .bg-diffbackground {
       background: $diffBackground !important;
@@ -67,6 +82,21 @@ $text-comment-focused: black;
 
 // Dark mode
 @mixin dark-mode-colors() {
+    --diff-removed-line-bg: rgba(255, 129, 130, 0.1);
+    --diff-added-line-bg: rgba(46, 160, 67, 0.1);
+    --diff-context-line-bg: transparent;
+    --diff-removed-glyph-bg: rgba(255, 129, 130, 0.2);
+    --diff-removed-glyph-color: #ff7b7b;
+    --diff-added-glyph-bg: rgba(46, 160, 67, 0.2);
+    --diff-added-glyph-color: #7ddc8c;
+    --diff-context-glyph-color: #6e7681;
+    --diff-block-header-bg: #2d2d2d;
+    --diff-block-header-color: #9e9e9e;
+    --diff-block-border: #444444;
+    --diff-word-rem-bg: rgba(255, 129, 130, 0.4);
+    --diff-word-add-bg: rgba(46, 160, 67, 0.4);
+    --diff-unset-color: #6e7681;
+
     // Diff background color
     .bg-diffbackground {
       background: $diffBackgroundDark !important;
@@ -99,10 +129,23 @@ $text-comment-focused: black;
     .bg-orange-2 {
       background: #ff980026 !important; // orange-6
     }
+
+    .bg-amber-1 {
+      background: transparent !important;
+    }
   
     .text-grey-8,
     .text-blue-grey {
       color: #9e9e9e !important; // grey-6
+    }
+
+    .q-btn-dropdown.bg-grey-3,
+    .q-btn-dropdown.bg-orange-1 {
+      background: transparent !important;
+    }
+
+    .text-brown-6 {
+      color: q.$orange-2 !important;
     }
   
     // For field border default
@@ -118,25 +161,26 @@ $text-comment-focused: black;
       background: #333333 !important;
     }
   
-    .editor p code {
+    .editor p code,
+    .draft-rendered-diff p code {
       background: #616161;
       color: white;
     }
   
     .diffrem {
-      background-color: #a03936;
+      background-color: var(--diff-removed-glyph-bg);
     }
   
     pre .diffrem {
-      background-color: #f44336; // red-6
+      background-color: var(--diff-removed-glyph-bg);
     }
   
     .diffadd {
-      background-color: #1d572d;
+      background-color: var(--diff-added-glyph-bg);
     }
   
     pre .diffadd {
-      background-color: #4caf50; // green-6
+      background-color: var(--diff-added-glyph-bg);
     }
   
     .login-form {

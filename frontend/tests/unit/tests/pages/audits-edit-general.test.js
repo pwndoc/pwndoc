@@ -626,7 +626,7 @@ describe('Audit Edit General Page', () => {
       expect(AuditService.updateAuditGeneral).toHaveBeenCalledWith('audit123', wrapper.vm.audit)
     })
 
-    it('should show success notification on save', async () => {
+    it('should mark save button as saved on save', async () => {
       const wrapper = createWrapper()
       await wrapper_flushPromises()
 
@@ -648,12 +648,9 @@ describe('Audit Edit General Page', () => {
       await wrapper.vm.$nextTick()
       await wrapper_flushPromises()
 
-      expect(Notify.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: 'msg.auditUpdateOk',
-          color: 'positive'
-        })
-      )
+      expect(wrapper.vm.saveSuccess).toBe(true)
+      expect(wrapper.vm.saveButtonState).toBe('saved')
+      expect(wrapper.vm.saveButtonLabel).toBe('btn.saved')
     })
 
     it('should show error notification on save failure', async () => {
@@ -686,6 +683,36 @@ describe('Audit Edit General Page', () => {
           color: 'negative'
         })
       )
+    })
+
+    it('should flush a pending draft write before confirmed route leave', async () => {
+      const wrapper = createWrapper()
+      await wrapper_flushPromises()
+      const flushPendingWrite = vi.fn().mockResolvedValue()
+      const next = vi.fn()
+      let confirmLeave
+
+      wrapper.vm.draftRecovery = { flushPendingWrite, stop: vi.fn() }
+      vi.spyOn(wrapper.vm, 'hasUnsavedChanges', 'get').mockReturnValue(true)
+      Dialog.create.mockImplementationOnce(() => ({
+        onOk(cb) {
+          confirmLeave = cb
+          return this
+        }
+      }))
+
+      wrapper.vm.$options.beforeRouteLeave.call(
+        wrapper.vm,
+        { name: 'audits' },
+        { name: 'audit-general' },
+        next
+      )
+
+      expect(next).not.toHaveBeenCalled()
+      await confirmLeave()
+
+      expect(flushPendingWrite).toHaveBeenCalled()
+      expect(next).toHaveBeenCalled()
     })
 
     it('should not save when required fields are empty', async () => {

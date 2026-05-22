@@ -303,6 +303,10 @@ describe('Sections Page', () => {
       AuditService.updateSection.mockResolvedValue({})
 
       const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      await wrapper.vm.$nextTick()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
       wrapper.vm.auditId = 'audit1'
       wrapper.vm.sectionId = 'section1'
       wrapper.vm.section = { field: 'test', name: 'Test', customFields: [] }
@@ -315,10 +319,14 @@ describe('Sections Page', () => {
       expect(Utils.syncEditors).toHaveBeenCalled()
     })
 
-    it('should show success notification on successful update', async () => {
+    it('should update sectionOrig and mark save button as saved on successful update', async () => {
       AuditService.updateSection.mockResolvedValue({})
 
       const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      await wrapper.vm.$nextTick()
+      await new Promise(resolve => setTimeout(resolve, 10))
+
       wrapper.vm.auditId = 'audit1'
       wrapper.vm.sectionId = 'section1'
       wrapper.vm.section = { field: 'test', name: 'Test', customFields: [] }
@@ -328,12 +336,10 @@ describe('Sections Page', () => {
       await wrapper.vm.$nextTick()
       await new Promise(resolve => setTimeout(resolve, 50))
 
-      expect(Notify.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: 'msg.sectionUpdateOk',
-          color: 'positive'
-        })
-      )
+      expect(wrapper.vm.sectionOrig).toEqual(wrapper.vm.section)
+      expect(wrapper.vm.saveSuccess).toBe(true)
+      expect(wrapper.vm.saveButtonState).toBe('saved')
+      expect(wrapper.vm.saveButtonLabel).toBe('btn.saved')
     })
 
     it('should show error notification on update failure', async () => {

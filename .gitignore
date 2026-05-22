@@ -49,3 +49,5 @@ coverage
 
 # AI configs
 .agents
+.claude/plan.md
+.playwright-cli
