@@ -493,6 +493,7 @@
                     <div class="q-toolbar-title">
                         {{$t('updateVulnerability')}}
                     </div>
+                    <draft-recovery-status />
                     <q-space />
                     <q-btn dense flat icon="close" @click="$refs.updatesModal.hide()" />
                 </q-bar>

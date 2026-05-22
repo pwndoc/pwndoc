@@ -437,6 +437,22 @@ describe('Vulnerabilities Page', () => {
   })
 
   describe('Draft Recovery Hints', () => {
+    it('should render the draft recovery status in create, edit, and update modal headers', async () => {
+      const wrapper = createWrapper({
+        stubs: {
+          'q-dialog': { template: '<div><slot /></div>' },
+          'q-card': { template: '<div><slot /></div>' },
+          'q-layout': { template: '<div><slot /></div>' },
+          'q-header': { template: '<div><slot /></div>' },
+          'q-bar': { template: '<div><slot /></div>' },
+          'draft-recovery-status': { template: '<div data-testid="draft-recovery-status-stub" />' }
+        }
+      })
+      await flushPromises()
+
+      expect(wrapper.findAll('[data-testid="draft-recovery-status-stub"]')).toHaveLength(3)
+    })
+
     it('should request vulnerability drafts on mount', async () => {
       createWrapper()
       await flushPromises()
