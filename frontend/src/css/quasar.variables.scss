@@ -49,8 +49,6 @@ $text-comment-focused: black;
     --diff-block-border: #d0d7de;
     --diff-word-rem-bg: #f97583;
     --diff-word-add-bg: #85e89d;
-    --diff-preview-bg: #ffffff;
-    --diff-preview-border: #e0e0e0;
     --diff-unset-color: #8c959f;
 
     // Diff background color
@@ -97,8 +95,6 @@ $text-comment-focused: black;
     --diff-block-border: #444444;
     --diff-word-rem-bg: rgba(255, 129, 130, 0.4);
     --diff-word-add-bg: rgba(46, 160, 67, 0.4);
-    --diff-preview-bg: #333333;
-    --diff-preview-border: #555555;
     --diff-unset-color: #6e7681;
 
     // Diff background color
@@ -165,25 +161,26 @@ $text-comment-focused: black;
       background: #333333 !important;
     }
   
-    .editor p code {
+    .editor p code,
+    .draft-rendered-diff p code {
       background: #616161;
       color: white;
     }
   
     .diffrem {
-      background-color: #a03936;
+      background-color: var(--diff-removed-glyph-bg);
     }
   
     pre .diffrem {
-      background-color: #f44336; // red-6
+      background-color: var(--diff-removed-glyph-bg);
     }
   
     .diffadd {
-      background-color: #1d572d;
+      background-color: var(--diff-added-glyph-bg);
     }
   
     pre .diffadd {
-      background-color: #4caf50; // green-6
+      background-color: var(--diff-added-glyph-bg);
     }
   
     .login-form {

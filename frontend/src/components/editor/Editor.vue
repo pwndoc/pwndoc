@@ -1018,17 +1018,17 @@ export default {
 }
 
 .diffrem {
-    background-color: #fdb8c0;
+    background-color: var(--diff-removed-glyph-bg, #ffd7d5);
 }
 pre .diffrem {
-    background-color: $red-6;
+    background-color: var(--diff-removed-glyph-bg, #ffd7d5);
 }
 
 .diffadd {
-    background-color: #acf2bd;
+    background-color: var(--diff-added-glyph-bg, #ccffd8);
 }
 pre .diffadd {
-    background-color: $green-6;
+    background-color: var(--diff-added-glyph-bg, #ccffd8);
 }
 
 .text-negative .editor:not(.q-dark) {

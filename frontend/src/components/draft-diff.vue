@@ -30,7 +30,13 @@
           class="diff-block"
         >
           <div class="diff-block__header">@@ {{ field.label }} @@</div>
-          <div class="diff-block__body">
+          <div
+            v-if="field.isHtml"
+            class="diff-block__body diff-block__body--html editor__content"
+          >
+            <div class="ProseMirror draft-rendered-diff" v-html="field.renderedHtml"></div>
+          </div>
+          <div v-else class="diff-block__body">
             <div
               v-for="(chunk, i) in field.chunks"
               :key="i"
@@ -59,11 +65,23 @@
           <div class="row q-col-gutter-md">
             <div class="col-12 col-md-6">
               <div class="text-caption text-grey-7 q-mb-xs">{{ $t('draftRecovery.currentVersion') }}</div>
-              <div class="draft-preview" v-html="field.currentHtml"></div>
+              <div
+                v-if="field.isHtml"
+                class="draft-preview draft-preview--html editor__content"
+              >
+                <div class="ProseMirror draft-rendered-diff" v-html="field.currentHtml"></div>
+              </div>
+              <div v-else class="draft-preview" v-html="field.currentHtml"></div>
             </div>
             <div class="col-12 col-md-6">
               <div class="text-caption text-grey-7 q-mb-xs">{{ $t('draftRecovery.draftVersion') }}</div>
-              <div class="draft-preview" v-html="field.draftHtml"></div>
+              <div
+                v-if="field.isHtml"
+                class="draft-preview draft-preview--html editor__content"
+              >
+                <div class="ProseMirror draft-rendered-diff" v-html="field.draftHtml"></div>
+              </div>
+              <div v-else class="draft-preview" v-html="field.draftHtml"></div>
             </div>
           </div>
         </div>
@@ -79,10 +97,12 @@
 <script>
 import { Diff, diffLines, diffWords } from 'diff'
 import _ from 'lodash'
+import Utils from '@/services/utils'
 
 const HTML_FIELDS = ['description', 'observation', 'remediation', 'poc', 'text', 'retestDescription']
 const DETAIL_KEYS = ['title', 'vulnType', 'description', 'observation', 'remediation', 'references', 'customFields']
 const EXCLUDED_TOP_LEVEL_KEYS = ['_id', 'id', 'details']
+const INLINE_FORMAT_TAGS = 'strong|b|em|i|u|s|strike|mark|sub|sup|span'
 
 const FIELD_LABELS = {
   auditType: 'Audit Type',
@@ -126,34 +146,97 @@ function htmlEscape(str) {
     .replace(/>/g, '&gt;')
 }
 
-function stripTags(html) {
-  return (html || '')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&quot;/g, '"')
-    .trim()
+function sanitizeHtml(html) {
+  return Utils.htmlEncode(String(html || ''))
+}
+
+function renderLegendText(label, alt) {
+  return [label, alt].filter(Boolean).join(' - ')
+}
+
+function resolveImageSrc(src) {
+  return /^[a-fA-F0-9]{24}$/.test(src || '')
+    ? `/api/images/download/${src}`
+    : src
+}
+
+function normalizeEditorHtmlForDiff(html) {
+  const clean = sanitizeHtml(html)
+  if (!clean) return ''
+
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(clean, 'text/html')
+
+  doc.body.querySelectorAll('legend').forEach((legend) => {
+    const label = legend.getAttribute('label') || ''
+    const alt = legend.getAttribute('alt') || ''
+    const visibleCaption = renderLegendText(label, alt)
+    if (visibleCaption && !legend.textContent.trim()) {
+      legend.textContent = visibleCaption
+    }
+    legend.removeAttribute('label')
+    legend.removeAttribute('alt')
+    legend.removeAttribute('commentid')
+  })
+
+  doc.body.querySelectorAll('img').forEach((img) => {
+    const figure = doc.createElement('figure')
+    const normalizedImg = doc.createElement('img')
+    const caption = doc.createElement('figcaption')
+    const alt = img.getAttribute('alt') || ''
+
+    figure.className = 'draft-image'
+    normalizedImg.setAttribute('src', resolveImageSrc(img.getAttribute('src') || ''))
+    normalizedImg.setAttribute('alt', '')
+    caption.textContent = alt
+
+    figure.appendChild(normalizedImg)
+    if (alt) figure.appendChild(caption)
+    img.replaceWith(figure)
+  })
+
+  return doc.body.innerHTML
 }
 
 function buildHtmlDiff() {
   const d = new Diff(true)
   d.tokenize = function(value) {
     return value
-      .replace(/<code[^>]*>/g, '<code>')
-      .split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/)
+      .split(new RegExp(`(<(?:${INLINE_FORMAT_TAGS})(?:\\s[^>]*)?>.*?</(?:${INLINE_FORMAT_TAGS})>|<[^>]+>|[{}:;,.]|\\s+)`, 'gi'))
+      .filter(part => part !== '')
   }
   return d
 }
 
-function injectSpan(value, cls) {
-  return value
+function injectSpan(value, cls, options = {}) {
+  const tagWrapper = options.tagWrapper || 'span'
+  const withHighlightedImages = value.replace(
+    /<img\b[^>]*>/gi,
+    match => `<${tagWrapper} class="${cls}">${match}</${tagWrapper}>`
+  )
+
+  return withHighlightedImages
+    .replace(new RegExp(`(<(?:${INLINE_FORMAT_TAGS})(?:\\s[^>]*)?>)(.+?)(</(?:${INLINE_FORMAT_TAGS})>)`, 'gi'), `$1<span class="${cls}">$2</span>$3`)
     .replace(/(<p>)(.+?)(<\/p>|$)/g, `$1<span class="${cls}">$2</span>$3`)
     .replace(/(<pre><code>)(.+?)(<\/code><\/pre>|$)/g, `$1<span class="${cls}">$2</span>$3`)
+    .replace(/(<legend\b[^>]*>)(.+?)(<\/legend>|$)/g, `$1<span class="${cls}">$2</span>$3`)
     .replace(/(^[^<].*?)(<|$)/g, `<span class="${cls}">$1</span>$2`)
+}
+
+function buildRenderedHtmlDiff(currentText, draftText) {
+  const d = buildHtmlDiff()
+  const changes = d.diff(currentText, draftText)
+
+  const content = changes.reduce((content, part) => {
+    const val = part.value.replace(/<p><\/p>/g, '<p><br></p>')
+    if (part.added)
+      return content + injectSpan(val, 'diffadd', { tagWrapper: 'ins' })
+    if (part.removed)
+      return content + injectSpan(val, 'diffrem', { tagWrapper: 'del' })
+    return content + val
+  }, '')
+
+  return content
 }
 
 function computeSplitSidesHtml(currentText, draftText) {
@@ -421,21 +504,21 @@ export default {
       const isHtml = this.isHtmlField(labelKey) || this.isHtmlValue(current) || this.isHtmlValue(draft)
       const currentEmpty = this.isEmpty(current)
       const draftEmpty = this.isEmpty(draft)
+      const currentHtmlText = isHtml ? normalizeEditorHtmlForDiff(current || '') : ''
+      const draftHtmlText = isHtml ? normalizeEditorHtmlForDiff(draft || '') : ''
 
       // --- Split view sides ---
       let currentHtml, draftHtml
 
       if (isHtml) {
-        const currentText = current || ''
-        const draftText = draft || ''
         if (currentEmpty && !draftEmpty) {
           currentHtml = UNSET_HTML
-          draftHtml = injectSpan(draftText, 'diffadd')
+          draftHtml = injectSpan(draftHtmlText, 'diffadd', { tagWrapper: 'ins' })
         } else if (!currentEmpty && draftEmpty) {
-          currentHtml = injectSpan(currentText, 'diffrem')
+          currentHtml = injectSpan(currentHtmlText, 'diffrem', { tagWrapper: 'del' })
           draftHtml = UNSET_HTML
         } else {
-          ;({ currentHtml, draftHtml } = computeSplitSidesHtml(currentText, draftText))
+          ;({ currentHtml, draftHtml } = computeSplitSidesHtml(currentHtmlText, draftHtmlText))
         }
       } else {
         const currentText = this.formatValue(current)
@@ -452,18 +535,21 @@ export default {
       }
 
       // --- Unified view chunks ---
-      const toPlainText = (val, empty) => {
-        if (empty) return ''
-        return isHtml ? stripTags(val || '') : this.formatValue(val)
-      }
-      const chunks = computeUnifiedChunks(
-        toPlainText(current, currentEmpty),
-        toPlainText(draft, draftEmpty)
-      )
+      const renderedHtml = isHtml
+        ? buildRenderedHtmlDiff(currentEmpty ? '' : currentHtmlText, draftEmpty ? '' : draftHtmlText)
+        : ''
+      const chunks = isHtml
+        ? []
+        : computeUnifiedChunks(
+            currentEmpty ? '' : this.formatValue(current),
+            draftEmpty ? '' : this.formatValue(draft)
+          )
 
       return {
         key,
         label: displayLabel || FIELD_LABELS[labelKey] || this.humanize(labelKey),
+        isHtml,
+        renderedHtml,
         currentHtml,
         draftHtml,
         chunks
@@ -672,6 +758,41 @@ export default {
   overflow: auto;
 }
 
+.diff-block__body--html {
+  padding: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.draft-rendered-diff {
+  min-height: 32px;
+}
+
+.draft-rendered-diff :deep(.draft-image) {
+  margin: 8px 0;
+  text-align: center;
+}
+
+.draft-rendered-diff :deep(.draft-image img) {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.draft-rendered-diff :deep(.draft-image figcaption) {
+  margin-top: 4px;
+  text-align: center;
+  font-style: italic;
+}
+
+.draft-rendered-diff :deep(legend) {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-style: italic;
+}
+
 .diff-line {
   display: flex;
   white-space: pre-wrap;
@@ -738,11 +859,16 @@ export default {
   min-height: 42px;
   max-height: 220px;
   overflow: auto;
-  border: 1px solid var(--diff-preview-border);
+  border: 1px solid var(--diff-block-border);
   border-radius: 4px;
   padding: 8px;
-  background: var(--diff-preview-bg);
+  background: var(--diff-context-line-bg);
   word-break: break-word;
+}
+
+.draft-preview--html {
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .draft-preview :deep(.diff-unset) {
@@ -750,13 +876,4 @@ export default {
   font-style: italic;
 }
 
-.draft-preview :deep(.diffrem) {
-  background-color: var(--diff-removed-glyph-bg);
-  border-radius: 2px;
-}
-
-.draft-preview :deep(.diffadd) {
-  background-color: var(--diff-added-glyph-bg);
-  border-radius: 2px;
-}
 </style>
