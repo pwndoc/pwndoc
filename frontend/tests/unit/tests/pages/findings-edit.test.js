@@ -905,6 +905,30 @@ describe('Findings Edit Page', () => {
       expect(calledWith.commentId).toBeUndefined()
     })
 
+    it('should scroll the new sidebar comment into view after creation', async () => {
+      const scrollIntoView = vi.fn()
+      const getElementByIdSpy = vi.spyOn(document, 'getElementById').mockImplementation((id) => {
+        if (id === 'sidebar-newComment1')
+          return { scrollIntoView }
+        return null
+      })
+      AuditService.createComment.mockResolvedValue({
+        data: { datas: { _id: 'newComment1' } }
+      })
+      AuditService.updateFinding.mockResolvedValue({})
+
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      await wrapper.vm.$nextTick()
+
+      wrapper.vm.createComment('titleField')
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'end' })
+
+      getElementByIdSpy.mockRestore()
+    })
+
     it('should show error notification on comment creation failure', async () => {
       AuditService.createComment.mockRejectedValue({
         response: { data: { datas: 'Comment creation failed' } }

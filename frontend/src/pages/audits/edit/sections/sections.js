@@ -433,11 +433,37 @@ export default {
             if (this.commentMode && event.detail.id) {
                 let comment = this.auditParent.comments.find(e => e._id === event.detail.id)
                 if (comment) {
-                    document.getElementById(`sidebar-${comment._id}`).scrollIntoView({block: "center"})
+                    this.scrollSidebarCommentIntoView(comment._id)
                     this.fieldHighlighted = comment.fieldName
                     this.focusedComment = comment._id
                 }
             }
+        },
+
+        scrollSidebarCommentIntoView: function(commentId, block = "center") {
+            if (!commentId)
+                return
+
+            const scroll = () => {
+                const commentElementSidebar = document.getElementById(`sidebar-${commentId}`)
+                if (commentElementSidebar) {
+                    commentElementSidebar.scrollIntoView({block})
+                    return true
+                }
+                return false
+            }
+
+            this.$nextTick(() => {
+                if (scroll())
+                    return
+
+                let checkCount = 0
+                const intervalId = setInterval(() => {
+                    checkCount++
+                    if (scroll() || checkCount >= 10)
+                        clearInterval(intervalId)
+                }, 100)
+            })
         },
 
         createComment: function(fieldName, commentId) {
@@ -460,6 +486,7 @@ export default {
                 this.editComment = newComment._id
                 this.fieldHighlighted = fieldName
                 this.focusComment(comment)
+                this.scrollSidebarCommentIntoView(newComment._id, "end")
                 this.updateSection()
             })
             .catch((err) => {

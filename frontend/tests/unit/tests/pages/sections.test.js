@@ -542,6 +542,30 @@ describe('Sections Page', () => {
       expect(callArgs.commentId).toBeUndefined()
     })
 
+    it('should scroll the new sidebar comment into view after creation', async () => {
+      const scrollIntoView = vi.fn()
+      const getElementByIdSpy = vi.spyOn(document, 'getElementById').mockImplementation((id) => {
+        if (id === 'sidebar-comment1')
+          return { scrollIntoView }
+        return null
+      })
+      AuditService.createComment.mockResolvedValue({
+        data: { datas: { _id: 'comment1' } }
+      })
+      AuditService.updateSection.mockResolvedValue({})
+
+      const wrapper = createWrapper()
+      wrapper.vm.auditId = 'audit1'
+      wrapper.vm.sectionId = 'section1'
+
+      wrapper.vm.createComment('fieldName1')
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'end' })
+
+      getElementByIdSpy.mockRestore()
+    })
+
     it('should show error notification on createComment failure', async () => {
       AuditService.createComment.mockRejectedValue({
         response: { data: { datas: 'Comment creation failed' } }
