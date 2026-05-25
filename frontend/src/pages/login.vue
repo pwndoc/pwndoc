@@ -146,6 +146,15 @@
                 <q-card-section align="center">
                     <q-btn :loading="loginLoading" color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
                 </q-card-section>
+
+                <template v-if="entraEnabled">
+                    <q-separator inset />
+                    <q-card-section align="center">
+                        <q-btn outline color="blue-8" class="full-width" no-caps icon="mdi-microsoft" @click="entraLogin()">
+                            Sign in with Microsoft
+                        </q-btn>
+                    </q-card-section>
+                </template>
             </div>
         </q-card>
     </div>
@@ -155,7 +164,8 @@
 <script>
 import {Loading} from 'quasar';
 import UserService from '@/services/user';
-import Utils from '@/services/utils'
+import Utils from '@/services/utils';
+import { api } from '@/boot/axios';
 
 import { $t } from '@/boot/i18n'
 
@@ -172,7 +182,8 @@ export default {
             step: 0,
             errors: {alert: "", username: "", password: "", firstname: "", lastname: ""},
             loginLoading: false,
-            strongPassword: [Utils.strongPassword]
+            strongPassword: [Utils.strongPassword],
+            entraEnabled: false
         }
     },
 
@@ -180,10 +191,30 @@ export default {
         if (this.$route.query.tokenError)
             if (this.$route.query.tokenError === "2") this.errors.alert = $t('err.expiredToken');
             else this.errors.alert = $t('err.invalidToken');
+
+        const entraErrorMap = {
+            no_group:        'Your account is not in an authorized group. Contact your administrator.',
+            login_failed:    'Microsoft sign-in failed. Please try again.',
+            callback_failed: 'Microsoft sign-in could not be completed. Please try again.',
+        };
+        if (this.$route.query.entraError)
+            this.errors.alert = entraErrorMap[this.$route.query.entraError] || 'Microsoft sign-in error.';
+
         this.checkInit();
+        this.checkEntraConfig();
     },
 
     methods: {
+
+        checkEntraConfig() {
+            api.get('auth/entra/config')
+            .then(res => { this.entraEnabled = !!res.data.enabled; })
+            .catch(() => { this.entraEnabled = false; });
+        },
+
+        entraLogin() {
+            window.location.href = '/api/auth/entra/login';
+        },
 
         cleanErrors() {
             this.errors.alert = "";

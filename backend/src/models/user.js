@@ -12,7 +12,7 @@ var OTPAuth = require('otpauth');
 
 var UserSchema = new Schema({
     username:       {type: String, unique: true, required: true},
-    password:       {type: String, required: true},
+    password:       {type: String, required: false},   // not set for Entra-authenticated users
     firstname:      {type: String, required: true},
     lastname:       {type: String, required: true},
     email:          {type: String, required: false},
@@ -22,7 +22,9 @@ var UserSchema = new Schema({
     totpEnabled:    {type: Boolean, default: false},
     totpSecret:     {type: String, default: ''},
     enabled:        {type: Boolean, default: true},
-    refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
+    refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}],
+    authType:       {type: String, enum: ['local', 'entra'], default: 'local'},
+    entraId:        {type: String, unique: true, sparse: true}   // Entra OID; sparse allows multiple nulls
 }, {timestamps: true});
 
 var totpConfig = {
@@ -493,6 +495,41 @@ UserSchema.statics.restore = (path, mode = "upsert") => {
     })
 }
 
+
+// Find an existing user by Entra OID, create if not found, and update role on every login
+UserSchema.statics.findOrCreateFromEntra = function ({ entraId, username, firstname, lastname, email, role }) {
+    return new Promise((resolve, reject) => {
+        this.findOne({ entraId })
+        .then(row => {
+            if (row) {
+                row.role      = role;
+                row.firstname = firstname || row.firstname;
+                row.lastname  = lastname  || row.lastname;
+                row.email     = email     || row.email;
+                return row.save();
+            }
+            return this.findOne({ username })
+            .then(existing => {
+                if (existing && existing.authType === 'local') {
+                    existing.entraId  = entraId;
+                    existing.authType = 'entra';
+                    existing.role     = role;
+                    existing.email    = email || existing.email;
+                    return existing.save();
+                }
+                return new User({ username, firstname, lastname, email, role, authType: 'entra', entraId }).save();
+            });
+        })
+        .then(row => resolve(row))
+        .catch(err => {
+            if (err.code === 11000)
+                reject({ fn: 'BadParameters', message: 'Username conflict during Entra sign-in' });
+            else
+                reject(err);
+        });
+    });
+};
+
 /*
 *** Methods ***
 */
@@ -507,7 +544,11 @@ UserSchema.methods.getToken = function (userAgent) {
             if (row && row.enabled === false) 
                 throw({fn: 'Unauthorized', message: 'Authentication Failed.'});
 
-            if (row && bcrypt.compareSync(user.password, row.password)) {
+            // Entra-only accounts cannot use local password login
+            if (row && row.authType === 'entra')
+                throw({fn: 'Unauthorized', message: 'This account uses Microsoft sign-in. Use the SSO button.'});
+
+            if (row && row.password && bcrypt.compareSync(user.password, row.password)) {
                 if (row.totpEnabled && user.totpToken)
                     checkTotpToken(user.totpToken, row.totpSecret)
                 else if (row.totpEnabled)

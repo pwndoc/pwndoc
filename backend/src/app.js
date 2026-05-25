@@ -19,10 +19,13 @@ app.disable('x-powered-by');
 
 var io = require('socket.io')(https, {
   cors: {
-    origin: "*"
+    origin: process.env.FRONTEND_ORIGIN || 'https://localhost'
   }
 })
-var cookieParser = require('cookie-parser')
+var cookieParser = require('cookie-parser');
+var session      = require('express-session');
+var helmet       = require('helmet');
+var rateLimit    = require('express-rate-limit');
 var utils = require('./lib/utils');
 const config = require('./config/config.json');
 const env = process.env.NODE_ENV || 'dev';
@@ -160,9 +163,31 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use(cookieParser())
+app.use(cookieParser());
+
+// Session — required for MSAL OIDC CSRF state storage between redirect and callback
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change-me-in-prod',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: true, sameSite: 'strict', httpOnly: true }
+}));
+
+// Security headers — CSP is set explicitly below; disable helmet's default CSP to avoid conflict
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// Rate-limit credential endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/users/token', authLimiter);
+app.use('/api/auth/entra', authLimiter);
 
 // Routes import
+require('./routes/auth')(app);
 require('./routes/user')(app);
 require('./routes/audit')(app, io);
 require('./routes/client')(app);
