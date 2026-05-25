@@ -4,6 +4,7 @@ module.exports = function(app) {
     var Settings = require('mongoose').model('Settings');
     var { invalidateLanguageToolConfigCache } = require('../lib/languagetool-config');
     var { testLanguageToolConnection } = require('../lib/languagetool-test');
+    var entra = require('../lib/entra');
 
     app.get("/api/settings", acl.hasPermission('settings:read'), function(req, res) {
         Settings.getAll()
@@ -60,5 +61,37 @@ module.exports = function(app) {
         Settings.getAll()
         .then(settings => Response.SendFile(res, "app-settings.json", settings))
         .catch(err => Response.Internal(res, err))
+    });
+
+    // GET /api/settings/entra — get Entra auth config (admin only)
+    app.get('/api/settings/entra', acl.hasPermission('settings:read'), async function(req, res) {
+        try {
+            const s = await Settings.getEntraAuth();
+            Response.Ok(res, s ? s.entraAuth : { enabled: false, groups: [] });
+        } catch(err) { Response.Internal(res, err); }
+    });
+
+    // PUT /api/settings/entra — update Entra auth config (admin only)
+    app.put('/api/settings/entra', acl.hasPermission('settings:update'), async function(req, res) {
+        try {
+            const { enabled, groups } = req.body;
+            const updated = await Settings.findOneAndUpdate(
+                {},
+                { $set: { 'entraAuth.enabled': !!enabled, 'entraAuth.groups': groups || [] } },
+                { new: true, runValidators: true }
+            ).select('entraAuth -_id').lean();
+            Response.Ok(res, updated ? updated.entraAuth : { enabled: false, groups: [] });
+        } catch(err) { Response.Internal(res, err); }
+    });
+
+    // POST /api/settings/entra/test — test Entra app registration connectivity
+    app.post('/api/settings/entra/test', acl.hasPermission('settings:update'), async function(req, res) {
+        if (!entra.isEnabled()) return Response.BadParameters(res, 'ENTRA_ENABLED env var is not set to true');
+        try {
+            await entra.testConnection();
+            Response.Ok(res, { ok: true, message: 'Entra connection successful' });
+        } catch(err) {
+            Response.Ok(res, { ok: false, message: err.message || String(err) });
+        }
     });
 }

@@ -125,7 +125,7 @@ export default {
             if (!this.currentCollab.username)
                 this.errors.username = $t('msg.usernameRequired');
 
-            if (this.errors.lastname || this.errors.firstname || this.errors.username || !this.$refs.pwdUpdateRef.validate())
+            if (this.errors.lastname || this.errors.firstname || this.errors.username || (this.$refs.pwdUpdateRef && !this.$refs.pwdUpdateRef.validate()))
                 return;
             
             CollabService.updateCollab(this.idUpdate, this.currentCollab)

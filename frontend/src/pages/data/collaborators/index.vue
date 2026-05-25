@@ -89,13 +89,22 @@
                     </q-tr>
                 </template>
 
+                <template v-slot:body-cell-role="props">
+                    <q-td>
+                        {{ props.row.role }}
+                        <q-badge :color="props.row.authType === 'entra' ? 'blue' : 'grey-7'" class="q-ml-xs">
+                            {{ props.row.authType === 'entra' ? 'Microsoft SSO' : 'Local' }}
+                        </q-badge>
+                    </q-td>
+                </template>
+
                 <template v-slot:body-cell-action="props">
                     <q-td style="width:1px">
                         <q-btn data-testid="edit-collaborator-button" v-if="userStore.isAllowed('users:update')" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">Edit</q-tooltip>
                         </q-btn>
                     </q-td>
-                </template> 
+                </template>
 
                 <template v-slot:bottom="scope">
                     <span v-if="collabs.length === 1">1 {{$t('quantifier')}}{{$t('collatorator')}}</span>                
@@ -335,7 +344,7 @@
                 outlined
                 />
             </q-card-section>
-            <q-card-section>
+            <q-card-section v-if="currentCollab.authType !== 'entra'">
                 <q-input
                 data-testid="edit-collaborator-password-input"
                 ref="pwdUpdateRef"

@@ -865,6 +865,64 @@
                 </q-dialog>
             </q-card>
 
+            <!-- Authentication — Entra SSO configuration (admin only) -->
+            <q-card v-if="userStore.isAllowed('settings:update')" class="q-mt-md">
+                <q-card-section>
+                    <div class="text-h6">Authentication</div>
+                </q-card-section>
+                <q-separator />
+
+                <q-card-section>
+                    <q-toggle v-model="entraSettings.enabled" label="Enable Microsoft Entra SSO" color="blue" />
+                    <div class="text-caption text-grey q-mt-xs">
+                        Requires ENTRA_CLIENT_ID, ENTRA_CLIENT_SECRET, ENTRA_TENANT_ID env vars set on the backend container.
+                    </div>
+                </q-card-section>
+
+                <!-- Group mapping table -->
+                <q-card-section v-if="entraSettings.enabled">
+                    <div class="text-subtitle2 q-mb-sm">Group &rarr; Role Mappings</div>
+                    <q-markup-table flat bordered dense>
+                        <thead>
+                            <tr>
+                                <th class="text-left">Entra Group Object ID</th>
+                                <th class="text-left">Friendly Label</th>
+                                <th class="text-left">PwnDoc Role</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(grp, idx) in entraSettings.groups" :key="idx">
+                                <td><q-input v-model="grp.groupId" dense borderless placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" /></td>
+                                <td><q-input v-model="grp.label"   dense borderless placeholder="e.g. GMF-Offsec-Admins" /></td>
+                                <td>
+                                    <q-select v-model="grp.role" :options="['admin','user']" dense borderless emit-value map-options />
+                                </td>
+                                <td>
+                                    <q-btn flat dense icon="delete" color="negative" @click="removeGroup(idx)" />
+                                </td>
+                            </tr>
+                            <tr v-if="!entraSettings.groups.length">
+                                <td colspan="4" class="text-center text-grey">No groups configured — all Entra users will be denied access.</td>
+                            </tr>
+                        </tbody>
+                    </q-markup-table>
+                    <q-btn flat dense icon="add" label="Add group" color="blue" class="q-mt-sm" @click="addGroup()" />
+                </q-card-section>
+
+                <q-card-section>
+                    <div class="row q-gutter-sm">
+                        <q-btn unelevated color="blue" label="Save Authentication Settings" @click="saveEntraSettings()" />
+                        <q-btn flat color="blue-8" label="Test Connection" @click="testEntraConnection()" :disable="!entraSettings.enabled" />
+                    </div>
+                    <div v-if="entraTestResult" class="q-mt-sm">
+                        <q-badge :color="entraTestResult.ok ? 'positive' : 'negative'">
+                            {{ entraTestResult.message }}
+                        </q-badge>
+                    </div>
+                </q-card-section>
+            </q-card>
+
             <q-card class="q-my-lg" v-if="canEdit" align="center">
                 <q-card-section >
                     <q-item>

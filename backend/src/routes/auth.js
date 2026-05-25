@@ -36,7 +36,7 @@ module.exports = function(app) {
         ? await entra.getGroupsFromGraph(claims.accessToken)
         : claims.groups;
 
-      const role = entra.mapGroupsToRole(groups);
+      const role = await entra.mapGroupsToRole(groups);
       if (!role) {
         console.warn(`[Entra] Access denied for ${claims.username} — not in any mapped group`);
         return res.redirect('/login?entraError=no_group');

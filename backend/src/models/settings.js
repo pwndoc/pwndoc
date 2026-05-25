@@ -63,6 +63,14 @@ const SettingSchema = new Schema({
         private: {
             removeApprovalsUponUpdate: { type: Boolean, default: false }
         }
+    },
+    entraAuth: {
+        enabled: { type: Boolean, default: false },
+        groups: [{
+            groupId: { type: String, required: true },
+            label:   { type: String, default: '' },
+            role:    { type: String, enum: ['admin', 'user'], required: true }
+        }]
     }
 }, {strict: true});
 
@@ -77,6 +85,11 @@ SettingSchema.statics.getAll = () => {
             })
             .catch(err => reject(err));
     });
+};
+
+// Get Entra auth config
+SettingSchema.statics.getEntraAuth = () => {
+    return Settings.findOne({}).select('entraAuth -_id').lean();
 };
 
 // Get public settings

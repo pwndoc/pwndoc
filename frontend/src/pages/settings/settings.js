@@ -1,4 +1,5 @@
 import { Notify, Dialog } from 'quasar'
+import { api } from 'boot/axios'
 
 import SettingsService from '@/services/settings'
 import SpellcheckService from '@/services/spellcheck'
@@ -92,7 +93,11 @@ export default {
             uploadProgress: 0,
             // LanguageTool connection test
             testingLtConnection: false,
-            ltConnectionResult: null
+            ltConnectionResult: null,
+
+            // Entra SSO settings
+            entraSettings: { enabled: false, groups: [] },
+            entraTestResult: null
         }
     },
     components: {
@@ -131,6 +136,7 @@ export default {
         else {
             this.loading = false
         }
+        this.loadEntraSettings()
     },
 
     unmounted: function() {
@@ -572,7 +578,30 @@ export default {
                 textColor: 'white',
                 position: 'top-right'
             })
+        },
+
+        loadEntraSettings() {
+            api.get('settings/entra')
+            .then(res => { this.entraSettings = res.data.datas || { enabled: false, groups: [] }; })
+            .catch(() => {});
+        },
+        saveEntraSettings() {
+            api.put('settings/entra', this.entraSettings)
+            .then(() => { this.$q.notify({ type: 'positive', message: 'Authentication settings saved.' }); })
+            .catch(err => { this.$q.notify({ type: 'negative', message: err.response?.data?.datas || 'Save failed.' }); });
+        },
+        testEntraConnection() {
+            this.entraTestResult = null;
+            api.post('settings/entra/test', {})
+            .then(res => { this.entraTestResult = res.data.datas; })
+            .catch(() => { this.entraTestResult = { ok: false, message: 'Request failed — check backend logs.' }; });
+        },
+        addGroup() {
+            this.entraSettings.groups.push({ groupId: '', label: '', role: 'user' });
+        },
+        removeGroup(idx) {
+            this.entraSettings.groups.splice(idx, 1);
         }
-        
+
     }
 }

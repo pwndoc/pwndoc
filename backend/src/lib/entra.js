@@ -71,11 +71,36 @@ const handleCallback = async (req) => {
 // Map Entra group GUIDs to a PwnDoc role.
 // Admin wins if the user is in any admin group. User wins otherwise.
 // Returns null if not in any mapped group → deny access.
-const mapGroupsToRole = (groups) => {
+// DB group mappings take precedence; falls back to env vars if DB has none configured.
+const mapGroupsToRole = async (groups) => {
   if (!groups || !groups.length) return null;
+
+  // Lazy DB lookup — require here to avoid circular-dependency issues at module load time
+  const Settings = require('mongoose').model('Settings');
+  const s = await Settings.getEntraAuth();
+  const dbGroups = s && s.entraAuth && s.entraAuth.groups;
+
+  if (dbGroups && dbGroups.length) {
+    // DB path: iterate in declaration order; first match wins (admin beats user if listed first)
+    for (const mapping of dbGroups) {
+      if (groups.includes(mapping.groupId)) return mapping.role;
+    }
+    return null;
+  }
+
+  // Env-var fallback
   if (adminGroupIds().some(g => groups.includes(g))) return 'admin';
   if (userGroupIds().some(g => groups.includes(g))) return 'user';
   return null;
+};
+
+// Verify MSAL configuration by attempting a client credentials token acquire
+const testConnection = async () => {
+  const cca = getCca();
+  await cca.acquireTokenByClientCredential({
+    scopes: ['https://graph.microsoft.com/.default'],
+  });
+  return { ok: true };
 };
 
 // Fall back to MS Graph when the token has a groups overage indicator
@@ -119,4 +144,4 @@ const extractClaims = (tokenResponse) => {
   };
 };
 
-module.exports = { isEnabled, getLoginUrl, handleCallback, mapGroupsToRole, getGroupsFromGraph, extractClaims };
+module.exports = { isEnabled, getLoginUrl, handleCallback, mapGroupsToRole, getGroupsFromGraph, extractClaims, testConnection };
