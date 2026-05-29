@@ -1,4 +1,5 @@
 - [Installation](installation.md)
+- [pwndoc-cli](pwndoc-cli.md)
 - [Data](data.md)
 - [Roles](roles.md)
 - [Vulnerabilities](vulnerabilities.md)
