@@ -253,7 +253,7 @@ Click the view icon on any row to open the rule XML in a read-only dialog.
 
 Click the delete icon on any row and confirm. Rules are reloaded into LanguageTool after deletion.
 
-Requires `spellcheck:read` permission to view rules and supported languages, `spellcheck:create` permission to create or reload rules, and `spellcheck:delete` permission to delete rules.
+Requires `proofing-rules:read` permission to view rules and supported languages, `proofing-rules:create` permission to create rules, `proofing-rules:delete` permission to delete rules, and `proofing-rules:update` permission to reload rules or restart the proofing service.
 
 ## Dump
 

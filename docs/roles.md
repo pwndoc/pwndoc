@@ -17,10 +17,10 @@ Here is the list of available permissions to access data:
 | audits:update-all          | vulnerabilities:delete-all    | clients:read      | audit-types:read                | spellcheck:read      |
 | audits:delete-all          |                               | clients:update    | audit-types:update              | spellcheck:create    |
 | audits:review              |                               | clients:delete    | audit-types:delete              | spellcheck:delete    |
-| audits:review-all          |                               | companies:create  | vulnerability-types:create      |                      |
-| audits:comments:create     |                               | companies:read    | vulnerability-types:read        |                      |
-| audits:comments:create-all |                               | companies:update  | vulnerability-types:update      |                      |
-| audits:comments:update     |                               | companies:delete  | vulnerability-types:delete      |                      |
+| audits:review-all          |                               | companies:create  | vulnerability-types:create      | proofing-rules:read  |
+| audits:comments:create     |                               | companies:read    | vulnerability-types:read        | proofing-rules:create |
+| audits:comments:create-all |                               | companies:update  | vulnerability-types:update      | proofing-rules:update |
+| audits:comments:update     |                               | companies:delete  | vulnerability-types:delete      | proofing-rules:delete |
 | audits:comments:update-all |                               | templates:create  | vulnerability-categories:create |                      |
 | audits:comments:delete     |                               | templates:read    | vulnerability-categories:read   |                      |
 | audits:comments:delete-all |                               | templates:update  | vulnerability-categories:update |                      |

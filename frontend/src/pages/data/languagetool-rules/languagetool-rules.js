@@ -12,10 +12,10 @@ const userStore = useUserStore()
 export default {
     computed: {
         canCreate() {
-            return userStore.isAllowed('spellcheck:create')
+            return userStore.isAllowed('proofing-rules:create')
         },
         canDelete() {
-            return userStore.isAllowed('spellcheck:delete')
+            return userStore.isAllowed('proofing-rules:delete')
         }
     },
 
