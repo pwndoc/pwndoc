@@ -222,7 +222,7 @@ Words are shared across all users. The table is searchable and paginated.
 
 **Remove a word:** Click the delete icon on any row and confirm.
 
-Requires `settings:update` permission to add or remove words.
+Requires `spellcheck:create` permission to add words and `spellcheck:delete` permission to remove words.
 
 ## LanguageTool Rules
 
@@ -253,7 +253,7 @@ Click the view icon on any row to open the rule XML in a read-only dialog.
 
 Click the delete icon on any row and confirm. Rules are reloaded into LanguageTool after deletion.
 
-Requires `settings:update` permission to create or delete rules.
+Requires `spellcheck:read` permission to view rules and supported languages, `spellcheck:create` permission to create or reload rules, and `spellcheck:delete` permission to delete rules.
 
 ## Dump
 

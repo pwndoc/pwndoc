@@ -168,8 +168,8 @@ module.exports = function(request, app) {
                 expect(response.status).toBe(401);
             });
 
-            it('Should require settings:update permission', async () => {
-                // This would require a user without settings:update permission
+            it('Should require spellcheck:create permission', async () => {
+                // This would require a user without spellcheck:create permission
                 // For now, we test that authenticated users can create
                 var response = await request(app)
                     .post('/api/languagetool-rules')

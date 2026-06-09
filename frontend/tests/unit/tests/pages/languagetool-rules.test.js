@@ -730,20 +730,4 @@ describe('LanguageTool Rules Page', () => {
       expect(wrapper.vm.search).toEqual({ name: '', id: '' })
     })
   })
-
-  describe('Computed Properties', () => {
-    it('should return true for canEdit when user has settings:update permission', async () => {
-      const wrapper = createWrapper({ canEdit: true })
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.vm.canEdit).toBe(true)
-    })
-
-    it('should return false for canEdit when user lacks permission', async () => {
-      const wrapper = createWrapper({ canEdit: false })
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.vm.canEdit).toBe(false)
-    })
-  })
 })

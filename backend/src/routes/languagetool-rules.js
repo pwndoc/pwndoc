@@ -92,7 +92,7 @@ module.exports = function(app) {
     // ---------------------------
     // Get supported languages
     // ---------------------------
-    app.get("/api/languagetool-rules/languages", acl.hasPermission("settings:read"), async (req, res) => {
+    app.get("/api/languagetool-rules/languages", acl.hasPermission("spellcheck:read"), async (req, res) => {
         try {
             const data = await callLTApi('GET', '/api/languages');
             Response.Ok(res, { languages: data.languages || [] });
@@ -104,7 +104,7 @@ module.exports = function(app) {
     // ---------------------------
     // List all custom rules
     // ---------------------------
-    app.get("/api/languagetool-rules", acl.hasPermission('settings:read-public'), async (req, res) => {
+    app.get("/api/languagetool-rules", acl.hasPermission('spellcheck:read'), async (req, res) => {
         LanguageToolRule.getAll()
             .then(rules => {
                 const transformedRules = rules.map(rule => {
@@ -124,7 +124,7 @@ module.exports = function(app) {
     // ---------------------------
     // Get a specific rule by ID
     // ---------------------------
-    app.get("/api/languagetool-rules/:id", acl.hasPermission('settings:read-public'), async (req, res) => {
+    app.get("/api/languagetool-rules/:id", acl.hasPermission('spellcheck:read'), async (req, res) => {
         const ruleId = req.params.id;
 
         LanguageToolRule.getById(ruleId)
@@ -147,7 +147,7 @@ module.exports = function(app) {
     // ---------------------------
     // Create a new rule
     // ---------------------------
-    app.post("/api/languagetool-rules", acl.hasPermission("settings:update"), async (req, res) => {
+    app.post("/api/languagetool-rules", acl.hasPermission("spellcheck:create"), async (req, res) => {
         const { language, ruleXml } = req.body;
 
         if (!language) {
@@ -196,7 +196,7 @@ module.exports = function(app) {
     // ---------------------------
     // Delete a rule
     // ---------------------------
-    app.delete("/api/languagetool-rules/:id", acl.hasPermission("settings:update"), async (req, res) => {
+    app.delete("/api/languagetool-rules/:id", acl.hasPermission("spellcheck:delete"), async (req, res) => {
         const ruleId = req.params.id;
 
         try {
@@ -226,7 +226,7 @@ module.exports = function(app) {
     // ---------------------------
     // Reload rules (update grammar.xml and restart LanguageTool)
     // ---------------------------
-    app.post("/api/languagetool-rules/reload", acl.hasPermission("settings:update"), async (req, res) => {
+    app.post("/api/languagetool-rules/reload", acl.hasPermission("spellcheck:create"), async (req, res) => {
         try {
             const allRules = await LanguageToolRule.getAll();
             const rulesByLanguage = {};
@@ -255,7 +255,7 @@ module.exports = function(app) {
     // ---------------------------
     // Restart LanguageTool process
     // ---------------------------
-    app.post("/api/languagetool-rules/restart", acl.hasPermission("settings:update"), async (req, res) => {
+    app.post("/api/languagetool-rules/restart", acl.hasPermission("spellcheck:create"), async (req, res) => {
         try {
             const result = await callLTApi('POST', '/api/rules/restart');
             Response.Ok(res, {
