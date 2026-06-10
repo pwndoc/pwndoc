@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user'
 
 export default defineBoot(async({ router, store, urlPath, redirect }) => {
   const userStore = useUserStore(store)
+  const getCurrentPath = () => urlPath || router.currentRoute?.value?.path || ''
   
   router.beforeEach((to, from, next) => {
     if (to.path === '/login') {
@@ -22,7 +23,7 @@ export default defineBoot(async({ router, store, urlPath, redirect }) => {
     UserService.refreshToken()
     .then()
     .catch(err => {
-      if (!router.currentRoute.path.startsWith('/login'))
+      if (!getCurrentPath().startsWith('/login'))
         if (err === 'Expired refreshToken')
           redirect('/login?tokenError=2')
         else
@@ -35,7 +36,7 @@ export default defineBoot(async({ router, store, urlPath, redirect }) => {
     await UserService.refreshToken()
   }
   catch(err) {
-    if (!urlPath.startsWith('/login'))
+    if (!getCurrentPath().startsWith('/login'))
       if (err === 'Expired refreshToken')
         redirect('/login?tokenError=2')
       else
