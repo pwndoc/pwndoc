@@ -9,9 +9,9 @@ var TemplateSchema = new Schema({
 
 TemplateSchema.statics.defaultDocuments = [
     {
-        filter: { name: "Default" },
+        filter: { name: "Default Template" },
         document: {
-            name: "Default",
+            name: "Default Template",
             ext: "docx"
         }
     }
