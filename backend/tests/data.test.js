@@ -43,21 +43,23 @@ module.exports = function(request, app) {
 
     describe('Language CRUD operations', () => {
       it('Get languages', async () => {
+        
+        // English is populated by default
+        const expected = [
+          {locale: 'en', language: 'English'},
+        ]
+
         var response = await request(app).get('/api/data/languages')
           .set('Cookie', [
             `token=JWT ${userToken}`
-          ])
+        ])
       
         expect(response.status).toBe(200)
-        expect(response.body.datas).toHaveLength(0)
+        expect(response.body.datas).toEqual(expect.arrayContaining(expected))
       })
 
-      it('Create 3 languages', async () => {
-        var english = {
-          locale: 'en',
-          language: 'English'
-        }
 
+      it('Create 2 additional languages', async () => {
         var french = {
           locale: 'fr',
           language: 'French'
@@ -67,12 +69,6 @@ module.exports = function(request, app) {
           locale: 'es',
           language: 'Espagnol'
         }
-        var response = await request(app).post('/api/data/languages')
-          .set('Cookie', [
-            `token=JWT ${userToken}`
-          ])
-          .send(english)
-        expect(response.status).toBe(201)
 
         var response = await request(app).post('/api/data/languages')
           .set('Cookie', [
@@ -327,10 +323,10 @@ module.exports = function(request, app) {
 
       it('Get audit types', async () => {
         const expected = [
-          {_id: expect.anything(), "hidden": ["network"], "name": "Retest", "sections": [], "templates": [{}], "stage": "retest"},
-          {_id: expect.anything(), "hidden": ["network"], "name": "Multi", "sections": [], "templates": [{}], "stage": "multi"},
-          {_id: expect.anything(), "hidden": [], "name": "Wifi", "sections": [], "templates": [{}], "stage": "default"},
-          {_id: expect.anything(), "hidden": [], "name": "Web", "sections": [], "templates": [{}], "stage": "default"}
+          {_id: expect.anything(), "hidden": ["network"], "name": "Retest", "sections": [], "templates": [{},{}], "stage": "retest"},
+          {_id: expect.anything(), "hidden": ["network"], "name": "Multi", "sections": [], "templates": [{},{}], "stage": "multi"},
+          {_id: expect.anything(), "hidden": [], "name": "Wifi", "sections": [], "templates": [{},{}], "stage": "default"},
+          {_id: expect.anything(), "hidden": [], "name": "Web", "sections": [], "templates": [{},{}], "stage": "default"}
         ]
         var response = await request(app).get('/api/data/audit-types')
           .set('Cookie', [

@@ -39,15 +39,12 @@ test.describe('Init First User', () => {
       // Check for expand button
       await expect(page.getByRole('button', { name: 'Expand "admin"' })).toBeVisible();
 
-      // Check paragraph texts and links
-      await expect(page.getByText('No languages are defined. Please create Languages in')).toBeVisible();
-      await expect(page.getByRole('link', { name: 'Data -> Custom Data -> Language' })).toHaveAttribute('href', '/data/custom');
+      // Check onboarding links
+      await expect(page.getByRole('link', { name: 'Data -> Custom Data -> Language' })).toHaveAttribute('href', '/data/custom#languages');
 
-      await expect(page.getByText('No Audit Types are defined. Please create Audit Types in')).toBeVisible();
-      await expect(page.getByRole('link', { name: 'Data -> Custom Data -> Audit Types' })).toHaveAttribute('href', '/data/custom');
+      await expect(page.getByRole('link', { name: 'Data -> Custom Data -> Audit Types' })).toHaveAttribute('href', '/data/custom#audit-types');
 
-      await expect(page.getByText('Or restore from Backup File')).toBeVisible();
-      await expect(page.getByRole('link', { name: 'Settings -> Backups' })).toHaveAttribute('href', '/settings');
+      await expect(page.getByRole('link', { name: 'Settings -> Backups' })).toHaveAttribute('href', '/settings#backups');
     });
   });
 

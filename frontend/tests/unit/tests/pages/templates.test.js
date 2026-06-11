@@ -78,6 +78,7 @@ describe('Templates Page', () => {
     router = createRouter({
       history: createWebHistory(),
       routes: [
+        { path: '/', component: TemplatesPage },
         { path: '/data/templates', component: TemplatesPage }
       ]
     })
