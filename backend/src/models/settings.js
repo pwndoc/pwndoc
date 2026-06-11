@@ -201,6 +201,8 @@ SettingSchema.statics.restore = (path) => {
             return new Promise((resolve, reject) => {
                 const readStream = fs.createReadStream(`${path}/settings.json`)
                 const JSONStream = require('JSONStream')
+                // Wait for all upserts before ensureInitialized() runs after restore.
+                const pendingWrites = []
 
                 let jsonStream = JSONStream.parse('*')
                 readStream.pipe(jsonStream)
@@ -210,14 +212,19 @@ SettingSchema.statics.restore = (path) => {
                 })
 
                 jsonStream.on('data', async (document) => {
-                    Settings.findOneAndReplace({_id: document._id}, document, { upsert: true })
-                    .catch(err => {
+                    pendingWrites.push(
+                        Settings.findOneAndReplace({_id: document._id}, document, { upsert: true })
+                    )
+                })
+                jsonStream.on('end', async () => {
+                    try {
+                        await Promise.all(pendingWrites)
+                        resolve()
+                    }
+                    catch (err) {
                         console.log(err)
                         reject(err)
-                    })
-                })
-                jsonStream.on('end', () => {
-                    resolve()
+                    }
                 })
                 jsonStream.on('error', (error) => {
                     reject(error)
