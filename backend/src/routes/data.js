@@ -12,160 +12,59 @@ module.exports = function(app) {
     var AiPrompt = require('mongoose').model('AiPrompt');
     var Settings = require('mongoose').model('Settings');
     const {
-        AI_PROVIDERS,
-        AI_DEFAULT_PROVIDER,
-        AI_PROVIDER_DEFAULTS,
         normalizePromptValue,
         toPromptCompositeKey,
         buildAiFieldCatalog,
         buildPromptMappings
     } = require('../lib/ai-prompts');
+    const {
+        normalizeRedactionGuidelines,
+        validateRedactionGuidelinesPayload,
+        buildRedactionGuidelinesSettingsUpdate
+    } = require('../lib/ai-redaction-guidelines');
+    const {
+        normalizeQaInstructions,
+        validateQaInstructionsPayload,
+        buildQaInstructionsSettingsUpdate
+    } = require('../lib/ai-qa-instructions');
+    const {
+        normalizeQaChecks,
+        validateQaChecksPayload,
+        buildQaChecksSettingsUpdate
+    } = require('../lib/ai-qa-checks');
 
     var _ = require('lodash')
 
-    const getAiPromptsPayload = async (settings, isAdmin) => {
-        const aiSettings = settings?.ai || {};
+    const getAiIntegrationPayload = async (settings) => {
         const customFields = await CustomField.getAll();
         const fieldCatalog = buildAiFieldCatalog(customFields);
         const promptRows = await AiPrompt.find({}).select('entityType fieldKey fieldLabel outputType enabled prompt customFieldId').lean();
-
         const promptMappings = buildPromptMappings(fieldCatalog, promptRows);
-        const defaultProvider = AI_PROVIDERS.includes(settings?.ai?.public?.defaultProvider) ?
-            settings.ai.public.defaultProvider :
-            AI_DEFAULT_PROVIDER;
 
-        const payload = {
+        return {
             aiEnabled: settings?.ai?.public?.enabled !== false,
-            defaultProvider: defaultProvider,
-            promptMappings: promptMappings
+            promptMappings: promptMappings,
+            redactionGuidelines: normalizeRedactionGuidelines(settings?.ai?.public?.redactionGuidelines || {}),
+            qaInstructions: normalizeQaInstructions(settings?.ai?.public?.qaInstructions || {}),
+            qaChecks: normalizeQaChecks(settings?.ai?.public?.qaChecks || {})
         };
-
-        if (!isAdmin)
-            return payload;
-
-        payload.hasOpenAIApiKey = Boolean((aiSettings?.private?.openaiApiKey || '').trim());
-        payload.openaiBaseUrl = String(aiSettings?.private?.openaiBaseUrl || AI_PROVIDER_DEFAULTS.openai.baseUrl);
-        payload.openaiModel = String(aiSettings?.private?.openaiModel || AI_PROVIDER_DEFAULTS.openai.model);
-
-        payload.hasAnthropicApiKey = Boolean((aiSettings?.private?.anthropicApiKey || '').trim());
-        payload.anthropicBaseUrl = String(aiSettings?.private?.anthropicBaseUrl || AI_PROVIDER_DEFAULTS.anthropic.baseUrl);
-        payload.anthropicModel = String(aiSettings?.private?.anthropicModel || AI_PROVIDER_DEFAULTS.anthropic.model);
-        payload.anthropicVersion = String(aiSettings?.private?.anthropicVersion || AI_PROVIDER_DEFAULTS.anthropic.version);
-
-        payload.hasDeepseekApiKey = Boolean((aiSettings?.private?.deepseekApiKey || '').trim());
-        payload.deepseekBaseUrl = String(aiSettings?.private?.deepseekBaseUrl || AI_PROVIDER_DEFAULTS.deepseek.baseUrl);
-        payload.deepseekModel = String(aiSettings?.private?.deepseekModel || AI_PROVIDER_DEFAULTS.deepseek.model);
-
-        payload.hasOllamaApiKey = Boolean((aiSettings?.private?.ollamaApiKey || '').trim());
-        payload.ollamaBaseUrl = String(aiSettings?.private?.ollamaBaseUrl || AI_PROVIDER_DEFAULTS.ollama.baseUrl);
-        payload.ollamaModel = String(aiSettings?.private?.ollamaModel || AI_PROVIDER_DEFAULTS.ollama.model);
-
-        return payload;
     }
 
-/* ===== ROLES ===== */
-
-    // Get Roles list
-    app.get("/api/data/roles", acl.hasPermission('roles:read'), function(req, res) {
+    const updateAiIntegration = async (req, res) => {
         try {
-            var result = Object.keys(acl.roles)
-            Response.Ok(res, result)
-        }
-        catch (error) {
-            Response.Internal(res, error)
-        }
-    })
+            const hasPromptMappings = Array.isArray(req.body.promptMappings);
+            const hasRedactionGuidelines = req.body.redactionGuidelines !== undefined;
+            const hasQaInstructions = req.body.qaInstructions !== undefined;
+            const hasQaChecks = req.body.qaChecks !== undefined;
 
-/* ===== AI PROMPTS ===== */
+            if (!hasPromptMappings && !hasRedactionGuidelines && !hasQaInstructions && !hasQaChecks) {
+                Response.BadParameters(res, 'Missing promptMappings, redactionGuidelines, qaInstructions, or qaChecks payload');
+                return;
+            }
 
-    // Get AI prompts
-    app.get("/api/data/ai-prompts", acl.hasPermission('settings:read-public'), async function(req, res) {
-        try {
-            const settings = await Settings.getAll();
-            const isAdmin = acl.isAllowed(req.decodedToken.role, 'settings:update');
-            const payload = await getAiPromptsPayload(settings, isAdmin);
-            Response.Ok(res, payload);
-        } catch (err) {
-            Response.Internal(res, err);
-        }
-    });
-
-    // Update AI prompts (admin only)
-    app.put("/api/data/ai-prompts", acl.hasPermission('settings:update'), async function(req, res) {
-        try {
             let currentSettings = await Settings.getAll() || {};
-            const update = {$set: {}};
 
-            if (req.body.aiEnabled !== undefined) {
-                if (typeof req.body.aiEnabled !== 'boolean') {
-                    Response.BadParameters(res, 'Invalid aiEnabled payload');
-                    return;
-                }
-                update.$set['ai.public.enabled'] = req.body.aiEnabled;
-            }
-
-            if (req.body.defaultProvider !== undefined) {
-                const provider = String(req.body.defaultProvider || '').toLowerCase().trim();
-                if (!AI_PROVIDERS.includes(provider)) {
-                    Response.BadParameters(res, `Invalid defaultProvider. Allowed values: ${AI_PROVIDERS.join(', ')}`);
-                    return;
-                }
-                update.$set['ai.public.defaultProvider'] = provider;
-            }
-
-            const apiKeyFields = [
-                { bodyField: 'openaiApiKey', settingsField: 'ai.private.openaiApiKey' },
-                { bodyField: 'anthropicApiKey', settingsField: 'ai.private.anthropicApiKey' },
-                { bodyField: 'deepseekApiKey', settingsField: 'ai.private.deepseekApiKey' },
-                { bodyField: 'ollamaApiKey', settingsField: 'ai.private.ollamaApiKey' }
-            ];
-
-            for (const entry of apiKeyFields) {
-                if (!Object.prototype.hasOwnProperty.call(req.body, entry.bodyField))
-                    continue;
-
-                const keyValue = req.body[entry.bodyField];
-                if (typeof keyValue !== 'string') {
-                    Response.BadParameters(res, `Invalid ${entry.bodyField} payload`);
-                    return;
-                }
-
-                const apiKey = keyValue.trim();
-                if (apiKey) {
-                    update.$set[entry.settingsField] = apiKey;
-                } else {
-                    update.$unset = update.$unset || {};
-                    update.$unset[entry.settingsField] = 1;
-                }
-            }
-
-            const providerConfigFields = [
-                { bodyField: 'openaiBaseUrl', settingsField: 'ai.private.openaiBaseUrl', fallback: AI_PROVIDER_DEFAULTS.openai.baseUrl },
-                { bodyField: 'openaiModel', settingsField: 'ai.private.openaiModel', fallback: AI_PROVIDER_DEFAULTS.openai.model },
-                { bodyField: 'anthropicBaseUrl', settingsField: 'ai.private.anthropicBaseUrl', fallback: AI_PROVIDER_DEFAULTS.anthropic.baseUrl },
-                { bodyField: 'anthropicModel', settingsField: 'ai.private.anthropicModel', fallback: AI_PROVIDER_DEFAULTS.anthropic.model },
-                { bodyField: 'anthropicVersion', settingsField: 'ai.private.anthropicVersion', fallback: AI_PROVIDER_DEFAULTS.anthropic.version },
-                { bodyField: 'deepseekBaseUrl', settingsField: 'ai.private.deepseekBaseUrl', fallback: AI_PROVIDER_DEFAULTS.deepseek.baseUrl },
-                { bodyField: 'deepseekModel', settingsField: 'ai.private.deepseekModel', fallback: AI_PROVIDER_DEFAULTS.deepseek.model },
-                { bodyField: 'ollamaBaseUrl', settingsField: 'ai.private.ollamaBaseUrl', fallback: AI_PROVIDER_DEFAULTS.ollama.baseUrl },
-                { bodyField: 'ollamaModel', settingsField: 'ai.private.ollamaModel', fallback: AI_PROVIDER_DEFAULTS.ollama.model }
-            ];
-
-            for (const entry of providerConfigFields) {
-                if (!Object.prototype.hasOwnProperty.call(req.body, entry.bodyField))
-                    continue;
-
-                const value = req.body[entry.bodyField];
-                if (typeof value !== 'string') {
-                    Response.BadParameters(res, `Invalid ${entry.bodyField} payload`);
-                    return;
-                }
-
-                const normalized = value.trim();
-                update.$set[entry.settingsField] = normalized || entry.fallback;
-            }
-
-            if (Array.isArray(req.body.promptMappings)) {
+            if (hasPromptMappings) {
                 const customFields = await CustomField.getAll();
                 const fieldCatalog = buildAiFieldCatalog(customFields);
                 const fieldByCompositeKey = new Map(
@@ -230,30 +129,108 @@ module.exports = function(app) {
                 .map((row) => row._id);
                 if (staleIds.length > 0)
                     await AiPrompt.deleteMany({_id: {$in: staleIds}});
-            } else if (req.body.promptMappings !== undefined) {
-                Response.BadParameters(res, 'Invalid promptMappings payload');
-                return;
             }
 
-            if (!update.$set || Object.keys(update.$set).length === 0)
-                delete update.$set;
-            if (!update.$unset || Object.keys(update.$unset).length === 0)
-                delete update.$unset;
+            if (hasRedactionGuidelines) {
+                const validation = validateRedactionGuidelinesPayload(req.body.redactionGuidelines);
+                if (!validation.valid) {
+                    Response.BadParameters(res, validation.message);
+                    return;
+                }
 
-            if (update.$set || update.$unset) {
-                currentSettings = await Settings.findOneAndUpdate({}, update, {
+                currentSettings = await Settings.findOneAndUpdate({}, {
+                    $set: buildRedactionGuidelinesSettingsUpdate(req.body.redactionGuidelines)
+                }, {
                     new: true,
                     runValidators: true,
                     upsert: true
                 });
             }
 
-            const payload = await getAiPromptsPayload(currentSettings, true);
+            if (hasQaInstructions) {
+                const validation = validateQaInstructionsPayload(req.body.qaInstructions);
+                if (!validation.valid) {
+                    Response.BadParameters(res, validation.message);
+                    return;
+                }
+
+                currentSettings = await Settings.findOneAndUpdate({}, {
+                    $set: buildQaInstructionsSettingsUpdate(req.body.qaInstructions)
+                }, {
+                    new: true,
+                    runValidators: true,
+                    upsert: true
+                });
+            }
+
+            if (hasQaChecks) {
+                const validation = validateQaChecksPayload(req.body.qaChecks);
+                if (!validation.valid) {
+                    Response.BadParameters(res, validation.message);
+                    return;
+                }
+
+                currentSettings = await Settings.findOneAndUpdate({}, {
+                    $set: buildQaChecksSettingsUpdate(req.body.qaChecks)
+                }, {
+                    new: true,
+                    runValidators: true,
+                    upsert: true
+                });
+            }
+
+            if (!currentSettings)
+                currentSettings = await Settings.getAll() || {};
+
+            const payload = await getAiIntegrationPayload(currentSettings);
+            Response.Ok(res, payload);
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    }
+
+/* ===== ROLES ===== */
+
+    // Get Roles list
+    app.get("/api/data/roles", acl.hasPermission('roles:read'), function(req, res) {
+        try {
+            var result = Object.keys(acl.roles)
+            Response.Ok(res, result)
+        }
+        catch (error) {
+            Response.Internal(res, error)
+        }
+    })
+
+/* ===== AI INTEGRATION ===== */
+
+    // Get AI integration configuration (prompts + redaction guidelines)
+    app.get("/api/data/ai-integration", acl.hasPermission('settings:read-public'), async function(req, res) {
+        try {
+            const settings = await Settings.getAll();
+            const payload = await getAiIntegrationPayload(settings);
             Response.Ok(res, payload);
         } catch (err) {
             Response.Internal(res, err);
         }
     });
+
+    // Backward-compatible alias
+    app.get("/api/data/ai-prompts", acl.hasPermission('settings:read-public'), async function(req, res) {
+        try {
+            const settings = await Settings.getAll();
+            const payload = await getAiIntegrationPayload(settings);
+            Response.Ok(res, payload);
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    });
+
+    // Update AI integration configuration (admin only)
+    app.put("/api/data/ai-integration", acl.hasPermission('settings:update'), updateAiIntegration);
+
+    // Backward-compatible alias
+    app.put("/api/data/ai-prompts", acl.hasPermission('settings:update'), updateAiIntegration);
 
 /* ===== LANGUAGES ===== */
 
@@ -656,7 +633,7 @@ module.exports = function(app) {
                 Response.BadParameters(res, 'Missing required parameters: _id, label, display')
                 return
             }
-            if ((!utils.validFilename(customField.label || !utils.validFilename(customField.fieldType))) && customField.fieldType !== 'space') {
+            if ((!utils.validFilename(customField.label) || (customField.fieldType && !utils.validFilename(customField.fieldType))) && customField.fieldType !== 'space') {
                 Response.BadParameters(res, 'label and fieldType value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
                 return
             }
@@ -671,7 +648,7 @@ module.exports = function(app) {
             if (typeof e.inline === 'boolean') field.inline = e.inline
             if (!_.isNil(e.description)) field.description = e.description
             if (!_.isNil(e.text)) field.text = e.text
-            if (isArray(e.options)) field.options = e.options
+            if (Array.isArray(e.options)) field.options = e.options
             if (typeof e.position === 'number') field.position = e.position
             customFields.push(field)
         })

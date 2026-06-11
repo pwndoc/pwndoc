@@ -43,6 +43,15 @@
                         Disable to fully hide AI prompt configuration and AI generation buttons for all users.
                     </div>
                 </q-card-section>
+                <q-separator v-if="settings.ai && settings.ai.public && settings.ai.public.enabled && userStore.isAllowed('settings:update')" />
+                <q-card-section v-if="settings.ai && settings.ai.public && settings.ai.public.enabled && userStore.isAllowed('settings:update')">
+                    <div class="text-bold q-mb-md">AI Provider</div>
+                    <ai-provider-settings
+                    ref="aiProviderSettings"
+                    :settings="settings"
+                    :canEdit="canEdit"
+                    />
+                </q-card-section>
             </q-card>
 
             <q-card v-if="userStore.isAllowed('settings:read')" class="q-my-lg">

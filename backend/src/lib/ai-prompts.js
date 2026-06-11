@@ -1,27 +1,32 @@
-const AI_PROVIDERS = ['openai', 'anthropic', 'deepseek', 'ollama'];
+const AI_PROVIDERS = ['openai', 'anthropic', 'deepseek', 'ollama', 'bedrock'];
 const AI_DEFAULT_PROVIDER = 'openai';
 
 const AI_PROVIDER_DEFAULTS = {
     openai: {
         baseUrl: 'https://api.openai.com/v1',
-        model: 'gpt-4.1-mini',
+        model: 'gpt-5.4-mini',
         timeoutMs: 30000
     },
     anthropic: {
         baseUrl: 'https://api.anthropic.com/v1',
-        model: 'claude-3-5-sonnet-latest',
+        model: 'claude-opus-4.8',
         timeoutMs: 30000,
         version: '2023-06-01'
     },
     deepseek: {
         baseUrl: 'https://api.deepseek.com/v1',
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         timeoutMs: 30000
     },
     ollama: {
         baseUrl: 'http://localhost:11434/v1',
         model: 'llama3.1',
         timeoutMs: 60000
+    },
+    bedrock: {
+        region: 'us-east-1',
+        model: 'global.anthropic.claude-opus-4-8',
+        timeoutMs: 120000
     }
 };
 

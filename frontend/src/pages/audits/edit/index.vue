@@ -73,6 +73,14 @@
 								</q-btn>
 							</q-item-section>
 						</template>
+						<q-item-section side class="topButtonSection" v-if="aiQaEnabled">
+							<q-btn class="audit-qa-btn" flat color="secondary" @click="runAuditQa">
+								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+									{{ $t('tooltip.auditQa') }}
+								</q-tooltip>
+								<q-icon name="fact_check" size="md" />
+							</q-btn>
+						</q-item-section>
 						<q-item-section side class="topButtonSection">
 							<q-btn class="audit-download-btn" flat color="info" @click="generateReport">
 								<q-badge
@@ -367,6 +375,7 @@ import { useUserStore } from 'src/stores/user'
 import DataService from '@/services/data';
 import DraftRecoveryService from '@/services/draft-recovery';
 import Utils from '@/services/utils';
+import { openAuditQaDialog } from '@/composables/openAuditQaDialog';
 
 import { $t } from '@/boot/i18n';
 
@@ -575,6 +584,11 @@ export default {
 
 		hasAnyAuditDraft: function() {
 			return this.auditDrafts.length > 0
+		},
+
+		aiQaEnabled: function() {
+			return this.$settings?.ai?.public?.enabled !== false &&
+				userStore.isAllowed('ai:qa')
 		}
 	},
 
@@ -861,6 +875,10 @@ export default {
 
 				fileReader.readAsText(data)
 			})
+		},
+
+		runAuditQa: function() {
+			openAuditQaDialog(this.auditId)
 		},
 
 		generateReport: function() {

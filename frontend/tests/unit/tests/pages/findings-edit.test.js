@@ -19,7 +19,8 @@ vi.mock('@/services/audit', () => ({
 
 vi.mock('@/services/data', () => ({
   default: {
-    getVulnerabilityTypes: vi.fn()
+    getVulnerabilityTypes: vi.fn(),
+    getAiPrompts: vi.fn()
   }
 }))
 
@@ -132,6 +133,14 @@ describe('Findings Edit Page', () => {
     // Default mock responses
     AuditService.getFinding.mockResolvedValue({ data: { datas: { ...mockFinding } } })
     DataService.getVulnerabilityTypes.mockResolvedValue({ data: { datas: mockVulnTypes } })
+    DataService.getAiPrompts.mockResolvedValue({
+      data: {
+        datas: {
+          aiEnabled: false,
+          promptMappings: []
+        }
+      }
+    })
   })
 
   const createWrapper = (options = {}) => {

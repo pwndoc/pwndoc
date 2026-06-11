@@ -7,7 +7,7 @@ import CommentsList from 'components/comments-list';
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
-import AiService from '@/services/ai';
+import AiFieldHelper from '@/services/ai-field-helper';
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils';
 import { createDraftRecovery } from '@/composables/useDraftRecovery';
@@ -33,6 +33,7 @@ export default {
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
             aiEnabled: false,
             aiPromptFieldKeys: [],
+            aiPromptMappings: [],
             aiGeneratingFields: {},
             // Comments
             commentTemp: null,
@@ -274,13 +275,16 @@ export default {
             .then((data) => {
                 const payload = data.data.datas || {}
                 this.aiEnabled = payload.aiEnabled !== false
-                this.aiPromptFieldKeys = (payload.promptMappings || [])
-                .filter((mapping) => String(mapping.entityType || '') === 'section' && mapping.enabled !== false)
+                this.aiPromptMappings = (payload.promptMappings || [])
+                .filter((mapping) => String(mapping.entityType || '') === 'section')
+                this.aiPromptFieldKeys = this.aiPromptMappings
+                .filter((mapping) => mapping.enabled !== false)
                 .map((mapping) => String(mapping.fieldKey || ''))
             })
             .catch(() => {
                 this.aiEnabled = false
                 this.aiPromptFieldKeys = []
+                this.aiPromptMappings = []
             })
         },
 
@@ -305,94 +309,87 @@ export default {
                 return
 
             Utils.syncEditors(this.$refs)
+
+            const selectionTarget = this.$refs.customfields?.getAiSelectionTarget?.(customField)
+            const selection = selectionTarget?.getTextSelection?.()
+            const outputType = AiFieldHelper.getOutputType(null, customField)
+            const fieldLabel = AiFieldHelper.getFieldLabel(null, customField, fieldKey)
+            const baseContext = AiFieldHelper.buildSectionAiContext(this.section, customField)
+            const requestParams = {
+                entityType: 'section',
+                field: fieldKey,
+                locale: this.auditParent.language,
+                outputType,
+                context: baseContext
+            }
+
             this.aiGeneratingFields[fieldKey] = true
 
             try {
-                const customFieldContext = {}
-                if (this.section.customFields && this.section.customFields.length > 0) {
-                    this.section.customFields.forEach((entry) => {
-                        if (entry?.customField?.label)
-                            customFieldContext[entry.customField.label] = entry.text
+                if (selection?.text) {
+                    const draft = await AiFieldHelper.runSelectionAiChat({
+                        title: `AI - ${fieldLabel}`,
+                        selectedText: selection.text,
+                        outputType,
+                        requestParams: {
+                            ...requestParams,
+                            context: {
+                                ...baseContext,
+                                selectedText: selection.text,
+                                selectedHtml: selection.html || selection.text
+                            }
+                        }
                     })
-                }
 
-                const response = await AiService.generateFieldDraft({
-                    entityType: 'section',
-                    field: fieldKey,
-                    locale: this.auditParent.language,
-                    context: {
-                        sectionField: this.section.field || '',
-                        sectionName: this.section.name || '',
-                        sectionText: this.section.text || '',
-                        customFieldLabel: customField?.customField?.label || '',
-                        customFieldValue: customField?.text || '',
-                        customFields: customFieldContext
-                    }
-                })
+                    if (!draft)
+                        return
 
-                const rawDraft = response.data?.datas?.draft || ''
-                const outputType = response.data?.datas?.outputType || 'html'
-                const providerUsed = response.data?.datas?.provider || 'default provider'
-                let normalizedDraft = null
-
-                if (outputType === 'array') {
-                    const entries = Array.isArray(rawDraft)
-                        ? rawDraft
-                        : String(rawDraft).split('\n')
-
-                    normalizedDraft = entries
-                    .map((entry) => String(entry || '').trim())
-                    .filter(Boolean)
-
-                    if (normalizedDraft.length === 0)
-                        throw new Error('AI draft is empty')
-
-                    const preview = normalizedDraft
-                    .map((line) => line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
-                    .join('<br/>')
-
-                    Dialog.create({
-                        title: `AI Draft - ${customField?.customField?.label || fieldKey} (${providerUsed})`,
-                        html: true,
-                        message: `<div style="max-height:40vh;overflow:auto;border:1px solid #d7d7d7;padding:8px;">${preview}</div><p class="q-mt-md">Apply this draft to the field?</p>`,
-                        ok: {label: 'Apply', color: 'primary'},
-                        cancel: {label: $t('btn.cancel'), color: 'white'}
+                    AiFieldHelper.applySelectionDraft({
+                        selectionTarget,
+                        selection,
+                        draft,
+                        outputType
                     })
-                    .onOk(() => {
-                        customField.text = normalizedDraft
-                        Notify.create({
-                            message: `AI draft applied from ${providerUsed} (not saved yet)`,
-                            color: 'positive',
-                            textColor: 'white',
-                            position: 'top-right'
-                        })
-                    })
-                    return
-                }
 
-                normalizedDraft = String(rawDraft || '').trim()
-                if (!normalizedDraft)
-                    throw new Error('AI draft is empty')
-
-                const preview = (outputType === 'html') ?
-                    Utils.htmlEncode(normalizedDraft) :
-                    normalizedDraft.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-                Dialog.create({
-                    title: `AI Draft - ${customField?.customField?.label || fieldKey} (${providerUsed})`,
-                    html: true,
-                    message: `<div style="max-height:40vh;overflow:auto;border:1px solid #d7d7d7;padding:8px;">${preview}</div><p class="q-mt-md">Apply this draft to the field?</p>`,
-                    ok: {label: 'Apply', color: 'primary'},
-                    cancel: {label: $t('btn.cancel'), color: 'white'}
-                })
-                .onOk(() => {
-                    customField.text = (outputType === 'html') ? Utils.htmlEncode(normalizedDraft) : normalizedDraft
                     Notify.create({
-                        message: `AI draft applied from ${providerUsed} (not saved yet)`,
+                        message: AiFieldHelper.appliedMessage(),
                         color: 'positive',
                         textColor: 'white',
                         position: 'top-right'
                     })
+                    return
+                }
+
+                const defaultPrompt = AiFieldHelper.getDefaultPrompt(
+                    this.aiPromptMappings,
+                    'section',
+                    fieldKey,
+                    baseContext
+                )
+
+                const draft = await AiFieldHelper.runFieldAiChat({
+                    title: `AI - ${fieldLabel}`,
+                    defaultPrompt,
+                    outputType,
+                    requestParams
+                })
+
+                if (!draft)
+                    return
+
+                AiFieldHelper.applyFieldDraft({
+                    draft,
+                    outputType,
+                    setValue: (value) => {
+                        customField.text = value
+                    }
+                })
+
+                Notify.create({
+                    message: AiFieldHelper.appliedFieldMessage(),
+                    color: 'positive',
+                    textColor: 'white',
+                    position: 'top-right'
                 })
             } catch (err) {
                 Notify.create({

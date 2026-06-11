@@ -105,11 +105,19 @@ export default {
         return api.put(`data/sections`, sections)
     },
 
+    getAiIntegration: function() {
+        return api.get('data/ai-integration')
+    },
+
+    updateAiIntegration: function(payload) {
+        return api.put('data/ai-integration', payload)
+    },
+
     getAiPrompts: function() {
-        return api.get('data/ai-prompts')
+        return api.get('data/ai-integration')
     },
 
     updateAiPrompts: function(payload) {
-        return api.put('data/ai-prompts', payload)
+        return api.put('data/ai-integration', payload)
     }
 }

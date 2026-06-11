@@ -21,6 +21,7 @@
     "supertest": "^7.2.2"
   },
   "dependencies": {
+    "@node-llm/core": "^1.16.1",
     "ae-cvss-calculator": "^1.0.9",
     "angular-expressions": "^1.5.1",
     "archiver": "^7.0.1",
@@ -31,11 +32,11 @@
     "docxtemplater-image-module-pwndoc": "github:pwndoc/docxtemplater-image-module-pwndoc",
     "express": "^5.2.1",
     "full-icu": "^1.5.0",
+    "highlight.js": "^11.11.1",
     "htmlparser2": "^10.0.0",
     "image-size": "^2.0.2",
     "JSONStream": "^1.3.5",
     "jsonwebtoken": "^9.0.3",
-    "highlight.js": "^11.11.1",
     "lodash": "^4.17.21",
     "mongoose": "^9.1.2",
     "multer": "^2.0.2",

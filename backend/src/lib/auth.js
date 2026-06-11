@@ -78,7 +78,8 @@ var builtInRoles = {
             'spellcheck:read',
             'spellcheck:create',
             // AI
-            'ai:generate'
+            'ai:generate',
+            'ai:qa'
         ]
     },
     admin: {

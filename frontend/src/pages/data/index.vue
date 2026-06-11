@@ -42,11 +42,11 @@
                 </q-item-section>
                 <q-item-section>{{$t('languageToolRules')}}</q-item-section>
             </q-item>
-            <q-item v-if="$settings.ai && $settings.ai.public && $settings.ai.public.enabled" to='/data/ai-prompts'>
+            <q-item v-if="$settings.ai && $settings.ai.public && $settings.ai.public.enabled" to='/data/ai-integration'>
                 <q-item-section avatar>
                     <q-icon name="fa fa-robot" />
                 </q-item-section>
-                <q-item-section>AI Prompts</q-item-section>
+                <q-item-section>AI Integration</q-item-section>
             </q-item>
 
             <q-separator spaced />

@@ -8,6 +8,7 @@ import Utils from '@/services/utils'
 
 import { $t } from 'boot/i18n'
 import LanguageSelector from '@/components/language-selector';
+import AiProviderSettings from '@/components/ai-provider-settings.vue';
 
 const userStore = useUserStore()
 
@@ -96,7 +97,8 @@ export default {
         }
     },
     components: {
-        LanguageSelector
+        LanguageSelector,
+        AiProviderSettings
     },
 
     watch: {
@@ -149,9 +151,11 @@ export default {
             SettingsService.getSettings()
             .then((data) => {
                 this.settings = data.data.datas;
-                if (!this.settings.ai) this.settings.ai = {public: {enabled: true}, private: {}}
-                if (!this.settings.ai.public) this.settings.ai.public = {enabled: true}
+                if (!this.settings.ai) this.settings.ai = {public: {enabled: true, defaultProvider: 'openai'}, private: {}}
+                if (!this.settings.ai.public) this.settings.ai.public = {enabled: true, defaultProvider: 'openai'}
+                if (!this.settings.ai.private) this.settings.ai.private = {}
                 if (typeof this.settings.ai.public.enabled !== 'boolean') this.settings.ai.public.enabled = true
+                if (!this.settings.ai.public.defaultProvider) this.settings.ai.public.defaultProvider = 'openai'
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.loading = false
             })
@@ -209,9 +213,14 @@ export default {
             if(this.settings.reviews.public.minReviewers < min || this.settings.reviews.public.minReviewers > max) {
                 this.settings.reviews.public.minReviewers = this.settings.reviews.public.minReviewers < min ? min: max;
             }
+            if (this.$refs.aiProviderSettings)
+                this.$refs.aiProviderSettings.applyPendingKeyUpdates()
+
             SettingsService.updateSettings(this.settings)
             .then((data) => {
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
+                if (this.$refs.aiProviderSettings)
+                    this.$refs.aiProviderSettings.resetKeyInputs()
                 this.$settings.refresh();
                 Notify.create({
                     message: $t('msg.settingsUpdatedOk'),

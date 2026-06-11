@@ -1,6 +1,23 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createTestWrapper } from '../../test-utils'
-import CustomFields from '@/components/custom-fields.vue'
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    isAllowed: vi.fn(() => true)
+  }))
+}))
+
+vi.mock('boot/axios', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
+  }
+}))
+
+vi.mock('@/boot/i18n', () => ({
+  $t: (key) => key
+}))
 
 // Stub the BasicEditor component to avoid complex dependency loading
 vi.mock('components/editor/Editor.vue', () => ({
@@ -10,6 +27,9 @@ vi.mock('components/editor/Editor.vue', () => ({
     props: ['modelValue', 'diff', 'editable', 'noSync', 'fieldName', 'commentMode', 'focusedComment', 'commentIdList']
   }
 }))
+
+import { createTestWrapper } from '../../test-utils'
+import CustomFields from '@/components/custom-fields.vue'
 
 describe('CustomFields Component', () => {
   const makeField = (overrides = {}) => ({

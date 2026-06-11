@@ -93,6 +93,13 @@ import BackupService from '@/services/backup'
 import { Notify, Dialog } from 'quasar'
 
 const mockSettings = {
+  ai: {
+    private: {},
+    public: {
+      enabled: true,
+      defaultProvider: 'openai'
+    }
+  },
   report: {
     private: {
       imageBorder: false,
@@ -147,6 +154,13 @@ const mockSettings = {
 
 const mockSettingsWithLt = {
   ...JSON.parse(JSON.stringify({
+    ai: {
+      private: {},
+      public: {
+        enabled: true,
+        defaultProvider: 'openai'
+      }
+    },
     report: {
       private: {
         imageBorder: false,

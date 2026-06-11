@@ -7,25 +7,50 @@ module.exports = function(request, app) {
         userToken = response.body.datas.token
       })
 
+      const defaultAiDeliverySettings = () => ({
+        "delivery": "inline",
+        "content": "",
+        "bedrockPromptCache": {
+          "cacheReference": "",
+          "region": ""
+        }
+      })
+
       const defaultAiPublicSettings = {
         "enabled": true,
-        "defaultProvider": "openai"
+        "defaultProvider": "openai",
+        "redactionGuidelines": defaultAiDeliverySettings(),
+        "qaInstructions": defaultAiDeliverySettings(),
+        "qaChecks": {
+          "completeness": true,
+          "references": true,
+          "imageCaptions": true,
+          "redaction": true,
+          "customer": true,
+          "instructions": true
+        }
       }
 
       const defaultAiPrivateSettings = {
         "openaiApiKey": "",
         "openaiBaseUrl": "https://api.openai.com/v1",
-        "openaiModel": "gpt-4.1-mini",
+        "openaiModel": "gpt-5.4-mini",
         "anthropicApiKey": "",
         "anthropicBaseUrl": "https://api.anthropic.com/v1",
-        "anthropicModel": "claude-3-5-sonnet-latest",
+        "anthropicModel": "claude-opus-4.8",
         "anthropicVersion": "2023-06-01",
         "deepseekApiKey": "",
         "deepseekBaseUrl": "https://api.deepseek.com/v1",
-        "deepseekModel": "deepseek-chat",
+        "deepseekModel": "deepseek-v4-flash",
         "ollamaApiKey": "",
         "ollamaBaseUrl": "http://localhost:11434/v1",
-        "ollamaModel": "llama3.1"
+        "ollamaModel": "llama3.1",
+        "bedrockApiKey": "",
+        "bedrockAccessKeyId": "",
+        "bedrockSecretAccessKey": "",
+        "bedrockSessionToken": "",
+        "bedrockRegion": "us-east-1",
+        "bedrockModel": "global.anthropic.claude-opus-4-8"
       }
 
       const defaultPublicSettings = {

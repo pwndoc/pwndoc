@@ -18,7 +18,8 @@ vi.mock('@/services/audit', () => ({
 
 vi.mock('@/services/data', () => ({
   default: {
-    getCustomFields: vi.fn()
+    getCustomFields: vi.fn(),
+    getAiPrompts: vi.fn()
   }
 }))
 
@@ -113,6 +114,14 @@ describe('Sections Page', () => {
     // Default mock implementations
     DataService.getCustomFields.mockResolvedValue({
       data: { datas: [] }
+    })
+    DataService.getAiPrompts.mockResolvedValue({
+      data: {
+        datas: {
+          aiEnabled: false,
+          promptMappings: []
+        }
+      }
     })
     AuditService.getSection.mockResolvedValue({
       data: {

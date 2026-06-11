@@ -181,6 +181,18 @@
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
 
+                <template v-if="showAiButton">
+                    <q-btn flat size="sm" dense
+                    :loading="aiLoading"
+                    :disable="aiLoading"
+                    @click="$emit('ai-click')"
+                    >
+                        <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+                        <q-icon name="smart_toy" />
+                    </q-btn>
+                    <q-separator vertical class="q-mx-sm" />
+                </template>
+
                 <q-btn flat size="sm" dense
                 @click="editor.commands.undo"
                 >
@@ -317,6 +329,7 @@ import {Diff} from 'diff';
 import Utils from '@/services/utils'
 import ImageService from '@/services/image'
 
+import { DOMSerializer } from '@tiptap/pm/model'
 import {common, createLowlight} from 'lowlight'
 const lowlight = createLowlight(common)
 lowlight.registerAlias('xml', ['html'])
@@ -365,8 +378,18 @@ export default {
         focusedComment: {
             type: String,
             default: ''
+        },
+        showAiButton: {
+            type: Boolean,
+            default: false
+        },
+        aiLoading: {
+            type: Boolean,
+            default: false
         }
     },
+
+    emits: ['update:modelValue', 'ai-click'],
     components: {
         EditorContent,
         BubbleMenu
@@ -722,6 +745,45 @@ export default {
                 this._spellcheckCategoryDirty = false
                 this.editor.commands.proofread()
             }
+        },
+
+        getTextSelection() {
+            if (!this.editor)
+                return null
+
+            const { from, to } = this.editor.state.selection
+            if (from === to)
+                return null
+
+            const text = this.editor.state.doc.textBetween(from, to, '\n')
+            const slice = this.editor.state.doc.slice(from, to)
+            const serializer = DOMSerializer.fromSchema(this.editor.schema)
+            const container = document.createElement('div')
+            container.appendChild(serializer.serializeFragment(slice.content))
+
+            return {
+                from,
+                to,
+                text,
+                html: container.innerHTML
+            }
+        },
+
+        replaceTextSelection(content, range) {
+            if (!this.editor)
+                return
+
+            const from = range?.from ?? this.editor.state.selection.from
+            const to = range?.to ?? this.editor.state.selection.to
+            const replacement = String(content || '')
+
+            this.editor.chain().focus()
+                .deleteRange({ from, to })
+                .insertContentAt(from, replacement, {
+                    parseOptions: { preserveWhitespace: 'full' }
+                })
+                .run()
+            this.updateHTML()
         }
     }
 }
