@@ -138,3 +138,26 @@ The state of the audits reviews can also be seen from the audit list page. It is
 The audit edit page, when then review mode is activated, follows the following state machine diagram. Different states show different UI elements. Keep in mind that the Report role here is viewing a report for which he is neither a the creator nor collaborator. Otherwise, on his own reports, his graph would be similar to the Collaborator shown here. Also, the reviewer role, here, has only `audits:review` permission, and not `audits:review-all`. 
 
 ![Audit edit view state diagram](/_images/edit_state_graph.png)
+
+## Local Draft Recovery
+
+When you edit an audit, PwnDoc keeps a local recovery draft in your browser for unsaved changes. Draft recovery is available on the General Information page, findings, and custom sections. It is also available when editing vulnerabilities and custom fields.
+
+Local drafts are not saved to the server and are not visible to other users. They are used only to recover work from the same browser session after a page refresh, navigation, browser crash, or temporary connection issue.
+
+When a local draft exists, PwnDoc shows an orange draft indicator next to the affected item in the audit sidebar. The draft recovery status menu shows whether you are viewing the server version or a local draft, when the draft was last saved, and when it expires.
+
+If you reopen an audit item with a local draft, PwnDoc compares the server version with the local draft and lets you choose what to do:
+
+- **Restore** — Apply the local draft in the editor. You must still save the page to persist it on the server.
+- **Discard** — Keep the server version and mark the local draft as discarded.
+- **View changes** — Review the differences between the server version and the local draft.
+- **Delete permanently** — Remove the local draft from the browser.
+
+Local drafts expire after 7 days of inactivity. Saving the page clears the local draft for that page.
+
+![Audit draft recovery status menu](/_images/audits-draft-recovery-status.png)
+
+![Audit draft recovery view changes modal](/_images/audits-draft-recovery-view-changes.png)
+
+> When generating a report, PwnDoc warns you if local recovery drafts exist. Unsaved local drafts are not included in the generated report. Save the affected audit pages first if those changes must appear in the report.

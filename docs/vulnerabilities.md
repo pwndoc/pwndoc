@@ -97,13 +97,13 @@ All users can request creation or modifications on a vulnerability when redactin
 
 ![Validate](/_images/new_updates_vulns.png)
 
-**New**
+### New
 
 ![New vuln](/_images/new_vuln.png)
 
 Before approving, it's possible to make changes to the Vulnerability including adding Languages.
 
-**Updates**
+### Updates
 
 ![Updates vuln](/_images/updates_vuln.png)
 
@@ -112,3 +112,21 @@ The left side is the current Vulnerability
 The right side has multiple tabs, each representing change requests made by users. There is syntax highlighting to make it easier to spot differences.
 
 The admin user must manually make changes in the left side with what he wants from the right side. When clicking the Update button the left side will be saved and all update requests from the right side will be deleted.
+
+## Local Draft Recovery
+
+When you create or edit a vulnerability, PwnDoc keeps a local recovery draft in your browser for unsaved changes. Drafts are tracked separately for new vulnerabilities and existing vulnerabilities.
+
+Local drafts are not saved to the server and are not visible to other users. They are used only to recover work from the same browser session after a page refresh, navigation, browser crash, or temporary connection issue.
+
+When a local draft exists, PwnDoc shows an orange draft indicator next to the affected vulnerability in the vulnerability list. New vulnerability drafts also appear in the **New Vulnerability** category menu, so you can recover a draft created under a specific category or under **No Category**.
+
+Inside the create or edit dialog, the draft recovery status menu shows whether you are viewing the server version or a local draft, when the draft was last saved, and when it expires.
+
+If you reopen a vulnerability with a local draft, PwnDoc compares the server version with the local draft and lets you restore, discard, review, or permanently delete the draft. Restoring a draft applies it in the editor only; click **Create** or **Update** to save it to the server.
+
+Local drafts expire after 7 days of inactivity. Creating or updating the vulnerability clears the local draft for that vulnerability.
+
+![Vulnerability draft recovery status menu](/_images/vulnerabilities-draft-recovery-status.png)
+
+![Vulnerability draft recovery view changes modal](/_images/vulnerabilities-draft-recovery-view-changes.png)

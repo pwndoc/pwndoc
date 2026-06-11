@@ -191,6 +191,27 @@ Size: 2
 -> This will display an additional input «Id» field in vulnerabilities that will also be displayed in findings
 >```
 
+#### Local Draft Recovery
+
+When you create or edit custom fields, PwnDoc keeps a local recovery draft in your browser for unsaved changes. Draft recovery is scoped to the selected view and sub-selection:
+
+- **Audit General** custom fields
+- **Audit Finding** custom fields, optionally scoped to a vulnerability category
+- **Audit Section** custom fields, optionally scoped to a custom section
+- **Vulnerability** custom fields, optionally scoped to a vulnerability category
+
+Local drafts are not saved to the server and are not visible to other users. They are used only to recover work from the same browser session after a page refresh, navigation, browser crash, or temporary connection issue.
+
+When a local draft exists, PwnDoc shows an orange draft indicator in the custom-field view and category/section selectors. The draft recovery status menu shows whether you are viewing the saved version or a local draft, when the draft was last saved, and when it expires.
+
+If you reopen a custom-field context with a local draft, PwnDoc compares the saved version with the local draft and lets you restore, discard, review, or permanently delete the draft. Restoring a draft applies it in the Custom Fields editor only; click the save button to persist it to the server.
+
+Local drafts expire after 7 days of inactivity. Saving the custom-field changes clears the local draft for the current context.
+
+![Custom Fields draft recovery status menu](/_images/data-custom-fields-draft-recovery-status.png)
+
+![Custom Fields draft recovery view changes modal](/_images/data-custom-fields-draft-recovery-view-changes.png)
+
 ### Custom Sections
 
 Custom Sections allow to have additionnal Sections in an Audit.
