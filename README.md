@@ -6,9 +6,12 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 # Documentation
 - [Installation](https://pwndoc.github.io/pwndoc/#/installation)
 - [Data](https://pwndoc.github.io/pwndoc/#/data)
+- [Roles](https://pwndoc.github.io/pwndoc/#/roles)
 - [Vulnerabilities](https://pwndoc.github.io/pwndoc/#/vulnerabilities)
 - [Audits](https://pwndoc.github.io/pwndoc/#/audits)
 - [Templating](https://pwndoc.github.io/pwndoc/#/docxtemplate)
+- [Settings](https://pwndoc.github.io/pwndoc/#/settings)
+- [Profile](https://pwndoc.github.io/pwndoc/#/profile)
 
 
 # Features
@@ -19,10 +22,18 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
   - Manage reusable Audit and Vulnerability Data
   - Create Custom Sections
   - Add custom fields to Vulnerabilities
-- Vulnerabilities Management
-- Multi-User reporting
+- Vulnerabilities Management with CVSS v3 and v4 scoring
+- Multi-User reporting with real-time collaboration
+- Retest and multi-audit workflows
+- Automatic recovery for unsaved work
+- Audit review and approval workflow
+- Audit comments with threaded replies
 - Docx Report Generation
 - Docx Template customization
+- Spellcheck and grammar check via LanguageTool (with custom rules)
+- Backup and restore with encryption and selective restore
+- Two-factor authentication (TOTP)
+- Custom roles and granular permissions
 
 # Demos
 

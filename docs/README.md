@@ -24,6 +24,8 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
   - Add custom fields to Vulnerabilities
 - Vulnerabilities Management with CVSS v3 and v4 scoring
 - Multi-User reporting with real-time collaboration
+- Retest and multi-audit workflows
+- Automatic recovery for unsaved work
 - Audit review and approval workflow
 - Audit comments with threaded replies
 - Docx Report Generation
