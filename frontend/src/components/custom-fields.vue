@@ -22,23 +22,37 @@
                 :model-value="field.text"
                 >
                     <template v-slot:control>
-                        <basic-editor 
-                        v-if="diff"
-                        v-model="field.text"
-                        :diff="getTextDiffInCustomFields(field)"
-                        :editable=false
-                        /> 
-                        <basic-editor 
-                        v-else
-                        ref="basiceditor_custom" 
-                        v-model="field.text" 
-                        :noSync="noSyncEditor"
-                        :editable="!readonly"
-                        :fieldName="`field-${field.customField.label}`"
-                        :commentMode="commentMode && canCreateComment"
-                        :focusedComment="focusedComment"
-                        :commentIdList="commentIdList"
-                        /> 
+                        <div class="custom-editor-wrap">
+                            <q-btn
+                            v-if="showAiButton(field)"
+                            class="custom-field-ai-btn all-pointer-events"
+                            size="sm"
+                            unelevated
+                            no-caps
+                            color="secondary"
+                            :loading="isAiLoading(field)"
+                            :disable="readonly || isAiLoading(field)"
+                            label="AI"
+                            @click.stop="triggerGenerateAi(field)"
+                            />
+                            <basic-editor 
+                            v-if="diff"
+                            v-model="field.text"
+                            :diff="getTextDiffInCustomFields(field)"
+                            :editable=false
+                            /> 
+                            <basic-editor 
+                            v-else
+                            ref="basiceditor_custom" 
+                            v-model="field.text" 
+                            :noSync="noSyncEditor"
+                            :editable="!readonly"
+                            :fieldName="`field-${field.customField.label}`"
+                            :commentMode="commentMode && canCreateComment"
+                            :focusedComment="focusedComment"
+                            :commentIdList="commentIdList"
+                            /> 
+                        </div>
                     </template>
 
                     <template v-slot:label>
@@ -62,6 +76,20 @@
                 lazy-rules="ondemand"
                 outlined
                 >
+                    <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        size="sm"
+                        unelevated
+                        no-caps
+                        color="secondary"
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isAiLoading(field)"
+                        label="AI"
+                        @click.stop="triggerGenerateAi(field)"
+                        />
+                    </template>
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
@@ -87,6 +115,18 @@
                 outlined
                 >
                     <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        size="sm"
+                        unelevated
+                        no-caps
+                        color="secondary"
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isAiLoading(field)"
+                        label="AI"
+                        @click.stop="triggerGenerateAi(field)"
+                        />
                         <q-icon name="event" class="cursor-pointer">
                         <q-popup-proxy ref="qDateProxyField" transition-show="scale" transition-hide="scale">
                             <q-date :readonly="readonly" first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text" @update:model-value="$refs.qDateProxyField.forEach(e => e.hide())" />
@@ -124,6 +164,20 @@
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
+                     <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        size="sm"
+                        unelevated
+                        no-caps
+                        color="secondary"
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isAiLoading(field)"
+                        label="AI"
+                        @click.stop="triggerGenerateAi(field)"
+                        />
+                    </template>
                      <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
@@ -157,6 +211,20 @@
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
+                     <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        size="sm"
+                        unelevated
+                        no-caps
+                        color="secondary"
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isAiLoading(field)"
+                        label="AI"
+                        @click.stop="triggerGenerateAi(field)"
+                        />
+                    </template>
                      <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
@@ -194,6 +262,20 @@
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
+                    <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        size="sm"
+                        unelevated
+                        no-caps
+                        color="secondary"
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isAiLoading(field)"
+                        label="AI"
+                        @click.stop="triggerGenerateAi(field)"
+                        />
+                    </template>
                     <template v-slot:control>
                         <q-option-group
                         type="checkbox"
@@ -228,6 +310,20 @@
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
+                    <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        size="sm"
+                        unelevated
+                        no-caps
+                        color="secondary"
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isAiLoading(field)"
+                        label="AI"
+                        @click.stop="triggerGenerateAi(field)"
+                        />
+                    </template>
                     <template v-slot:control>
                         <q-option-group
                         type="radio"
@@ -300,6 +396,22 @@ export default {
         canCreateComment: {
             type: Boolean,
             default: false
+        },
+        aiEnabled: {
+            type: Boolean,
+            default: false
+        },
+        canGenerateAiForField: {
+            type: Function,
+            default: () => false
+        },
+        isAiGeneratingField: {
+            type: Function,
+            default: () => false
+        },
+        generateAiForField: {
+            type: Function,
+            default: () => {}
         }
     },
 
@@ -354,6 +466,22 @@ export default {
             return result
         },
 
+        getAiFieldKey: function(field) {
+            return `custom-field:${field.customField._id}`
+        },
+
+        showAiButton: function(field) {
+            return this.aiEnabled && this.canGenerateAiForField(this.getAiFieldKey(field))
+        },
+
+        isAiLoading: function(field) {
+            return this.isAiGeneratingField(this.getAiFieldKey(field))
+        },
+
+        triggerGenerateAi: function(field) {
+            this.generateAiForField(field)
+        },
+
         validate: function() {
             Object.keys(this.$refs).forEach(key => key.startsWith('field') && this.$refs[key][0].validate())
         },
@@ -373,5 +501,20 @@ export default {
 
 </script>
 
-<style>
+<style scoped>
+.custom-editor-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.custom-field-ai-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
+}
+
+.custom-field-ai-btn :deep(.q-btn__content) {
+    font-weight: 600;
+}
 </style>

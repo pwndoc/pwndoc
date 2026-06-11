@@ -25,6 +25,29 @@
             <q-card v-if="userStore.isAllowed('settings:read')" class="q-my-lg">
                 <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                     <q-item style="padding:0px;">
+                        <q-item-section class="col-11">
+                            <div class="text-h6">AI Integration</div>
+                        </q-item-section>
+                        <q-item-section class="col-md-1 items-center">
+                            <q-toggle
+                                color="primary"
+                                keep-color
+                                :disable="!canEdit"
+                                v-model="settings.ai.public.enabled"
+                            />
+                        </q-item-section>
+                    </q-item>
+                </q-card-section>
+                <q-card-section>
+                    <div class="text-grey-8">
+                        Disable to fully hide AI prompt configuration and AI generation buttons for all users.
+                    </div>
+                </q-card-section>
+            </q-card>
+
+            <q-card v-if="userStore.isAllowed('settings:read')" class="q-my-lg">
+                <q-card-section class="q-py-none bg-blue-grey-5 text-white">
+                    <q-item style="padding:0px;">
                         <q-item-section class="col-md-11">
                             <div class="text-h6">{{$t('reports')}}</div>
                         </q-item-section>

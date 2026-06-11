@@ -103,5 +103,13 @@ export default {
 
     updateSections: function(sections) {
         return api.put(`data/sections`, sections)
+    },
+
+    getAiPrompts: function() {
+        return api.get('data/ai-prompts')
+    },
+
+    updateAiPrompts: function(payload) {
+        return api.put('data/ai-prompts', payload)
     }
 }
