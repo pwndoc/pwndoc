@@ -7,6 +7,16 @@ var LanguageSchema = new Schema({
 
 }, {timestamps: true});
 
+LanguageSchema.statics.defaultDocuments = [
+    {
+        filter: { locale: "en" },
+        document: {
+            language: "English",
+            locale: "en"
+        }
+    }
+];
+
 /*
 *** Statics ***
 */
@@ -203,6 +213,7 @@ LanguageSchema.statics.restore = (path, mode = "upsert") => {
 /*
 *** Methods ***
 */
+
 
 var Language = mongoose.model('Language', LanguageSchema);
 module.exports = Language;

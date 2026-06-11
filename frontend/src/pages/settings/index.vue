@@ -1,7 +1,7 @@
 <template>
     <div v-if="!loading" class="row">
         <div class="col-xl-8 col-12 offset-xl-2 q-pa-md">
-            <q-card>
+            <q-card id="general-settings">
                 <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                     <q-item style="padding:0px;">
                         <q-item-section class="col-md-11">
@@ -22,7 +22,7 @@
                 </q-card-section>
             </q-card>
 
-            <q-card v-if="userStore.isAllowed('settings:read')" class="q-my-lg">
+            <q-card id="reports" v-if="userStore.isAllowed('settings:read')" class="q-my-lg">
                 <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                     <q-item style="padding:0px;">
                         <q-item-section class="col-md-11">
@@ -427,7 +427,7 @@
                 </div>
             </q-card>
 
-            <q-card v-if="userStore.isAllowed('settings:read')" class="q-my-lg">
+            <q-card id="reviews" v-if="userStore.isAllowed('settings:read')" class="q-my-lg">
                 <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                     <q-item style="padding:0px;">
                         <q-item-section class="col-11">
@@ -502,7 +502,7 @@
                 </q-card-section>
             </q-card>
 
-            <q-card v-if="userStore.isAllowed('backups:read')" class="q-my-lg">
+            <q-card id="backups" v-if="userStore.isAllowed('backups:read')" class="q-my-lg">
                 <q-card-section class="q-py-none bg-blue-grey-5 text-white">
                     <q-item style="padding:0px;">
                         <q-item-section class="col-11">

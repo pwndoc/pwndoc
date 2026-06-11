@@ -1,4 +1,5 @@
 import { Notify, Dialog } from 'quasar'
+import { nextTick } from 'vue'
 
 import SettingsService from '@/services/settings'
 import SpellcheckService from '@/services/spellcheck'
@@ -100,6 +101,9 @@ export default {
     },
 
     watch: {
+        '$route.hash': function() {
+            this.scrollToHash()
+        },
         'settings.report.private.languageToolUrl'() { this.ltConnectionResult = null },
         'settings.report.private.languageToolApiKey'() { this.ltConnectionResult = null },
         'settings.report.private.languageToolUsername'() { this.ltConnectionResult = null },
@@ -130,6 +134,7 @@ export default {
         }
         else {
             this.loading = false
+            this.scrollToHash()
         }
     },
 
@@ -147,10 +152,11 @@ export default {
 
         getSettings: function() {
             SettingsService.getSettings()
-            .then((data) => {
+            .then(async (data) => {
                 this.settings = data.data.datas;
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.loading = false
+                await this.scrollToHash()
             })
             .catch((err) => {
                 Notify.create({
@@ -572,7 +578,23 @@ export default {
                 textColor: 'white',
                 position: 'top-right'
             })
-        }
+        },
+
+        scrollToHash: async function() {
+            await nextTick()
+
+            if (!this.$route.hash)
+                return
+
+            const el = document.querySelector(this.$route.hash)
+            if (!el)
+                return
+
+            el.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            })
+        },
         
     }
 }

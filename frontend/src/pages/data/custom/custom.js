@@ -32,8 +32,22 @@ function buildDefaultCustomField(overrides = {}) {
     }
 }
 
+const validCustomTabs = [
+    'languages',
+    'audit-types',
+    'vulnerability-types',
+    'vulnerability-categories',
+    'custom-fields',
+    'custom-sections'
+]
+
+function getInitialCustomTab(route) {
+    const tab = route?.hash?.replace(/^#/, '')
+    return validCustomTabs.includes(tab) ? tab : 'languages'
+}
+
 export default {
-    data: () => {
+    data: function() {
         return {
             userStore: userStore,
             Utils: Utils,
@@ -99,7 +113,7 @@ export default {
 
             errors: {locale: '', language: '', auditType: '', vulnType: '', vulnCat: '', vulnCatField: '', sectionField: '', sectionName: '', fieldLabel: '', fieldType: ''},
 
-            selectedTab: "languages",
+            selectedTab: getInitialCustomTab(this.$route),
             draftRecovery: null,
             customFieldDrafts: [],
         }
@@ -113,6 +127,13 @@ export default {
     },
 
     mounted: function() {
+        if (this.$route.hash !== `#${this.selectedTab}`) {
+            this.$router.replace({
+                hash: `#${this.selectedTab}`,
+                query: this.$route.query
+            }).catch(() => {})
+        }
+
         this.getTemplates()
         this.getLanguages()
         this.getAuditTypes()
@@ -130,20 +151,44 @@ export default {
     },
 
     watch: {
-        selectedTab: async function() {
+        '$route.hash': function(hash) {
+            const tab = hash.replace(/^#/, '')
+
+            if (validCustomTabs.includes(tab) && tab !== this.selectedTab) {
+                this.selectedTab = tab
+            }
+        },
+
+        selectedTab: async function(newTab) {
+            if (!validCustomTabs.includes(newTab)) {
+                this.selectedTab = 'languages'
+                return
+            }
+
+            if (this.$route.hash !== `#${newTab}`) {
+                this.$router.replace({
+                    hash: `#${newTab}`,
+                    query: this.$route.query
+                }).catch(() => {})
+            }
+
             if (this.draftRecovery) {
                 await this.draftRecovery.flushPendingWrite()
                 await this.draftRecovery.maybePromptRecovery()
             }
+
             if (this.selectedTab === 'custom-fields')
                 this.refreshCustomFieldDrafts()
         },
+
         'newCustomField.display': async function() {
             await this.handleCustomFieldDraftContextChanged()
         },
+
         'newCustomField.displaySub': async function() {
             await this.handleCustomFieldDraftContextChanged()
         },
+
         draftRecoveryRevision: function() {
             this.refreshCustomFieldDrafts()
         }

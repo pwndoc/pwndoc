@@ -7,6 +7,16 @@ var TemplateSchema = new Schema({
 
 }, {timestamps: true});
 
+TemplateSchema.statics.defaultDocuments = [
+    {
+        filter: { name: "Default" },
+        document: {
+            name: "Default",
+            ext: "docx"
+        }
+    }
+];
+
 /*
 *** Statics ***
 */

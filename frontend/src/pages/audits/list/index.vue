@@ -1,13 +1,30 @@
 <template>
     <div class="row">
         <div v-if="languages.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-            <p>{{$t('noLanguage')}}<a href="/data/custom">{{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('language')}}</a></p>
+            <p>
+                {{$t('noLanguage')}}
+                <router-link :to="{ path: '/data/custom', hash: '#languages' }">
+                    {{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('language')}}
+                </router-link>
+            </p>
         </div>
+
         <div v-if="auditTypes.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-            <p>{{$t('noAudit')}}<a href="/data/custom">{{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('auditTypes')}}</a></p>
+            <p>
+                {{$t('noAudit')}}
+                <router-link :to="{ path: '/data/custom', hash: '#audit-types' }">
+                    {{$t('nav.data')}} -> {{$t('customData')}} -> {{$t('auditTypes')}}
+                </router-link>
+            </p>
         </div>
+
         <div v-if="languages.length === 0 || auditTypes.length === 0" class="col-md-4 offset-md-4 q-mt-md">
-            <p>{{$t('restoreFromBackup')}} <a href="/settings">{{$t('settings')}} -> {{$t('backups')}}</a></p>
+            <p>
+                {{$t('restoreFromBackup')}}
+                <router-link :to="{ path: '/settings', hash: '#backups' }">
+                    {{$t('settings')}} -> {{$t('backups')}}
+                </router-link>
+            </p>
         </div>
         <div v-if="languages.length > 0 && auditTypes.length > 0" class="col-md-10 col-12 offset-md-1 q-mt-md">
             <q-table
