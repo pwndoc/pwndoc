@@ -72,6 +72,8 @@ When an audit type uses the `retest` stage, each finding includes additional ret
 - **Retest Description** — Write the retest response for the finding.
 - **Split View** — Toggle split view to display the original finding data in a read-only panel beside the editable retest response.
 
+![Retest audit finding showing validation status and retest response fields](/_images/audits-retest-fields.png)
+
 ## Custom Sections
 
 Custom Sections are configured on the selected Audit Type in [Custom Data](/data?id=audit-types). When you create an audit, every section attached to that Audit Type is added automatically.
@@ -121,23 +123,17 @@ Once this is done, a reviewer can be added to an audit by the creator or a colla
 
 ![Adding a reviewer](/_images/adding_reviewer.png)
 
-![Marking as ready for review](/_images/mark_for_review.png)
-
-When an audit is in the `REVIEW` state, a reviewer can give his approval of an audit. The minimal number of approvals before an audit is approved is set in the application's settings page. To know who already approved an audit and how far along it is to be approved, it is possible to hover the mouse over the audit state icon. A tooltip will appear, giving you details on the audit's state. 
+When an audit is in the `REVIEW` state, a reviewer can give his approval of an audit. The minimal number of approvals before an audit is approved is set in the application's settings page. 
 
 ![Approving an audit](/_images/approving_report.png)
-
-The tooltip giving information on the audit's current state. Here, two approvals are needed for an audit to be approved. The audit is still in the review phase, even if one person approved it already. 
-
-![Information in the tooltip](/_images/audit_state_tooltip.png)
 
 Once enough approvals are given for an audit to be approved, the audit passes to the `APPROVED` state. In this state, the report is ready to be downloaded and sent to the client. 
 
 ![Audit is now approved](/_images/approved_audit.png)
 
-The states of the audits can also be seen from the audit list page. 
+The state of the audits reviews can also be seen from the audit list page. It is possible to know who already approved an audit by hovering the mouse over the audit state icon. A tooltip will appear, giving you details on the audit's state. 
 
-![Audit list page](/_images/audit_list_states.png)
+![Information in the tooltip](/_images/audit_list_review_state.png)
 
 The audit edit page, when then review mode is activated, follows the following state machine diagram. Different states show different UI elements. Keep in mind that the Report role here is viewing a report for which he is neither a the creator nor collaborator. Otherwise, on his own reports, his graph would be similar to the Collaborator shown here. Also, the reviewer role, here, has only `audits:review` permission, and not `audits:review-all`. 
 
