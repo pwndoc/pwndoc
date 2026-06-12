@@ -516,4 +516,16 @@ describe('CustomFields Component', () => {
       expect(wrapper.vm.requiredFieldsEmpty()).toBe(false)
     })
   })
+
+  describe('syncEditors', () => {
+    it('should call updateHTML on registered text editors', () => {
+      const wrapper = createWrapper()
+      const updateHTML = vi.fn()
+      wrapper.vm.editorRefs.cf1 = { updateHTML }
+
+      wrapper.vm.syncEditors()
+
+      expect(updateHTML).toHaveBeenCalledOnce()
+    })
+  })
 })

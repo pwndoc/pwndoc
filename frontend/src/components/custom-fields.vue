@@ -487,6 +487,13 @@ export default {
                 delete this.editorRefs[customFieldId]
         },
 
+        syncEditors: function() {
+            Object.values(this.editorRefs).forEach((editor) => {
+                if (editor && typeof editor.updateHTML === 'function')
+                    editor.updateHTML()
+            })
+        },
+
         getAiSelectionTarget: function(field) {
             const fieldType = field?.customField?.fieldType
             const customFieldId = field?.customField?._id

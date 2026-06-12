@@ -98,6 +98,8 @@ export default {
     Object.keys(refs).forEach(key => {
       if (key.startsWith('basiceditor_') && refs[key]) // ref must start with 'basiceditor_'
         (Array.isArray(refs[key]))? refs[key].forEach(elt => elt.updateHTML()) : refs[key].updateHTML()
+      else if (refs[key] && typeof refs[key].syncEditors === 'function')
+        refs[key].syncEditors()
       else if (refs[key] && refs[key].$refs) // check for editors in child components
         this.syncEditors(refs[key].$refs)
     })

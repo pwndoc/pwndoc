@@ -683,7 +683,10 @@ export default {
                 })
         },
 
-        unsavedChanges: function() {  
+        unsavedChanges: function() {
+            if ((this.section.text || this.sectionOrig.text) && this.section.text !== this.sectionOrig.text)
+                return true
+
             if (!this.$_.isEqual(this.section.customFields, this.sectionOrig.customFields))
                 return true
 

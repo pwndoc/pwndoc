@@ -423,6 +423,14 @@ describe('Sections Page', () => {
 
       expect(wrapper.vm.unsavedChanges()).toBe(true)
     })
+
+    it('should return true when legacy section text differs from original', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.section = { text: '<p>dirty content</p>' }
+      wrapper.vm.sectionOrig = { text: '<p>original</p>' }
+
+      expect(wrapper.vm.unsavedChanges()).toBe(true)
+    })
   })
 
   describe('displayHighlightWarning', () => {
