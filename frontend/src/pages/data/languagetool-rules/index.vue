@@ -28,7 +28,7 @@
                 <template v-slot:top>
                     <q-space />
                     <q-btn
-                    v-if="canEdit"
+                    v-if="canCreate"
                     flat
                     :label="$t('btn.create')"
                     color="primary"
@@ -87,7 +87,7 @@
                             flat
                             color="negative"
                             icon="delete"
-                            v-if="canEdit"
+                            v-if="canDelete"
                             @click="confirmDeleteRule(props.row)"
                         >
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
