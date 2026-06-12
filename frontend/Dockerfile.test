@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/playwright:v1.54.0-noble
 
+# ffmpeg is used by the demo recorder to compose side-by-side collaboration videos
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
 RUN mkdir -p /app
 WORKDIR /app
 COPY tests/e2e/package*.json ./

@@ -2,6 +2,7 @@
     "name": "playwright-tests",
     "private": true,
     "scripts": {
+        "demo:record": "node e2e/demo/record-demos.mjs",
         "test:e2e:ui": "npx playwright test --config=e2e/playwright.config.js --ui-host=0.0.0.0 --ui-port=8082",
         "test:e2e:ci": "npx playwright test --config=e2e/playwright.config.js"
     },

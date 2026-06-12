@@ -37,14 +37,25 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 
 # Demos
 
-#### Multi-User reporting
-![Shared Audit demo gif](https://raw.githubusercontent.com/pwndoc/pwndoc/master/demos/shared_audit_demo.gif)
+#### Audit workflow
 
-#### Finding edition
-![Finding edit demo gif](https://raw.githubusercontent.com/pwndoc/pwndoc/master/demos/audit_finding_demo.gif)
+<video src="demos/audit_authoring.webm" controls muted loop playsinline width="100%"></video>
 
-#### Vulnerability management workflow
-![Create and update demo gif](https://raw.githubusercontent.com/pwndoc/pwndoc/master/demos/create_and_update_finding.gif)
+#### Vulnerability workflow
+
+<video src="demos/vulnerability_workflow.webm" controls muted loop playsinline width="100%"></video>
+
+#### Collaboration and review
+
+<video src="demos/collaboration_review.webm" controls muted loop playsinline width="100%"></video>
+
+#### Retest and draft recovery
+
+<video src="demos/retest_draft_recovery.webm" controls muted loop playsinline width="100%"></video>
+
+#### Customization and settings
+
+<video src="demos/customization_operations.webm" controls muted loop playsinline width="100%"></video>
 
 # Donate
 
@@ -58,12 +69,3 @@ Or you can send me some crypto love
 |:----------------------------------------:|:--------:|
 | <img src="https://user-images.githubusercontent.com/4255028/160478210-ddc3b0ec-6eeb-4112-b1f0-ff1a4ee7c074.png">| <img src="https://user-images.githubusercontent.com/4255028/160478210-ddc3b0ec-6eeb-4112-b1f0-ff1a4ee7c074.png"> |
 | BTC address: `bc1q6z2n99effsmla5mj4ctk3ya6nd76truf6qfe7y` | ETH address: `0xB76cd48CD6C098DE85928e125b44057D3B372821` |
-
-# Sponsors
-
-Thank you for your support
-
-[<img src="https://user-images.githubusercontent.com/4255028/160469615-51ae233b-38d3-4e05-adaf-0ad8633e101f.png" height="50">](https://www.on-x.com)
-
-[<img src="https://github.com/relaxedricky.png" height="50" />](https://github.com/relaxedricky)
-[<img src="https://github.com/belane.png" height="50" />](https://github.com/belane)

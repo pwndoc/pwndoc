@@ -36,11 +36,14 @@ services:
     build:
       context: ./frontend/
       dockerfile: Dockerfile.test
+    shm_size: '1gb'
     volumes:
       - ./frontend/tests/e2e:/app/e2e
+      - ./demos:/app/demos
       - ./backend/report-templates:/app/report-templates:ro
     environment:
       - BASE_URL=https://pwndoc-frontend:8443
+      - DEMO_OUTPUT_DIR=/app/demos
     depends_on:
       - pwndoc-frontend
     networks:
@@ -52,9 +55,11 @@ services:
       dockerfile: Dockerfile.test
     volumes:
       - ./frontend/tests/e2e:/app/e2e
+      - ./demos:/app/demos
       - ./backend/report-templates:/app/report-templates:ro
     environment:
       - BASE_URL=https://pwndoc-frontend:8443
+      - DEMO_OUTPUT_DIR=/app/demos
     depends_on:
       - pwndoc-frontend
     networks:

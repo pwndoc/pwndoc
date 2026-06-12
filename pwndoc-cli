@@ -267,6 +267,19 @@ function test_frontend_e2e {
     return $rc
 }
 
+function demo_record {
+    ENV=test
+    $(dc_cmd) down -v --remove-orphans
+
+    $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests pwndoc-languagetools
+    $(dc_cmd) up -d pwndoc-backend pwndoc-frontend pwndoc-languagetools
+
+    $(dc_cmd) run --rm --entrypoint npm frontend-tests run demo:record
+    rc=$?
+    $(dc_cmd) down -v --remove-orphans
+    return $rc
+}
+
 function test_frontend_unit {
     ENV=test
     $(dc_cmd) build frontend-unit-tests
@@ -329,7 +342,7 @@ _pwndoc_cli() {
     local cur commands options
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    commands="up deploy down destroy build update stop start restart logs ps status lt-apikey test help completion"
+    commands="up deploy down destroy build update stop start restart logs ps status lt-apikey test demo-record help completion"
     options="--dev --prod-local --with-lt --backend-only --frontend-only"
 
     # Complete command (first argument)
@@ -377,6 +390,7 @@ Commands:
   ps|status                   Show container status
   lt-apikey                   Print the LanguageTool API key
   test                        Run tests
+  demo-record                 Record README demo .webm files into demos/
   help                        Show this help message
 
 Environment options (default: prod):
@@ -426,6 +440,7 @@ Examples:
   ./pwndoc-cli test --frontend-e2e --ui
   ./pwndoc-cli test --coverage
   ./pwndoc-cli test --backend --coverage
+  ./pwndoc-cli demo-record
 
 Enable tab completion:
   source <(./pwndoc-cli completion)
@@ -593,6 +608,10 @@ case "$COMMAND" in
     test)
         echo "Running tests..."
         run_tests
+        ;;
+    demo-record)
+        echo "Recording README demos..."
+        demo_record
         ;;
     completion)
         print_completion
