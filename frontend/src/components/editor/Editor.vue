@@ -154,17 +154,21 @@
                     
                 <div v-if="toolbar.indexOf('image') !== -1">
                     <q-tooltip :delay="500" class="text-bold">Insert Image</q-tooltip>
-                    <q-btn flat size="sm" dense>
-                        <label class="cursor-pointer">
-                            <input
-                            type="file"
-                            accept="image/*"
-                            class="hidden"
-                            @change="importImage($event.target.files)"
-                            :disabled="!editable"
-                            />
-                            <q-icon name="image" />
-                        </label>
+                    <q-btn
+                    flat
+                    size="sm"
+                    dense
+                    :disable="!editable"
+                    @click="triggerImageUpload"
+                    >
+                        <input
+                        ref="imageInput"
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        @change="importImage($event.target.files)"
+                        />
+                        <q-icon name="image" />
                     </q-btn>
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('image') !== -1" />
@@ -602,7 +606,14 @@ export default {
     },
 
     methods: {
+        triggerImageUpload() {
+            this.$refs.imageInput?.click()
+        },
+
         importImage(files) {
+            if (!files || !files.length)
+                return
+
             var file = files[0];
             var fileReader = new FileReader();
 
@@ -623,6 +634,7 @@ export default {
             }
 
             fileReader.readAsDataURL(file);
+            this.$refs.imageInput.value = null
         },
 
         updateHTML() {

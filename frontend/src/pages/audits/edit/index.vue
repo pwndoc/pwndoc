@@ -1,9 +1,10 @@
 <template>
-	<q-drawer side="left" :model-value="true" :width="400">
+	<q-drawer v-model="drawerModel" side="left" :width="400" :behavior="isDesktop ? 'desktop' : 'mobile'" bordered>
+		<q-btn flat round dense icon="close" aria-label="Close audit navigation menu" class="audit-drawer-close" @click="closeDrawer" />
 		<q-splitter horizontal v-model="splitterRatio" :limits="[50, 80]" style="height: 100%">
 			<template v-slot:before>
 				<q-list class="home-drawer">
-					<q-item style="padding:0px">
+					<q-item class="audit-drawer-header" style="padding:0px">
 						<q-item-section avatar v-if="audit.type === 'multi'">
 							<q-chip square size="md" outline color="green" :label="$t('multi')" />
 						</q-item-section>
@@ -30,7 +31,7 @@
 									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.navigateRetest')}}</q-tooltip> 
 								</q-btn>
 								<q-btn
-								v-else
+								v-else-if="auditTypesRetest && auditTypesRetest.length === 1"
 								class="q-mx-xs q-px-xs"
 								size="11px"
 								unelevated
@@ -38,17 +39,29 @@
 								color="secondary"
 								:label="$t('btn.topButtonSection.createRetest')"
 								no-caps
-								@click="(auditTypesRetest && auditTypesRetest.length === 1) ? createRetest(auditTypesRetest[0]) : ''"
+								@click="createRetest(auditTypesRetest[0])"
 								>
 									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.createRetest')}}</q-tooltip> 
-									<q-menu style="width: 300px" >
-										<q-item clickable v-for="retest of auditTypesRetest" :key="retest.name">
-											<q-item-section @click="createRetest(retest)">
+								</q-btn>
+								<q-btn-dropdown
+								v-else-if="auditTypesRetest && auditTypesRetest.length > 1"
+								class="q-mx-xs q-px-xs"
+								size="11px"
+								unelevated
+								dense
+								color="secondary"
+								:label="$t('btn.topButtonSection.createRetest')"
+								no-caps
+								>
+									<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.topButtonSection.createRetest')}}</q-tooltip>
+									<q-list dense style="min-width: 220px">
+										<q-item clickable v-close-popup v-for="retest of auditTypesRetest" :key="retest.name" @click="createRetest(retest)">
+											<q-item-section>
 												{{ retest.name }}
 											</q-item-section>
 										</q-item>
-									</q-menu>
-								</q-btn>
+									</q-list>
+								</q-btn-dropdown>
 							</q-item-section>
 						</template>
 						<template v-if="$settings.reviews.enabled">
@@ -399,6 +412,8 @@ export default {
 	data () {
 		return {
 			auditId: "",
+			desktopDrawerOpen: true,
+			mobileDrawerOpen: false,
 			findings: [],
 			users: [],
 			audit: auditR,
@@ -429,6 +444,8 @@ export default {
 
 	provide() {
 		return {
+			auditDrawerOpen: computed(() => this.drawerModel),
+			openAuditDrawer: this.openDrawer,
 			frontEndAuditState: computed(() => this.frontEndAuditState),
 			auditParent: auditR,
 			retestSplitView: retestSplitViewR,
@@ -479,6 +496,17 @@ export default {
 	},
 
 	watch: {
+		'$q.screen.gt.sm': function(isWide, wasWide) {
+			if (isWide && !wasWide) {
+				this.desktopDrawerOpen = true
+				this.mobileDrawerOpen = false
+				return
+			}
+
+			if (!isWide && wasWide)
+				this.mobileDrawerOpen = false
+		},
+
 		'audit.findings': {
 			handler(newVal, oldVal) {
 				var result = _.chain(this.audit.findings)
@@ -528,6 +556,23 @@ export default {
 	},
 
 	computed: {
+		isDesktop: function() {
+			return this.$q.screen.gt.sm
+		},
+
+		drawerModel: {
+			get() {
+				return this.isDesktop ? this.desktopDrawerOpen : this.mobileDrawerOpen
+			},
+
+			set(value) {
+				if (this.isDesktop)
+					this.desktopDrawerOpen = value
+				else
+					this.mobileDrawerOpen = value
+			}
+		},
+
 		userLocations: function() {
 			var locationsByKey = new Map()
 
@@ -593,6 +638,14 @@ export default {
 	},
 
 	methods: {
+		openDrawer: function() {
+			this.drawerModel = true
+		},
+
+		closeDrawer: function() {
+			this.drawerModel = false
+		},
+
 		getFindingColor: function(finding) {
 			let severity = this.getFindingSeverity(finding)
 
@@ -1187,4 +1240,16 @@ export default {
     position: fixed;
     right: 8px;
 }
+
+.audit-drawer-close {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	z-index: 1;
+}
+
+.audit-drawer-header {
+	padding-right: 44px !important;
+}
+
 </style>

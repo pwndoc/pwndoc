@@ -194,7 +194,12 @@ export default {
         },
 
         checkInit() {
-            Loading.show({message: $t('msg.tryingToContactBackend'), customClass: 'loading', backgroundColor: 'blue-grey-8'});
+            Loading.show({
+                message: $t('msg.tryingToContactBackend'),
+                html: true,
+                customClass: 'loading',
+                backgroundColor: 'blue-grey-8'
+            });
             UserService.isInit()
             .then((data) => {
                 Loading.hide();
@@ -204,6 +209,7 @@ export default {
             .catch(err => {
                 Loading.show({
                     message: `<i class='material-icons'>wifi_off</i><br /><p>${$t('msg.wrongContactingBackend')}</p>`, 
+                    html: true,
                     spinner: null, 
                     backgroundColor: 'red-10', 
                     customClass: 'loading-error'})
