@@ -1,6 +1,7 @@
 <template>
 <div>
-    <q-drawer side="left" :model-value="true">
+    <q-drawer v-model="drawerModel" side="left" :behavior="isDesktop ? 'desktop' : 'mobile'" bordered>
+        <q-btn flat round dense icon="close" aria-label="Close navigation menu" class="data-drawer-close" @click="closeDrawer" />
         <q-list class="home-drawer">
             <q-item-label header>{{$t('handleCustomData')}}</q-item-label>
         
@@ -59,9 +60,75 @@
             </q-item>
         </q-list>
     </q-drawer>
+    <q-page-sticky v-if="!drawerModel" position="top-left" :offset="[16, 16]" class="data-drawer-toggle">
+        <q-btn round color="primary" icon="menu" aria-label="Open navigation menu" @click="openDrawer" />
+    </q-page-sticky>
     <router-view />     
 </div>
 </template>
 
-<script></script>
+<script>
+export default {
+    data() {
+        return {
+            desktopDrawerOpen: true,
+            mobileDrawerOpen: false
+        }
+    },
 
+    computed: {
+        isDesktop() {
+            return this.$q.screen.gt.sm
+        },
+
+        drawerModel: {
+            get() {
+                return this.isDesktop ? this.desktopDrawerOpen : this.mobileDrawerOpen
+            },
+
+            set(value) {
+                if (this.isDesktop)
+                    this.desktopDrawerOpen = value
+                else
+                    this.mobileDrawerOpen = value
+            }
+        }
+    },
+
+    watch: {
+        '$q.screen.gt.sm': function(isWide, wasWide) {
+            if (isWide && !wasWide) {
+                this.desktopDrawerOpen = true
+                this.mobileDrawerOpen = false
+                return
+            }
+
+            if (!isWide && wasWide)
+                this.mobileDrawerOpen = false
+        }
+    },
+
+    methods: {
+        openDrawer() {
+            this.drawerModel = true
+        },
+
+        closeDrawer() {
+            this.drawerModel = false
+        }
+    }
+}
+</script>
+
+<style scoped>
+.data-drawer-toggle {
+    z-index: 1100;
+}
+
+.data-drawer-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+}
+</style>

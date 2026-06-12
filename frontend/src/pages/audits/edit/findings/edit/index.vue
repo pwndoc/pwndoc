@@ -26,18 +26,28 @@
             v-if="auditParent.type === 'default'"
             color="orange"
             class="q-mr-sm"
-            :label="$t('btn.backupFinding')"
+            :label="$q.screen.gt.sm ? $t('btn.backupFinding') : ''"
+            :icon="$q.screen.gt.sm ? void 0 : 'fa fa-database'"
             no-caps
             @click="backupFinding()"
-            />
+            >
+                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+                    {{$t('btn.backupFinding')}}
+                </q-tooltip>
+            </q-btn>
             <q-btn
             color="negative"
             class="q-mr-sm"
-            :label="$t('btn.delete')"
+            :label="$q.screen.gt.sm ? $t('btn.delete') : ''"
+            :icon="$q.screen.gt.sm ? void 0 : 'delete'"
             no-caps
             @click="deleteFinding()"
             v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT && auditParent.type === 'default'"
-            />
+            >
+                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+                    {{$t('btn.delete')}}
+                </q-tooltip>
+            </q-btn>
             <q-btn
             v-if="auditParent.type === 'retest'"
             data-testid="retest-split-view-toggle"
@@ -57,19 +67,23 @@
             outline
             :color="saveButtonColor"
             :text-color="saveButtonTextColor"
+            :icon="$q.screen.gt.sm ? void 0 : (saveButtonState === 'saved' ? 'check' : 'save')"
             unelevated
             no-caps
             @click="updateFinding()"
             >
-                <q-icon v-if="saveButtonState === 'saved'" name="check" class="q-mr-sm" />
-                <span>{{ saveButtonLabel }}</span>
+                <q-icon v-if="$q.screen.gt.sm && saveButtonState === 'saved'" name="check" class="q-mr-sm" />
+                <span v-if="$q.screen.gt.sm">{{ saveButtonLabel }}</span>
                 <q-icon
                     v-if="saveButtonState === 'dirty'"
                     data-testid="save-unsaved-badge"
                     name="circle"
                     size="12px"
-                    class="q-ml-sm"
+                    :class="$q.screen.gt.sm ? 'q-ml-sm' : 'q-ml-xs'"
                 />
+                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+                    {{ saveButtonLabel }}
+                </q-tooltip>
             </q-btn>
         </template>
     </breadcrumb>

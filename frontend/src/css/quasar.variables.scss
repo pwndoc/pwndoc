@@ -64,6 +64,27 @@ $text-comment-focused: black;
     .editor {
       background: white;
     }
+
+    .q-field.basic-editor,
+    .q-field.basic-editor .q-field__control,
+    .q-field.basic-editor .q-field__control-container,
+    .q-field.basic-editor .q-field__native {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .q-field.basic-editor .q-field__control-container,
+    .q-field.basic-editor .q-field__native {
+      display: flex;
+      flex: 1 1 auto;
+    }
+
+    .q-field.basic-editor .q-field__native > * {
+      flex: 1 1 auto;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
   
     .q-card:not(.editor):not(.cvsscalculator),
     .q-table__container {
@@ -159,6 +180,27 @@ $text-comment-focused: black;
     .expansion-header,
     .editor {
       background: #333333 !important;
+    }
+
+    .q-field.basic-editor,
+    .q-field.basic-editor .q-field__control,
+    .q-field.basic-editor .q-field__control-container,
+    .q-field.basic-editor .q-field__native {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .q-field.basic-editor .q-field__control-container,
+    .q-field.basic-editor .q-field__native {
+      display: flex;
+      flex: 1 1 auto;
+    }
+
+    .q-field.basic-editor .q-field__native > * {
+      flex: 1 1 auto;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
   
     .editor p code,

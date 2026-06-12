@@ -1,5 +1,15 @@
 <template>
-    <q-bar class="card-breadcrumb bg-white">
+    <q-bar class="card-breadcrumb bg-white" :style="breadcrumbStyle">
+        <q-btn
+        v-if="showDrawerToggle"
+        flat
+        round
+        dense
+        icon="menu"
+        aria-label="Open audit navigation menu"
+        class="q-mr-sm"
+        @click="openAuditDrawer()"
+        />
         <template v-if="path">
             <q-btn :to="path" :label="pathName" no-caps dense flat color="secondary" icon="arrow_back" />
             <q-separator class="q-mr-sm" vertical inset />
@@ -23,24 +33,32 @@ import DraftRecoveryStatus from 'components/draft-recovery-status.vue';
 export default {
     name: 'breadcrumb',
     props: ['buttons', 'title', 'approvals', 'state', 'path', 'pathName'],
+    inject: {
+        auditDrawerOpen: {
+            default: null
+        },
+        openAuditDrawer: {
+            default: null
+        }
+    },
 
     components: {
         AuditStateIcon,
         DraftRecoveryStatus
     },
 
-    data: function() {
-        return {
-            
+    computed: {
+        breadcrumbStyle() {
+            const hasDesktopDrawer = this.auditDrawerOpen && this.$q.screen.gt.sm
+            return {
+                left: hasDesktopDrawer ? '400px' : '0px'
+            }
+        },
+
+        showDrawerToggle() {
+            return !!this.openAuditDrawer && !this.auditDrawerOpen
         }
     },
-
-    created: function() {
-    },
-
-    methods: {
-        
-    }
 }
 
 </script>
@@ -53,24 +71,12 @@ export default {
     position: fixed;
     top: 50px;
     right: 0;
-    left:400px;
+    left: 0;
     z-index: 1000;
 }
 
 .card-breadcrumb .q-btn {
     font-size: 14px;
-}
-
-.breadcrumb-title {
-    margin-top: 11px;
-}
-
-.breadcrumb-buttons {
-    margin-top: 7px;
-}
-
-.card-breadcrumb>.q-breadcrumbs {
-    margin-top: 17px;
 }
 
 .approvedMark {
