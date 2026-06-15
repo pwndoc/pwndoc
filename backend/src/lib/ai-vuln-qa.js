@@ -3,7 +3,7 @@ const {
     stripHtml,
     summarizeCustomFields,
     normalizeIssue
-} = require('./ai-qa');
+} = require('./ai-qa-shared');
 const {
     getQaChecksFromSettings,
     isQaCheckEnabled,

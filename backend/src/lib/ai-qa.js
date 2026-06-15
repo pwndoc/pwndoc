@@ -1,3 +1,9 @@
+const {
+    stripHtml,
+    isEmptyContent,
+    normalizeIssue,
+    summarizeCustomFields
+} = require('./ai-qa-shared');
 const { runQaWithProvider } = require('./ai-client');
 const {
     formatFindingLocation,
@@ -21,39 +27,6 @@ const {
     hasEnabledQaChecks,
     filterAiIssuesByEnabledChecks
 } = require('./ai-qa-checks');
-
-const QA_SEVERITIES = ['error', 'warning', 'info'];
-const QA_CATEGORIES = ['completeness', 'redaction', 'customer', 'instructions', 'references', 'imageCaptions', 'duplicates', 'aiDuplicates', 'other'];
-
-const stripHtml = (value) => {
-    return String(value || '')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/&nbsp;/gi, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-};
-
-const isEmptyContent = (value) => {
-    if (value === null || value === undefined)
-        return true;
-    if (Array.isArray(value))
-        return value.length === 0 || value.every((entry) => !String(entry || '').trim());
-    return !stripHtml(value);
-};
-
-const normalizeIssue = (issue = {}, source = 'structural') => {
-    const severity = QA_SEVERITIES.includes(issue.severity) ? issue.severity : 'warning';
-    const category = QA_CATEGORIES.includes(issue.category) ? issue.category : 'other';
-
-    return {
-        severity: severity,
-        category: category,
-        title: String(issue.title || 'Issue').trim(),
-        message: String(issue.message || '').trim(),
-        location: String(issue.location || 'report').trim() || 'report',
-        source: source
-    };
-};
 
 const pushIssue = (issues, issue, source = 'structural') => {
     const normalized = normalizeIssue(issue, source);
@@ -111,33 +84,6 @@ const runStructuralChecks = (audit = {}) => {
     });
 
     return issues;
-};
-
-const summarizeCustomFields = (customFields = []) => {
-    return (customFields || [])
-        .map((field) => {
-            const label = field?.customField?.label || field?.label || 'Custom field';
-            const fieldType = field?.customField?.fieldType || field?.fieldType || 'text';
-            if (fieldType === 'space')
-                return null;
-
-            let textValue = field?.text;
-            if (Array.isArray(textValue))
-                textValue = textValue.join('\n');
-            else if (textValue && typeof textValue === 'object')
-                textValue = JSON.stringify(textValue);
-
-            const content = stripHtml(textValue);
-            if (!content)
-                return null;
-
-            return {
-                label: label,
-                fieldType: fieldType,
-                content: content.slice(0, 4000)
-            };
-        })
-        .filter(Boolean);
 };
 
 const buildAuditSnapshot = (audit = {}) => {
@@ -357,6 +303,7 @@ const runAuditQa = async ({ audit, settings, provider }) => {
 module.exports = {
     stripHtml,
     isEmptyContent,
+    summarizeCustomFields,
     runStructuralChecks,
     buildAuditSnapshot,
     runAuditQa,

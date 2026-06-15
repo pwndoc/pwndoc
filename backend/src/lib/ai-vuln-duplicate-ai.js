@@ -1,5 +1,5 @@
 const { runVulnerabilityDuplicateQaWithProvider } = require('./ai-client');
-const { stripHtml, normalizeIssue } = require('./ai-qa');
+const { stripHtml, normalizeIssue } = require('./ai-qa-shared');
 const { AI_DEFAULT_PROVIDER } = require('./ai-prompts');
 const {
     formatVulnerabilityLocation,
