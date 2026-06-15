@@ -152,6 +152,7 @@ export default {
     defaultPrompt,
     outputType,
     requestParams,
+    lockKey = null,
     onCancel
   }) {
     try {
@@ -159,7 +160,8 @@ export default {
         title,
         defaultPrompt,
         outputType,
-        requestParams
+        requestParams,
+        lockKey
       })
     } catch (err) {
       if (err?.message === 'cancelled') {
@@ -184,6 +186,7 @@ export default {
     selectedText,
     outputType,
     requestParams,
+    lockKey = null,
     onCancel
   }) {
     try {
@@ -191,7 +194,8 @@ export default {
         title,
         selectedText,
         outputType,
-        requestParams
+        requestParams,
+        lockKey
       })
     } catch (err) {
       if (err?.message === 'cancelled') {

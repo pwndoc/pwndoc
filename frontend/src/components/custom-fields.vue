@@ -33,13 +33,14 @@
                         :ref="(el) => registerEditorRef(field.customField._id, el)"
                         v-model="field.text" 
                         :noSync="noSyncEditor"
-                        :editable="!readonly"
+                        :editable="isFieldEditable(field)"
                         :fieldName="`field-${field.customField.label}`"
                         :commentMode="commentMode && canCreateComment"
                         :focusedComment="focusedComment"
                         :commentIdList="commentIdList"
                         :showAiButton="showAiButton(field)"
                         :aiLoading="isAiLoading(field)"
+                        :aiLocked="isFieldLocked(field)"
                         @ai-click="triggerGenerateAi(field)"
                         /> 
                     </template>
@@ -73,7 +74,7 @@
                         size="sm"
                         dense
                         :loading="isAiLoading(field)"
-                        :disable="readonly || isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
@@ -112,7 +113,7 @@
                         size="sm"
                         dense
                         :loading="isAiLoading(field)"
-                        :disable="readonly || isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
@@ -163,7 +164,7 @@
                         size="sm"
                         dense
                         :loading="isAiLoading(field)"
-                        :disable="readonly || isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
@@ -211,7 +212,7 @@
                         size="sm"
                         dense
                         :loading="isAiLoading(field)"
-                        :disable="readonly || isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
@@ -263,7 +264,7 @@
                         size="sm"
                         dense
                         :loading="isAiLoading(field)"
-                        :disable="readonly || isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
@@ -312,7 +313,7 @@
                         size="sm"
                         dense
                         :loading="isAiLoading(field)"
-                        :disable="readonly || isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
@@ -405,6 +406,10 @@ export default {
             type: Function,
             default: () => false
         },
+        isAiFieldLocked: {
+            type: Function,
+            default: () => false
+        },
         generateAiForField: {
             type: Function,
             default: () => {}
@@ -472,6 +477,14 @@ export default {
 
         isAiLoading: function(field) {
             return this.isAiGeneratingField(this.getAiFieldKey(field))
+        },
+
+        isFieldLocked: function(field) {
+            return this.isAiFieldLocked(this.getAiFieldKey(field))
+        },
+
+        isFieldEditable: function(field) {
+            return !this.readonly && !this.isFieldLocked(field)
         },
 
         triggerGenerateAi: function(field) {

@@ -1,5 +1,5 @@
 <template>
-<q-card flat bordered class="editor full-width" :style="(editable)?'':'border: 1px dashed lightgrey'">
+<q-card flat bordered class="editor full-width relative-position" :class="{'editor--ai-locked': aiLocked}" :style="(editable && !aiLocked)?'':'border: 1px dashed lightgrey'">
     <div v-sticky="!noAffix && !diff && editable" sticky-offset="affixOffset" class="bg-grey-4">
         <template v-if="editable">
             <q-toolbar data-testid="editor-toolbar" class="editor-toolbar">
@@ -188,7 +188,7 @@
                 <template v-if="showAiButton">
                     <q-btn flat size="sm" dense
                     :loading="aiLoading"
-                    :disable="aiLoading"
+                    :disable="aiLoading || aiLocked"
                     @click="$emit('ai-click')"
                     >
                         <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
@@ -304,6 +304,12 @@
     <div v-else class="editor__content q-pa-sm">
         <div class="ProseMirror" v-html="diffContent"></div>
     </div>
+    <q-inner-loading :showing="aiLocked && !aiLoading">
+        <q-badge color="secondary">{{ $t('aiChat.generatingSession') }}</q-badge>
+    </q-inner-loading>
+    <q-inner-loading :showing="aiLoading">
+        <q-badge color="secondary">{{ $t('aiChat.generating') }}</q-badge>
+    </q-inner-loading>
 </q-card>
 </template>
 
@@ -388,6 +394,10 @@ export default {
             default: false
         },
         aiLoading: {
+            type: Boolean,
+            default: false
+        },
+        aiLocked: {
             type: Boolean,
             default: false
         }
@@ -488,7 +498,11 @@ export default {
        },
 
         editable (value) {
-            this.editor.setEditable(this.editable, false)
+            this.editor.setEditable(value && !this.aiLocked, false)
+       },
+
+        aiLocked () {
+            this.editor.setEditable(this.editable && !this.aiLocked, false)
        },
 
         highlightColor (value) {
@@ -510,7 +524,7 @@ export default {
     mounted: async function() {
         document.addEventListener('comment-deleted', this.handleDeleteComment)
         
-        this.editor.setEditable(this.editable, false)
+        this.editor.setEditable(this.editable && !this.aiLocked, false)
 
         if (typeof this.modelValue === "undefined" || this.modelValue === this.editor.getHTML()) {
             return;

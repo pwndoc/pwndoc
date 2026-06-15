@@ -13,6 +13,8 @@ import DataService from '@/services/data';
 import { useUserStore } from 'src/stores/user'
 import VulnService from '@/services/vulnerability';
 import AiFieldHelper from '@/services/ai-field-helper';
+import { useAiGenerationStore } from '@/stores/ai-generation';
+import { runAfterAiGenerationCheck } from '@/composables/confirmLeaveIfAiGenerating';
 import Utils from '@/services/utils';
 import { createDraftRecovery } from '@/composables/useDraftRecovery';
 
@@ -36,7 +38,6 @@ export default {
             aiEnabled: false,
             aiPromptFieldKeys: [],
             aiPromptMappings: [],
-            aiGeneratingFields: {},
             // Comments
             commentTemp: null,
             replyTemp: null,
@@ -133,77 +134,15 @@ export default {
             return
         }
 
-        Utils.syncEditors(this.$refs)
-
-        var displayHighlightWarning = this.displayHighlightWarning()
-
-        if (this.unsavedChanges()) {
-            Dialog.create({
-            title: $t('msg.thereAreUnsavedChanges'),
-            message: $t('msg.doYouWantToLeave'),
-            ok: {label: $t('btn.confirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'},
-            focus: 'cancel'
-            })
-            .onOk(async () => {
-                if (this.draftRecovery)
-                    await this.draftRecovery.flushPendingWrite()
-                next()
-            })
-        }
-        else if (!this.commentMode && displayHighlightWarning) {
-            Dialog.create({
-                title: $t('msg.highlightWarningTitle'),
-                message: `${displayHighlightWarning}</mark>`,
-                html: true,
-                ok: {label: $t('btn.leave'), color: 'negative'},
-                cancel: {label: $t('btn.stay'), color: 'white'},
-            })
-            .onOk(async () => {
-                if (this.draftRecovery)
-                    await this.draftRecovery.flushPendingWrite()
-                next()
-            })
-        }
-        else
-            next()
+        runAfterAiGenerationCheck(() => {
+            this.continueRouteLeave(to, from, next)
+        })
     },
 
     beforeRouteUpdate (to, from , next) {
-        Utils.syncEditors(this.$refs)
-
-        var displayHighlightWarning = this.displayHighlightWarning()
-
-        if (this.unsavedChanges()) {
-            Dialog.create({
-            title: $t('msg.thereAreUnsavedChanges'),
-            message: $t('msg.doYouWantToLeave'),
-            ok: {label: $t('btn.confirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'},
-            focus: 'cancel'
-            })
-            .onOk(async () => {
-                if (this.draftRecovery)
-                    await this.draftRecovery.flushPendingWrite()
-                next()
-            })
-        }
-        else if (!this.commentMode && displayHighlightWarning) {
-            Dialog.create({
-                title: $t('msg.highlightWarningTitle'),
-                message: `${displayHighlightWarning}</mark>`,
-                html: true,
-                ok: {label: $t('btn.leave'), color: 'negative'},
-                cancel: {label: $t('btn.stay'), color: 'white'},
-            })
-            .onOk(async () => {
-                if (this.draftRecovery)
-                    await this.draftRecovery.flushPendingWrite()
-                next()
-            })
-        }
-        else
-            next()
+        runAfterAiGenerationCheck(() => {
+            this.continueRouteUpdate(to, from, next)
+        })
     },
 
     watch: {
@@ -256,9 +195,95 @@ export default {
                 return $t('btn.saved')
             return `${$t('btn.save')} (ctrl+s)`
         },
+
+        findingTabsBarStyle: function() {
+            const inset = useAiGenerationStore().layoutRightInset
+            if (!inset)
+                return {}
+
+            return {
+                right: `${inset}px`,
+                left: '0',
+                width: 'auto'
+            }
+        },
     },
 
     methods: {
+        continueRouteLeave: function(to, from, next) {
+            Utils.syncEditors(this.$refs)
+
+            var displayHighlightWarning = this.displayHighlightWarning()
+
+            if (this.unsavedChanges()) {
+                Dialog.create({
+                title: $t('msg.thereAreUnsavedChanges'),
+                message: $t('msg.doYouWantToLeave'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'},
+                focus: 'cancel'
+                })
+                .onOk(async () => {
+                    if (this.draftRecovery)
+                        await this.draftRecovery.flushPendingWrite()
+                    next()
+                })
+            }
+            else if (!this.commentMode && displayHighlightWarning) {
+                Dialog.create({
+                    title: $t('msg.highlightWarningTitle'),
+                    message: `${displayHighlightWarning}</mark>`,
+                    html: true,
+                    ok: {label: $t('btn.leave'), color: 'negative'},
+                    cancel: {label: $t('btn.stay'), color: 'white'},
+                })
+                .onOk(async () => {
+                    if (this.draftRecovery)
+                        await this.draftRecovery.flushPendingWrite()
+                    next()
+                })
+            }
+            else
+                next()
+        },
+
+        continueRouteUpdate: function(to, from, next) {
+            Utils.syncEditors(this.$refs)
+
+            var displayHighlightWarning = this.displayHighlightWarning()
+
+            if (this.unsavedChanges()) {
+                Dialog.create({
+                title: $t('msg.thereAreUnsavedChanges'),
+                message: $t('msg.doYouWantToLeave'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'},
+                focus: 'cancel'
+                })
+                .onOk(async () => {
+                    if (this.draftRecovery)
+                        await this.draftRecovery.flushPendingWrite()
+                    next()
+                })
+            }
+            else if (!this.commentMode && displayHighlightWarning) {
+                Dialog.create({
+                    title: $t('msg.highlightWarningTitle'),
+                    message: `${displayHighlightWarning}</mark>`,
+                    html: true,
+                    ok: {label: $t('btn.leave'), color: 'negative'},
+                    cancel: {label: $t('btn.stay'), color: 'white'},
+                })
+                .onOk(async () => {
+                    if (this.draftRecovery)
+                        await this.draftRecovery.flushPendingWrite()
+                    next()
+                })
+            }
+            else
+                next()
+        },
+
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
                 e.preventDefault();
@@ -481,8 +506,21 @@ export default {
             return this.aiEnabled && this.aiPromptFieldKeys.includes(fieldKey)
         },
 
+        buildAiLockKey: function(fieldKey) {
+            return `finding:${this.auditId}:${this.findingId}:${fieldKey}`
+        },
+
         isAiFieldLoading: function(fieldKey) {
-            return !!this.aiGeneratingFields[fieldKey]
+            return useAiGenerationStore().isFieldGenerating(this.buildAiLockKey(fieldKey))
+        },
+
+        isAiFieldLocked: function(fieldKey) {
+            return useAiGenerationStore().isFieldLocked(this.buildAiLockKey(fieldKey))
+        },
+
+        isFieldEditable: function(fieldKey) {
+            return this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT &&
+                !this.isAiFieldLocked(fieldKey)
         },
 
         generateDescriptionDraftAI: function() {
@@ -511,6 +549,18 @@ export default {
             if (this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT || this.isAiFieldLoading(fieldKey))
                 return
 
+            const lockKey = this.buildAiLockKey(fieldKey)
+            const aiStore = useAiGenerationStore()
+            if (aiStore.drawerOpen && aiStore.isActive && aiStore.lockKey !== lockKey) {
+                Notify.create({
+                    message: $t('aiChat.activeSession'),
+                    color: 'warning',
+                    textColor: 'dark',
+                    position: 'top-right'
+                })
+                return
+            }
+
             Utils.syncEditors(this.$refs)
 
             const selectionTarget = this.getAiSelectionTarget(field, customField)
@@ -526,14 +576,13 @@ export default {
                 context: baseContext
             }
 
-            this.aiGeneratingFields[fieldKey] = true
-
             try {
                 if (selection?.text) {
                     const draft = await AiFieldHelper.runSelectionAiChat({
                         title: `AI - ${fieldLabel}`,
                         selectedText: selection.text,
                         outputType,
+                        lockKey,
                         requestParams: {
                             ...requestParams,
                             context: {
@@ -574,6 +623,7 @@ export default {
                     title: `AI - ${fieldLabel}`,
                     defaultPrompt,
                     outputType,
+                    lockKey,
                     requestParams
                 })
 
@@ -604,8 +654,6 @@ export default {
                     textColor: 'white',
                     position: 'top-right'
                 })
-            } finally {
-                this.aiGeneratingFields[fieldKey] = false
             }
         },
 

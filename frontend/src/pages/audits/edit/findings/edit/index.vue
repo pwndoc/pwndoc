@@ -89,7 +89,7 @@
     </breadcrumb>
 
     <div class="row" v-if="auditParent.type === 'default'">
-        <q-tabs data-testid="finding-tabs-bar" v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width top-fixed">
+        <q-tabs data-testid="finding-tabs-bar" v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white top-fixed" :style="findingTabsBarStyle">
             <q-tab name="definition" default :label="$t('definition')" />
             <q-tab name="proofs" :label="$t('proofs')"/>
             <q-tab name="details" :label="$t('details')" />
@@ -164,13 +164,14 @@
                                     ref="basiceditor_description"
                                     noSync
                                     v-model="finding.description"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    :editable="isFieldEditable('description')"
                                     fieldName="descriptionField"
                                     :commentMode="commentMode && canCreateComment"
                                     :focusedComment="focusedComment"
                                     :commentIdList="commentIdList"
                                     :showAiButton="canGenerateAi('description')"
                                     :aiLoading="isAiFieldLoading('description')"
+                                    :aiLocked="isAiFieldLocked('description')"
                                     @ai-click="generateFieldDraftAI('description')"
                                     />
                                 </template>
@@ -196,13 +197,14 @@
                                     ref="basiceditor_observation"
                                     noSync
                                     v-model="finding.observation"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    :editable="isFieldEditable('observation')"
                                     fieldName="observationField"
                                     :commentMode="commentMode && canCreateComment"
                                     :focusedComment="focusedComment"
                                     :commentIdList="commentIdList"
                                     :showAiButton="canGenerateAi('observation')"
                                     :aiLoading="isAiFieldLoading('observation')"
+                                    :aiLocked="isAiFieldLocked('observation')"
                                     @ai-click="generateFieldDraftAI('observation')"
                                     />
                                 </template>
@@ -225,7 +227,7 @@
                                 :label="$t('references')+' '+$t('one_per_line')"
                                 v-model="finding.references"
                                 :rules="($settings.report.public.requiredFields.findingReferences) ? [val => !!val || $t('fieldIsRequired')] : ['']"
-                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT"
+                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT || isAiFieldLocked('references')"
                                 :showAiButton="canGenerateAi('references')"
                                 :aiLoading="isAiFieldLoading('references')"
                                 @ai-click="generateFieldDraftAI('references')"
@@ -257,6 +259,7 @@
                             :aiEnabled="aiEnabled"
                             :canGenerateAiForField="canGenerateAi"
                             :isAiGeneratingField="isAiFieldLoading"
+                            :isAiFieldLocked="isAiFieldLocked"
                             :generateAiForField="generateCustomFieldDraftAI"
                             />
                         </q-expansion-item>
@@ -280,14 +283,14 @@
                                     <basic-editor
                                     ref="basiceditor_poc"
                                     noSync
-                                    v-model="finding.poc"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    :editable="isFieldEditable('poc')"
                                     fieldName="pocField"
                                     :commentMode="commentMode && canCreateComment"
                                     :focusedComment="focusedComment"
                                     :commentIdList="commentIdList"
                                     :showAiButton="canGenerateAi('poc')"
                                     :aiLoading="isAiFieldLoading('poc')"
+                                    :aiLocked="isAiFieldLocked('poc')"
                                     @ai-click="generateFieldDraftAI('poc')"
                                     />
                                 </template>
@@ -319,7 +322,7 @@
                                         <basic-editor 
                                         v-model="finding.scope"
                                         :toolbar="['format', 'marks', 'list']"
-                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        :editable="isFieldEditable('scope')"
                                         fieldName="affectedField"
                                         :commentMode="commentMode && canCreateComment"
                                         :focusedComment="focusedComment"
@@ -436,13 +439,14 @@
                                         ref="basiceditor_remediation"
                                         noSync
                                         v-model="finding.remediation"
-                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        :editable="isFieldEditable('remediation')"
                                         fieldName="remediationField"
                                         :commentMode="commentMode && canCreateComment"
                                         :focusedComment="focusedComment"
                                         :commentIdList="commentIdList"
                                         :showAiButton="canGenerateAi('remediation')"
                                         :aiLoading="isAiFieldLoading('remediation')"
+                                        :aiLocked="isAiFieldLocked('remediation')"
                                         @ai-click="generateFieldDraftAI('remediation')"
                                         />
                                     </template>
@@ -546,7 +550,7 @@
                                         <basic-editor
                                         ref="basiceditor_retestdescription"
                                         v-model="finding.retestDescription"
-                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        :editable="isFieldEditable('retestDescription')"
                                         fieldName="retestDescriptionField"
                                         :commentMode="commentMode && canCreateComment"
                                         :focusedComment="focusedComment"
@@ -751,6 +755,8 @@
 .top-fixed {
     position: fixed;
     top: 100px;
+    left: 0;
+    right: 0;
     z-index: 1000;
 }
 

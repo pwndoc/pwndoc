@@ -65,6 +65,7 @@
         :aiEnabled="aiEnabled"
         :canGenerateAiForField="canGenerateAi"
         :isAiGeneratingField="isAiFieldLoading"
+        :isAiFieldLocked="isAiFieldLocked"
         :generateAiForField="generateCustomFieldDraftAI"
         />
     </q-card>
