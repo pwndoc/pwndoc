@@ -20,6 +20,8 @@ const {
     buildAiFieldCatalog
 } = require('../lib/ai-prompts');
 
+const ALLOWED_ENTITY_TYPES = ['finding', 'section'];
+
 const normalizeContextValue = (value) => {
     if (value === null || value === undefined)
         return '';
@@ -28,195 +30,202 @@ const normalizeContextValue = (value) => {
     if (typeof value === 'object')
         return JSON.stringify(value);
     return String(value);
-}
+};
 
 const renderPromptTemplate = (template = '', context = {}) => {
     const source = String(template || '');
     return source.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
         return normalizeContextValue(context[key]);
     }).trim();
-}
+};
 
 const normalizeProvider = (provider) => {
     if (!provider || typeof provider !== 'string')
         return null;
     return provider.toLowerCase().trim();
-}
+};
 
-module.exports = function(app) {
-    app.post('/api/ai/generate', acl.hasPermission('ai:generate'), async function(req, res) {
-        try {
-            const entityType = String(req.body.entityType || 'finding').trim().toLowerCase();
-            if (!['finding', 'section'].includes(entityType)) {
-                Response.BadParameters(res, `Unsupported entityType "${entityType}". Allowed entity types: finding, section`);
-                return;
-            }
+const isAllowedEntityType = (entityType) => {
+    return ALLOWED_ENTITY_TYPES.includes(entityType);
+};
 
-            const field = String(req.body.field || '').trim();
-            if (!field) {
-                Response.BadParameters(res, 'Missing required parameter: field');
-                return;
-            }
-
-            let settings = null;
-            try {
-                settings = await Settings.getAll();
-            } catch (_) {
-                settings = null;
-            }
-
-            if (!settings || settings?.ai?.public?.enabled === false) {
-                Response.Forbidden(res, 'AI integration is disabled in organization settings');
-                return;
-            }
-
-            const customFields = await CustomField.getAll();
-            const fieldCatalog = buildAiFieldCatalog(customFields);
-            const fieldByCompositeKey = new Map(
-                fieldCatalog.map((entry) => [toPromptCompositeKey(entry.entityType, entry.fieldKey), entry])
-            );
-            const fieldConfig = fieldByCompositeKey.get(toPromptCompositeKey(entityType, field));
-
-            if (!fieldConfig) {
-                Response.BadParameters(res, `Unsupported field "${field}" for entityType "${entityType}"`);
-                return;
-            }
-
-            const promptDoc = await AiPrompt.findOne({
-                entityType: fieldConfig.entityType,
-                fieldKey: fieldConfig.fieldKey
-            }).select('enabled prompt').lean();
-            if (promptDoc && promptDoc.enabled === false) {
-                Response.Forbidden(res, `AI generation is disabled for field "${fieldConfig.fieldLabel}"`);
-                return;
-            }
-
-            const promptTemplate = normalizePromptValue(promptDoc?.prompt) || fieldConfig.defaultPrompt;
-            let promptInstruction = renderPromptTemplate(promptTemplate, req.body.context || {});
-
-            const provider = normalizeProvider(req.body.provider) ||
-                normalizeProvider(settings?.ai?.public?.defaultProvider) ||
-                AI_DEFAULT_PROVIDER;
-
-            if (!AI_PROVIDERS.includes(provider)) {
-                Response.BadParameters(res, `Unsupported provider "${provider}". Allowed providers: ${AI_PROVIDERS.join(', ')}`);
-                return;
-            }
-
-            const context = req.body.context || {};
-            const selectedText = String(context.selectedText || '').trim();
-            const userPrompt = String(req.body.userPrompt || '').trim();
-            const selectionMode = Boolean(selectedText);
-
-            if (selectionMode && !userPrompt) {
-                Response.BadParameters(res, 'Missing required parameter: userPrompt');
-                return;
-            }
-
-            const chatMessages = req.body.messages || [];
-
-            if (!selectionMode) {
-                const promptOverride = String(req.body.promptInstruction || '').trim();
-                if (promptOverride)
-                    promptInstruction = promptOverride;
-                else if (userPrompt && chatMessages.length === 0)
-                    promptInstruction = userPrompt;
-            }
-
-            if (!selectionMode && !promptInstruction) {
-                Response.BadParameters(res, 'Missing required parameter: userPrompt');
-                return;
-            }
-
-            const result = await generateWithProvider({
-                provider: provider,
-                settings: settings,
-                outputType: fieldConfig.outputType,
-                context: context,
-                promptInstruction: promptInstruction,
-                userPrompt: userPrompt,
-                messages: chatMessages
-            });
-
-            Response.Ok(res, {
-                entityType: fieldConfig.entityType,
-                field: field,
-                outputType: fieldConfig.outputType,
-                draft: result.draft,
-                reply: result.reply || '',
-                provider: provider,
-                model: result.model
-            });
-        } catch (err) {
-            Response.Internal(res, err);
+const handleAiGenerate = async function(req, res) {
+    try {
+        const entityType = String(req.body.entityType || 'finding').trim().toLowerCase();
+        if (!isAllowedEntityType(entityType)) {
+            Response.BadParameters(res, 'Unsupported entityType. Allowed entity types: finding, section');
+            return;
         }
-    });
 
-    app.post('/api/ai/qa', acl.hasPermission('ai:qa'), async function(req, res) {
+        const field = String(req.body.field || '').trim();
+        if (!field) {
+            Response.BadParameters(res, 'Missing required parameter: field');
+            return;
+        }
+
+        let settings = null;
         try {
-            const auditId = String(req.body.auditId || '').trim();
-            if (!auditId) {
-                Response.BadParameters(res, 'Missing required parameter: auditId');
-                return;
-            }
+            settings = await Settings.getAll();
+        } catch (_) {
+            settings = null;
+        }
 
-            let settings = null;
-            try {
-                settings = await Settings.getAll();
-            } catch (_) {
-                settings = null;
-            }
+        if (!settings || settings?.ai?.public?.enabled === false) {
+            Response.Forbidden(res, 'AI integration is disabled in organization settings');
+            return;
+        }
 
-            if (!settings || settings?.ai?.public?.enabled === false) {
-                Response.Forbidden(res, 'AI integration is disabled in organization settings');
-                return;
-            }
+        const customFields = await CustomField.getAll();
+        const fieldCatalog = buildAiFieldCatalog(customFields);
+        const fieldByCompositeKey = new Map(
+            fieldCatalog.map((entry) => [toPromptCompositeKey(entry.entityType, entry.fieldKey), entry])
+        );
+        const fieldConfig = fieldByCompositeKey.get(toPromptCompositeKey(entityType, field));
 
-            const audit = await Audit.getAudit(
-                acl.isAllowed(req.decodedToken.role, 'audits:read-all'),
-                auditId,
-                req.decodedToken.id
-            );
+        if (!fieldConfig) {
+            Response.BadParameters(res, 'Unsupported field for the requested entityType');
+            return;
+        }
 
-            const provider = normalizeProvider(req.body.provider) ||
-                normalizeProvider(settings?.ai?.public?.defaultProvider) ||
-                AI_DEFAULT_PROVIDER;
+        const promptDoc = await AiPrompt.findOne({
+            entityType: fieldConfig.entityType,
+            fieldKey: fieldConfig.fieldKey
+        }).select('enabled prompt').lean();
+        if (promptDoc && promptDoc.enabled === false) {
+            Response.Forbidden(res, 'AI generation is disabled for the requested field');
+            return;
+        }
 
-            if (!AI_PROVIDERS.includes(provider)) {
-                Response.BadParameters(res, `Unsupported provider "${provider}". Allowed providers: ${AI_PROVIDERS.join(', ')}`);
-                return;
-            }
+        const promptTemplate = normalizePromptValue(promptDoc?.prompt) || fieldConfig.defaultPrompt;
+        let promptInstruction = renderPromptTemplate(promptTemplate, req.body.context || {});
 
-            const auditObject = typeof audit.toObject === 'function' ? audit.toObject() : audit;
+        const provider = normalizeProvider(req.body.provider) ||
+            normalizeProvider(settings?.ai?.public?.defaultProvider) ||
+            AI_DEFAULT_PROVIDER;
 
-            const cachedReport = getCachedQaReport(auditObject);
-            if (cachedReport) {
-                Response.Ok(res, {
-                    auditId: auditId,
-                    ...cachedReport
-                });
-                return;
-            }
+        if (!AI_PROVIDERS.includes(provider)) {
+            Response.BadParameters(res, 'Unsupported provider');
+            return;
+        }
 
-            const result = await runAuditQa({
-                audit: auditObject,
-                settings: settings,
-                provider: provider
-            });
+        const context = req.body.context || {};
+        const selectedText = String(context.selectedText || '').trim();
+        const userPrompt = String(req.body.userPrompt || '').trim();
+        const selectionMode = Boolean(selectedText);
 
-            const fingerprint = computeAuditQaFingerprint(auditObject);
-            const qaReport = buildQaReportCache(fingerprint, result);
-            await Audit.saveLatestQaReport(auditId, qaReport);
+        if (selectionMode && !userPrompt) {
+            Response.BadParameters(res, 'Missing required parameter: userPrompt');
+            return;
+        }
 
+        const chatMessages = req.body.messages || [];
+
+        if (!selectionMode) {
+            const promptOverride = String(req.body.promptInstruction || '').trim();
+            if (promptOverride)
+                promptInstruction = promptOverride;
+            else if (userPrompt && chatMessages.length === 0)
+                promptInstruction = userPrompt;
+        }
+
+        if (!selectionMode && !promptInstruction) {
+            Response.BadParameters(res, 'Missing required parameter: userPrompt');
+            return;
+        }
+
+        const result = await generateWithProvider({
+            provider: provider,
+            settings: settings,
+            outputType: fieldConfig.outputType,
+            context: context,
+            promptInstruction: promptInstruction,
+            userPrompt: userPrompt,
+            messages: chatMessages
+        });
+
+        Response.Ok(res, {
+            entityType: fieldConfig.entityType,
+            field: field,
+            outputType: fieldConfig.outputType,
+            draft: result.draft,
+            reply: result.reply || '',
+            provider: provider,
+            model: result.model
+        });
+    } catch (err) {
+        Response.Internal(res, err);
+    }
+};
+
+const handleAiQa = async function(req, res) {
+    try {
+        const auditId = String(req.body.auditId || '').trim();
+        if (!auditId) {
+            Response.BadParameters(res, 'Missing required parameter: auditId');
+            return;
+        }
+
+        let settings = null;
+        try {
+            settings = await Settings.getAll();
+        } catch (_) {
+            settings = null;
+        }
+
+        if (!settings || settings?.ai?.public?.enabled === false) {
+            Response.Forbidden(res, 'AI integration is disabled in organization settings');
+            return;
+        }
+
+        const audit = await Audit.getAudit(
+            acl.isAllowed(req.decodedToken.role, 'audits:read-all'),
+            auditId,
+            req.decodedToken.id
+        );
+
+        const provider = normalizeProvider(req.body.provider) ||
+            normalizeProvider(settings?.ai?.public?.defaultProvider) ||
+            AI_DEFAULT_PROVIDER;
+
+        if (!AI_PROVIDERS.includes(provider)) {
+            Response.BadParameters(res, 'Unsupported provider');
+            return;
+        }
+
+        const auditObject = typeof audit.toObject === 'function' ? audit.toObject() : audit;
+
+        const cachedReport = getCachedQaReport(auditObject);
+        if (cachedReport) {
             Response.Ok(res, {
                 auditId: auditId,
-                ...formatQaReportResponse(qaReport, {
-                    cached: false,
-                    outdated: false
-                })
+                ...cachedReport
             });
-        } catch (err) {
-            Response.Internal(res, err);
+            return;
         }
-    });
+
+        const result = await runAuditQa({
+            audit: auditObject,
+            settings: settings,
+            provider: provider
+        });
+
+        const fingerprint = computeAuditQaFingerprint(auditObject);
+        const qaReport = buildQaReportCache(fingerprint, result);
+        await Audit.saveLatestQaReport(auditId, qaReport);
+
+        Response.Ok(res, {
+            auditId: auditId,
+            ...formatQaReportResponse(qaReport, {
+                cached: false,
+                outdated: false
+            })
+        });
+    } catch (err) {
+        Response.Internal(res, err);
+    }
+};
+
+module.exports = function(app) {
+    app.post('/api/ai/generate', acl.hasPermission('ai:generate'), handleAiGenerate);
+    app.post('/api/ai/qa', acl.hasPermission('ai:qa'), handleAiQa);
 };
