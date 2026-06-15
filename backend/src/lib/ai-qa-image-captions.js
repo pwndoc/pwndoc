@@ -13,9 +13,9 @@ const unescapeHtmlAttribute = (value = '') => {
     return String(value || '')
         .replace(/&quot;/gi, '"')
         .replace(/&#0*39;/g, "'")
-        .replace(/&amp;/gi, '&')
         .replace(/&lt;/gi, '<')
-        .replace(/&gt;/gi, '>');
+        .replace(/&gt;/gi, '>')
+        .replace(/&amp;/gi, '&');
 };
 
 const extractFilenameLikeCaptionsFromHtml = (html = '') => {
