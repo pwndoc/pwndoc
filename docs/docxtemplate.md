@@ -30,12 +30,12 @@ data = { array: [{name: 'value1'}, {name: 'value2'}, {name: 'value3'}]}
 ### Condition
 
 ```
-data = {findings: [{title: 'vuln1', cvssSeverity: 'Critical'}, {title: 'vuln2', cvssSeverity: 'High'}, {title: 'vuln3', cvssSeverity: 'Medium'}]}
--> // List Vulnerabilities with cvssSeverity Critical
+data = {findings: [{title: 'vuln1', cvss: {baseSeverity: 'Critical'}}, {title: 'vuln2', cvss: {baseSeverity: 'High'}}, {title: 'vuln3', cvss: {baseSeverity: 'Medium'}}]}
+-> // List Vulnerabilities with CVSS v3 baseSeverity Critical
 {#findings}
-{#cvssSeverity == 'Critical'}
-{title} : {cvssSeverity}
-{/cvssSeverity == 'Critical'}
+{#cvss.baseSeverity == 'Critical'}
+{title} : {cvss.baseSeverity}
+{/cvss.baseSeverity == 'Critical'}
 {/findings}
 ```
 
@@ -175,14 +175,32 @@ List of findings. Array of Objects:
 * **findings[i].priority** (Number 1-4)
 * **findings[i].references** (Array of String)
 * **findings[i].cvssv3**
-* **findings[i].cvssScore**
-* **findings[i].cvssSeverity**
+* **findings[i].cvss.vectorString**
+* **findings[i].cvss.baseMetricScore**
+* **findings[i].cvss.baseSeverity**
+* **findings[i].cvss.temporalMetricScore**
+* **findings[i].cvss.temporalSeverity**
+* **findings[i].cvss.environmentalMetricScore**
+* **findings[i].cvss.environmentalSeverity**
+* **findings[i].cvss.cellColor**
+* **findings[i].cvss.temporalCellColor**
+* **findings[i].cvss.environmentalCellColor**
+* **findings[i].cvss4.vectorString**
+* **findings[i].cvss4.baseScore**
+* **findings[i].cvss4.baseSeverity**
+* **findings[i].cvss4.cellColor**
 * **findings[i].cvssObj** (Object of cvss Criterias)
+* **findings[i].cvss4Obj** (Object of CVSS v4 criterias)
 * **findings[i].poc** (HTML with images)
 * **findings[i].affected** (HTML without images)
 * **findings[i].status** (Number 0:done, 1:redacting)
 * **findings[i].category**
 * **findings[i].identifier**
+* **findings[i].retestStatus**
+* **findings[i].retestDescription** (HTML with images)
+
+When CVSS v3 scoring is enabled, the generated finding includes the nested `findings[i].cvss` object.
+When CVSS v4 scoring is enabled, the generated finding includes the nested `findings[i].cvss4` object.
 
 Identifier consists on a sequential id for the reported vulnerability pre-pended with 'IDX-'. Ex: IDX-001.
 You can replace the prefix by using the filter ```changeID```
@@ -195,7 +213,7 @@ Eg. if Custom Field label is `Aggravating Factors` it will be added to the array
 List of Findings{#findings}
 {identifier | changeID: 'PROJ1-'}    {title}    {vulnType}
 >
-Severity: {cvssSeverity}    Score: {cvssScore}
+Severity: {cvss.baseSeverity}    Score: {cvss.baseMetricScore}
 Attack Vector: cvssObj.AV               Scope: cvssObj.S
 Attack Complexity: cvssObj.AC           Confidentiality: cvssObj.C
 Required Privileges: cvssObj.PR         Integrity: cvssObj.I

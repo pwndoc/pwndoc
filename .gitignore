@@ -28,6 +28,7 @@ config.json
 report.json
 roles.json
 app-settings.json
+.claude/settings.json
 
 # Editor directories and files
 .idea
@@ -50,4 +51,5 @@ coverage
 # AI configs
 .agents
 .claude/plan.md
+.playwright-mcp
 .playwright-cli

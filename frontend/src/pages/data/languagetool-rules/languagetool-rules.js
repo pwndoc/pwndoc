@@ -11,8 +11,11 @@ const userStore = useUserStore()
 
 export default {
     computed: {
-        canEdit() {
-            return userStore.isAllowed('settings:update')
+        canCreate() {
+            return userStore.isAllowed('proofing-rules:create')
+        },
+        canDelete() {
+            return userStore.isAllowed('proofing-rules:delete')
         }
     },
 
@@ -70,7 +73,7 @@ export default {
     mounted: function() {
         this.checkCapabilities()
         this.getRules()
-        if (this.canEdit) {
+        if (this.canCreate) {
             this.getLanguages()
         }
     },
@@ -133,7 +136,7 @@ export default {
         },
 
         openCreateDialog: function() {
-            if (!this.canEdit) {
+            if (!this.canCreate) {
                 Notify.create({
                     message: $t('msg.unauthorized'),
                     color: 'negative'
@@ -187,6 +190,14 @@ export default {
         },
 
         createRule: function() {
+            if (!this.canCreate) {
+                Notify.create({
+                    message: $t('msg.unauthorized'),
+                    color: 'negative'
+                })
+                return
+            }
+
             if (!this.validateCreateForm()) {
                 return
             }
@@ -222,7 +233,7 @@ export default {
         },
 
         confirmDeleteRule: function(rule) {
-            if (!this.canEdit) {
+            if (!this.canDelete) {
                 Notify.create({
                     message: $t('msg.unauthorized'),
                     color: 'negative'
