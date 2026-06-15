@@ -776,7 +776,6 @@ module.exports = function(app) {
             // Settings
             if (info.data.includes('Settings') && backupData.includes('Settings')) {
                 files.push('settings.json')
-                files.push('aiPrompts.json')
             }
 
             if (!fs.existsSync(restoreTmpPath))

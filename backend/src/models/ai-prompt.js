@@ -108,6 +108,12 @@ AiPromptSchema.statics.restore = (path, mode = 'upsert') => {
         try {
             if (mode === 'revert')
                 await AiPrompt.deleteMany();
+
+            if (!fs.existsSync(`${path}/aiPrompts.json`)) {
+                resolve();
+                return;
+            }
+
             await importAiPromptsPromise();
             resolve();
         }
