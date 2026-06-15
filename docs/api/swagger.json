@@ -41,6 +41,16 @@
         }
       }
     },
+    "/api/ai/vulnerabilities/qa": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/audits": {
       "get": {
         "description": "",

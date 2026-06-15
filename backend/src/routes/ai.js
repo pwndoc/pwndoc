@@ -2,10 +2,15 @@ const Response = require('../lib/httpResponse.js');
 const acl = require('../lib/auth').acl;
 const Settings = require('mongoose').model('Settings');
 const Audit = require('mongoose').model('Audit');
+const Vulnerability = require('mongoose').model('Vulnerability');
 const CustomField = require('mongoose').model('CustomField');
 const AiPrompt = require('mongoose').model('AiPrompt');
 const { generateWithProvider } = require('../lib/ai-client');
 const { runAuditQa } = require('../lib/ai-qa');
+const {
+    runVulnerabilityQa,
+    runAllVulnerabilitiesQa
+} = require('../lib/ai-vuln-qa');
 const {
     computeAuditQaFingerprint,
     getCachedQaReport,
@@ -225,7 +230,81 @@ const handleAiQa = async function(req, res) {
     }
 };
 
+const handleVulnerabilityQa = async function(req, res) {
+    try {
+        const locale = String(req.body.locale || '').trim();
+        if (!locale) {
+            Response.BadParameters(res, 'Missing required parameter: locale');
+            return;
+        }
+
+        let settings = null;
+        try {
+            settings = await Settings.getAll();
+        } catch (_) {
+            settings = null;
+        }
+
+        if (!settings || settings?.ai?.public?.enabled === false) {
+            Response.Forbidden(res, 'AI integration is disabled in organization settings');
+            return;
+        }
+
+        const provider = normalizeProvider(req.body.provider) ||
+            normalizeProvider(settings?.ai?.public?.defaultProvider) ||
+            AI_DEFAULT_PROVIDER;
+
+        if (!AI_PROVIDERS.includes(provider)) {
+            Response.BadParameters(res, 'Unsupported provider');
+            return;
+        }
+
+        const allVulnerabilities = await Vulnerability.getAll();
+        const vulnerabilityId = String(req.body.vulnerabilityId || '').trim();
+
+        if (vulnerabilityId) {
+            const vulnerability = allVulnerabilities.find((entry) => {
+                return String(entry._id) === vulnerabilityId;
+            });
+
+            if (!vulnerability) {
+                Response.NotFound(res, 'Vulnerability not found');
+                return;
+            }
+
+            const result = await runVulnerabilityQa({
+                vulnerability: typeof vulnerability.toObject === 'function' ?
+                    vulnerability.toObject() :
+                    vulnerability,
+                locale: locale,
+                settings: settings,
+                provider: provider,
+                allVulnerabilities: allVulnerabilities.map((entry) => {
+                    return typeof entry.toObject === 'function' ? entry.toObject() : entry;
+                })
+            });
+
+            Response.Ok(res, result);
+            return;
+        }
+
+        const result = await runAllVulnerabilitiesQa({
+            vulnerabilities: allVulnerabilities.map((entry) => {
+                return typeof entry.toObject === 'function' ? entry.toObject() : entry;
+            }),
+            locale: locale,
+            settings: settings,
+            provider: provider
+        });
+
+        Response.Ok(res, result);
+    } catch (err) {
+        Response.Internal(res, err);
+    }
+};
+
 module.exports = function(app) {
     app.post('/api/ai/generate', acl.hasPermission('ai:generate'), handleAiGenerate);
     app.post('/api/ai/qa', acl.hasPermission('ai:qa'), handleAiQa);
+    app.post('/api/ai/vulnerabilities/qa', acl.hasPermission('ai:qa'), handleVulnerabilityQa);
 };

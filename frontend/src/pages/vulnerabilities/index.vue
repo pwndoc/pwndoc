@@ -42,6 +42,16 @@
                     no-caps
                     @click="$refs.mergeModal.show()"
                     />
+                    <q-btn
+                    v-if="aiQaEnabled"
+                    class="q-ml-md"
+                    :label="$t('vulnerabilityQa.runAll')"
+                    outline
+                    color="secondary"
+                    no-caps
+                    :disable="vulnerabilityQaCount === 0"
+                    @click="confirmRunAllVulnerabilityQa()"
+                    />
                     <q-space />
                     <q-btn-dropdown 
                     v-if="userStore.isAllowed('vulnerabilities:create')"
@@ -138,6 +148,16 @@
                             </q-btn>
                             <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.findAudits')}}</q-tooltip>
+                            </q-btn>
+                            <q-btn
+                            v-if="aiQaEnabled"
+                            size="sm"
+                            flat
+                            color="secondary"
+                            icon="fact_check"
+                            @click="runVulnerabilityQa(props.row)"
+                            >
+                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.vulnerabilityQa')}}</q-tooltip>
                             </q-btn>
                             <q-btn v-if="userStore.isAllowed('vulnerabilities:delete')" data-testid="delete-vulnerability-button" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>

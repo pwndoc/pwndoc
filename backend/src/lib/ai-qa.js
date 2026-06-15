@@ -23,7 +23,7 @@ const {
 } = require('./ai-qa-checks');
 
 const QA_SEVERITIES = ['error', 'warning', 'info'];
-const QA_CATEGORIES = ['completeness', 'redaction', 'customer', 'instructions', 'references', 'imageCaptions', 'other'];
+const QA_CATEGORIES = ['completeness', 'redaction', 'customer', 'instructions', 'references', 'imageCaptions', 'duplicates', 'aiDuplicates', 'other'];
 
 const stripHtml = (value) => {
     return String(value || '')

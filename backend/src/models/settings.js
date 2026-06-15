@@ -89,6 +89,8 @@ const SettingSchema = new Schema({
                 completeness: {type: Boolean, default: true},
                 references: {type: Boolean, default: true},
                 imageCaptions: {type: Boolean, default: true},
+                duplicates: {type: Boolean, default: true},
+                aiDuplicates: {type: Boolean, default: true},
                 redaction: {type: Boolean, default: true},
                 customer: {type: Boolean, default: true},
                 instructions: {type: Boolean, default: true}

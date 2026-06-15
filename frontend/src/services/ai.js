@@ -11,4 +11,8 @@ export default {
       ...params
     })
   },
+
+  runVulnerabilityQa: function(params = {}) {
+    return api.post('ai/vulnerabilities/qa', params)
+  },
 }

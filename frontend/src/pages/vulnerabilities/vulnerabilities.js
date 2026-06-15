@@ -14,6 +14,7 @@ import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
 import { createDraftRecovery } from '@/composables/useDraftRecovery'
 import DraftRecoveryService from '@/services/draft-recovery'
+import { openVulnerabilityQaDialog } from '@/composables/openVulnerabilityQaDialog'
 
 import { $t } from 'boot/i18n'
 
@@ -167,6 +168,15 @@ export default {
 
         draftRecoveryRevision: function() {
             return DraftRecoveryService.state.revision
+        },
+
+        aiQaEnabled: function() {
+            return this.$settings?.ai?.public?.enabled !== false &&
+                userStore.isAllowed('ai:qa')
+        },
+
+        vulnerabilityQaCount: function() {
+            return this.computedVulnerabilities.length
         }
     },
 
@@ -592,6 +602,33 @@ export default {
         goToAudits: function(row) {
             var title = this.getDtTitle(row);
             this.$router.push({name: 'audits', query: {findingTitle: title}});
+        },
+
+        runVulnerabilityQa: function(row) {
+            openVulnerabilityQaDialog({
+                locale: this.dtLanguage,
+                vulnerabilityId: row._id,
+                title: this.getDtTitle(row)
+            })
+        },
+
+        confirmRunAllVulnerabilityQa: function() {
+            const count = this.vulnerabilityQaCount
+            if (!count)
+                return
+
+            Dialog.create({
+                title: $t('vulnerabilityQa.allWarningTitle'),
+                message: $t('vulnerabilityQa.allWarningMessage', { count: count }),
+                ok: { label: $t('vulnerabilityQa.runAll'), color: 'warning' },
+                cancel: { label: $t('btn.cancel'), color: 'white' },
+                focus: 'cancel'
+            })
+            .onOk(() => {
+                openVulnerabilityQaDialog({
+                    locale: this.dtLanguage
+                })
+            })
         },
 
         getVulnTitleLocale: function(vuln, locale) {

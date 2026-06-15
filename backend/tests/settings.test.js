@@ -25,6 +25,8 @@ module.exports = function(request, app) {
           "completeness": true,
           "references": true,
           "imageCaptions": true,
+          "duplicates": true,
+          "aiDuplicates": true,
           "redaction": true,
           "customer": true,
           "instructions": true

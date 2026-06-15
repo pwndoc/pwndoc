@@ -455,7 +455,7 @@ const buildQaSystemPrompt = (scopeInstruction = '') => {
         '"summary" as a brief overall assessment, and',
         '"issues" as an array of objects with keys:',
         '"severity" (error, warning, or info),',
-        '"category" (completeness, redaction, customer, instructions, references, imageCaptions, or other),',
+        '"category" (completeness, redaction, customer, instructions, references, imageCaptions, duplicates, or other),',
         '"title" (short issue title),',
         '"message" (actionable explanation),',
         '"location" (general, network, report, finding:<finding title>, section:Name, or field path).',
@@ -464,7 +464,7 @@ const buildQaSystemPrompt = (scopeInstruction = '') => {
 };
 
 const QA_SEVERITIES = ['error', 'warning', 'info'];
-const QA_CATEGORIES = ['completeness', 'redaction', 'customer', 'instructions', 'references', 'imageCaptions', 'other'];
+const QA_CATEGORIES = ['completeness', 'redaction', 'customer', 'instructions', 'references', 'imageCaptions', 'duplicates', 'other'];
 
 const normalizeQaIssueFromParsed = (issue = {}) => {
     const severity = QA_SEVERITIES.includes(issue.severity) ? issue.severity : 'warning';
@@ -596,7 +596,118 @@ const runQaWithProvider = async ({
     };
 };
 
+const buildVulnerabilityDuplicateSystemPrompt = () => {
+    return [
+        'You are a senior penetration testing knowledge manager reviewing a vulnerability template database.',
+        'Identify templates that describe the SAME specific underlying security issue, even when titles differ or wording is paraphrased.',
+        'Do not flag templates that only share a broad vulnerability class unless they would be redundant entries for the same finding in a report.',
+        'Return ONLY valid JSON with keys:',
+        '"summary" as a brief overall assessment, and',
+        '"issues" as an array of objects with keys:',
+        '"severity" (error, warning, or info),',
+        '"title" (short issue title),',
+        '"message" (actionable explanation),',
+        '"location" (vulnerability:<template title>),',
+        '"vulnerabilityId" (template id when available),',
+        '"templateTitle" (template title),',
+        '"relatedTemplates" as an array of objects with keys "vulnerabilityId", "title", and optional "reason".',
+        'Only flag supported duplicate relationships. Return an empty issues array when none are found.'
+    ].join(' ');
+};
+
+const runVulnerabilityDuplicateQaWithProvider = async ({
+    provider,
+    settings,
+    locale = '',
+    mode = 'all',
+    target = null,
+    templates = []
+}) => {
+    const providerLabel = PROVIDER_LABELS[provider] || provider;
+    const providerConfig = resolveProviderConfig(provider, settings);
+
+    if (!providerConfig) {
+        throw({
+            fn: 'BadParameters',
+            message: `Unsupported provider "${provider}"`
+        });
+    }
+
+    if (providerConfig.requireCredentials && !providerConfig.hasCredentials) {
+        throw({
+            fn: 'BadParameters',
+            message: `${providerLabel} provider is not configured. Set API key or IAM credentials.`
+        });
+    }
+
+    if (providerConfig.requireApiKey && !providerConfig.apiKey) {
+        throw({
+            fn: 'BadParameters',
+            message: `${providerLabel} provider is not configured. Set API key.`
+        });
+    }
+
+    const { createLLM } = await loadNodeLlm();
+    const llm = createLLM(buildLlmConfig(provider, providerConfig));
+
+    let chat = configureChatTemperature(llm.chat(providerConfig.model, {
+        systemPrompt: buildVulnerabilityDuplicateSystemPrompt()
+    }), provider, 0.1);
+
+    const requestHeaders = {};
+    if (provider === 'anthropic' && providerConfig.version)
+        requestHeaders['anthropic-version'] = providerConfig.version;
+    if (provider === 'ollama' && providerConfig.apiKey)
+        requestHeaders.Authorization = `Bearer ${providerConfig.apiKey}`;
+    if (Object.keys(requestHeaders).length > 0)
+        chat = chat.withRequestOptions({ headers: requestHeaders });
+
+    const userPayload = {
+        task: 'vulnerability_template_duplicate_detection',
+        locale: locale,
+        mode: mode,
+        target: target,
+        templates: templates
+    };
+
+    let response = null;
+    try {
+        response = await chat.ask(JSON.stringify(userPayload), {
+            requestTimeout: providerConfig.timeoutMs
+        });
+    } catch (err) {
+        throw mapLlmError(err, providerLabel, providerConfig.timeoutMs);
+    }
+
+    const content = String(response?.content || response || '').trim();
+    if (!content) {
+        const finishReason = response?.finish_reason || response?.finishReason;
+        throw({
+            fn: 'BadRequest',
+            message: finishReason ?
+                `${providerLabel} returned an empty duplicate-detection response (finish reason: ${finishReason}).` :
+                `${providerLabel} returned an empty duplicate-detection response.`
+        });
+    }
+
+    const parsed = extractJsonObjectFromText(content);
+    if (!parsed) {
+        throw({
+            fn: 'BadRequest',
+            message: `${providerLabel} duplicate-detection response does not contain valid JSON`
+        });
+    }
+
+    const qaResponse = getQaIssuesFromParsed(parsed, providerLabel);
+    return {
+        summary: qaResponse.summary,
+        issues: qaResponse.issues,
+        model: response?.model || providerConfig.model
+    };
+};
+
 module.exports = {
     generateWithProvider,
-    runQaWithProvider
+    runQaWithProvider,
+    runVulnerabilityDuplicateQaWithProvider
 };

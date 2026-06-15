@@ -1,9 +1,11 @@
-const QA_CHECK_KEYS = ['completeness', 'references', 'imageCaptions', 'redaction', 'customer', 'instructions'];
+const QA_CHECK_KEYS = ['completeness', 'references', 'imageCaptions', 'duplicates', 'aiDuplicates', 'redaction', 'customer', 'instructions'];
 
 const defaultQaChecks = () => ({
     completeness: true,
     references: true,
     imageCaptions: true,
+    duplicates: true,
+    aiDuplicates: true,
     redaction: true,
     customer: true,
     instructions: true

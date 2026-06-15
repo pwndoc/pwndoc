@@ -17,6 +17,8 @@ const defaultQaChecks = () => ({
     completeness: true,
     references: true,
     imageCaptions: true,
+    duplicates: true,
+    aiDuplicates: true,
     redaction: true,
     customer: true,
     instructions: true
@@ -37,6 +39,16 @@ const QA_CHECK_OPTIONS = [
         key: 'imageCaptions',
         label: 'Image captions',
         description: 'Flag images and figure captions that still use the imported filename (for example screenshot.png).'
+    },
+    {
+        key: 'duplicates',
+        label: 'Duplicate templates',
+        description: 'Fast structural checks for templates in the same language with the same title or identical description, observation, and remediation content.'
+    },
+    {
+        key: 'aiDuplicates',
+        label: 'AI duplicate templates',
+        description: 'AI review to identify templates that describe the same underlying vulnerability even when titles differ or content is paraphrased. Uses additional tokens.'
     },
     {
         key: 'redaction',
@@ -79,6 +91,8 @@ const serializeQaChecks = (checks = {}) => ({
     completeness: checks.completeness !== false,
     references: checks.references !== false,
     imageCaptions: checks.imageCaptions !== false,
+    duplicates: checks.duplicates !== false,
+    aiDuplicates: checks.aiDuplicates !== false,
     redaction: checks.redaction !== false,
     customer: checks.customer !== false,
     instructions: checks.instructions !== false
@@ -179,6 +193,8 @@ export default {
                 completeness: qaChecks.completeness !== false,
                 references: qaChecks.references !== false,
                 imageCaptions: qaChecks.imageCaptions !== false,
+                duplicates: qaChecks.duplicates !== false,
+                aiDuplicates: qaChecks.aiDuplicates !== false,
                 redaction: qaChecks.redaction !== false,
                 customer: qaChecks.customer !== false,
                 instructions: qaChecks.instructions !== false

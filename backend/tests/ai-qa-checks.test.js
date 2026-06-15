@@ -14,6 +14,8 @@ module.exports = function() {
             expect(checks.completeness).toBe(true);
             expect(checks.references).toBe(true);
             expect(checks.imageCaptions).toBe(true);
+            expect(checks.duplicates).toBe(true);
+            expect(checks.aiDuplicates).toBe(true);
             expect(checks.redaction).toBe(true);
             expect(checks.customer).toBe(true);
             expect(checks.instructions).toBe(true);
@@ -68,6 +70,8 @@ module.exports = function() {
                 completeness: false,
                 references: false,
                 imageCaptions: false,
+                duplicates: false,
+                aiDuplicates: false,
                 redaction: false,
                 customer: false,
                 instructions: false
