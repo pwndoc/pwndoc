@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+const fs = require('fs');
 
 var AiPromptSchema = new Schema({
     entityType: {type: String, required: true, default: 'finding', enum: ['finding', 'section']},
@@ -16,13 +17,11 @@ AiPromptSchema.index({entityType: 1, fieldKey: 1}, {
     unique: true
 });
 
-AiPromptSchema.statics.backup = (path) => {
+AiPromptSchema.statics.backup = (restoreDir) => {
     return new Promise(async (resolve, reject) => {
-        const fs = require('fs');
-
         function exportAiPromptsPromise() {
             return new Promise((resolve, reject) => {
-                const writeStream = fs.createWriteStream(`${path}/aiPrompts.json`);
+                const writeStream = fs.createWriteStream(`${restoreDir}/aiPrompts.json`);
                 writeStream.write('[');
 
                 let prompts = AiPrompt.find().cursor();
@@ -65,56 +64,55 @@ AiPromptSchema.statics.backup = (path) => {
     });
 }
 
-AiPromptSchema.statics.restore = (path, mode = 'upsert') => {
-    return new Promise(async (resolve, reject) => {
-        const fs = require('fs');
+const importAiPromptsPromise = (restoreDir) => {
+    return new Promise((resolve, reject) => {
+        const readStream = fs.createReadStream(`${restoreDir}/aiPrompts.json`);
+        const JSONStream = require('JSONStream');
 
-        function importAiPromptsPromise() {
-            return new Promise((resolve, reject) => {
-                const readStream = fs.createReadStream(`${path}/aiPrompts.json`);
-                const JSONStream = require('JSONStream');
+        let jsonStream = JSONStream.parse('*');
+        readStream.pipe(jsonStream);
 
-                let jsonStream = JSONStream.parse('*');
-                readStream.pipe(jsonStream);
+        readStream.on('error', (error) => {
+            if (error.code === 'ENOENT') {
+                resolve();
+                return;
+            }
+            reject(error);
+        });
 
-                readStream.on('error', (error) => {
-                    if (error.code === 'ENOENT') {
-                        resolve();
-                        return;
-                    }
-                    reject(error);
-                });
-
-                jsonStream.on('data', async (document) => {
-                    AiPrompt.findOneAndReplace(
-                        {entityType: document.entityType, fieldKey: document.fieldKey},
-                        document,
-                        {upsert: true}
-                    )
-                    .catch((err) => {
-                        console.log(err);
-                        reject(err);
-                    });
-                });
-                jsonStream.on('end', () => {
-                    resolve();
-                });
-                jsonStream.on('error', (error) => {
-                    reject(error);
-                });
+        jsonStream.on('data', async (document) => {
+            AiPrompt.findOneAndReplace(
+                {entityType: document.entityType, fieldKey: document.fieldKey},
+                document,
+                {upsert: true}
+            )
+            .catch((err) => {
+                console.log(err);
+                reject(err);
             });
-        }
+        });
+        jsonStream.on('end', () => {
+            resolve();
+        });
+        jsonStream.on('error', (error) => {
+            reject(error);
+        });
+    });
+}
 
+AiPromptSchema.statics.restore = (restoreDir, mode = 'upsert') => {
+    return new Promise(async (resolve, reject) => {
         try {
             if (mode === 'revert')
                 await AiPrompt.deleteMany();
 
-            if (!fs.existsSync(`${path}/aiPrompts.json`)) {
+            // ponytail: optional file for pre-AI backups; ENOENT in importAiPromptsPromise is the fallback.
+            if (!fs.existsSync(`${restoreDir}/aiPrompts.json`)) {
                 resolve();
                 return;
             }
 
-            await importAiPromptsPromise();
+            await importAiPromptsPromise(restoreDir);
             resolve();
         }
         catch (error) {
