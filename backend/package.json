@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "ae-cvss-calculator": "^1.0.9",
-    "angular-expressions": "^1.5.1",
+    "angular-expressions": "^1.5.4",
     "archiver": "^7.0.1",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
