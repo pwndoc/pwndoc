@@ -773,7 +773,7 @@ module.exports = function(app) {
                 files.push('vulnerabilityCategories.json')
             }
 
-            // Settings
+            // Settings (aiPrompts.json restored separately when present — old backups omit it)
             if (info.data.includes('Settings') && backupData.includes('Settings')) {
                 files.push('settings.json')
             }

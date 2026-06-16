@@ -1,5 +1,5 @@
 import Utils from '@/services/utils'
-import { openAiChatDialog } from '@/composables/openAiChatDialog'
+import { useAiGenerationStore } from '@/stores/ai-generation'
 import { $t } from '@/boot/i18n'
 
 const FINDING_FIELD_OUTPUT_TYPES = {
@@ -156,7 +156,7 @@ export default {
     onCancel
   }) {
     try {
-      return await openAiChatDialog({
+      return await useAiGenerationStore().openSession({
         title,
         defaultPrompt,
         outputType,
@@ -190,7 +190,7 @@ export default {
     onCancel
   }) {
     try {
-      return await openAiChatDialog({
+      return await useAiGenerationStore().openSession({
         title,
         selectedText,
         outputType,

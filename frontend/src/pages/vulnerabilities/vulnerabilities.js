@@ -14,7 +14,7 @@ import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
 import { createDraftRecovery } from '@/composables/useDraftRecovery'
 import DraftRecoveryService from '@/services/draft-recovery'
-import { openVulnerabilityQaDialog } from '@/composables/openVulnerabilityQaDialog'
+import VulnerabilityQaDialog from '@/components/vulnerability-qa-dialog.vue'
 
 import { $t } from 'boot/i18n'
 
@@ -605,10 +605,13 @@ export default {
         },
 
         runVulnerabilityQa: function(row) {
-            openVulnerabilityQaDialog({
-                locale: this.dtLanguage,
-                vulnerabilityId: row._id,
-                title: this.getDtTitle(row)
+            Dialog.create({
+                component: VulnerabilityQaDialog,
+                componentProps: {
+                    locale: this.dtLanguage,
+                    vulnerabilityId: row._id,
+                    title: this.getDtTitle(row)
+                }
             })
         },
 
@@ -625,8 +628,11 @@ export default {
                 focus: 'cancel'
             })
             .onOk(() => {
-                openVulnerabilityQaDialog({
-                    locale: this.dtLanguage
+                Dialog.create({
+                    component: VulnerabilityQaDialog,
+                    componentProps: {
+                        locale: this.dtLanguage
+                    }
                 })
             })
         },

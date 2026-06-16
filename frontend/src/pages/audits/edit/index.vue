@@ -379,6 +379,7 @@
 
 <script>
 import { Dialog, Notify, QSpinnerGears, LocalStorage } from 'quasar';
+import AuditQaDialog from '@/components/audit-qa-dialog.vue'
 import { computed, ref } from 'vue';
 import draggable from 'vuedraggable'
 import CommentsList from 'components/comments-list'
@@ -388,7 +389,6 @@ import { useUserStore } from 'src/stores/user'
 import DataService from '@/services/data';
 import DraftRecoveryService from '@/services/draft-recovery';
 import Utils from '@/services/utils';
-import { openAuditQaDialog } from '@/composables/openAuditQaDialog';
 
 import { $t } from '@/boot/i18n';
 
@@ -931,7 +931,12 @@ export default {
 		},
 
 		runAuditQa: function() {
-			openAuditQaDialog(this.auditId)
+			Dialog.create({
+				component: AuditQaDialog,
+				componentProps: {
+					auditId: this.auditId
+				}
+			})
 		},
 
 		generateReport: function() {
