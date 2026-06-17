@@ -1,0 +1,240 @@
+<template>
+    <div class="row">
+        <div class="col-md-10 col-12 offset-md-1 q-mt-md">
+            <q-table
+                class="sticky-header-table"
+                :columns="dtHeaders"
+                :rows="roles"
+                :filter="search"
+                :filter-method="customFilter"
+                v-model:pagination="pagination"
+                row-key="name"
+                :loading="loading"
+                @row-dblclick="dblClick"
+            >
+                <template v-slot:top>
+                    <q-space />
+                    <q-btn
+                    v-if="userStore.isAllowed('roles:create')"
+                    unelevated
+                    :label="$t('createRole')"
+                    color="secondary"
+                    no-caps
+                    @click="cleanCurrentRole(); $refs.createModal.show()"
+                    />
+                </template>
+
+                <template v-slot:top-row="props">
+                    <q-tr>
+                        <q-td>
+                            <q-input dense :label="$t('search')" v-model="search.name" clearable outlined />
+                        </q-td>
+                        <q-td>
+                            <q-select dense :label="$t('search')" v-model="search.type" clearable :options="['System', 'Custom']" outlined />
+                        </q-td>
+                    </q-tr>
+                </template>
+
+                <template v-slot:body-cell-type="props">
+                    <q-td>
+                        <q-badge v-if="isSystem(props.row)" color="grey-7" :label="$t('systemRole')" />
+                        <span v-else>Custom</span>
+                    </q-td>
+                </template>
+
+                <template v-slot:body-cell-users="props">
+                    <q-td>
+                        <q-btn flat dense no-caps color="primary" :to="`/data/collaborators?role=${props.row.name}`">
+                            {{ props.row.users }}
+                        </q-btn>
+                    </q-td>
+                </template>
+
+                <template v-slot:body-cell-action="props">
+                    <q-td style="width:1px">
+                        <q-icon v-if="isSystem(props.row)" name="lock" color="grey-7">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('cannotEditSystemRole')}}</q-tooltip>
+                        </q-icon>
+                        <q-btn v-if="userStore.isAllowed('roles:update') && !isSystem(props.row)" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">Edit</q-tooltip>
+                        </q-btn>
+                        <q-btn v-if="userStore.isAllowed('roles:delete') && !isSystem(props.row)" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteRole(props.row)">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">Delete</q-tooltip>
+                        </q-btn>
+                    </q-td>
+                </template>
+
+                <template v-slot:bottom="scope">
+                    <span>{{roles.length}} {{$t('quantifier')}}{{$t('roles')}}</span>
+                    <q-space />
+                    <span>{{$t('resultsPerPage')}}</span>
+                    <q-select class="q-px-md" v-model="pagination.rowsPerPage" :options="rowsPerPageOptions" emit-value map-options dense options-dense options-cover borderless />
+                    <q-pagination input v-model="pagination.page" :max="scope.pagesNumber" />
+                </template>
+            </q-table>
+        </div>
+    </div>
+
+    <q-dialog ref="createModal" persistent @hide="cleanErrors()">
+        <q-card class="role-modal-card" style="width:900px; max-width:95vw">
+            <q-bar class="bg-fixed-primary text-white">
+                <div class="q-toolbar-title">{{$t('createRole')}}</div>
+                <q-space />
+                <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
+            </q-bar>
+            <q-card-section>
+                <q-input dense :label="$t('roleName')+' *'" v-model="currentRole.name" :error="!!errors.name" :error-message="errors.name" hide-bottom-space outlined />
+            </q-card-section>
+            <q-card-section>
+                <q-select dense :label="$t('cloneFrom')" v-model="cloneFrom" :options="roles.map(role => role.name)" clearable outlined @update:model-value="applyClone" />
+            </q-card-section>
+            <q-card-section class="q-pt-none role-permission-toolbar">
+                <div class="row items-center q-col-gutter-sm q-mb-sm">
+                    <div class="col-md-6 col-12">
+                        <q-input dense outlined clearable v-model="permissionSearch" :placeholder="$t('searchPermissions')">
+                            <template v-slot:prepend>
+                                <q-icon name="search" />
+                            </template>
+                        </q-input>
+                    </div>
+                    <div class="col-md-6 col-12 row items-center justify-end q-gutter-sm">
+                        <q-chip dense square color="grey-7" text-color="white" :label="selectedPermissionsCount + ' / ' + permissionsCount + ' ' + $t('selected')" />
+                        <q-btn flat dense no-caps color="primary" :label="$t('expandAll')" @click="expandAllPermissionGroups()" />
+                        <q-btn flat dense no-caps color="primary" :label="$t('collapseAll')" @click="collapseAllPermissionGroups()" />
+                        <q-btn flat dense no-caps color="negative" :label="$t('clearAll')" @click="clearPermissions()" />
+                    </div>
+                </div>
+            </q-card-section>
+            <q-card-section class="q-pt-none role-modal-content">
+                <div class="role-permissions">
+                    <q-expansion-item v-for="group in filteredPermissionsCatalog" :key="group.key" v-model="expandedPermissionGroups[group.key]" expand-separator dense header-class="bg-blue-grey-1">
+                        <template v-slot:header>
+                            <q-item-section>
+                                <div class="text-weight-bold">{{group.label}}</div>
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-badge rounded color="grey-7" :label="groupCheckedCount(group) + ' / ' + group.permissions.length" />
+                            </q-item-section>
+                        </template>
+                        <div class="row q-col-gutter-sm q-pa-sm">
+                            <div v-for="permission in group.permissions" :key="permission.scope" class="col-md-6 col-12">
+                                <q-checkbox dense :model-value="isPermissionChecked(permission.scope)" @update:model-value="togglePermission(permission.scope)" :label="permissionLabel(permission.scope)" :color="permission.core ? 'secondary' : 'primary'" />
+                            </div>
+                        </div>
+                    </q-expansion-item>
+                    <div v-if="filteredPermissionsCatalog.length === 0" class="text-grey-7 q-pa-md text-center">{{$t('noPermissionsFound')}}</div>
+                </div>
+            </q-card-section>
+            <q-card-actions class="role-modal-actions bg-white" align="right">
+                <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
+                <q-btn color="secondary" unelevated @click="createRole()">{{$t('btn.create')}}</q-btn>
+            </q-card-actions>
+        </q-card>
+    </q-dialog>
+
+    <q-dialog ref="editModal" persistent @hide="cleanErrors()">
+        <q-card class="role-modal-card" style="width:900px; max-width:95vw">
+            <q-bar class="bg-fixed-primary text-white">
+                <div class="q-toolbar-title">{{$t('editRole')}}</div>
+                <q-space />
+                <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
+            </q-bar>
+            <q-card-section>
+                <q-input :label="$t('roleName')+' *'" v-model="currentRole.name" :error="!!errors.name" :error-message="errors.name" hide-bottom-space outlined />
+            </q-card-section>
+            <q-card-section class="q-pt-none role-permission-toolbar">
+                <div class="row items-center q-col-gutter-sm q-mb-sm">
+                    <div class="col-md-6 col-12">
+                        <q-input dense outlined clearable v-model="permissionSearch" :placeholder="$t('searchPermissions')">
+                            <template v-slot:prepend>
+                                <q-icon name="search" />
+                            </template>
+                        </q-input>
+                    </div>
+                    <div class="col-md-6 col-12 row items-center justify-end q-gutter-sm">
+                        <q-chip dense square color="grey-7" text-color="white" :label="selectedPermissionsCount + ' / ' + permissionsCount + ' ' + $t('selected')" />
+                        <q-btn flat dense no-caps color="primary" :label="$t('expandAll')" @click="expandAllPermissionGroups()" />
+                        <q-btn flat dense no-caps color="primary" :label="$t('collapseAll')" @click="collapseAllPermissionGroups()" />
+                        <q-btn flat dense no-caps color="negative" :label="$t('clearAll')" @click="clearPermissions()" />
+                    </div>
+                </div>
+            </q-card-section>
+            <q-card-section class="q-pt-none role-modal-content">
+                <div class="role-permissions">
+                    <q-expansion-item v-for="group in filteredPermissionsCatalog" :key="group.key" v-model="expandedPermissionGroups[group.key]" expand-separator dense header-class="bg-blue-grey-1">
+                        <template v-slot:header>
+                            <q-item-section>
+                                <div class="text-weight-bold">{{group.label}}</div>
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-badge rounded color="grey-7" :label="groupCheckedCount(group) + ' / ' + group.permissions.length" />
+                            </q-item-section>
+                        </template>
+                        <div class="row q-col-gutter-sm q-pa-sm">
+                            <div v-for="permission in group.permissions" :key="permission.scope" class="col-md-6 col-12">
+                                <q-checkbox dense :model-value="isPermissionChecked(permission.scope)" @update:model-value="togglePermission(permission.scope)" :label="permissionLabel(permission.scope)" :color="permission.core ? 'secondary' : 'primary'" />
+                            </div>
+                        </div>
+                    </q-expansion-item>
+                    <div v-if="filteredPermissionsCatalog.length === 0" class="text-grey-7 q-pa-md text-center">{{$t('noPermissionsFound')}}</div>
+                </div>
+            </q-card-section>
+            <q-card-actions class="role-modal-actions bg-white" align="right">
+                <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
+                <q-btn color="secondary" unelevated @click="updateRole()">{{$t('btn.update')}}</q-btn>
+            </q-card-actions>
+        </q-card>
+    </q-dialog>
+
+    <q-dialog ref="deleteModal" persistent>
+        <q-card style="width:500px; max-width:95vw">
+            <q-bar class="bg-fixed-primary text-white">
+                <div class="q-toolbar-title">{{$t('deleteRole')}}</div>
+                <q-space />
+                <q-btn dense flat icon="close" @click="$refs.deleteModal.hide()" />
+            </q-bar>
+            <q-card-section>
+                <p v-if="usersCount > 0">{{$t('usersWithRole')}}: {{usersCount}}</p>
+                <p>{{$t('msg.confirmSuppression')}}</p>
+            </q-card-section>
+            <q-card-actions align="right">
+                <q-btn color="primary" outline @click="$refs.deleteModal.hide()">{{$t('btn.cancel')}}</q-btn>
+                <q-btn color="negative" unelevated @click="deleteRole()">{{$t('btn.delete')}}</q-btn>
+            </q-card-actions>
+        </q-card>
+    </q-dialog>
+</template>
+
+<script src="./roles.js"></script>
+
+<style>
+.role-permissions {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.role-modal-card {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.role-modal-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.role-permission-toolbar {
+    flex: 0 0 auto;
+}
+
+.role-modal-actions {
+    flex: 0 0 auto;
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+</style>

@@ -16,6 +16,7 @@ export default [
     {path: 'data', component: () => import('pages/data'), meta: {breadcrumb: 'Datas'}, children: [
       {path: '', redirect: {name: 'collaborators'}},
       {path: 'collaborators', name: 'collaborators', component: () => import('pages/data/collaborators')},
+      {path: 'roles', name: 'roles', component: () => import('pages/data/roles')},
       {path: 'companies', component: () => import('pages/data/companies')},
       {path: 'clients', component: () => import('pages/data/clients')},
       {path: 'templates', component: () => import('pages/data/templates')},

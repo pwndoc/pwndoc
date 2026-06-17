@@ -18,7 +18,7 @@ var UserSchema = new Schema({
     email:          {type: String, required: false},
     phone:          {type: String, required: false},
     jobTitle:       {type: String, required: false},
-    role:           {type: String, default: 'user'},
+    roles:          {type: [String], default: ['user']},
     totpEnabled:    {type: Boolean, default: false},
     totpSecret:     {type: String, default: ''},
     enabled:        {type: Boolean, default: true},
@@ -85,7 +85,7 @@ UserSchema.statics.create = function (user) {
 UserSchema.statics.getAll = function () {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname email phone jobTitle role totpEnabled enabled');
+        query.select('username firstname lastname email phone jobTitle roles totpEnabled enabled');
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -100,7 +100,7 @@ UserSchema.statics.getAll = function () {
 UserSchema.statics.getByUsername = function (username) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname email phone jobTitle role totpEnabled enabled');
+        query.select('username firstname lastname email phone jobTitle roles totpEnabled enabled');
         query.exec()
         .then(function(row) {
             if (row)
@@ -135,13 +135,13 @@ UserSchema.statics.updateProfile = function (username, user) {
 
                 payload.id = row._id;
                 payload.username = row.username;
-                payload.role = row.role;
+                payload.roles = row.roles || [];
                 payload.firstname = row.firstname;
                 payload.lastname = row.lastname;
                 payload.email = row.email;
                 payload.phone = row.phone;
                 payload.jobTitle = row.jobTitle;
-                payload.roles = auth.acl.getRoles(payload.role);
+                payload.permissions = auth.acl.getRoles(payload.roles);
 
                 return row.save();
             }
@@ -215,13 +215,13 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                 var payload = {}
                 payload.id = row._id
                 payload.username = row.username
-                payload.role = row.role
+                payload.roles = row.roles || []
                 payload.firstname = row.firstname
                 payload.lastname = row.lastname
                 payload.email = row.email
                 payload.phone = row.phone
                 payload.jobTitle = row.jobTitle
-                payload.roles = auth.acl.getRoles(payload.role)
+                payload.permissions = auth.acl.getRoles(payload.roles)
 
                 token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '15 minutes'})
 

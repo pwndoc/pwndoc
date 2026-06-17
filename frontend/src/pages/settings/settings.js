@@ -71,6 +71,7 @@ export default {
                     {label: $t('includeVulnerabilitiesUpdates'), value: 'Vulnerabilities Updates'},
                 ]},
                 {label: $t('users'), value: 'Users'},
+                {label: $t('roles'), value: 'Roles'},
                 {label: $t('customers'), value: 'Customers', children: [
                     {label: $t('companies'), value: 'Companies'},
                     {label: $t('clients'), value: 'Clients'}
@@ -391,15 +392,26 @@ export default {
         },
 
         handleBackupTicked: function(ticked) {
+            if (ticked.includes('Users')) {
+                if (!ticked.includes('Roles'))
+                    ticked.push('Roles')
+                this.backupOptions[3].disabled = true
+                this.backupOptions[3].label = $t('roles') + ' (' + $t('neededForUsers') + ')'
+            }
+            else {
+                this.backupOptions[3].disabled = false
+                this.backupOptions[3].label = $t('roles')
+            }
+
             if (ticked.includes('Clients')) {
                 if (!ticked.includes('Companies'))
                     ticked.push('Companies')
-                this.backupOptions[3].children[0].disabled = true
-                this.backupOptions[3].children[0].label = $t('companies') + ' (' + $t('neededForClients') + ')'
+                this.backupOptions[4].children[0].disabled = true
+                this.backupOptions[4].children[0].label = $t('companies') + ' (' + $t('neededForClients') + ')'
             }
             else {
-                this.backupOptions[3].children[0].disabled = false
-                this.backupOptions[3].children[0].label = $t('companies')
+                this.backupOptions[4].children[0].disabled = false
+                this.backupOptions[4].children[0].label = $t('companies')
             }
 
             if (ticked.includes('Audit Types')) {
@@ -407,16 +419,16 @@ export default {
                     ticked.push('Templates')
                 if (!ticked.includes('Custom Sections')) 
                     ticked.push('Custom Sections')
-                this.backupOptions[4].disabled = true
-                this.backupOptions[4].label = $t('templates') + ' (' + $t('neededForAuditTypes') + ')'
-                this.backupOptions[5].children[4].disabled = true
-                this.backupOptions[5].children[4].label = $t('customSections') + ' (' + $t('neededForAuditTypes') + ')'
+                this.backupOptions[5].disabled = true
+                this.backupOptions[5].label = $t('templates') + ' (' + $t('neededForAuditTypes') + ')'
+                this.backupOptions[6].children[4].disabled = true
+                this.backupOptions[6].children[4].label = $t('customSections') + ' (' + $t('neededForAuditTypes') + ')'
             }
             else {
-                this.backupOptions[4].disabled = false
-                this.backupOptions[4].label = $t('templates')
-                this.backupOptions[5].children[4].disabled = false
-                this.backupOptions[5].children[4].label = $t('customSections')
+                this.backupOptions[5].disabled = false
+                this.backupOptions[5].label = $t('templates')
+                this.backupOptions[6].children[4].disabled = false
+                this.backupOptions[6].children[4].label = $t('customSections')
             }
 
             if (ticked.includes('Vulnerabilities Updates')) {

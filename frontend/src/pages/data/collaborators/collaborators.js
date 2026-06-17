@@ -1,6 +1,6 @@
 import { Notify } from 'quasar';
 import CollabService from '@/services/collaborator'
-import DataService from '@/services/data'
+import RoleService from '@/services/role'
 import Utils from '@/services/utils'
 import { useUserStore } from 'src/stores/user'
 
@@ -23,7 +23,7 @@ export default {
                 {name: 'lastname', label: $t('lastname'), field: 'lastname', align: 'left', sortable: true},
                 {name: 'email', label: $t('email'), field: 'email', align: 'left', sortable: true},
                 {name: 'jobTitle', label: $t('jobTitle'), field: 'jobTitle', align: 'left', sortable: true},
-                {name: 'role', label: $t('role'), field: 'role', align: 'left', sortable: true},
+                {name: 'roles', label: $t('roles'), field: 'roles', align: 'left', sortable: true},
                 {name: 'action', label: '', field: 'action', align: 'left', sortable: false},
             ],
             // Datatable pagination
@@ -39,7 +39,7 @@ export default {
                 {label:'All', value:0}
             ],
             // Search filter
-            search: {username: '', firstname: '', lastname: '', role: '', email: '', jobTitle: '', enabled: true},
+            search: {username: '', firstname: '', lastname: '', roles: [], email: '', jobTitle: '', enabled: true},
             customFilter: Utils.customFilter,
             // Errors messages
             errors: {lastname: '', firstname: '', username: ''},
@@ -48,7 +48,7 @@ export default {
                 lastname: '', 
                 firstname: '', 
                 username: '',
-                role: '',
+                roles: ['user'],
                 email: '',
                 phone: '',
                 jobTitle: '',
@@ -59,6 +59,9 @@ export default {
             idUpdate: '',
             // List of roles
             roles: [],
+            selected: [],
+            bulkRoles: [],
+            bulkAction: 'add',
             strongPassword: [Utils.strongPassword]
         }
     },
@@ -66,6 +69,8 @@ export default {
     mounted: function() {
         this.getCollabs()
         this.getRoles()
+        if (this.$route.query.role)
+            this.search.roles = [this.$route.query.role]
     },
 
     methods: {
@@ -150,9 +155,9 @@ export default {
         },
 
         getRoles: function() {
-            DataService.getRoles()
+            RoleService.getRoles()
             .then((data) => {
-                this.roles = data.data.datas
+                this.roles = data.data.datas.map(role => role.name)
             })
             .catch((err) => {
                 console.log(err)
@@ -161,6 +166,7 @@ export default {
 
         clone: function(row) {
             this.currentCollab = this.$_.clone(row);
+            this.currentCollab.roles = this.currentCollab.roles || [];
             this.idUpdate = row._id;
         },
 
@@ -175,7 +181,7 @@ export default {
             this.currentCollab.lastname = '';
             this.currentCollab.firstname = '';
             this.currentCollab.username = '';
-            this.currentCollab.role = 'user';
+            this.currentCollab.roles = ['user'];
             this.currentCollab.password = '';
             this.currentCollab.email = '';
             this.currentCollab.phone = '';
@@ -183,10 +189,49 @@ export default {
         },
 
         dblClick: function(evt, row) {
-            if (userStore.isAllowed('users:updates')) {
+            if (userStore.isAllowed('users:update')) {
                 this.clone(row)
                 this.$refs.editModal.show()  
             }     
+        },
+
+        openBulkRoles: function(action) {
+            this.bulkAction = action
+            this.bulkRoles = []
+            this.$refs.bulkRolesModal.show()
+        },
+
+        applyBulkRoles: function() {
+            const payload = {
+                userIds: this.selected.map(user => user._id),
+                add: this.bulkAction === 'add' ? this.bulkRoles : [],
+                remove: this.bulkAction === 'remove' ? this.bulkRoles : []
+            }
+            CollabService.bulkRoles(payload)
+            .then(() => {
+                this.selected = []
+                this.getCollabs()
+                this.$refs.bulkRolesModal.hide()
+                Notify.create({message: $t('msg.usersUpdatedOk'), color: 'positive', textColor:'white', position: 'top-right'})
+            })
+            .catch((err) => {
+                Notify.create({message: err.response.data.datas, color: 'negative', textColor:'white', position: 'top-right'})
+            })
+        },
+
+        bulkSetEnabled: function(enabled) {
+            CollabService.bulkStatus({
+                userIds: this.selected.map(user => user._id),
+                enabled: enabled
+            })
+            .then(() => {
+                this.selected = []
+                this.getCollabs()
+                Notify.create({message: $t('msg.usersUpdatedOk'), color: 'positive', textColor:'white', position: 'top-right'})
+            })
+            .catch((err) => {
+                Notify.create({message: err.response.data.datas, color: 'negative', textColor:'white', position: 'top-right'})
+            })
         }
     }
 }

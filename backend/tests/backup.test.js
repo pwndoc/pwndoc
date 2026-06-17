@@ -127,11 +127,11 @@ module.exports = function(request, app) {
         expect(response.body.datas[1].name).toBe("Full Backup")
         expect(response.body.datas[1].type).toBe("full")
         expect(response.body.datas[1].protected).toBe(true)
-        expect(response.body.datas[1].data).toHaveLength(13)
+        expect(response.body.datas[1].data).toHaveLength(14)
         expect(response.body.datas[2].name).toBe("Partial Backup")
         expect(response.body.datas[2].type).toBe("partial")
         expect(response.body.datas[2].protected).toBe(false)
-        expect(response.body.datas[2].data).toEqual(["Audits", "Users"])
+        expect(response.body.datas[2].data).toEqual(["Audits", "Users", "Roles"])
 
         backupRestore = response.body.datas[0]
         backupDownload = response.body.datas[1]
@@ -171,11 +171,11 @@ module.exports = function(request, app) {
         expect(response.body.datas).toHaveLength(2)
         expect(response.body.datas[0].type).toBe("full")
         expect(response.body.datas[0].protected).toBe(false)
-        expect(response.body.datas[0].data).toHaveLength(13)
+        expect(response.body.datas[0].data).toHaveLength(14)
         expect(response.body.datas[1].name).toBe("Partial Backup")
         expect(response.body.datas[1].type).toBe("partial")
         expect(response.body.datas[1].protected).toBe(false)
-        expect(response.body.datas[1].data).toEqual(["Audits", "Users"])
+        expect(response.body.datas[1].data).toEqual(["Audits", "Users", "Roles"])
       })
 
       it('Should not upload backup with path traversal filename', async () => {
@@ -228,15 +228,15 @@ module.exports = function(request, app) {
         expect(response.body.datas).toHaveLength(3)
         expect(response.body.datas[0].type).toBe("full")
         expect(response.body.datas[0].protected).toBe(false)
-        expect(response.body.datas[0].data).toHaveLength(13)
+        expect(response.body.datas[0].data).toHaveLength(14)
         expect(response.body.datas[1].name).toBe("Partial Backup")
         expect(response.body.datas[1].type).toBe("partial")
         expect(response.body.datas[1].protected).toBe(false)
-        expect(response.body.datas[1].data).toEqual(["Audits", "Users"])
+        expect(response.body.datas[1].data).toEqual(["Audits", "Users", "Roles"])
         expect(response.body.datas[2].name).toBe("Partial Backup")
         expect(response.body.datas[2].type).toBe("partial")
         expect(response.body.datas[2].protected).toBe(false)
-        expect(response.body.datas[2].data).toEqual(["Audits", "Users"])
+        expect(response.body.datas[2].data).toEqual(["Audits", "Users", "Roles"])
       })
 
       it('Should Restore backup', async () => {
@@ -248,6 +248,8 @@ module.exports = function(request, app) {
 
           for (const collection of collections) {
             const collectionName = collection.name
+            if (collectionName === 'migrations')
+              continue
             const data = await mongoose.connection.db.collection(collectionName).find({}).toArray()
             snapshot[collectionName] = data
           }

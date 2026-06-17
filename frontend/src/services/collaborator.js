@@ -15,5 +15,13 @@ export default {
 
   deleteCollab: function(collabId) {
     return api.delete(`users/${collabId}`)
+  },
+
+  bulkRoles: function(payload) {
+    return api.put('users/bulk-roles', payload)
+  },
+
+  bulkStatus: function(payload) {
+    return api.put('users/bulk-status', payload)
   }
 }

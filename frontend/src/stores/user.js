@@ -4,21 +4,21 @@ export const useUserStore = defineStore('user', {
     state: () => ({
       id: "",
       username: "",
-      role: "",
+      roles: [],
       firstname: "",
       lastname: "",
       email: "",
       phone: "",
       totpEnabled: false,
-      roles: "",
+      permissions: [],
       isLoggedIn: false
     }),
   
     getters: {
-      isAllowed: (state) => (role) => Boolean(
-        state.roles?.includes(role) ||
-        state.roles?.includes(`${role}-all`) ||
-        state.roles === '*'
+      isAllowed: (state) => (scope) => Boolean(
+        state.permissions === '*' ||
+        state.permissions?.includes(scope) ||
+        state.permissions?.includes(`${scope}-all`)
       )
     },
   
@@ -26,23 +26,23 @@ export const useUserStore = defineStore('user', {
       setUser(decodedToken) {
         this.id = decodedToken?.id;
         this.username = decodedToken?.username;
-        this.role = decodedToken?.role;
+        this.roles = decodedToken?.roles || [];
         this.firstname = decodedToken?.firstname;
         this.lastname = decodedToken?.lastname;
         this.email = decodedToken?.email;
         this.phone = decodedToken?.phone;
         this.totpEnabled = decodedToken?.totpEnabled;
-        this.roles = decodedToken?.roles;
+        this.permissions = decodedToken?.permissions || [];
         this.isLoggedIn = true;
       },
   
       clearUser() {
         this.username = "";
-        this.role = "";
+        this.roles = [];
         this.firstname = "";
         this.lastname = "";
         this.totpEnabled = false;
-        this.roles = "";
+        this.permissions = [];
         this.isLoggedIn = false;
       }
     }

@@ -31,6 +31,12 @@ vi.mock('@/services/data', () => ({
   }
 }))
 
+vi.mock('@/services/role', () => ({
+  default: {
+    getRoles: vi.fn()
+  }
+}))
+
 vi.mock('@/services/utils', () => ({
   default: {
     customFilter: vi.fn(),
@@ -66,6 +72,7 @@ vi.mock('quasar', async () => {
 // Must import after mocks are set up
 import CollabService from '@/services/collaborator'
 import DataService from '@/services/data'
+import RoleService from '@/services/role'
 import { Notify } from 'quasar'
 import CollaboratorsPage from '@/pages/data/collaborators/index.vue'
 
@@ -112,6 +119,7 @@ describe('Collaborators Page', () => {
           phone: 'Phone',
           jobTitle: 'Job Title',
           role: 'Role',
+          roles: 'Roles',
           password: 'Password',
           search: 'Search',
           addCollaborator: 'Add Collaborator',
@@ -146,8 +154,8 @@ describe('Collaborators Page', () => {
     CollabService.getCollabs.mockResolvedValue({
       data: { datas: [] }
     })
-    DataService.getRoles.mockResolvedValue({
-      data: { datas: ['admin', 'user'] }
+    RoleService.getRoles.mockResolvedValue({
+      data: { datas: [{name: 'admin'}, {name: 'user'}] }
     })
   })
 
@@ -197,7 +205,7 @@ describe('Collaborators Page', () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
 
-      expect(DataService.getRoles).toHaveBeenCalled()
+      expect(RoleService.getRoles).toHaveBeenCalled()
     })
 
     it('should have correct initial data state', () => {
@@ -209,7 +217,7 @@ describe('Collaborators Page', () => {
         lastname: '',
         firstname: '',
         username: '',
-        role: '',
+        roles: ['user'],
         email: '',
         phone: '',
         jobTitle: '',
@@ -241,7 +249,7 @@ describe('Collaborators Page', () => {
         username: '',
         firstname: '',
         lastname: '',
-        role: '',
+        roles: [],
         email: '',
         jobTitle: '',
         enabled: true
@@ -291,8 +299,8 @@ describe('Collaborators Page', () => {
   describe('getRoles', () => {
     it('should populate roles on success', async () => {
       const mockRoles = ['admin', 'user', 'reviewer']
-      DataService.getRoles.mockResolvedValue({
-        data: { datas: mockRoles }
+      RoleService.getRoles.mockResolvedValue({
+        data: { datas: mockRoles.map(name => ({name: name})) }
       })
 
       const wrapper = createWrapper()
@@ -304,7 +312,7 @@ describe('Collaborators Page', () => {
 
     it('should handle getRoles error gracefully', async () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-      DataService.getRoles.mockRejectedValue(new Error('Network error'))
+      RoleService.getRoles.mockRejectedValue(new Error('Network error'))
 
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
@@ -837,7 +845,7 @@ describe('Collaborators Page', () => {
         lastname: 'Doe',
         firstname: 'John',
         username: 'johndoe',
-        role: 'admin',
+        roles: ['admin'],
         password: 'secret',
         email: 'john@example.com',
         phone: '555-1234',
@@ -849,7 +857,7 @@ describe('Collaborators Page', () => {
       expect(wrapper.vm.currentCollab.lastname).toBe('')
       expect(wrapper.vm.currentCollab.firstname).toBe('')
       expect(wrapper.vm.currentCollab.username).toBe('')
-      expect(wrapper.vm.currentCollab.role).toBe('user')
+      expect(wrapper.vm.currentCollab.roles).toEqual(['user'])
       expect(wrapper.vm.currentCollab.password).toBe('')
       expect(wrapper.vm.currentCollab.email).toBe('')
       expect(wrapper.vm.currentCollab.phone).toBe('')
@@ -879,7 +887,7 @@ describe('Collaborators Page', () => {
 
       wrapper.vm.dblClick({}, row)
 
-      expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:updates')
+      expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:update')
       expect(wrapper.vm.idUpdate).toBe('abc123')
       expect(showMock).toHaveBeenCalled()
     })
@@ -904,7 +912,7 @@ describe('Collaborators Page', () => {
 
       wrapper.vm.dblClick({}, row)
 
-      expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:updates')
+      expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:update')
       expect(showMock).not.toHaveBeenCalled()
     })
   })
@@ -919,7 +927,7 @@ describe('Collaborators Page', () => {
       expect(headerNames).toContain('lastname')
       expect(headerNames).toContain('email')
       expect(headerNames).toContain('jobTitle')
-      expect(headerNames).toContain('role')
+      expect(headerNames).toContain('roles')
       expect(headerNames).toContain('action')
     })
 

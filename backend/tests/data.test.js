@@ -36,8 +36,8 @@ module.exports = function(request, app) {
           ])
 
         expect(response.status).toBe(200)
-        expect(response.body.datas).toContain('admin')
-        expect(response.body.datas).toContain('user')
+        expect(response.body.datas.map(role => role.name)).toContain('admin')
+        expect(response.body.datas.map(role => role.name)).toContain('user')
       })
     })
 

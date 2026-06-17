@@ -2,12 +2,15 @@
   4 Users at the end:
     admin:Admin123 (admin)
     user2:User1234 (user)
-    report:Report123 (report)
-    reviewer:Reviewer123 (reviewer)
+    vulnadmin:Vulnadmin1 (user, vuln-admin)
+    reviewer:Reviewer123 (user)
 */
 
 module.exports = function(request, app) {
   var OTPAuth = require('otpauth')
+  var User = require('mongoose').model('User')
+  var Migration = require('mongoose').model('Migration')
+  var migrations = require('../src/migrations')
 
   var userToken = '';
   var refreshToken = '';
@@ -84,7 +87,7 @@ module.exports = function(request, app) {
           username: 'admin',
           firstname: 'Admin',
           lastname: 'Istrator',
-          role: 'admin'
+          roles: ['admin']
         }
         var response = await request(app).get('/api/users/me')
           .set('Cookie', [
@@ -101,7 +104,7 @@ module.exports = function(request, app) {
           password: 'Password1',
           firstname: 'User',
           lastname: 'Test',
-          role: 'user'
+          roles: ['user']
         }
         var response = await request(app).post('/api/users')
           .set('Cookie', [
@@ -132,17 +135,35 @@ module.exports = function(request, app) {
 
         response = await request(app).post('/api/users/token').send(user)
         expect(response.status).toBe(200)
+
+        response = await request(app).get('/api/users/tmpuser')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.body.datas).toEqual(expect.objectContaining({roles: ['user']}))
       })
       
-      it('Create user with role report', async () => {
-        var user = {
-          username: 'report',
-          password: 'Report123',
-          firstname: 'Report',
-          lastname: 'Admin',
-          role: 'report'
+      it('Create user with a custom role alongside user', async () => {
+        var role = {
+          name: 'vuln-admin',
+          allows: ['vulnerabilities:update']
         }
-        var response = await request(app).post('/api/users')
+        var response = await request(app).post('/api/data/roles')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(role)
+
+        expect(response.status).toBe(201)
+
+        var user = {
+          username: 'vulnadmin',
+          password: 'Vulnadmin1',
+          firstname: 'Vuln',
+          lastname: 'Admin',
+          roles: ['user', 'vuln-admin']
+        }
+        response = await request(app).post('/api/users')
           .set('Cookie', [
             `token=JWT ${userToken}`
           ])
@@ -152,15 +173,20 @@ module.exports = function(request, app) {
 
         response = await request(app).post('/api/users/token').send(user)
         expect(response.status).toBe(200)
+
+        response = await request(app).get('/api/users/vulnadmin')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.body.datas).toEqual(expect.objectContaining({roles: ['user', 'vuln-admin']}))
       })
 
-      it('Create user with role reviewer', async () => {
+      it('Create reviewer user with default user role', async () => {
         var user = {
           username: 'reviewer',
           password: 'Reviewer123',
           firstname: 'reviewer',
-          lastname: 'reviewer',
-          role: 'reviewer'
+          lastname: 'reviewer'
         }
         var response = await request(app).post('/api/users')
           .set('Cookie', [
@@ -179,7 +205,7 @@ module.exports = function(request, app) {
           username: 'user',
           firstname: 'User',
           lastname: 'Test',
-          role: 'user'
+          roles: ['user']
         }
         var response = await request(app).get('/api/users/user')
           .set('Cookie', [
@@ -195,7 +221,7 @@ module.exports = function(request, app) {
           username: 'admin',
           firstname: 'Admin2',
           lastname: 'Istrator',
-          role: 'admin'
+          roles: ['admin']
         }
 
         var user = {
@@ -225,7 +251,7 @@ module.exports = function(request, app) {
           username: 'user2',
           firstname: 'User2',
           lastname: 'Test',
-          role: 'user'
+          roles: ['user']
         }
 
         var user = {
@@ -255,6 +281,16 @@ module.exports = function(request, app) {
           ])
 
         expect(response.body.datas).toEqual(expect.objectContaining(expected))
+      })
+
+      it('Counts assignable user role members', async () => {
+        var response = await request(app).get('/api/data/roles/user/users-count')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+
+        expect(response.status).toBe(200)
+        expect(response.body.datas.count).toBeGreaterThanOrEqual(4)
       })
 
       it('Get users list and reviewers list', async () => {
@@ -305,6 +341,33 @@ module.exports = function(request, app) {
             `refreshToken=${refreshToken}`
           ])
         expect(response.status).toBe(200)
+      })
+
+      it('Migrates legacy role field to roles array', async () => {
+        await Migration.deleteOne({name: '20260617-user-roles-array'})
+        await User.collection.insertMany([
+          {username: 'legacyadmin', password: 'x', firstname: 'Legacy', lastname: 'Admin', role: 'admin'},
+          {username: 'legacyuser', password: 'x', firstname: 'Legacy', lastname: 'User', role: 'user'},
+          {username: 'legacyreport', password: 'x', firstname: 'Legacy', lastname: 'Report', role: 'report'}
+        ])
+
+        await migrations.run()
+
+        const users = await User.collection.find(
+          {username: {$in: ['legacyadmin', 'legacyuser', 'legacyreport']}},
+          {projection: {username: 1, role: 1, roles: 1}}
+        ).toArray()
+        const byUsername = Object.fromEntries(users.map(user => [user.username, user]))
+
+        expect(byUsername.legacyadmin.roles).toEqual(['admin'])
+        expect(byUsername.legacyuser.roles).toEqual(['user'])
+        expect(byUsername.legacyreport.roles).toEqual(['report'])
+        expect(byUsername.legacyadmin.role).toBeUndefined()
+        expect(byUsername.legacyuser.role).toBeUndefined()
+        expect(byUsername.legacyreport.role).toBeUndefined()
+        expect(await Migration.findOne({name: '20260617-user-roles-array'}).lean()).toBeTruthy()
+
+        await User.collection.deleteMany({username: {$in: ['legacyadmin', 'legacyuser', 'legacyreport']}})
       })
 
       it('TOTP setup and cancel flow', async () => {

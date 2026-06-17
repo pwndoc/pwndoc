@@ -170,7 +170,7 @@ Common actions:
 
 | Role | Access |
 |------|--------|
-| `user` | Can create and manage assigned audits, read vulnerabilities, manage clients and companies, read custom data, use spellcheck, and view public settings |
+| `user` | Assignable core access. Can create and manage assigned audits, read vulnerabilities, manage clients and companies, read custom data, use spellcheck, and view public settings |
 | `admin` | Full access to all permissions |
 
 ### user
@@ -194,51 +194,44 @@ The `admin` role has full permission access.
 
 ## Create Additional Roles
 
-Custom roles can be defined in `backend/src/config/roles.json`.
+Custom roles are managed from **Data > Roles**. The table shows the built-in `admin` and `user` roles as locked system rows and any custom roles as editable rows.
 
-The format is:
+> Note: screenshot needed — Data > Roles table showing locked system rows and a custom role.
+
+Click **Create Role** to add a custom role. A role name may contain letters, numbers, underscores, and hyphens. Select permissions from the permission matrix. New roles start with the same core permissions as the built-in `user` role.
+
+Use **Clone From** to copy the permissions from an existing role before saving. This is useful for roles such as:
+
+- `reporter`: clone `user`, then add `audits:read-all`
+- `reviewer`: clone `user`, then add `audits:review`
+- `lead-reviewer`: clone `user`, then add `audits:review-all` and `audits:read-all`
+
+> Note: screenshot needed — create role dialog with Clone From and the permission matrix.
+
+Custom roles do not inherit from other roles. Each role stores its complete permission list. To change what a role can do, edit the role and update the checked permissions.
+
+Renaming a custom role updates users assigned to that role. Deleting a role removes it from all users. If users are assigned to a role, PwnDoc shows the user count before confirming deletion.
+
+## Assign Roles To Users
+
+Users can have multiple assigned roles. Their effective permissions are the union of all assigned roles. The built-in `user` role is assignable and provides the core application permissions. If a user has no roles, or only roles that no longer exist, PwnDoc still falls back to the built-in `user` role as a safety net.
+
+Assign roles from **Data > Collaborators** when creating or editing a collaborator. The role field accepts multiple values. Both built-in roles, `admin` and `user`, can be assigned directly. Keep `user` assigned when a custom role should add specialized permissions without removing the core permissions.
+
+The Collaborators table also supports bulk updates. Select users, then use the bulk actions to add roles, remove roles, enable accounts, or disable accounts.
+
+From **Data > Roles**, click a role's user count to open **Data > Collaborators** filtered to users with that role.
+
+## Upgrade Notes
+
+Roles are now stored in the database. `backend/src/config/roles.json` is no longer used.
+
+User accounts now store `roles: ['user']` instead of a single `role: 'user'` value. Existing normal users are migrated to the built-in `user` role. The empty-role fallback remains only as a safety net.
+
+Administrators must be restored manually after upgrading:
 
 ```js
-role_name: {
-  allows: [], // Array of allowed permissions to access or use '*' for all (admin)
-  inherits: [] // Array of inherited users permissions
-}
+db.users.updateOne({username: '<admin>'}, {$set: {roles: ['admin']}})
 ```
 
-A default custom role is already defined as a `report` role for example:
-
-```json
-"report": {
-  "inherits": ["user"],
-  "allows": [
-    "audits:read-all"
-  ]
-}
-```
-
-This role inherits all `user` permissions. Since `user` can only access and modify its own audits, `audits:read-all` gives the `report` role access to all audits.
-To update and delete all audits, additional `audits:update-all` and `audits:delete-all` permissions would be required.
-
-To be able to properly use the review feature of the application, a reviewer role should be added. This reviewer should have the `audits:review` or `audits:review-all` permissions to be able to review reports. A reviewer with only the `audits:review` permission can only review the reports on which they are assigned. The role could look like the following: 
-
-```json
-"reviewer": {
-  "inherits": ["user"],
-  "allows": [
-    "audits:review"
-  ]
-}
-```
-A reviewer with the `audits:review-all` permission should also have the `audits:read-all` permission to be able to take full advantage of the first one. The role could look like the following:
-
-```json
-"reviewer": {
-  "inherits": ["user"],
-  "allows": [
-    "audits:review-all",
-    "audits:read-all"
-  ]
-}
-```
-
-Keep in mind that these two roles inherit their permissions from the `user` role, which means that they can also create their own audits. A reviewer cannot review an audit for which they are the creator or a collaborator.
+Users may need to log in again after upgrading so their JWT contains the new `roles` and `permissions` fields.

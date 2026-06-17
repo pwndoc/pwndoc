@@ -1,0 +1,27 @@
+import { api } from 'boot/axios'
+
+export default {
+  getRoles: function() {
+    return api.get('data/roles')
+  },
+
+  getPermissionsCatalog: function() {
+    return api.get('data/roles/permissions')
+  },
+
+  getRoleUsersCount: function(name) {
+    return api.get(`data/roles/${name}/users-count`)
+  },
+
+  createRole: function(role) {
+    return api.post('data/roles', role)
+  },
+
+  updateRole: function(name, role) {
+    return api.put(`data/roles/${name}`, role)
+  },
+
+  deleteRole: function(name) {
+    return api.delete(`data/roles/${name}`)
+  }
+}

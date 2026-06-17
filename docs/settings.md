@@ -140,6 +140,7 @@ Click **Create Backup** to open the backup dialog.
 - Audits
 - Vulnerabilities
 - Users
+- Roles
 - Customers
   - Clients (requires Customers)
 - Templates
@@ -151,6 +152,8 @@ Click **Create Backup** to open the backup dialog.
   - Custom Fields
   - Custom Sections
 - Settings
+
+Selecting **Users** automatically includes **Roles**, because user accounts reference role names. **Roles** can also be selected on their own when you want to move only generic role definitions to another instance.
 
 Backups are stored on the server. The list shows each backup's name, size, and creation date.
 

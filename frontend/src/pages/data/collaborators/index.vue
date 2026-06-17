@@ -8,6 +8,8 @@
                 :filter="search"
                 :filter-method="customFilter"
                 v-model:pagination="pagination"
+                selection="multiple"
+                v-model:selected="selected"
                 row-key="username"
                 :loading="loading"
                 @row-dblclick="dblClick"
@@ -17,6 +19,13 @@
                     :label="(search.enabled)? $t('btn.accountsEnabled'): $t('btn.accountsDisabled')" 
                     v-model="search.enabled" 
                     />
+                    <div v-if="selected.length && userStore.isAllowed('users:update')" class="row items-center q-gutter-sm q-ml-md">
+                        <span>{{ $t('bulkActionsSelected', {count: selected.length}) }}</span>
+                        <q-btn dense flat icon="add" :label="$t('addRoles')" @click="openBulkRoles('add')" />
+                        <q-btn dense flat icon="remove" :label="$t('removeRoles')" @click="openBulkRoles('remove')" />
+                        <q-btn dense flat icon="check_circle" :label="$t('btn.enable')" @click="bulkSetEnabled(true)" />
+                        <q-btn dense flat icon="block" :label="$t('btn.disable')" @click="bulkSetEnabled(false)" />
+                    </div>
                     <q-space />
                     <q-btn 
                     v-if="userStore.isAllowed('users:create')"
@@ -30,6 +39,7 @@
 
                 <template v-slot:top-row="props">
                     <q-tr>
+                        <q-td auto-width />
                         <q-td style="width: 20%">
                             <q-input 
                             dense
@@ -79,14 +89,24 @@
                             <q-select 
                             dense
                             :label="$t('search')"
-                            v-model="search.role"
+                            v-model="search.roles"
                             clearable
+                            multiple
+                            use-chips
                             :options="roles"
                             options-sanitize
                             outlined
                             />
                         </q-td>
+                        <q-td style="width:1px" />
                     </q-tr>
+                </template>
+
+                <template v-slot:body-cell-roles="props">
+                    <q-td>
+                        <q-chip v-for="role in props.row.roles" :key="role" dense square :label="role" color="info" text-color="white" />
+                        <q-chip v-if="!props.row.roles || props.row.roles.length === 0" dense square label="User (fallback)" color="grey-7" text-color="white" />
+                    </q-td>
                 </template>
 
                 <template v-slot:body-cell-action="props">
@@ -208,8 +228,10 @@
                 data-testid="create-collaborator-role-select"
                 :label="$t('role')+' *'"
                 class="col-md-12"
-                v-model="currentCollab.role"
+                v-model="currentCollab.roles"
                 :options=roles
+                multiple
+                use-chips
                 @keyup.enter="createCollab()"
                 options-sanitize
                 outlined
@@ -328,8 +350,10 @@
                 data-testid="edit-collaborator-role-select"
                 :label="$t('role')+' *'"
                 class="col-md-12"
-                v-model="currentCollab.role"
+                v-model="currentCollab.roles"
                 :options=roles
+                multiple
+                use-chips
                 @keyup.enter="updateCollab()"
                 options-sanitize
                 outlined
@@ -365,6 +389,32 @@
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
                 <q-btn data-testid="edit-collaborator-submit-button" color="secondary" unelevated @click="updateCollab()">{{$t('btn.update')}}</q-btn>
+            </q-card-actions>
+        </q-card>
+    </q-dialog>
+
+    <q-dialog ref="bulkRolesModal" persistent>
+        <q-card style="width:500px">
+            <q-bar class="bg-fixed-primary text-white">
+                <div class="q-toolbar-title">
+                    {{ bulkAction === 'add' ? $t('addRoles') : $t('removeRoles') }}
+                </div>
+                <q-space />
+                <q-btn dense flat icon="close" @click="$refs.bulkRolesModal.hide()" />
+            </q-bar>
+            <q-card-section>
+                <q-select
+                v-model="bulkRoles"
+                :options="roles"
+                multiple
+                use-chips
+                outlined
+                :label="$t('roles')"
+                />
+            </q-card-section>
+            <q-card-actions align="right">
+                <q-btn color="primary" outline @click="$refs.bulkRolesModal.hide()">{{$t('btn.cancel')}}</q-btn>
+                <q-btn color="secondary" unelevated @click="applyBulkRoles()">{{$t('btn.update')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

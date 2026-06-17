@@ -69,8 +69,8 @@ export default {
         return (api.get(`users/init`, {timeout: 10000}));
     },
 
-    isAllowed(role) {
-        return (this.user.roles && (this.user.roles.includes(role) || this.user.roles.includes(`${role}-all`) || this.user.roles === '*'))
+    isAllowed(scope) {
+        return userStore.isAllowed(scope)
     },
 
     getProfile: function() {
