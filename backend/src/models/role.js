@@ -3,6 +3,8 @@ var Schema = mongoose.Schema;
 
 var RoleSchema = new Schema({
     name: {type: String, unique: true, required: true},
+    displayName: {type: String, required: true, index: {unique: true, collation: {locale: 'en', strength: 2}}},
+    description: {type: String, default: ''},
     allows: {type: [String], default: []}
 }, {timestamps: true});
 
@@ -44,24 +46,28 @@ async function withOptionalTransaction(work) {
 }
 
 RoleSchema.statics.getAll = () => {
-    return Role.find().select('name allows').sort({name: 1}).lean()
+    return Role.find().select('name displayName description allows').sort({displayName: 1, name: 1}).lean()
 }
 
 RoleSchema.statics.getByName = (name) => {
-    return Role.findOne({name: name}).select('name allows').lean()
+    return Role.findOne({name: name}).select('name displayName description allows').lean()
 }
 
-RoleSchema.statics.create = (role) => {
-    return serializeMutation(async () => {
-        try {
-            return await new Role({name: role.name, allows: role.allows || []}).save()
-        }
-        catch (err) {
-            if (err.code === 11000)
-                throw({fn: 'BadParameters', message: 'Role already exists'})
-            throw err
-        }
-    })
+RoleSchema.statics.create = async (role) => {
+    try {
+        const displayName = (role.displayName || role.name).trim()
+        return await new Role({
+            name: role.name,
+            displayName: displayName,
+            description: role.description || '',
+            allows: role.allows || []
+        }).save()
+    }
+    catch (err) {
+        if (err.code === 11000)
+            throw({fn: 'BadParameters', message: err.keyPattern && err.keyPattern.displayName ? 'Role display name already exists' : 'Role already exists'})
+        throw err
+    }
 }
 
 RoleSchema.statics.update = (name, role) => {
@@ -73,7 +79,12 @@ RoleSchema.statics.update = (name, role) => {
             if (newName !== name && await roleExists(newName))
                 throw({fn: 'BadParameters', message: 'Role already exists'})
 
-            const update = {allows: role.allows || []}
+            const displayName = (role.displayName || newName).trim()
+            const update = {
+                displayName: displayName,
+                description: role.description || '',
+                allows: role.allows || []
+            }
             if (newName !== name)
                 update.name = newName
 
@@ -109,7 +120,7 @@ RoleSchema.statics.update = (name, role) => {
         }
         catch (error) {
             if (error.code === 11000)
-                throw({fn: 'BadParameters', message: 'Role already exists'})
+                throw({fn: 'BadParameters', message: error.keyPattern && error.keyPattern.displayName ? 'Role display name already exists' : 'Role already exists'})
             throw error
         }
     })
@@ -140,6 +151,20 @@ RoleSchema.statics.countUsers = async (name) => {
         })
     }
     return User.countDocuments({roles: name})
+}
+
+RoleSchema.statics.ensureDisplayNames = async () => {
+    const roles = await Role.find({$or: [{displayName: {$exists: false}}, {displayName: null}, {displayName: ''}]}).select('name').lean()
+    if (roles.length === 0)
+        return
+    return Role.bulkWrite(roles.map(role => {
+        return {
+            updateOne: {
+                filter: {_id: role._id},
+                update: {$set: {displayName: role.name}}
+            }
+        }
+    }))
 }
 
 RoleSchema.statics.backup = (path) => {
@@ -197,10 +222,14 @@ RoleSchema.statics.restore = (path, mode = "upsert") => {
                     if (current.length === 0)
                         return
                     await Role.bulkWrite(current.map(document => {
+                        const displayName = (document.displayName || document.name).trim()
                         return {
                             replaceOne: {
                                 filter: {name: document.name},
-                                replacement: document,
+                                replacement: {
+                                    ...document,
+                                    displayName: displayName
+                                },
                                 upsert: true
                             }
                         }
@@ -245,5 +274,7 @@ RoleSchema.statics.restore = (path, mode = "upsert") => {
 }
 
 var Role = mongoose.model('Role', RoleSchema);
-Role.syncIndexes();
+Role.ensureDisplayNames()
+.then(() => Role.syncIndexes())
+.catch(err => console.error(err))
 module.exports = Role;

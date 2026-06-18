@@ -1,6 +1,5 @@
 import { Notify } from 'quasar'
 import RoleService from '@/services/role'
-import Utils from '@/services/utils'
 import { useUserStore } from 'src/stores/user'
 import { $t } from '@/boot/i18n'
 
@@ -14,11 +13,11 @@ export default {
             permissionsCatalog: [],
             loading: true,
             dtHeaders: [
-                {name: 'name', label: $t('roleName'), field: 'name', align: 'left', sortable: true},
+                {name: 'name', label: $t('role'), field: 'displayName', align: 'left', sortable: true},
                 {name: 'type', label: $t('roleType'), field: 'type', align: 'left', sortable: true},
-                {name: 'permissions', label: $t('permissions'), field: 'permissions', align: 'left', sortable: true},
+                {name: 'permissions', label: $t('permissions'), field: 'permissionCount', align: 'left', sortable: true},
                 {name: 'users', label: $t('users'), field: 'users', align: 'left', sortable: true},
-                {name: 'action', label: '', field: 'action', align: 'left', sortable: false}
+                {name: 'action', label: $t('actions'), field: 'action', align: 'right', sortable: false}
             ],
             pagination: {
                 page: 1,
@@ -26,15 +25,16 @@ export default {
                 sortBy: 'name'
             },
             rowsPerPageOptions: [
+                {label:'10', value:10},
                 {label:'25', value:25},
                 {label:'50', value:50},
                 {label:'100', value:100},
-                {label:'All', value:0}
+                {label:$t('all'), value:0}
             ],
-            search: {name: '', type: ''},
-            customFilter: Utils.customFilter,
-            errors: {name: ''},
-            currentRole: {name: '', allows: []},
+            search: {query: '', type: null},
+            errors: {name: '', displayName: ''},
+            currentRole: {name: '', displayName: '', description: '', allows: []},
+            roleNameTouched: false,
             cloneFrom: '',
             permissionSearch: '',
             expandedPermissionGroups: {},
@@ -46,7 +46,7 @@ export default {
 
     mounted: function() {
         this.getPermissionsCatalog()
-        this.getRoles()
+        .then(() => this.getRoles())
     },
 
     methods: {
@@ -57,9 +57,11 @@ export default {
                 const rows = data.data.datas
                 await Promise.all(rows.map(async role => {
                     const count = await RoleService.getRoleUsersCount(role.name)
+                    role.displayName = role.displayName || role.name
                     role.users = count.data.datas.count
-                    role.type = role.virtual ? 'System' : 'Custom'
-                    role.permissions = role.allows === '*' ? 'All' : (role.allows || []).length
+                    role.type = role.virtual ? 'system' : 'custom'
+                    role.permissionCount = role.allows === '*' ? this.permissionsCount : (role.allows || []).length
+                    role.permissionTotal = this.permissionsCount
                 }))
                 this.roles = rows
                 this.loading = false
@@ -71,7 +73,7 @@ export default {
         },
 
         getPermissionsCatalog: function() {
-            RoleService.getPermissionsCatalog()
+            return RoleService.getPermissionsCatalog()
             .then((data) => {
                 this.permissionsCatalog = data.data.datas
                 this.expandAllPermissionGroups()
@@ -81,9 +83,11 @@ export default {
 
         createRole: function() {
             this.cleanErrors()
-            if (!this.currentRole.name)
+            if (!this.currentRole.displayName.trim())
+                this.errors.displayName = $t('msg.roleDisplayNameRequired')
+            if (!this.currentRole.name.trim())
                 this.errors.name = $t('msg.roleNameRequired')
-            if (this.errors.name)
+            if (this.errors.displayName || this.errors.name)
                 return
 
             RoleService.createRole(this.currentRole)
@@ -99,9 +103,11 @@ export default {
 
         updateRole: function() {
             this.cleanErrors()
-            if (!this.currentRole.name)
+            if (!this.currentRole.displayName.trim())
+                this.errors.displayName = $t('msg.roleDisplayNameRequired')
+            if (!this.currentRole.name.trim())
                 this.errors.name = $t('msg.roleNameRequired')
-            if (this.errors.name)
+            if (this.errors.displayName || this.errors.name)
                 return
 
             RoleService.updateRole(this.idUpdate, this.currentRole)
@@ -139,9 +145,12 @@ export default {
         clone: function(row) {
             this.currentRole = {
                 name: row.name,
+                displayName: this.roleDisplayName(row),
+                description: row.description || '',
                 allows: row.allows === '*' ? [] : [...(row.allows || [])]
             }
             this.idUpdate = row.name
+            this.roleNameTouched = true
             this.permissionSearch = ''
             this.expandAllPermissionGroups()
         },
@@ -166,8 +175,11 @@ export default {
         cleanCurrentRole: function() {
             this.currentRole = {
                 name: '',
+                displayName: '',
+                description: '',
                 allows: this.permissionsCatalog.flatMap(group => group.permissions.filter(permission => permission.core).map(permission => permission.scope))
             }
+            this.roleNameTouched = false
             this.cloneFrom = ''
             this.permissionSearch = ''
             this.expandAllPermissionGroups()
@@ -175,6 +187,7 @@ export default {
 
         cleanErrors: function() {
             this.errors.name = ''
+            this.errors.displayName = ''
         },
 
         dblClick: function(evt, row) {
@@ -226,6 +239,107 @@ export default {
 
         clearPermissions: function() {
             this.currentRole.allows = []
+        },
+
+        roleFilter: function(rows, terms) {
+            if (!rows)
+                return []
+            const query = (terms.query || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            return rows.filter(row => {
+                const haystack = [
+                    row.name,
+                    this.roleDisplayName(row),
+                    row.description || this.roleDescription(row)
+                ].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+                if (query && haystack.indexOf(query) < 0)
+                    return false
+                if (terms.type && row.type !== terms.type)
+                    return false
+                return true
+            })
+        },
+
+        typeOptions: function() {
+            return [
+                {label: $t('allTypes'), value: null},
+                {label: $t('systemRole'), value: 'system'},
+                {label: $t('customRole'), value: 'custom'}
+            ]
+        },
+
+        typeLabel: function(row) {
+            return this.isSystem(row) ? $t('systemRole') : $t('customRole')
+        },
+
+        roleDisplayName: function(row) {
+            return row.displayName || row.name
+        },
+
+        roleDescription: function(row) {
+            if (row.description)
+                return row.description
+            if (row.name === 'admin')
+                return $t('adminRoleDescription')
+            if (row.name === 'user')
+                return $t('userRoleDescription')
+            return $t('roleDescriptionFallback')
+        },
+
+        permissionProgress: function(row) {
+            if (!this.permissionsCount)
+                return 0
+            return row.permissionCount / this.permissionsCount
+        },
+
+        permissionSummary: function(row) {
+            if (row.allows === '*')
+                return $t('allPermissions')
+            return `${row.permissionCount} / ${this.permissionsCount} ${$t('permissions').toLowerCase()}`
+        },
+
+        roleOptions: function() {
+            return this.roles.map(role => ({label: this.roleDisplayName(role), value: role.name}))
+        },
+
+        slugifyRoleName: function(value) {
+            return (value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+        },
+
+        updateDisplayName: function(value) {
+            this.currentRole.displayName = value
+            if (!this.roleNameTouched)
+                this.currentRole.name = this.slugifyRoleName(value)
+        },
+
+        updateRoleName: function(value) {
+            this.currentRole.name = value
+            this.roleNameTouched = true
+        },
+
+        filteredRolesCount: function() {
+            return this.roleFilter(this.roles, this.search).length
+        },
+
+        pageStart: function() {
+            const count = this.filteredRolesCount()
+            if (count === 0)
+                return 0
+            if (!this.pagination.rowsPerPage)
+                return 1
+            return ((this.pagination.page - 1) * this.pagination.rowsPerPage) + 1
+        },
+
+        pageEnd: function() {
+            const count = this.filteredRolesCount()
+            if (!this.pagination.rowsPerPage)
+                return count
+            return Math.min(this.pagination.page * this.pagination.rowsPerPage, count)
         }
     },
 

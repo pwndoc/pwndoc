@@ -9,8 +9,12 @@
 module.exports = function(request, app) {
   var OTPAuth = require('otpauth')
   var User = require('mongoose').model('User')
+  var Role = require('mongoose').model('Role')
   var Migration = require('mongoose').model('Migration')
   var migrations = require('../src/migrations')
+  var fs = require('fs')
+  var path = require('path')
+  var permissionsCatalog = require('../src/lib/permissions-catalog')
 
   var userToken = '';
   var refreshToken = '';
@@ -146,6 +150,7 @@ module.exports = function(request, app) {
       it('Create user with a custom role alongside user', async () => {
         var role = {
           name: 'vuln-admin',
+          displayName: 'Vulnerability Admin',
           allows: ['vulnerabilities:update']
         }
         var response = await request(app).post('/api/data/roles')
@@ -348,7 +353,7 @@ module.exports = function(request, app) {
         await User.collection.insertMany([
           {username: 'legacyadmin', password: 'x', firstname: 'Legacy', lastname: 'Admin', role: 'admin'},
           {username: 'legacyuser', password: 'x', firstname: 'Legacy', lastname: 'User', role: 'user'},
-          {username: 'legacyreport', password: 'x', firstname: 'Legacy', lastname: 'Report', role: 'report'}
+          {username: 'legacyreport', password: 'x', firstname: 'Legacy', lastname: 'Report', role: 'legacy-field-role'}
         ])
 
         await migrations.run()
@@ -361,13 +366,96 @@ module.exports = function(request, app) {
 
         expect(byUsername.legacyadmin.roles).toEqual(['admin'])
         expect(byUsername.legacyuser.roles).toEqual(['user'])
-        expect(byUsername.legacyreport.roles).toEqual(['report'])
+        expect(byUsername.legacyreport.roles).toEqual(['legacy-field-role'])
         expect(byUsername.legacyadmin.role).toBeUndefined()
         expect(byUsername.legacyuser.role).toBeUndefined()
         expect(byUsername.legacyreport.role).toBeUndefined()
         expect(await Migration.findOne({name: '20260617-user-roles-array'}).lean()).toBeTruthy()
 
         await User.collection.deleteMany({username: {$in: ['legacyadmin', 'legacyuser', 'legacyreport']}})
+        await Role.collection.deleteOne({name: 'legacy-field-role'})
+      })
+
+      it('Migrates legacy roles to display names', async () => {
+        await Migration.deleteOne({name: '20260617-user-roles-array'})
+        await Role.collection.insertOne({
+          name: 'legacy-reviewer',
+          allows: ['audits:review']
+        })
+
+        await migrations.run()
+
+        const role = await Role.collection.findOne(
+          {name: 'legacy-reviewer'},
+          {projection: {name: 1, displayName: 1}}
+        )
+
+        expect(role.displayName).toBe('legacy-reviewer')
+        expect(await Migration.findOne({name: '20260617-user-roles-array'}).lean()).toBeTruthy()
+
+        await Role.collection.deleteOne({name: 'legacy-reviewer'})
+      })
+
+      it('Migrates custom roles from legacy roles config', async () => {
+        const rolesConfigPath = path.join(__dirname, '..', 'src', 'config', 'roles.json')
+        const existingConfig = fs.existsSync(rolesConfigPath) ? fs.readFileSync(rolesConfigPath, 'utf8') : null
+
+        await Migration.deleteOne({name: '20260617-user-roles-array'})
+        await Role.collection.deleteOne({name: 'legacy-report'})
+        fs.writeFileSync(rolesConfigPath, JSON.stringify({
+          'legacy-report': {
+            inherits: ['user'],
+            allows: ['audits:read-all']
+          }
+        }))
+
+        try {
+          await migrations.run()
+
+          const role = await Role.collection.findOne(
+            {name: 'legacy-report'},
+            {projection: {name: 1, displayName: 1, allows: 1}}
+          )
+
+          expect(role.displayName).toBe('legacy-report')
+          expect(role.allows).toContain('audits:create')
+          expect(role.allows).toContain('audits:read-all')
+          expect(await Migration.findOne({name: '20260617-user-roles-array'}).lean()).toBeTruthy()
+        }
+        finally {
+          await Role.collection.deleteOne({name: 'legacy-report'})
+          if (existingConfig === null)
+            fs.unlinkSync(rolesConfigPath)
+          else
+            fs.writeFileSync(rolesConfigPath, existingConfig)
+        }
+      })
+
+      it('Creates missing user-assigned roles with core permissions', async () => {
+        await Migration.deleteOne({name: '20260617-user-roles-array'})
+        await Role.collection.deleteOne({name: 'orphan-role'})
+        await User.collection.insertOne({
+          username: 'legacyorphan',
+          password: 'x',
+          firstname: 'Legacy',
+          lastname: 'Orphan',
+          roles: ['orphan-role']
+        })
+
+        await migrations.run()
+
+        const role = await Role.collection.findOne(
+          {name: 'orphan-role'},
+          {projection: {name: 1, displayName: 1, description: 1, allows: 1}}
+        )
+
+        expect(role.displayName).toBe('orphan-role')
+        expect(role.description).toBe('Migrated from user assignment. Review permissions.')
+        expect(role.allows.sort()).toEqual(permissionsCatalog.core().sort())
+        expect(await Migration.findOne({name: '20260617-user-roles-array'}).lean()).toBeTruthy()
+
+        await User.collection.deleteOne({username: 'legacyorphan'})
+        await Role.collection.deleteOne({name: 'orphan-role'})
       })
 
       it('TOTP setup and cancel flow', async () => {

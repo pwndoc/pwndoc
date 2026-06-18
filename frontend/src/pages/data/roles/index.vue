@@ -2,70 +2,110 @@
     <div class="row">
         <div class="col-md-10 col-12 offset-md-1 q-mt-md">
             <q-table
-                class="sticky-header-table"
+                class="sticky-header-table rounded-borders"
                 :columns="dtHeaders"
                 :rows="roles"
                 :filter="search"
-                :filter-method="customFilter"
+                :filter-method="roleFilter"
                 v-model:pagination="pagination"
                 row-key="name"
                 :loading="loading"
                 @row-dblclick="dblClick"
             >
                 <template v-slot:top>
-                    <q-space />
-                    <q-btn
-                    v-if="userStore.isAllowed('roles:create')"
-                    unelevated
-                    :label="$t('createRole')"
-                    color="secondary"
-                    no-caps
-                    @click="cleanCurrentRole(); $refs.createModal.show()"
-                    />
+                    <div class="full-width">
+                        <div class="row items-start q-col-gutter-md">
+                            <div class="col">
+                                <div class="text-h5 text-weight-bold">{{$t('roles')}}</div>
+                                <div class="text-body2 text-grey-7">{{$t('rolesPageSubtitle')}}</div>
+                            </div>
+                            <div class="col-auto">
+                                <q-btn
+                                v-if="userStore.isAllowed('roles:create')"
+                                unelevated
+                                icon="add"
+                                :label="$t('createRole')"
+                                color="secondary"
+                                no-caps
+                                @click="cleanCurrentRole(); $refs.createModal.show()"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="row items-center q-col-gutter-md q-mt-md">
+                            <div class="col-md col-12">
+                                <q-input dense outlined clearable debounce="250" v-model="search.query" :placeholder="$t('searchRolesPlaceholder')">
+                                    <template v-slot:prepend>
+                                        <q-icon name="search" />
+                                    </template>
+                                </q-input>
+                            </div>
+                            <div class="col-md-2 col-sm-6 col-12">
+                                <q-select
+                                dense
+                                outlined
+                                emit-value
+                                map-options
+                                v-model="search.type"
+                                :options="typeOptions()"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </template>
 
-                <template v-slot:top-row="props">
-                    <q-tr>
-                        <q-td>
-                            <q-input dense :label="$t('search')" v-model="search.name" clearable outlined />
-                        </q-td>
-                        <q-td>
-                            <q-select dense :label="$t('search')" v-model="search.type" clearable :options="['System', 'Custom']" outlined />
-                        </q-td>
-                    </q-tr>
+                <template v-slot:body-cell-name="props">
+                    <q-td>
+                        <div class="text-weight-bold">{{roleDisplayName(props.row)}}</div>
+                        <div class="text-caption text-grey-7">{{props.row.name}}</div>
+                        <div class="text-body2 text-grey-7">{{roleDescription(props.row)}}</div>
+                    </q-td>
                 </template>
 
                 <template v-slot:body-cell-type="props">
                     <q-td>
-                        <q-badge v-if="isSystem(props.row)" color="grey-7" :label="$t('systemRole')" />
-                        <span v-else>Custom</span>
+                        <q-chip dense square :color="isSystem(props.row) ? 'grey-4' : 'blue-1'" :text-color="isSystem(props.row) ? 'dark' : 'primary'" class="q-ma-none" :label="typeLabel(props.row)" />
+                    </q-td>
+                </template>
+
+                <template v-slot:body-cell-permissions="props">
+                    <q-td>
+                        <div class="text-body2 q-mb-xs">{{permissionSummary(props.row)}}</div>
+                        <q-linear-progress
+                        rounded
+                        size="6px"
+                        color="secondary"
+                        track-color="grey-3"
+                        :value="permissionProgress(props.row)"
+                        />
                     </q-td>
                 </template>
 
                 <template v-slot:body-cell-users="props">
                     <q-td>
                         <q-btn flat dense no-caps color="primary" :to="`/data/collaborators?role=${props.row.name}`">
+                            <q-icon name="groups" size="18px" class="q-mr-sm" />
                             {{ props.row.users }}
                         </q-btn>
                     </q-td>
                 </template>
 
                 <template v-slot:body-cell-action="props">
-                    <q-td style="width:1px">
+                    <q-td class="text-right">
                         <q-icon v-if="isSystem(props.row)" name="lock" color="grey-7">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('cannotEditSystemRole')}}</q-tooltip>
                         </q-icon>
-                        <q-btn v-if="userStore.isAllowed('roles:update') && !isSystem(props.row)" size="sm" flat color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">Edit</q-tooltip>
+                        <q-btn v-if="userStore.isAllowed('roles:update') && !isSystem(props.row)" size="sm" flat round color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                         </q-btn>
-                        <q-btn v-if="userStore.isAllowed('roles:delete') && !isSystem(props.row)" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteRole(props.row)">
-                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">Delete</q-tooltip>
+                        <q-btn v-if="userStore.isAllowed('roles:delete') && !isSystem(props.row)" size="sm" flat round color="negative" icon="fa fa-trash" @click="confirmDeleteRole(props.row)">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                         </q-btn>
                     </q-td>
                 </template>
 
                 <template v-slot:bottom="scope">
-                    <span>{{roles.length}} {{$t('quantifier')}}{{$t('roles')}}</span>
+                    <span>{{$t('showing')}} {{ pageStart() }} {{$t('to')}} {{ pageEnd() }} {{$t('of')}} {{ filteredRolesCount() }} {{$t('roles')}}</span>
                     <q-space />
                     <span>{{$t('resultsPerPage')}}</span>
                     <q-select class="q-px-md" v-model="pagination.rowsPerPage" :options="rowsPerPageOptions" emit-value map-options dense options-dense options-cover borderless />
@@ -83,10 +123,16 @@
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
             <q-card-section>
-                <q-input dense :label="$t('roleName')+' *'" v-model="currentRole.name" :error="!!errors.name" :error-message="errors.name" hide-bottom-space outlined />
+                <q-input dense :label="$t('roleDisplayName')+' *'" :model-value="currentRole.displayName" @update:model-value="updateDisplayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
-                <q-select dense :label="$t('cloneFrom')" v-model="cloneFrom" :options="roles.map(role => role.name)" clearable outlined @update:model-value="applyClone" />
+                <q-input dense :label="$t('roleName')+' *'" :model-value="currentRole.name" @update:model-value="updateRoleName" :error="!!errors.name" :error-message="errors.name" hide-bottom-space outlined />
+            </q-card-section>
+            <q-card-section>
+                <q-input dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
+            </q-card-section>
+            <q-card-section>
+                <q-select dense :label="$t('cloneFrom')" v-model="cloneFrom" :options="roleOptions()" emit-value map-options clearable outlined @update:model-value="applyClone" />
             </q-card-section>
             <q-card-section class="q-pt-none role-permission-toolbar">
                 <div class="row items-center q-col-gutter-sm q-mb-sm">
@@ -140,7 +186,13 @@
                 <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
             </q-bar>
             <q-card-section>
-                <q-input :label="$t('roleName')+' *'" v-model="currentRole.name" :error="!!errors.name" :error-message="errors.name" hide-bottom-space outlined />
+                <q-input dense :label="$t('roleDisplayName')+' *'" v-model="currentRole.displayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
+            </q-card-section>
+            <q-card-section>
+                <q-input dense :label="$t('roleName')+' *'" v-model="currentRole.name" :error="!!errors.name" :error-message="errors.name" hide-bottom-space outlined />
+            </q-card-section>
+            <q-card-section>
+                <q-input dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
             </q-card-section>
             <q-card-section class="q-pt-none role-permission-toolbar">
                 <div class="row items-center q-col-gutter-sm q-mb-sm">

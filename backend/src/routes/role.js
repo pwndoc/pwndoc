@@ -11,8 +11,8 @@ module.exports = function(app) {
 
     function systemRows() {
         return [
-            {name: 'admin', allows: '*', virtual: true},
-            {name: 'user', allows: auth.CORE_PERMISSIONS, virtual: true}
+            {name: 'admin', displayName: 'Admin', allows: '*', virtual: true},
+            {name: 'user', displayName: 'User', allows: auth.CORE_PERMISSIONS, virtual: true}
         ]
     }
 
@@ -29,6 +29,18 @@ module.exports = function(app) {
             return false
         if (SYSTEM_ROLES.includes(name)) {
             Response.Forbidden(res, 'System roles cannot be modified')
+            return false
+        }
+        return true
+    }
+
+    function validateDisplayName(res, displayName) {
+        if (!displayName || typeof displayName !== 'string' || !displayName.trim()) {
+            Response.BadParameters(res, 'Role display name is required')
+            return false
+        }
+        if (systemRows().some(role => role.displayName.toLowerCase() === displayName.trim().toLowerCase())) {
+            Response.BadParameters(res, 'Role display name already exists')
             return false
         }
         return true
@@ -65,11 +77,13 @@ module.exports = function(app) {
 
     app.post("/api/data/roles", acl.hasPermission('roles:create'), function(req, res) {
         const allows = req.body.allows || []
-        if (!validateMutableRole(res, req.body.name) || !validateAllows(res, allows))
+        if (!validateMutableRole(res, req.body.name) || !validateDisplayName(res, req.body.displayName) || !validateAllows(res, allows))
             return
 
         Role.create({
             name: req.body.name,
+            displayName: req.body.displayName,
+            description: req.body.description,
             allows: allows
         })
         .then(async role => {
@@ -82,11 +96,13 @@ module.exports = function(app) {
     app.put("/api/data/roles/:name", acl.hasPermission('roles:update'), function(req, res) {
         const allows = req.body.allows || []
         const newName = req.body.name || req.params.name
-        if (!validateMutableRole(res, req.params.name) || !validateMutableRole(res, newName) || !validateAllows(res, allows))
+        if (!validateMutableRole(res, req.params.name) || !validateMutableRole(res, newName) || !validateDisplayName(res, req.body.displayName) || !validateAllows(res, allows))
             return
 
         Role.update(req.params.name, {
             name: newName,
+            displayName: req.body.displayName,
+            description: req.body.description,
             allows: allows
         })
         .then(async msg => {

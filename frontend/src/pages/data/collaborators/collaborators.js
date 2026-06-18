@@ -58,6 +58,7 @@ export default {
             idUpdate: '',
             // List of roles
             roles: [],
+            rolesByName: {},
             selected: [],
             bulkRoles: [],
             bulkAction: 'add',
@@ -169,7 +170,11 @@ export default {
         getRoles: function() {
             RoleService.getRoles()
             .then((data) => {
-                this.roles = data.data.datas.map(role => role.name)
+                this.roles = data.data.datas.map(role => ({...role, displayName: role.displayName || role.name}))
+                this.rolesByName = this.roles.reduce((acc, role) => {
+                    acc[role.name] = role
+                    return acc
+                }, {})
             })
             .catch((err) => {
                 console.log(err)
@@ -354,6 +359,14 @@ export default {
             if (normalizedRole === 'user')
                 return 'grey-7'
             return 'blue-grey'
+        },
+
+        roleLabel: function(role) {
+            return this.rolesByName[role]?.displayName || role
+        },
+
+        roleOptions: function() {
+            return this.roles.map(role => ({label: this.roleLabel(role.name), value: role.name}))
         },
 
         primaryRole: function(row) {

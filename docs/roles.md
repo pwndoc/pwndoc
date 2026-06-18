@@ -194,11 +194,17 @@ The `admin` role has full permission access.
 
 ## Create Additional Roles
 
-Custom roles are managed from **Data > Roles**. The table shows the built-in `admin` and `user` roles as locked system rows and any custom roles as editable rows.
+Custom roles are managed from **Data > Roles**. The table shows the built-in `admin` and `user` roles as locked system rows and any custom roles as editable rows. Use the search field to find roles by display name, technical name, or description, and use the type filter to show all roles, system roles, or custom roles.
 
-> Note: screenshot needed — Data > Roles table showing locked system rows and a custom role.
+The table summarizes each role with:
 
-Click **Create Role** to add a custom role. A role name may contain letters, numbers, underscores, and hyphens. Select permissions from the permission matrix. New roles start with the same core permissions as the built-in `user` role.
+- The role display name, technical name, and optional description
+- The role type, either system or custom
+- The number of enabled permissions with a progress bar
+- The number of assigned users
+- Direct actions for editable custom roles
+
+Click **Create Role** to add a custom role. The display name is used in the interface and must be unique, ignoring case. The technical role name is the stored identifier used for permission checks and user assignments; it may contain letters, numbers, underscores, and hyphens. When the technical name is empty, PwnDoc fills it from the display name using lowercase words separated by dashes. A description can be added to explain the purpose of the role. Select permissions from the permission matrix. New roles start with the same core permissions as the built-in `user` role.
 
 Use **Clone From** to copy the permissions from an existing role before saving. This is useful for roles such as:
 

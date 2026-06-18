@@ -64,7 +64,7 @@
                                 map-options
                                 :label="$t('role')"
                                 v-model="search.roles"
-                                :options="[{label: $t('any'), value: null}, ...roles.map(role => ({label: role, value: role}))]"
+                                :options="[{label: $t('any'), value: null}, ...roleOptions()]"
                                 />
                             </div>
                             <div class="col-md-2 col-sm-6 col-12">
@@ -101,7 +101,7 @@
                             <q-chip
                             dense
                             square
-                            :label="primaryRole(props.row)"
+                            :label="roleLabel(primaryRole(props.row))"
                             :color="roleColor(primaryRole(props.row))"
                             text-color="white"
                             class="q-ma-none"
@@ -120,7 +120,7 @@
                                         <q-separator inset />
                                         <q-item v-for="role in props.row.roles" :key="role">
                                             <q-item-section>
-                                                <q-chip dense square :label="role" :color="roleColor(role)" text-color="white" class="q-ma-none" />
+                                                <q-item-label :class="'text-' + roleColor(role)">{{ roleLabel(role) }}</q-item-label>
                                             </q-item-section>
                                         </q-item>
                                     </q-list>
@@ -268,7 +268,9 @@
                 :label="$t('role')+' *'"
                 class="col-md-12"
                 v-model="currentCollab.roles"
-                :options=roles
+                :options="roleOptions()"
+                emit-value
+                map-options
                 multiple
                 use-chips
                 @keyup.enter="createCollab()"
@@ -390,7 +392,9 @@
                 :label="$t('role')+' *'"
                 class="col-md-12"
                 v-model="currentCollab.roles"
-                :options=roles
+                :options="roleOptions()"
+                emit-value
+                map-options
                 multiple
                 use-chips
                 @keyup.enter="updateCollab()"
@@ -444,7 +448,9 @@
             <q-card-section>
                 <q-select
                 v-model="bulkRoles"
-                :options="roles"
+                :options="roleOptions()"
+                emit-value
+                map-options
                 multiple
                 use-chips
                 outlined
