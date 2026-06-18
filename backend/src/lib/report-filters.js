@@ -286,13 +286,23 @@ defaultFilters.sort = function(input, key = null) {
 // Sort array by supplied field: {#findings | sortArrayByField: 'identifier':1}{/}
 // order: 1 = ascending, -1 = descending
 defaultFilters.sortArrayByField = function (input, field, order) {
-    //invalid order sort ascending
-    if(order != 1 && order != -1) order = 1;
+    if (order != 1 && order != -1) order = 1;
 
-    const sorted = input.sort((a,b) => {
-        //multiply by order so that if is descending (-1) will reverse the values
-        return _.get(a, field).localeCompare(_.get(b, field), undefined, {numeric: true}) * order
-    })
+    const sorted = input.sort((a, b) => {
+        const av = _.get(a, field);
+        const bv = _.get(b, field);
+
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1 * order;
+        if (bv == null) return -1 * order;
+
+        if (typeof av === "number" && typeof bv === "number") {
+            return (av - bv) * order;
+        }
+
+        return String(av).localeCompare(String(bv), undefined, { numeric: true }) * order;
+    });
+
     return sorted;
 }
 

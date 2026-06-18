@@ -46,6 +46,16 @@ module.exports = function () {
         expect(ooxml).toEqual(expected)
       })
 
+      it('Basic Table', () => {
+        var html = "<table><tbody><tr><th><p>Header</p></th><td><p>Cell</p></td></tr></tbody></table>"
+        var ooxml = html2ooxml(html)
+        expect(ooxml).toContain("<w:tbl>")
+        expect(ooxml).toContain("<w:tr>")
+        expect(ooxml).toContain("<w:tc>")
+        expect(ooxml).toContain("Header")
+        expect(ooxml).toContain("Cell")
+      })
+
       it('Text without tag', () => {
         var html = "Paragraph Text"
         var expected = `<w:p><w:r><w:t xml:space="preserve">Paragraph Text</w:t></w:r></w:p>`
