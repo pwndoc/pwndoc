@@ -153,7 +153,7 @@ export default {
         applyClone: function() {
             const role = this.roles.find(role => role.name === this.cloneFrom)
             if (role)
-                this.currentRole.allows = role.allows === '*' ? [] : [...(role.allows || [])]
+                this.currentRole.allows = [...(role.allows || [])]
         },
 
         togglePermission: function(scope) {
@@ -294,7 +294,9 @@ export default {
         },
 
         roleOptions: function() {
-            return this.roles.map(role => ({label: this.roleDisplayName(role), value: role.name}))
+            return this.roles
+            .filter(role => !this.isSystem(role))
+            .map(role => ({label: this.roleDisplayName(role), value: role.name}))
         },
 
         slugifyRoleName: function(value) {

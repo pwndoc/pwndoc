@@ -822,7 +822,7 @@ module.exports = function(app) {
 
             // Roles
             if (info.data.includes('Roles') && backupData.includes('Roles')) {
-                restorePromises.push(Role.restore(restoreTmpPath))
+                restorePromises.push(Role.restore(restoreTmpPath, restoreMode))
             }
 
             // Users
