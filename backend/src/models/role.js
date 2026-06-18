@@ -53,6 +53,38 @@ RoleSchema.statics.getByName = (name) => {
     return Role.findOne({name: name}).select('name displayName description allows').lean()
 }
 
+// Roles from getAll() plus the 'admin'/'user' system roles, each annotated with a
+// `usersCount` computed in a single aggregation (avoids one users-count round-trip
+// per role on the roles management page).
+RoleSchema.statics.getAllWithUserCounts = async (systemRoles = []) => {
+    const User = require('mongoose').model('User')
+    const customRoles = await Role.getAll()
+    const knownRoles = ['admin', 'user', ...customRoles.map(role => role.name)]
+
+    const counts = await User.aggregate([
+        {
+            $project: {
+                roles: {
+                    $cond: [
+                        {$gt: [{$size: {$setIntersection: ['$roles', knownRoles]}}, 0]},
+                        '$roles',
+                        {$concatArrays: ['$roles', ['user']]}
+                    ]
+                }
+            }
+        },
+        {$unwind: '$roles'},
+        {$match: {roles: {$in: knownRoles}}},
+        {$group: {_id: '$roles', count: {$sum: 1}}}
+    ])
+    const countByRole = counts.reduce((acc, entry) => {
+        acc[entry._id] = entry.count
+        return acc
+    }, {})
+
+    return [...systemRoles, ...customRoles].map(role => ({...role, users: countByRole[role.name] || 0}))
+}
+
 RoleSchema.statics.create = async (role) => {
     try {
         const displayName = (role.displayName || role.name).trim()
@@ -102,17 +134,21 @@ RoleSchema.statics.update = (name, role) => {
             })
 
             if (!transactional) {
-                if (newName !== name)
-                    await User.updateMany({roles: name}, {$set: {'roles.$[roleName]': newName}}, {arrayFilters: [{roleName: name}]})
-                try {
-                    const result = await Role.updateOne({name: name}, {$set: update})
-                    if (result.matchedCount !== 1)
-                        throw({fn: 'NotFound', message: 'Role not found'})
-                }
-                catch (error) {
-                    if (newName !== name)
-                        await User.updateMany({roles: newName}, {$set: {'roles.$[roleName]': name}}, {arrayFilters: [{roleName: newName}]})
-                    throw error
+                // Update the Role document first: if it fails (not found, or a concurrent
+                // rename already took newName), no User document has been touched yet, so
+                // there is nothing to roll back.
+                const result = await Role.updateOne({name: name}, {$set: update})
+                if (result.matchedCount !== 1)
+                    throw({fn: 'NotFound', message: 'Role not found'})
+
+                if (newName !== name) {
+                    try {
+                        await User.updateMany({roles: name}, {$set: {'roles.$[roleName]': newName}}, {arrayFilters: [{roleName: name}]})
+                    }
+                    catch (error) {
+                        await Role.updateOne({name: newName}, {$set: {name: name}})
+                        throw error
+                    }
                 }
             }
 
@@ -132,8 +168,10 @@ RoleSchema.statics.delete = (name) => {
         const result = await Role.deleteOne({name: name})
         if (result.deletedCount !== 1)
             throw({fn: 'NotFound', message: 'Role not found'})
-        await User.updateMany({roles: name}, {$pull: {roles: name}})
-        await User.updateMany({roles: {$size: 0}}, {$set: {roles: ['user']}})
+        await User.updateMany({roles: name}, [
+            {$set: {roles: {$filter: {input: '$roles', cond: {$ne: ['$$this', name]}}}}},
+            {$set: {roles: {$cond: [{$eq: [{$size: '$roles'}, 0]}, ['user'], '$roles']}}}
+        ], {updatePipeline: true})
         return 'Role deleted successfully'
     })
 }
@@ -146,7 +184,7 @@ RoleSchema.statics.countUsers = async (name) => {
         return User.countDocuments({
             $or: [
                 {roles: 'user'},
-                {roles: {$nin: knownRoles}}
+                {roles: {$nin: knownRoles, $ne: []}}
             ]
         })
     }
@@ -233,7 +271,7 @@ RoleSchema.statics.restore = (path, mode = "upsert") => {
                                 upsert: true
                             }
                         }
-                    }))
+                    }), {timestamps: false})
                 }
 
                 readStream.on('error', error => reject(error))

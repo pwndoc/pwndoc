@@ -8,6 +8,7 @@ module.exports = function(app) {
     var jwt = require('jsonwebtoken')
     var _ = require('lodash')
     var passwordpolicy = require('../lib/passwordpolicy')
+    var mongoose = require('mongoose')
 
     async function validateAssignableRoles(roles) {
         if (!Array.isArray(roles))
@@ -300,8 +301,8 @@ module.exports = function(app) {
 
     // Update any user (admin only)
     app.put("/api/users/bulk-roles", acl.hasPermission('users:update'), async function(req, res) {
-        if (!Array.isArray(req.body.userIds)) {
-            Response.BadParameters(res, 'userIds must be an array')
+        if (!Array.isArray(req.body.userIds) || req.body.userIds.some(id => !mongoose.isValidObjectId(id))) {
+            Response.BadParameters(res, 'userIds must be an array of valid user ids')
             return
         }
         const add = Array.isArray(req.body.add) ? req.body.add : []

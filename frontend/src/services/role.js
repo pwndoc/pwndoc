@@ -9,10 +9,6 @@ export default {
     return api.get('data/roles/permissions')
   },
 
-  getRoleUsersCount: function(name) {
-    return api.get(`data/roles/${name}/users-count`)
-  },
-
   createRole: function(role) {
     return api.post('data/roles', role)
   },

@@ -92,7 +92,16 @@ class ACL {
                         Response.Unauthorized(res, 'Invalid token')
                     return
                 }
-                
+
+                // Tokens issued before the roles/permissions payload migration lack `permissions`
+                // and have `roles` populated with permission strings instead of role names.
+                // Reject them so the client immediately refreshes instead of running with
+                // permissions silently resolved from those stale, mismatched roles.
+                if (decoded.permissions === undefined) {
+                    Response.Unauthorized(res, 'Invalid token')
+                    return
+                }
+
                 if ( permission === "validtoken" || this.isAllowed(decoded.roles, permission)) {
                     req.decodedToken = decoded
                     return next()

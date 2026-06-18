@@ -204,6 +204,9 @@ app.use((err, req, res, next) => {
             console.warn('LanguageTool startup sync failed (non-blocking):', err.message);
         });
     })
-})();
+})().catch(err => {
+    console.error(err)
+    process.exit(1)
+});
 
 module.exports = app;

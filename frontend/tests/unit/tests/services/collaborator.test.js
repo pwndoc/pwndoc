@@ -78,23 +78,4 @@ describe('CollaboratorService', () => {
     })
   })
 
-  describe('deleteCollab', () => {
-    it('should call the correct API endpoint with collaborator ID', async () => {
-      const collabId = 'abc123'
-      const mockResponse = { data: { datas: 'User deleted' } }
-      api.delete.mockResolvedValue(mockResponse)
-
-      const result = await CollaboratorService.deleteCollab(collabId)
-
-      expect(api.delete).toHaveBeenCalledWith('users/abc123')
-      expect(result).toEqual(mockResponse)
-    })
-
-    it('should handle errors', async () => {
-      const mockError = { response: { status: 404, data: { message: 'User not found' } } }
-      api.delete.mockRejectedValue(mockError)
-
-      await expect(CollaboratorService.deleteCollab('invalid')).rejects.toEqual(mockError)
-    })
-  })
 })

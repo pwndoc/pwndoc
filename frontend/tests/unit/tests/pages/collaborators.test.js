@@ -237,7 +237,7 @@ describe('Collaborators Page', () => {
 
       expect(wrapper.vm.pagination).toEqual({
         page: 1,
-        rowsPerPage: 25,
+        rowsPerPage: 10,
         sortBy: 'username'
       })
     })
@@ -246,12 +246,8 @@ describe('Collaborators Page', () => {
       const wrapper = createWrapper()
 
       expect(wrapper.vm.search).toEqual({
-        username: '',
-        firstname: '',
-        lastname: '',
-        roles: [],
-        email: '',
-        jobTitle: '',
+        query: '',
+        roles: null,
         enabled: true
       })
     })
@@ -307,7 +303,7 @@ describe('Collaborators Page', () => {
       await wrapper.vm.$nextTick()
       await wrapper.vm.$nextTick()
 
-      expect(wrapper.vm.roles).toEqual(mockRoles)
+      expect(wrapper.vm.roles).toEqual(mockRoles.map(name => ({name: name, displayName: name})))
     })
 
     it('should handle getRoles error gracefully', async () => {
@@ -922,19 +918,18 @@ describe('Collaborators Page', () => {
       const wrapper = createWrapper()
 
       const headerNames = wrapper.vm.dtHeaders.map(h => h.name)
+      expect(headerNames).toContain('name')
       expect(headerNames).toContain('username')
-      expect(headerNames).toContain('firstname')
-      expect(headerNames).toContain('lastname')
       expect(headerNames).toContain('email')
-      expect(headerNames).toContain('jobTitle')
       expect(headerNames).toContain('roles')
+      expect(headerNames).toContain('status')
       expect(headerNames).toContain('action')
     })
 
     it('should have correct number of columns', () => {
       const wrapper = createWrapper()
 
-      expect(wrapper.vm.dtHeaders).toHaveLength(7)
+      expect(wrapper.vm.dtHeaders).toHaveLength(6)
     })
   })
 })

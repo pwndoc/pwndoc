@@ -25,9 +25,12 @@ export default {
         update: 'Aktualisieren',
         deleteAll: 'Alle löschen',
         enable: 'Aktiviert',
+        disable: 'Deaktivieren',
         valid: 'Geprüft',
         new: 'Neu',
         updates: 'Aktualisierungen',
+        accountEnabled: 'Konto aktiviert',
+        accountDisabled: 'Konto deaktiviert',
     },
     tooltip: {
         usersConnected: 'Benutzer im Audit:',

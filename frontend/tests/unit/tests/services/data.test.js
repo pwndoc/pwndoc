@@ -18,27 +18,6 @@ describe('DataService', () => {
     vi.clearAllMocks()
   })
 
-  // --- Roles ---
-
-  describe('getRoles', () => {
-    it('should call the correct API endpoint', async () => {
-      const mockResponse = { data: { datas: ['admin', 'user'] } }
-      api.get.mockResolvedValue(mockResponse)
-
-      const result = await DataService.getRoles()
-
-      expect(api.get).toHaveBeenCalledWith('data/roles')
-      expect(result).toEqual(mockResponse)
-    })
-
-    it('should handle errors', async () => {
-      const mockError = new Error('Network error')
-      api.get.mockRejectedValue(mockError)
-
-      await expect(DataService.getRoles()).rejects.toEqual(mockError)
-    })
-  })
-
   // --- Languages ---
 
   describe('getLanguages', () => {

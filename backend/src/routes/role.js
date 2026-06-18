@@ -60,8 +60,8 @@ module.exports = function(app) {
     }
 
     app.get("/api/data/roles", acl.hasPermission('roles:read'), function(req, res) {
-        Role.getAll()
-        .then(roles => Response.Ok(res, [...systemRows(), ...roles]))
+        Role.getAllWithUserCounts(systemRows())
+        .then(roles => Response.Ok(res, roles))
         .catch(err => Response.Internal(res, err))
     })
 

@@ -222,6 +222,17 @@ export default {
     return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   },
 
+  paginationRange: function(page, rowsPerPage, count) {
+    if (count === 0)
+      return {start: 0, end: 0}
+    if (!rowsPerPage)
+      return {start: 1, end: count}
+    return {
+      start: ((page - 1) * rowsPerPage) + 1,
+      end: Math.min(page * rowsPerPage, count)
+    }
+  },
+
   AUDIT_VIEW_STATE: { 
     "EDIT": 0, 
     "EDIT_READONLY": 1, 

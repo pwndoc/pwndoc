@@ -507,7 +507,7 @@ module.exports = function(app) {
         Response.Ok(res, 'Backup request submitted')
     });
 
-    function extractFiles(archivePath, destPath, files = [], optionalFiles = []) {
+    function extractFiles(archivePath, destPath, files = []) {
         return new Promise((resolve, reject) => {
             const readStream = fs.createReadStream(archivePath)
             const extract = tar.extract()
@@ -565,7 +565,7 @@ module.exports = function(app) {
             extract.on('finish', () => {
                 console.log('finish')
                 readStream.close()
-                const missingFiles = files.filter(x => !filesExtracted.includes(x) && !optionalFiles.includes(x))
+                const missingFiles = files.filter(x => !filesExtracted.includes(x))
                 if (filesExtracted.length === 0 )
                     reject(new Error('No files were extracted from the Archive'))
                 else if (missingFiles.length > 0)

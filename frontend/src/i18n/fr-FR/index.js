@@ -31,9 +31,12 @@ export default {
         update: 'Modifier',
         deleteAll: 'Tout Supprimer',
         enable: 'Activer',
+        disable: 'Désactiver',
         valid: 'Validées',
         new: 'Nouvelles',
         updates: 'Modifiées',
+        accountEnabled: 'Compte activé',
+        accountDisabled: 'Compte désactivé',
     },
     tooltip: {
         usersConnected: 'Utilisateurs sur l\'Audit:',

@@ -1,5 +1,6 @@
 import { Notify } from 'quasar'
 import RoleService from '@/services/role'
+import Utils from '@/services/utils'
 import { useUserStore } from 'src/stores/user'
 import { $t } from '@/boot/i18n'
 
@@ -53,16 +54,13 @@ export default {
         getRoles: function() {
             this.loading = true
             RoleService.getRoles()
-            .then(async (data) => {
+            .then((data) => {
                 const rows = data.data.datas
-                await Promise.all(rows.map(async role => {
-                    const count = await RoleService.getRoleUsersCount(role.name)
+                rows.forEach(role => {
                     role.displayName = role.displayName || role.name
-                    role.users = count.data.datas.count
                     role.type = role.virtual ? 'system' : 'custom'
                     role.permissionCount = role.allows === '*' ? this.permissionsCount : (role.allows || []).length
-                    role.permissionTotal = this.permissionsCount
-                }))
+                })
                 this.roles = rows
                 this.loading = false
             })
@@ -123,11 +121,8 @@ export default {
 
         confirmDeleteRole: function(row) {
             this.roleToDelete = row
-            RoleService.getRoleUsersCount(row.name)
-            .then((data) => {
-                this.usersCount = data.data.datas.count
-                this.$refs.deleteModal.show()
-            })
+            this.usersCount = row.users || 0
+            this.$refs.deleteModal.show()
         },
 
         deleteRole: function() {
@@ -244,13 +239,13 @@ export default {
         roleFilter: function(rows, terms) {
             if (!rows)
                 return []
-            const query = (terms.query || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            const query = Utils.normalizeString(terms.query || '')
             return rows.filter(row => {
-                const haystack = [
+                const haystack = Utils.normalizeString([
                     row.name,
                     this.roleDisplayName(row),
                     row.description || this.roleDescription(row)
-                ].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                ].join(' '))
 
                 if (query && haystack.indexOf(query) < 0)
                     return false
@@ -327,19 +322,11 @@ export default {
         },
 
         pageStart: function() {
-            const count = this.filteredRolesCount()
-            if (count === 0)
-                return 0
-            if (!this.pagination.rowsPerPage)
-                return 1
-            return ((this.pagination.page - 1) * this.pagination.rowsPerPage) + 1
+            return Utils.paginationRange(this.pagination.page, this.pagination.rowsPerPage, this.filteredRolesCount()).start
         },
 
         pageEnd: function() {
-            const count = this.filteredRolesCount()
-            if (!this.pagination.rowsPerPage)
-                return count
-            return Math.min(this.pagination.page * this.pagination.rowsPerPage, count)
+            return Utils.paginationRange(this.pagination.page, this.pagination.rowsPerPage, this.filteredRolesCount()).end
         }
     },
 

@@ -46,6 +46,7 @@ async function importLegacyRolesConfig(Role) {
     if (roleNames.length === 0)
         return
 
+    const now = new Date()
     await Role.collection.bulkWrite(roleNames.map(roleName => {
         const role = rolesConfig[roleName] || {}
         const displayName = (role.displayName || roleName).trim()
@@ -57,7 +58,10 @@ async function importLegacyRolesConfig(Role) {
                         name: roleName,
                         displayName: displayName,
                         description: role.description || '',
-                        allows: resolveLegacyRoleAllows(roleName, rolesConfig)
+                        allows: resolveLegacyRoleAllows(roleName, rolesConfig),
+                        createdAt: now,
+                        updatedAt: now,
+                        __v: 0
                     }
                 },
                 upsert: true
@@ -92,6 +96,7 @@ async function createMissingUserRoles(User, Role) {
     if (missingRoles.length === 0)
         return
 
+    const now = new Date()
     await Role.collection.bulkWrite(missingRoles.map(roleName => {
         return {
             insertOne: {
@@ -99,7 +104,10 @@ async function createMissingUserRoles(User, Role) {
                     name: roleName,
                     displayName: roleName,
                     description: 'Migrated from user assignment. Review permissions.',
-                    allows: CORE_PERMISSIONS
+                    allows: CORE_PERMISSIONS,
+                    createdAt: now,
+                    updatedAt: now,
+                    __v: 0
                 }
             }
         }
@@ -137,20 +145,5 @@ exports.up = async function() {
         await User.collection.bulkWrite(operations)
     }
 
-    const roles = await Role.collection.find(
-        {$or: [{displayName: {$exists: false}}, {displayName: null}, {displayName: ''}]},
-        {projection: {_id: 1, name: 1}}
-    ).toArray()
-
-    if (roles.length === 0)
-        return
-
-    await Role.collection.bulkWrite(roles.map(role => {
-        return {
-            updateOne: {
-                filter: {_id: role._id},
-                update: {$set: {displayName: role.name}}
-            }
-        }
-    }))
+    await Role.ensureDisplayNames()
 }

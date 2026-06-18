@@ -308,13 +308,13 @@ export default {
             if (!rows)
                 return []
             return rows.filter(row => {
-                const query = (terms.query || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                const haystack = [
+                const query = Utils.normalizeString(terms.query || '')
+                const haystack = Utils.normalizeString([
                     row.firstname,
                     row.lastname,
                     row.username,
                     row.email
-                ].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                ].join(' '))
 
                 if (query && haystack.indexOf(query) < 0)
                     return false
@@ -370,7 +370,7 @@ export default {
         },
 
         primaryRole: function(row) {
-            const rowRoles = row.roles || ["user"]
+            const rowRoles = (row.roles && row.roles.length) ? row.roles : ["user"]
             if (this.search.roles && rowRoles.includes(this.search.roles))
                 return this.search.roles
             return rowRoles[0]
@@ -389,19 +389,11 @@ export default {
         },
 
         pageStart: function() {
-            const count = this.filteredCollabsCount()
-            if (count === 0)
-                return 0
-            if (!this.pagination.rowsPerPage)
-                return 1
-            return ((this.pagination.page - 1) * this.pagination.rowsPerPage) + 1
+            return Utils.paginationRange(this.pagination.page, this.pagination.rowsPerPage, this.filteredCollabsCount()).start
         },
 
         pageEnd: function() {
-            const count = this.filteredCollabsCount()
-            if (!this.pagination.rowsPerPage)
-                return count
-            return Math.min(this.pagination.page * this.pagination.rowsPerPage, count)
+            return Utils.paginationRange(this.pagination.page, this.pagination.rowsPerPage, this.filteredCollabsCount()).end
         }
     }
 }

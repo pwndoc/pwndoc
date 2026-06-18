@@ -436,6 +436,14 @@ UserSchema.statics.restore = (path, mode = "upsert") => {
                     reject(error)
                 })
 
+                function normalizeRoles(document) {
+                    if (!Array.isArray(document.roles) || document.roles.length === 0) {
+                        document.roles = typeof document.role === 'string' ? [document.role] : ['user']
+                    }
+                    delete document.role
+                    return document
+                }
+
                 jsonStream.on('data', async (document) => {
                     documents.push(document)
                     if (documents.length === 100) {
@@ -443,7 +451,7 @@ UserSchema.statics.restore = (path, mode = "upsert") => {
                             return {
                                 replaceOne: {
                                     filter: {_id: document._id},
-                                    replacement: document,
+                                    replacement: normalizeRoles(document),
                                     upsert: true
                                 }
                             }
@@ -460,7 +468,7 @@ UserSchema.statics.restore = (path, mode = "upsert") => {
                             return {
                                 replaceOne: {
                                     filter: {_id: document._id},
-                                    replacement: document,
+                                    replacement: normalizeRoles(document),
                                     upsert: true
                                 }
                             }

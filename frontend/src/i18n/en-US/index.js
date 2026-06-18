@@ -127,7 +127,6 @@ export default {
         passwordComplexity: 'Password must be at least 8 characters with minimum 1 Uppercase, Lowercase and Number',
         collaboratorCreatedOk: 'Collaborator created successfully',
         collaboratorUpdatedOk: 'Collaborator updated successfully',
-        collaboratorDeletedOk: 'Collaborator deleted successfully',
         roleCreatedOk: 'Role created successfully',
         roleUpdatedOk: 'Role updated successfully',
         roleDeletedOk: 'Role deleted successfully',
