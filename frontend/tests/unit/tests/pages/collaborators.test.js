@@ -319,6 +319,44 @@ describe('Collaborators Page', () => {
     })
   })
 
+  describe('roleFilterOptions', () => {
+    it('should derive role filter options from assigned collaborator roles', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.roles = []
+      wrapper.vm.rolesByName = {}
+      wrapper.vm.collabs = [
+        { username: 'alice', roles: ['user', 'reviewer'] },
+        { username: 'bob', roles: ['admin'] },
+        { username: 'charlie', roles: ['reviewer'] }
+      ]
+
+      expect(wrapper.vm.roleFilterOptions()).toEqual([
+        { label: 'any', value: null },
+        { label: 'admin', value: 'admin' },
+        { label: 'reviewer', value: 'reviewer' },
+        { label: 'user', value: 'user' }
+      ])
+    })
+
+    it('should use role display names when the role catalog is available', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.rolesByName = {
+        admin: { name: 'admin', displayName: 'Admin' },
+        user: { name: 'user', displayName: 'User' }
+      }
+      wrapper.vm.collabs = [
+        { username: 'alice', roles: ['user'] },
+        { username: 'bob', roles: ['admin'] }
+      ]
+
+      expect(wrapper.vm.roleFilterOptions()).toEqual([
+        { label: 'any', value: null },
+        { label: 'Admin', value: 'admin' },
+        { label: 'User', value: 'user' }
+      ])
+    })
+  })
+
   describe('createCollab', () => {
     it('should validate lastname is required', async () => {
       const wrapper = createWrapper()

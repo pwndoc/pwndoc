@@ -64,7 +64,7 @@
                                 map-options
                                 :label="$t('role')"
                                 v-model="search.roles"
-                                :options="[{label: $t('any'), value: null}, ...roleOptions()]"
+                                :options="roleFilterOptions()"
                                 />
                             </div>
                             <div class="col-md-2 col-sm-6 col-12">
@@ -120,7 +120,7 @@
                                         <q-separator inset />
                                         <q-item v-for="role in props.row.roles" :key="role">
                                             <q-item-section>
-                                                <q-item-label :class="'text-' + roleColor(role)">{{ roleLabel(role) }}</q-item-label>
+                                                <q-chip square dense :color="roleColor(role)">{{ roleLabel(role) }}</q-chip>
                                             </q-item-section>
                                         </q-item>
                                     </q-list>

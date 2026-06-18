@@ -369,6 +369,20 @@ export default {
             return this.roles.map(role => ({label: this.roleLabel(role.name), value: role.name}))
         },
 
+        roleFilterOptions: function() {
+            const assignedRoles = new Set()
+            ;(this.collabs || []).forEach(collab => {
+                ;(collab.roles || []).forEach(role => assignedRoles.add(role))
+            })
+
+            return [
+                {label: $t('any'), value: null},
+                ...Array.from(assignedRoles)
+                .sort((a, b) => this.roleLabel(a).localeCompare(this.roleLabel(b)))
+                .map(role => ({label: this.roleLabel(role), value: role}))
+            ]
+        },
+
         primaryRole: function(row) {
             const rowRoles = (row.roles && row.roles.length) ? row.roles : ["user"]
             if (this.search.roles && rowRoles.includes(this.search.roles))
