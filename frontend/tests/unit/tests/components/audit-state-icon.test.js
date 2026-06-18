@@ -11,16 +11,29 @@ describe('AuditStateIcon Component', () => {
     }
   }
 
+  const globalConfig = {
+    routes: [
+      { path: '/', component: { template: '<div />' } }
+    ],
+    global: {
+      stubs: {
+        'q-chip': { template: '<div><slot /></div>' },
+        'q-tooltip': { template: '<div><slot /></div>' },
+        'q-avatar': { template: '<div><slot /></div>' },
+        'q-separator': true
+      },
+      mocks: {
+        $settings: mockSettings
+      }
+    }
+  }
+
   it('should render', () => {
     const wrapper = createTestWrapper(AuditStateIcon, {
       props: {
         state: 'EDIT'
       },
-      global: {
-        mocks: {
-          $settings: mockSettings
-        }
-      }
+      ...globalConfig
     })
 
     expect(wrapper.exists()).toBe(true)
@@ -32,11 +45,7 @@ describe('AuditStateIcon Component', () => {
         state: 'REVIEW',
         approvals: []
       },
-      global: {
-        mocks: {
-          $settings: mockSettings
-        }
-      }
+      ...globalConfig
     })
 
     expect(wrapper.exists()).toBe(true)
@@ -49,11 +58,7 @@ describe('AuditStateIcon Component', () => {
         state: 'APPROVED',
         approvals: [{ _id: '1', firstname: 'John', lastname: 'Doe' }]
       },
-      global: {
-        mocks: {
-          $settings: mockSettings
-        }
-      }
+      ...globalConfig
     })
 
     expect(wrapper.exists()).toBe(true)
@@ -69,11 +74,7 @@ describe('AuditStateIcon Component', () => {
           { _id: '2', firstname: 'Jane', lastname: 'Smith' }
         ]
       },
-      global: {
-        mocks: {
-          $settings: mockSettings
-        }
-      }
+      ...globalConfig
     })
 
     expect(wrapper.vm.getApprovalCount()).toBe(2)

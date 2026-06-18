@@ -15,13 +15,19 @@ module.exports = function(request, app) {
       var template1Id = ""
       var template2Id = ""
       it('Get templates (no existing templates in db)', async () => {
+
+        // "Default Template" is prepopulated
+        const expected = [
+            {name: "Default Template"},
+        ]
+
         var response = await request(app).get('/api/templates')
           .set('Cookie', [
             `token=JWT ${userToken}`
           ])
       
         expect(response.status).toBe(200)
-        expect(response.body.datas).toHaveLength(0)
+        expect(response.body.datas.map(t => {return {name: t.name}})).toEqual(expect.arrayContaining(expected))
       })
 
       it('Create 2 templates', async () => {
@@ -171,7 +177,7 @@ module.exports = function(request, app) {
           .set('Cookie', [
             `token=JWT ${userToken}`
           ])
-        expect(response.body.datas).toHaveLength(1)
+        expect(response.body.datas).toHaveLength(2)
       })
 
       it('Delete template with nonexistent ID', async () => {

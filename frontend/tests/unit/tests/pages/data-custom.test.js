@@ -119,6 +119,7 @@ describe('Data Custom Page', () => {
     router = createRouter({
       history: createWebHistory(),
       routes: [
+        { path: '/', component: CustomPage },
         { path: '/data/custom', component: CustomPage }
       ]
     })

@@ -49,13 +49,16 @@ if (config && config[env] && config[env].database && config[env].database.connec
   connectionOptions = config[env].database.connectionOptions;
 }
 
+var dbConnection;
+
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI, connectionOptions);
+  dbConnection = mongoose.connect(process.env.MONGODB_URI, connectionOptions);
 } else {
-  mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, connectionOptions);
+  dbConnection = mongoose.connect(`mongodb://${process.env.DB_SERVER}:27017/${process.env.DB_NAME}`, connectionOptions);
 }
 
 // Models import
+var modelDefaults = require('./lib/model-defaults');
 require('./models/user');
 require('./models/audit');
 require('./models/client');
@@ -190,12 +193,21 @@ app.use((err, req, res, next) => {
 
 // Start server
 
-https.listen(4242, () => {
-    // Best-effort async: push custom rules to LanguageTool on startup
-    const { syncRulesToLanguageTool } = require('./lib/languagetool-sync');
-    syncRulesToLanguageTool().catch(err => {
-        console.warn('LanguageTool startup sync failed (non-blocking):', err.message);
+dbConnection
+.then(() => {
+    return modelDefaults.ensureModelDefaults();
+})
+.then(() => {
+    https.listen(4242, () => {
+        const { syncRulesToLanguageTool } = require('./lib/languagetool-sync');
+
+        syncRulesToLanguageTool().catch(err => {
+            console.warn('LanguageTool startup sync failed (non-blocking):', err.message);
+        });
     });
 })
-
+.catch((err) => {
+    console.error('Backend startup failed:', err);
+    process.exit(1);
+});
 module.exports = app;
