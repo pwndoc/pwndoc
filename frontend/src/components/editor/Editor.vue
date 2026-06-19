@@ -185,7 +185,7 @@
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
 
-                <template v-if="showAiButton">
+                <template v-if="showAiButton && editable">
                     <q-btn flat size="sm" dense
                     :loading="aiLoading"
                     :disable="aiLoading || aiLocked"

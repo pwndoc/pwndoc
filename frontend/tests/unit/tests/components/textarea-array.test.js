@@ -93,6 +93,16 @@ describe('TextareaArray Component', () => {
       const asterisk = wrapper.find('.text-red')
       expect(asterisk.exists()).toBe(false)
     })
+
+    it('should not render the AI toolbar when readonly', () => {
+      const wrapper = createWrapper({ props: { showAiButton: true, readonly: true } })
+      expect(wrapper.find('.bg-grey-4').exists()).toBe(false)
+    })
+
+    it('should render the AI toolbar when editable', () => {
+      const wrapper = createWrapper({ props: { showAiButton: true, readonly: false } })
+      expect(wrapper.find('.bg-grey-4').exists()).toBe(true)
+    })
   })
 
   describe('watcher: modelValue', () => {

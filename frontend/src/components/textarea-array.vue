@@ -1,6 +1,6 @@
 <template>
     <div>
-    <div v-if="showAiButton" class="bg-grey-4 row items-center q-px-sm q-py-xs">
+    <div v-if="showAiButton && !readonly" class="bg-grey-4 row items-center q-px-sm q-py-xs">
         <q-btn flat size="sm" dense
         :loading="aiLoading"
         :disable="aiLoading || readonly"

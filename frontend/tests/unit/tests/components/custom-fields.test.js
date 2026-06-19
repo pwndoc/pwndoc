@@ -528,4 +528,39 @@ describe('CustomFields Component', () => {
       expect(updateHTML).toHaveBeenCalledOnce()
     })
   })
+
+  describe('showAiButton', () => {
+    const aiField = makeField({ customField: { _id: 'cf-ai', fieldType: 'input' } })
+
+    const createAiWrapper = (overrides = {}) => createWrapper({
+      props: {
+        modelValue: [aiField],
+        aiEnabled: true,
+        canGenerateAiForField: () => true,
+        ...overrides.props
+      }
+    })
+
+    it('should hide the AI button for select fields', () => {
+      const field = makeField({ customField: { _id: 'cf-select', fieldType: 'select' } })
+      const wrapper = createAiWrapper({ props: { modelValue: [field] } })
+      expect(wrapper.vm.showAiButton(field)).toBe(false)
+    })
+
+    it('should hide the AI button for select-multiple fields', () => {
+      const field = makeField({ customField: { _id: 'cf-multi', fieldType: 'select-multiple', text: [] } })
+      const wrapper = createAiWrapper({ props: { modelValue: [field] } })
+      expect(wrapper.vm.showAiButton(field)).toBe(false)
+    })
+
+    it('should hide the AI button when the field is readonly', () => {
+      const wrapper = createAiWrapper({ props: { readonly: true } })
+      expect(wrapper.vm.showAiButton(aiField)).toBe(false)
+    })
+
+    it('should show the AI button for editable supported fields', () => {
+      const wrapper = createAiWrapper()
+      expect(wrapper.vm.showAiButton(aiField)).toBe(true)
+    })
+  })
 })

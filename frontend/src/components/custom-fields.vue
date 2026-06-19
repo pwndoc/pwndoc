@@ -472,7 +472,13 @@ export default {
         },
 
         showAiButton: function(field) {
-            return this.aiEnabled && this.canGenerateAiForField(this.getAiFieldKey(field))
+            const fieldType = field?.customField?.fieldType
+            if (fieldType === 'select' || fieldType === 'select-multiple')
+                return false
+
+            return this.aiEnabled &&
+                this.canGenerateAiForField(this.getAiFieldKey(field)) &&
+                this.isFieldEditable(field)
         },
 
         isAiLoading: function(field) {
