@@ -111,13 +111,5 @@ export default {
 
     updateAiIntegration: function(payload) {
         return api.put('data/ai-integration', payload)
-    },
-
-    getAiPrompts: function() {
-        return api.get('data/ai-integration')
-    },
-
-    updateAiPrompts: function(payload) {
-        return api.put('data/ai-integration', payload)
     }
 }

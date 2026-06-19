@@ -35,7 +35,7 @@ module.exports = function(app) {
 
     var _ = require('lodash')
 
-    const getAiIntegrationPayload = async (settings) => {
+    const getAiIntegrationAdminPayload = async (settings) => {
         const customFields = await CustomField.getAll();
         const fieldCatalog = buildAiFieldCatalog(customFields);
         const promptRows = await AiPrompt.find({}).select('entityType fieldKey fieldLabel outputType enabled prompt customFieldId').lean();
@@ -48,7 +48,7 @@ module.exports = function(app) {
             qaInstructions: normalizeQaInstructions(settings?.ai?.public?.qaInstructions || {}),
             qaChecks: normalizeQaChecks(settings?.ai?.public?.qaChecks || {})
         };
-    }
+    };
 
     const updateAiIntegration = async (req, res) => {
         try {
@@ -182,7 +182,7 @@ module.exports = function(app) {
             if (!currentSettings)
                 currentSettings = await Settings.getAll() || {};
 
-            const payload = await getAiIntegrationPayload(currentSettings);
+            const payload = await getAiIntegrationAdminPayload(currentSettings);
             Response.Ok(res, payload);
         } catch (err) {
             Response.Internal(res, err);
@@ -204,11 +204,11 @@ module.exports = function(app) {
 
 /* ===== AI INTEGRATION ===== */
 
-    // Get AI integration configuration (prompts + redaction guidelines)
-    app.get("/api/data/ai-integration", acl.hasPermission('settings:read-public'), async function(req, res) {
+    // Get AI integration configuration (admin only)
+    app.get("/api/data/ai-integration", acl.hasPermission('settings:update'), async function(req, res) {
         try {
             const settings = await Settings.getAll();
-            const payload = await getAiIntegrationPayload(settings);
+            const payload = await getAiIntegrationAdminPayload(settings);
             Response.Ok(res, payload);
         } catch (err) {
             Response.Internal(res, err);
@@ -216,10 +216,10 @@ module.exports = function(app) {
     });
 
     // Backward-compatible alias
-    app.get("/api/data/ai-prompts", acl.hasPermission('settings:read-public'), async function(req, res) {
+    app.get("/api/data/ai-prompts", acl.hasPermission('settings:update'), async function(req, res) {
         try {
             const settings = await Settings.getAll();
-            const payload = await getAiIntegrationPayload(settings);
+            const payload = await getAiIntegrationAdminPayload(settings);
             Response.Ok(res, payload);
         } catch (err) {
             Response.Internal(res, err);

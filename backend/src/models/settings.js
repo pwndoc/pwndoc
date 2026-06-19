@@ -137,7 +137,7 @@ SettingSchema.statics.getAll = () => {
 SettingSchema.statics.getPublic = () => {
     return new Promise((resolve, reject) => {
         const query = Settings.findOne({});
-        query.select('-_id report.enabled report.public reviews.enabled reviews.public ai.public');
+        query.select('-_id report.enabled report.public reviews.enabled reviews.public ai.public.enabled');
         query.exec()
             .then(settings => resolve(settings))
             .catch(err => reject(err));

@@ -18,8 +18,13 @@ vi.mock('@/services/audit', () => ({
 
 vi.mock('@/services/data', () => ({
   default: {
-    getCustomFields: vi.fn(),
-    getAiPrompts: vi.fn()
+    getCustomFields: vi.fn()
+  }
+}))
+
+vi.mock('@/services/ai', () => ({
+  default: {
+    getEnabledFields: vi.fn()
   }
 }))
 
@@ -65,6 +70,7 @@ vi.mock('quasar', async () => {
 
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
+import AiService from '@/services/ai'
 import Utils from '@/services/utils'
 import { Notify, Dialog } from 'quasar'
 import { useUserStore } from 'src/stores/user'
@@ -115,11 +121,10 @@ describe('Sections Page', () => {
     DataService.getCustomFields.mockResolvedValue({
       data: { datas: [] }
     })
-    DataService.getAiPrompts.mockResolvedValue({
+    AiService.getEnabledFields.mockResolvedValue({
       data: {
         datas: {
-          aiEnabled: false,
-          promptMappings: []
+          fields: []
         }
       }
     })
@@ -176,6 +181,11 @@ describe('Sections Page', () => {
             isEqual: vi.fn((a, b) => JSON.stringify(a) === JSON.stringify(b))
           },
           $settings: {
+            ai: {
+              public: {
+                enabled: false
+              }
+            },
             report: {
               enabled: false,
               public: {

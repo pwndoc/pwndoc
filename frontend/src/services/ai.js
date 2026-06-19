@@ -1,6 +1,12 @@
 import { api } from 'boot/axios'
 
 export default {
+  getEnabledFields: function(entityType) {
+    return api.get('ai/enabled-fields', {
+      params: { entityType }
+    })
+  },
+
   generateFieldDraft: function(params) {
     return api.post('ai/generate', params)
   },

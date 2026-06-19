@@ -10,6 +10,7 @@ import CommentsList from 'components/comments-list'
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
+import AiService from '@/services/ai';
 import { useUserStore } from 'src/stores/user'
 import VulnService from '@/services/vulnerability';
 import AiFieldHelper from '@/services/ai-field-helper';
@@ -35,9 +36,8 @@ export default {
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
             overrideLeaveCheck: false,
             transitionEnd: true,
-            aiEnabled: false,
             aiPromptFieldKeys: [],
-            aiPromptMappings: [],
+            aiFieldPrompts: [],
             // Comments
             commentTemp: null,
             replyTemp: null,
@@ -86,7 +86,7 @@ export default {
         this.findingId = this.$route.params.findingId;
         this.getFinding();
         this.getVulnTypes();
-        this.getAiPromptsConfig();
+        this.loadAiEnabledFieldKeys();
 
         this.$socket.emit('menu', {menu: 'editFinding', finding: this.findingId, room: this.auditId});
 
@@ -166,6 +166,10 @@ export default {
 
         canCreateComment: function() {
             return userStore.isAllowed('audits:comments:create') 
+        },
+
+        aiEnabled: function() {
+            return this.$settings?.ai?.public?.enabled !== false
         },
 
         saveButtonState: function() {
@@ -303,21 +307,22 @@ export default {
             })
         },
 
-        getAiPromptsConfig: function() {
-            DataService.getAiPrompts()
+        loadAiEnabledFieldKeys: function() {
+            if (!this.aiEnabled) {
+                this.aiPromptFieldKeys = []
+                this.aiFieldPrompts = []
+                return
+            }
+
+            AiService.getEnabledFields('finding')
             .then((data) => {
-                const payload = data.data.datas || {}
-                this.aiEnabled = payload.aiEnabled !== false
-                this.aiPromptMappings = (payload.promptMappings || [])
-                .filter((mapping) => String(mapping.entityType || '') === 'finding')
-                this.aiPromptFieldKeys = this.aiPromptMappings
-                .filter((mapping) => mapping.enabled !== false)
-                .map((mapping) => String(mapping.fieldKey || ''))
+                const fields = data.data.datas?.fields || []
+                this.aiFieldPrompts = fields
+                this.aiPromptFieldKeys = fields.map((field) => String(field.fieldKey || ''))
             })
             .catch(() => {
-                this.aiEnabled = false
                 this.aiPromptFieldKeys = []
-                this.aiPromptMappings = []
+                this.aiFieldPrompts = []
             })
         },
 
@@ -613,8 +618,7 @@ export default {
                 }
 
                 const defaultPrompt = AiFieldHelper.getDefaultPrompt(
-                    this.aiPromptMappings,
-                    'finding',
+                    this.aiFieldPrompts,
                     fieldKey,
                     baseContext
                 )

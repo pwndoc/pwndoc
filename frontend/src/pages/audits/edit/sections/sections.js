@@ -7,6 +7,7 @@ import CommentsList from 'components/comments-list';
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
+import AiService from '@/services/ai';
 import AiFieldHelper from '@/services/ai-field-helper';
 import { useAiGenerationStore } from '@/stores/ai-generation';
 import { runAfterAiGenerationCheck } from '@/composables/confirmLeaveIfAiGenerating';
@@ -33,9 +34,8 @@ export default {
             // List of CustomFields
             customFields: [],
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
-            aiEnabled: false,
             aiPromptFieldKeys: [],
-            aiPromptMappings: [],
+            aiFieldPrompts: [],
             // Comments
             commentTemp: null,
             replyTemp: null,
@@ -76,7 +76,7 @@ export default {
         this.auditId = this.$route.params.auditId;
         this.sectionId = this.$route.params.sectionId;
         this.getSection();
-        this.getAiPromptsConfig();
+        this.loadAiEnabledFieldKeys();
 
         this.$socket.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
 
@@ -148,6 +148,10 @@ export default {
     computed: {
         canCreateComment: function() {
             return userStore.isAllowed('audits:comments:create') 
+        },
+
+        aiEnabled: function() {
+            return this.$settings?.ai?.public?.enabled !== false
         },
 
         saveButtonState: function() {
@@ -283,21 +287,22 @@ export default {
             })
         },
 
-        getAiPromptsConfig: function() {
-            DataService.getAiPrompts()
+        loadAiEnabledFieldKeys: function() {
+            if (!this.aiEnabled) {
+                this.aiPromptFieldKeys = []
+                this.aiFieldPrompts = []
+                return
+            }
+
+            AiService.getEnabledFields('section')
             .then((data) => {
-                const payload = data.data.datas || {}
-                this.aiEnabled = payload.aiEnabled !== false
-                this.aiPromptMappings = (payload.promptMappings || [])
-                .filter((mapping) => String(mapping.entityType || '') === 'section')
-                this.aiPromptFieldKeys = this.aiPromptMappings
-                .filter((mapping) => mapping.enabled !== false)
-                .map((mapping) => String(mapping.fieldKey || ''))
+                const fields = data.data.datas?.fields || []
+                this.aiFieldPrompts = fields
+                this.aiPromptFieldKeys = fields.map((field) => String(field.fieldKey || ''))
             })
             .catch(() => {
-                this.aiEnabled = false
                 this.aiPromptFieldKeys = []
-                this.aiPromptMappings = []
+                this.aiFieldPrompts = []
             })
         },
 
@@ -393,8 +398,7 @@ export default {
                 }
 
                 const defaultPrompt = AiFieldHelper.getDefaultPrompt(
-                    this.aiPromptMappings,
-                    'section',
+                    this.aiFieldPrompts,
                     fieldKey,
                     baseContext
                 )

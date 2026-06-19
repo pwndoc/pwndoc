@@ -22,7 +22,8 @@ const {
     AI_DEFAULT_PROVIDER,
     normalizePromptValue,
     toPromptCompositeKey,
-    buildAiFieldCatalog
+    buildAiFieldCatalog,
+    buildEnabledFieldPrompts
 } = require('../lib/ai-prompts');
 
 const ALLOWED_ENTITY_TYPES = ['finding', 'section'];
@@ -303,7 +304,33 @@ const handleVulnerabilityQa = async function(req, res) {
     }
 };
 
+const handleAiEnabledFields = async (req, res) => {
+    try {
+        const entityType = String(req.query.entityType || '').trim().toLowerCase();
+        if (!isAllowedEntityType(entityType)) {
+            Response.BadParameters(res, 'Unsupported entityType. Allowed entity types: finding, section');
+            return;
+        }
+
+        const settings = await Settings.getAll();
+        if (!settings || settings?.ai?.public?.enabled === false) {
+            Response.Ok(res, { fields: [] });
+            return;
+        }
+
+        const customFields = await CustomField.getAll();
+        const fieldCatalog = buildAiFieldCatalog(customFields);
+        const promptRows = await AiPrompt.find({}).select('entityType fieldKey enabled prompt').lean();
+        const fields = buildEnabledFieldPrompts(fieldCatalog, promptRows, entityType);
+
+        Response.Ok(res, { fields });
+    } catch (err) {
+        Response.Internal(res, err);
+    }
+};
+
 module.exports = function(app) {
+    app.get('/api/ai/enabled-fields', acl.hasPermission('ai:generate'), handleAiEnabledFields);
     app.post('/api/ai/generate', acl.hasPermission('ai:generate'), handleAiGenerate);
     app.post('/api/ai/qa', acl.hasPermission('ai:qa'), handleAiQa);
     app.post('/api/ai/vulnerabilities/qa', acl.hasPermission('ai:qa'), handleVulnerabilityQa);

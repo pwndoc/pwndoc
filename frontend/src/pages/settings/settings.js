@@ -11,6 +11,17 @@ import LanguageSelector from '@/components/language-selector';
 import AiProviderSettings from '@/components/ai-provider-settings.vue';
 
 const userStore = useUserStore()
+const MASKED_SECRET = '••••••••••••••••'
+const AI_SECRET_FIELDS = [
+    'openaiApiKey',
+    'anthropicApiKey',
+    'deepseekApiKey',
+    'ollamaApiKey',
+    'bedrockApiKey',
+    'bedrockAccessKeyId',
+    'bedrockSecretAccessKey',
+    'bedrockSessionToken'
+]
 
 export default {
     data: () => {
@@ -93,7 +104,9 @@ export default {
             uploadProgress: 0,
             // LanguageTool connection test
             testingLtConnection: false,
-            ltConnectionResult: null
+            ltConnectionResult: null,
+            languageToolApiKeyInput: '',
+            languageToolApiKeyOrig: ''
         }
     },
     components: {
@@ -103,7 +116,7 @@ export default {
 
     watch: {
         'settings.report.private.languageToolUrl'() { this.ltConnectionResult = null },
-        'settings.report.private.languageToolApiKey'() { this.ltConnectionResult = null },
+        languageToolApiKeyInput() { this.ltConnectionResult = null },
         'settings.report.private.languageToolUsername'() { this.ltConnectionResult = null },
     },
 
@@ -156,7 +169,11 @@ export default {
                 if (!this.settings.ai.private) this.settings.ai.private = {}
                 if (typeof this.settings.ai.public.enabled !== 'boolean') this.settings.ai.public.enabled = true
                 if (!this.settings.ai.public.defaultProvider) this.settings.ai.public.defaultProvider = 'openai'
+                this.languageToolApiKeyInput = this.settings.report?.private?.languageToolApiKeyConfigured ? MASKED_SECRET : ''
+                this.languageToolApiKeyOrig = this.languageToolApiKeyInput
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
+                if (this.$refs.aiProviderSettings)
+                    this.$refs.aiProviderSettings.resetKeyInputs()
                 this.loading = false
             })
             .catch((err) => {
@@ -174,15 +191,19 @@ export default {
             const currLt = this.settings.report?.private
             const ltChanged = origLt && currLt && (
                 origLt.languageToolUrl !== currLt.languageToolUrl ||
-                origLt.languageToolApiKey !== currLt.languageToolApiKey ||
+                this.languageToolApiKeyInput !== this.languageToolApiKeyOrig ||
                 origLt.languageToolUsername !== currLt.languageToolUsername
             )
             if (this.settings.report?.public?.enableSpellCheck && ltChanged && currLt.languageToolUrl) {
                 this.testingLtConnection = true
                 try {
+                    this.applyLanguageToolApiKeyUpdate()
+                    const apiKeyForTest = this.languageToolApiKeyInput === MASKED_SECRET
+                        ? ''
+                        : this.settings.report.private.languageToolApiKey
                     const data = await SpellcheckService.testConnection(
                         currLt.languageToolUrl,
-                        currLt.languageToolApiKey,
+                        apiKeyForTest,
                         currLt.languageToolUsername
                     )
                     const result = data.data.datas
@@ -215,10 +236,14 @@ export default {
             }
             if (this.$refs.aiProviderSettings)
                 this.$refs.aiProviderSettings.applyPendingKeyUpdates()
+            this.applyLanguageToolApiKeyUpdate()
 
             SettingsService.updateSettings(this.settings)
             .then((data) => {
+                this.stripSavedSecretsFromSettings()
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
+                this.languageToolApiKeyInput = this.settings.report?.private?.languageToolApiKeyConfigured ? MASKED_SECRET : ''
+                this.languageToolApiKeyOrig = this.languageToolApiKeyInput
                 if (this.$refs.aiProviderSettings)
                     this.$refs.aiProviderSettings.resetKeyInputs()
                 this.$settings.refresh();
@@ -317,9 +342,13 @@ export default {
             this.testingLtConnection = true;
             this.ltConnectionResult = null;
             try {
+                this.applyLanguageToolApiKeyUpdate()
+                const apiKeyForTest = this.languageToolApiKeyInput === MASKED_SECRET
+                    ? ''
+                    : this.settings.report.private.languageToolApiKey
                 const data = await SpellcheckService.testConnection(
                     this.settings.report.private.languageToolUrl,
-                    this.settings.report.private.languageToolApiKey,
+                    apiKeyForTest,
                     this.settings.report.private.languageToolUsername
                 );
                 this.ltConnectionResult = data.data.datas;
@@ -337,7 +366,44 @@ export default {
         },
 
         unsavedChanges() {
-            return JSON.stringify(this.settingsOrig) !== JSON.stringify(this.settings);
+            return JSON.stringify(this.settingsOrig) !== JSON.stringify(this.settings) ||
+                this.languageToolApiKeyInput !== this.languageToolApiKeyOrig;
+        },
+
+        applyLanguageToolApiKeyUpdate() {
+            const configured = Boolean(this.settings.report?.private?.languageToolApiKeyConfigured)
+            const value = String(this.languageToolApiKeyInput || '')
+
+            if (!configured) {
+                if (value.trim())
+                    this.settings.report.private.languageToolApiKey = value.trim()
+                return
+            }
+
+            if (value === MASKED_SECRET) {
+                this.settings.report.private.languageToolApiKey = ''
+                return
+            }
+
+            this.settings.report.private.languageToolApiKey = value.trim()
+        },
+
+        stripSavedSecretsFromSettings() {
+            const aiPrivate = this.settings.ai?.private
+            if (aiPrivate) {
+                AI_SECRET_FIELDS.forEach((field) => {
+                    if (String(aiPrivate[field] || '').trim()) {
+                        aiPrivate[`${field}Configured`] = true
+                        aiPrivate[field] = ''
+                    }
+                })
+            }
+
+            const reportPrivate = this.settings.report?.private
+            if (reportPrivate && String(reportPrivate.languageToolApiKey || '').trim()) {
+                reportPrivate.languageToolApiKeyConfigured = true
+                reportPrivate.languageToolApiKey = ''
+            }
         },
 
         getBackups: function() {

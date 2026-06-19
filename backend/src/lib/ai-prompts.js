@@ -172,6 +172,18 @@ const buildPromptMappings = (fieldCatalog = [], promptRows = []) => {
     });
 }
 
+const buildEnabledFieldPrompts = (fieldCatalog = [], promptRows = [], entityType = '') => {
+    const normalizedEntityType = String(entityType || '').trim();
+
+    return buildPromptMappings(fieldCatalog, promptRows)
+        .filter((field) => !normalizedEntityType || field.entityType === normalizedEntityType)
+        .filter((field) => field.enabled !== false)
+        .map((field) => ({
+            fieldKey: field.fieldKey,
+            prompt: field.prompt
+        }));
+};
+
 module.exports = {
     AI_PROVIDERS,
     AI_DEFAULT_PROVIDER,
@@ -184,5 +196,6 @@ module.exports = {
     buildFindingFieldCatalog,
     buildSectionFieldCatalog,
     buildAiFieldCatalog,
-    buildPromptMappings
+    buildPromptMappings,
+    buildEnabledFieldPrompts
 };

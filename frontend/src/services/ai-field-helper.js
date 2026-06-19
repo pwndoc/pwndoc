@@ -33,6 +33,13 @@ const getFieldLabel = (field, customField, fieldKey) => {
   }[field] || fieldKey
 }
 
+const getOutputType = (field, customField) => {
+  if (customField)
+    return CUSTOM_FIELD_OUTPUT_TYPES[customField?.customField?.fieldType] || 'text'
+
+  return FINDING_FIELD_OUTPUT_TYPES[field] || 'html'
+}
+
 const normalizeContextValue = (value) => {
   if (value === null || value === undefined)
     return ''
@@ -49,19 +56,11 @@ const renderPromptTemplate = (template = '', context = {}) => {
   }).trim()
 }
 
-const getDefaultPrompt = (promptMappings, entityType, fieldKey, context = {}) => {
-  const mapping = (promptMappings || []).find((entry) => {
-    return String(entry.entityType || '') === String(entityType) &&
-      String(entry.fieldKey || '') === String(fieldKey)
+const getDefaultPrompt = (fieldPrompts = [], fieldKey, context = {}) => {
+  const mapping = (fieldPrompts || []).find((entry) => {
+    return String(entry.fieldKey || '') === String(fieldKey)
   })
   return renderPromptTemplate(mapping?.prompt || '', context)
-}
-
-const getOutputType = (field, customField) => {
-  if (customField)
-    return CUSTOM_FIELD_OUTPUT_TYPES[customField?.customField?.fieldType] || 'text'
-
-  return FINDING_FIELD_OUTPUT_TYPES[field] || 'html'
 }
 
 const normalizeDraftForApply = (draft, outputType) => {

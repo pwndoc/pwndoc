@@ -2,6 +2,7 @@ module.exports = function(request, app) {
     describe('Application settings', () => {
       var userToken = '';
       var Settings = require('mongoose').model('Settings')
+      const { sanitizeSettingsForClient } = require('../src/lib/settings-secrets')
       beforeAll(async () => {
         var response = await request(app).post('/api/users/token').send({username: 'admin', password: 'Admin123'})
         userToken = response.body.datas.token
@@ -57,7 +58,9 @@ module.exports = function(request, app) {
 
       const defaultPublicSettings = {
         "ai": {
-          "public": defaultAiPublicSettings,
+          "public": {
+            "enabled": true
+          },
         },
         "report": {
             "enabled": true,
@@ -105,9 +108,9 @@ module.exports = function(request, app) {
             "minReviewers": 1,
           },
         },
-      }
+      };
 
-      const defaultSettings = {
+      const defaultSettings = sanitizeSettingsForClient({
         "ai": {
           "private": defaultAiPrivateSettings,
           "public": defaultAiPublicSettings,
@@ -168,7 +171,7 @@ module.exports = function(request, app) {
             "minReviewers": 1,
           },
         },
-      };
+      });
 
       it('Get settings', async () => {
           var response = await request(app).get('/api/settings')
@@ -266,7 +269,7 @@ module.exports = function(request, app) {
             `token=JWT ${userToken}`
           ]);
         expect(response.status).toBe(200);
-        expect(response.body.datas).toEqual(fullModification);
+        expect(response.body.datas).toEqual(sanitizeSettingsForClient(fullModification));
 
         const partialModification = {
           "reviews": {
@@ -317,6 +320,80 @@ module.exports = function(request, app) {
       expect(response.status).toBe(200);
       expect(response.type).toEqual('application/json');
       expect(response.headers['content-disposition'].indexOf('attachment; filename=')).toBe(0);
+      expect(response.body.ai.private.openaiApiKey).toBe('');
+      expect(response.body.ai.private.openaiApiKeyConfigured).toBe(false);
+    })
+
+    it('Does not return stored API keys to clients', async () => {
+      await Settings.update({
+        ai: {
+          private: {
+            ...defaultAiPrivateSettings,
+            openaiApiKey: 'super-secret-openai-key'
+          },
+          public: defaultAiPublicSettings
+        },
+        report: {
+          enabled: true,
+          private: {
+            imageBorder: false,
+            imageBorderColor: '#000000',
+            languageToolUrl: 'http://lt:8020',
+            languageToolApiKey: 'super-secret-lt-key',
+            languageToolUsername: ''
+          },
+          public: defaultSettings.report.public
+        },
+        reviews: defaultSettings.reviews
+      });
+
+      const response = await request(app).get('/api/settings')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ]);
+
+      expect(response.status).toBe(200);
+      expect(response.body.datas.ai.private.openaiApiKey).toBe('');
+      expect(response.body.datas.ai.private.openaiApiKeyConfigured).toBe(true);
+      expect(response.body.datas.report.private.languageToolApiKey).toBe('');
+      expect(response.body.datas.report.private.languageToolApiKeyConfigured).toBe(true);
+      expect(JSON.stringify(response.body.datas)).not.toContain('super-secret-openai-key');
+      expect(JSON.stringify(response.body.datas)).not.toContain('super-secret-lt-key');
+    })
+
+    it('Preserves stored API keys when clients submit empty values', async () => {
+      await Settings.update({
+        ai: {
+          private: {
+            ...defaultAiPrivateSettings,
+            openaiApiKey: 'persisted-openai-key'
+          },
+          public: defaultAiPublicSettings
+        },
+        report: defaultSettings.report,
+        reviews: defaultSettings.reviews
+      });
+
+      const response = await request(app).put('/api/settings')
+        .set('Cookie', [
+          `token=JWT ${userToken}`
+        ])
+        .send({
+          ai: {
+            private: {
+              ...defaultAiPrivateSettings,
+              openaiApiKey: ''
+            },
+            public: defaultAiPublicSettings
+          },
+          report: defaultSettings.report,
+          reviews: defaultSettings.reviews
+        });
+
+      expect(response.status).toBe(200);
+
+      const stored = await Settings.getAll();
+      expect(stored.ai.private.openaiApiKey).toBe('persisted-openai-key');
     })
 
     it('Returns internal error when loading full settings fails', async () => {

@@ -43,7 +43,7 @@
                 </q-item-section>
                 <q-item-section>{{$t('languageToolRules')}}</q-item-section>
             </q-item>
-            <q-item v-if="$settings.ai && $settings.ai.public && $settings.ai.public.enabled" to='/data/ai-integration'>
+            <q-item v-if="showAiIntegration" to='/data/ai-integration'>
                 <q-item-section avatar>
                     <q-icon name="fa fa-robot" />
                 </q-item-section>
@@ -74,6 +74,10 @@
 </template>
 
 <script>
+import { useUserStore } from 'src/stores/user'
+
+const userStore = useUserStore()
+
 export default {
     data() {
         return {
@@ -83,6 +87,11 @@ export default {
     },
 
     computed: {
+        showAiIntegration() {
+            return this.$settings?.ai?.public?.enabled !== false &&
+                userStore.isAllowed('settings:update')
+        },
+
         isDesktop() {
             return this.$q.screen.gt.sm
         },

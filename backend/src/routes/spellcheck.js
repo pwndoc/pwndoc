@@ -43,7 +43,12 @@ module.exports = function(app) {
     // ---------------------------
     app.post("/api/spellcheck/test", acl.hasPermission("settings:update"), async (req, res) => {
         try {
-            const { url, apiKey, username } = req.body;
+            const { url, username } = req.body;
+            let { apiKey } = req.body;
+            if (!String(apiKey || '').trim()) {
+                const settings = await Settings.getAll();
+                apiKey = settings?.report?.private?.languageToolApiKey || '';
+            }
             const result = await testLanguageToolConnection(url, apiKey, username);
             if (result.error) return Response.BadParameters(res, result.error);
             const { valid, ...data } = result;

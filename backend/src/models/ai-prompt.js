@@ -106,7 +106,6 @@ AiPromptSchema.statics.restore = (restoreDir, mode = 'upsert') => {
             if (mode === 'revert')
                 await AiPrompt.deleteMany();
 
-            // ponytail: optional file for pre-AI backups; ENOENT in importAiPromptsPromise is the fallback.
             if (!fs.existsSync(`${restoreDir}/aiPrompts.json`)) {
                 resolve();
                 return;

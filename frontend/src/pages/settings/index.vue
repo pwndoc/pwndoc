@@ -400,9 +400,10 @@
                             <q-item>
                                 <q-item-section class="col-md-6">
                                     <q-input
-                                        v-model="settings.report.private.languageToolApiKey"
+                                        v-model="languageToolApiKeyInput"
                                         :label="$t('languageToolApiKey')"
                                         :hint="$t('languageToolApiKeyHint')"
+                                        type="password"
                                         outlined
                                         dense
                                     />

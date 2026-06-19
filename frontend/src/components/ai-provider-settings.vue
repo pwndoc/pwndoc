@@ -249,7 +249,7 @@ export default {
 
     methods: {
         hasStoredSecret(field) {
-            return Boolean(String(this.settings?.ai?.private?.[field] || '').trim())
+            return Boolean(this.settings?.ai?.private?.[`${field}Configured`])
         },
 
         maskedValue(stored) {
