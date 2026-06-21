@@ -38,7 +38,7 @@
     "highlight.js": "^11.11.1",
     "lodash": "^4.17.21",
     "mongoose": "^9.1.2",
-    "multer": "^2.0.2",
+    "multer": "^2.1.1",
     "otpauth": "^9.4.1",
     "pizzip": "^3.2.0",
     "qrcode": "^1.5.4",
