@@ -82,7 +82,7 @@ var AuditSchema = new Schema({
     date_end:           String,
     summary:            String,
     company:            {type: Schema.Types.ObjectId, ref: 'Company'},
-    client:             {type: Schema.Types.ObjectId, ref: 'Client'},
+    client:             [{type: Schema.Types.ObjectId, ref: 'Client'}],
     collaborators:      [{type: Schema.Types.ObjectId, ref: 'User'}],
     reviewers:          [{type: Schema.Types.ObjectId, ref: 'User'}],
     language:           {type: String, required: true},
@@ -153,6 +153,13 @@ AuditSchema.statics.getAudit = (isAdmin, auditId, userId) => {
         .then((row) => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
+            
+            // Backwards compatibility: convert single client to array
+            if (row.client && !Array.isArray(row.client)) {
+                row.client = [row.client]
+                row.markModified('client')
+            }
+            
             resolve(row)
         })
         .catch((err) => {
@@ -467,6 +474,11 @@ AuditSchema.statics.getGeneral = (isAdmin, auditId, userId) => {
         .then((row) => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'});
+
+            // Backwards compatibility: convert single client to array
+            if (row.client && !Array.isArray(row.client)) {
+                row.client = [row.client]
+            }
 
             var formatScope = row.scope.map(item => {return item.name})
             for (var i=0;i<formatScope.length;i++) {
