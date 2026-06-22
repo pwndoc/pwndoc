@@ -13,9 +13,9 @@ const catalog = [
             {scope: 'audits:review', core: false},
             {scope: 'audits:review-all', core: false},
             {scope: 'audits:users-connected', core: false},
-            {scope: 'audits:comments:create', core: false},
-            {scope: 'audits:comments:update', core: false},
-            {scope: 'audits:comments:delete', core: false},
+            {scope: 'audits:comments:create', core: true},
+            {scope: 'audits:comments:update', core: true},
+            {scope: 'audits:comments:delete', core: true},
             {scope: 'audits:comments:create-all', core: false},
             {scope: 'audits:comments:update-all', core: false},
             {scope: 'audits:comments:delete-all', core: false}

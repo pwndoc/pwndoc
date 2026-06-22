@@ -64,7 +64,7 @@
 
                 <template v-slot:body-cell-type="props">
                     <q-td>
-                        <q-chip dense square :color="isSystem(props.row) ? 'grey-4' : 'blue-1'" :text-color="isSystem(props.row) ? 'dark' : 'primary'" class="q-ma-none" :label="typeLabel(props.row)" />
+                        <q-chip dense square :color="isSystem(props.row) ? 'grey-7' : 'blue-grey'" text-color="white" class="q-ma-none" :label="typeLabel(props.row)" />
                     </q-td>
                 </template>
 
@@ -86,6 +86,7 @@
                         <q-btn flat dense no-caps color="primary" :to="`/data/collaborators?role=${props.row.name}`">
                             <q-icon name="groups" size="18px" class="q-mr-sm" />
                             {{ props.row.users }}
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('usersWithRole')}}</q-tooltip>
                         </q-btn>
                     </q-td>
                 </template>

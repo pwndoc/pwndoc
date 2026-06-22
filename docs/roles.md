@@ -19,66 +19,70 @@ Common actions:
 
 | Permission | Description |
 |------------|-------------|
-| `audits:create` | Create audits and retests |
-| `audits:read` | View audits assigned to the user |
-| `audits:read-all` | View all audits |
-| `audits:update` | Edit audits assigned to the user |
-| `audits:update-all` | Edit all audits |
-| `audits:delete` | Delete audits assigned to the user |
-| `audits:delete-all` | Delete all audits |
-| `audits:review` | Review audits assigned to the user |
-| `audits:review-all` | Review all audits |
+| `audits:create` | Create default and multi audits, create retests, and link an audit to a parent audit |
+| `audits:read` | List, open, export, and read details for audits where the user is creator, collaborator, or reviewer |
+| `audits:read-all` | Read every audit, including audits where the user is not assigned |
+| `audits:update` | Edit general information, network scope, findings, sections, finding order, review state, and parent links for audits where the user is creator or collaborator |
+| `audits:update-all` | Update every audit, including audits where the user is not assigned |
+| `audits:delete` | Delete audits created by the user and remove parent links from audits the user can edit |
+| `audits:delete-all` | Delete any audit and remove parent links from any audit |
+| `audits:review` | Approve or unapprove audits where the user is a reviewer, but not the creator or a collaborator |
+| `audits:review-all` | Approve or unapprove any audit, except audits where the user is creator or collaborator |
+| `audits:users-connected` | Show connected users in the audits list |
 
 ### Audit Comments
 
 | Permission | Description |
 |------------|-------------|
-| `audits:comments:create` | Add comments to accessible audits |
-| `audits:comments:create-all` | Add comments to any audit |
-| `audits:comments:update` | Edit comments on accessible audits |
-| `audits:comments:update-all` | Edit comments on any audit |
-| `audits:comments:delete` | Delete comments on accessible audits |
-| `audits:comments:delete-all` | Delete comments on any audit |
+| `audits:comments:create` | Add comments to findings or sections on audits where the user is creator or collaborator |
+| `audits:comments:create-all` | Add comments to findings or sections on any audit |
+| `audits:comments:update` | Edit comment text, replies, and resolved status on audits where the user is creator or collaborator |
+| `audits:comments:update-all` | Edit comment text, replies, and resolved status on any audit |
+| `audits:comments:delete` | Delete comments from audits where the user is creator or collaborator |
+| `audits:comments:delete-all` | Delete comments from any audit |
 
 ### Vulnerabilities
 
 | Permission | Description |
 |------------|-------------|
-| `vulnerabilities:create` | Create vulnerabilities |
-| `vulnerabilities:read` | View vulnerabilities |
-| `vulnerabilities:update` | Edit vulnerabilities and merge updates |
-| `vulnerabilities:delete` | Delete individual vulnerabilities |
-| `vulnerabilities:delete-all` | Delete all vulnerabilities |
-| `vulnerability-updates:create` | Create vulnerability update requests from audit findings |
+| `vulnerabilities:create` | Create vulnerabilities in the vulnerability database, including imported vulnerability arrays |
+| `vulnerabilities:read` | List, export, and read vulnerabilities, including language-specific vulnerability lists |
+| `vulnerabilities:update` | Edit vulnerabilities, view pending update requests, and merge language details from another vulnerability |
+| `vulnerabilities:delete` | Delete one vulnerability from the vulnerability database |
+| `vulnerabilities:delete-all` | Delete every vulnerability from the vulnerability database |
+| `vulnerability-updates:create` | Submit a new vulnerability or update request from an audit finding |
 
 ### Users And Roles
 
 | Permission | Description |
 |------------|-------------|
-| `users:create` | Create users |
-| `users:read` | View users |
-| `users:update` | Edit users |
-| `roles:read` | View available roles |
+| `users:create` | Create collaborator accounts and assign initial roles |
+| `users:read` | List users, view user details, and list users eligible as reviewers |
+| `users:update` | Edit collaborators, assign roles, enable or disable accounts, reset TOTP, and bulk update roles or account status |
+| `roles:create` | Create custom roles with a display name, technical name, description, and permission list |
+| `roles:read` | View system and custom roles, the permissions catalog, and role user counts |
+| `roles:update` | Edit custom role names, display names, descriptions, and permissions |
+| `roles:delete` | Delete custom roles and remove them from assigned users |
 
 ### Shared Data
 
 | Permission | Description |
 |------------|-------------|
-| `clients:create` | Create clients |
-| `clients:read` | View clients |
-| `clients:update` | Edit clients |
+| `clients:create` | Create clients, optionally linked to a company |
+| `clients:read` | List clients |
+| `clients:update` | Edit client contact details and company association |
 | `clients:delete` | Delete clients |
-| `companies:create` | Create companies |
-| `companies:read` | View companies |
-| `companies:update` | Edit companies |
+| `companies:create` | Create companies with optional short name and logo |
+| `companies:read` | List companies |
+| `companies:update` | Edit company name, short name, and logo |
 | `companies:delete` | Delete companies |
-| `templates:create` | Upload templates |
-| `templates:read` | View and download templates |
-| `templates:update` | Edit templates |
-| `templates:delete` | Delete templates |
-| `images:create` | Upload images |
-| `images:read` | View and download images |
-| `images:delete` | Delete images |
+| `templates:create` | Upload report templates from a base64 file payload |
+| `templates:read` | List templates and download template files |
+| `templates:update` | Rename templates and optionally replace the template file |
+| `templates:delete` | Delete templates and their stored files |
+| `images:create` | Upload stored images, optionally associated with an audit |
+| `images:read` | Retrieve image metadata and download image content |
+| `images:delete` | Delete stored images |
 
 ### Custom Data
 
@@ -86,91 +90,91 @@ Common actions:
 
 | Permission | Description |
 |------------|-------------|
-| `languages:create` | Create languages |
-| `languages:read` | View languages |
-| `languages:update` | Edit languages |
-| `languages:delete` | Delete languages |
+| `languages:create` | Create a language with a display name and locale |
+| `languages:read` | List configured languages |
+| `languages:update` | Replace the configured language list |
+| `languages:delete` | Delete a language by locale |
 
 #### Audit Types
 
 | Permission | Description |
 |------------|-------------|
-| `audit-types:create` | Create audit types |
-| `audit-types:read` | View audit types |
-| `audit-types:update` | Edit audit types |
-| `audit-types:delete` | Delete audit types |
+| `audit-types:create` | Create audit types with templates, sections, hidden sections, and stage |
+| `audit-types:read` | List audit types |
+| `audit-types:update` | Replace the configured audit type list |
+| `audit-types:delete` | Delete an audit type by name |
 
 #### Vulnerability Types
 
 | Permission | Description |
 |------------|-------------|
-| `vulnerability-types:create` | Create vulnerability types |
-| `vulnerability-types:read` | View vulnerability types |
-| `vulnerability-types:update` | Edit vulnerability types |
-| `vulnerability-types:delete` | Delete vulnerability types |
+| `vulnerability-types:create` | Create a vulnerability type for a locale |
+| `vulnerability-types:read` | List vulnerability types |
+| `vulnerability-types:update` | Update the configured vulnerability type list |
+| `vulnerability-types:delete` | Delete a vulnerability type by name |
 
 #### Vulnerability Categories
 
 | Permission | Description |
 |------------|-------------|
-| `vulnerability-categories:create` | Create vulnerability categories |
-| `vulnerability-categories:read` | View vulnerability categories |
-| `vulnerability-categories:update` | Edit vulnerability categories |
-| `vulnerability-categories:delete` | Delete vulnerability categories |
+| `vulnerability-categories:create` | Create vulnerability categories with optional default finding sort settings |
+| `vulnerability-categories:read` | List vulnerability categories |
+| `vulnerability-categories:update` | Update vulnerability categories and their default sort settings |
+| `vulnerability-categories:delete` | Delete a vulnerability category by name |
 
 #### Custom Fields
 
 | Permission | Description |
 |------------|-------------|
-| `custom-fields:create` | Create custom fields |
-| `custom-fields:read` | View custom fields |
-| `custom-fields:update` | Edit custom fields |
-| `custom-fields:delete` | Delete custom fields |
+| `custom-fields:create` | Create custom fields for audits, findings, sections, or vulnerabilities |
+| `custom-fields:read` | List custom fields |
+| `custom-fields:update` | Update custom field definitions, layout settings, text, options, and ordering |
+| `custom-fields:delete` | Delete a custom field by ID |
 
 #### Custom Sections
 
 | Permission | Description |
 |------------|-------------|
-| `sections:create` | Create custom sections |
-| `sections:read` | View custom sections |
-| `sections:update` | Edit custom sections |
-| `sections:delete` | Delete custom sections |
+| `sections:create` | Create custom sections with field, name, locale, default text, and icon |
+| `sections:read` | List custom sections |
+| `sections:update` | Update custom section names, fields, and icons |
+| `sections:delete` | Delete a custom section by field and locale |
 
 #### Spellcheck
 
 | Permission | Description |
 |------------|-------------|
-| `spellcheck:read` | Use spellcheck and view the shared dictionary |
-| `spellcheck:create` | Add words to the spellcheck dictionary |
-| `spellcheck:delete` | Remove words from the spellcheck dictionary |
+| `spellcheck:read` | Check text with LanguageTool, view spellcheck capabilities, and list dictionary words |
+| `spellcheck:create` | Add words to the shared spellcheck dictionary |
+| `spellcheck:delete` | Remove words from the shared spellcheck dictionary |
 
 #### Proofing Rules
 
 | Permission | Description |
 |------------|-------------|
-| `proofing-rules:read` | View LanguageTool rules and supported languages |
-| `proofing-rules:create` | Create LanguageTool rules |
-| `proofing-rules:update` | Reload rules or restart the proofing service |
-| `proofing-rules:delete` | Delete LanguageTool rules |
+| `proofing-rules:read` | List custom LanguageTool rules, view rule XML, and fetch supported languages from LanguageTool |
+| `proofing-rules:create` | Create custom LanguageTool rules from XML and push them to LanguageTool |
+| `proofing-rules:update` | Reload stored rules into LanguageTool or restart the LanguageTool process |
+| `proofing-rules:delete` | Delete custom LanguageTool rules and update LanguageTool |
 
 ### Settings And Backups
 
 | Permission | Description |
 |------------|-------------|
-| `settings:read` | View settings |
-| `settings:read-public` | View public settings |
-| `settings:update` | Edit settings, revert settings, and test the spellcheck connection |
-| `backups:create` | Create and upload backups |
-| `backups:read` | View, download, and check backups |
-| `backups:update` | Restore backups |
-| `backups:delete` | Delete backups |
+| `settings:read` | View all settings, including private settings, and export them as JSON |
+| `settings:read-public` | View public settings used by the frontend |
+| `settings:update` | Edit settings, restore default settings, and test a LanguageTool connection |
+| `backups:create` | Create partial or full backups and upload backup archives |
+| `backups:read` | List backups, view backup or restore status, and download backup archives |
+| `backups:update` | Restore backup archives, including password-protected and partial restores |
+| `backups:delete` | Delete backup archives |
 
 
 ## Built-In Roles
 
 | Role | Access |
 |------|--------|
-| `user` | Assignable core access. Can create and manage assigned audits, read vulnerabilities, manage clients and companies, read custom data, use spellcheck, and view public settings |
+| `user` | Assignable core access. Can create, manage, and comment on assigned audits, upload and read images, read vulnerabilities, view users and roles, manage clients and companies, read templates and custom data, use spellcheck, and view public settings |
 | `admin` | Full access to all permissions |
 
 ### user
@@ -178,6 +182,7 @@ Common actions:
 The `user` role has the following permissions:
 
 - audits:create, audits:read, audits:update, audits:delete
+- audits:comments:create, audits:comments:update, audits:comments:delete
 - images:create, images:read
 - vulnerabilities:read, vulnerability-updates:create
 - users:read, roles:read
@@ -206,13 +211,11 @@ The table summarizes each role with:
 
 Click **Create Role** to add a custom role. The display name is used in the interface and must be unique, ignoring case. The technical role name is the stored identifier used for permission checks and user assignments; it may contain letters, numbers, underscores, and hyphens. When the technical name is empty, PwnDoc fills it from the display name using lowercase words separated by dashes. A description can be added to explain the purpose of the role. Select permissions from the permission matrix. New roles start with the same core permissions as the built-in `user` role.
 
-Use **Clone From** to copy the permissions from an existing role before saving. This is useful for roles such as:
+Use **Clone From** to copy the permissions from an existing custom role before saving. New roles already start with the built-in `user` role's core permissions, so you can create roles such as:
 
-- `reporter`: clone `user`, then add `audits:read-all`
-- `reviewer`: clone `user`, then add `audits:review`
-- `lead-reviewer`: clone `user`, then add `audits:review-all` and `audits:read-all`
-
-> Note: screenshot needed — create role dialog with Clone From and the permission matrix.
+- `reporter`: keep the default core permissions, then add `audits:read-all`
+- `reviewer`: keep the default core permissions, then add `audits:review`
+- `lead-reviewer`: keep the default core permissions, then add `audits:review-all` and `audits:read-all`
 
 Custom roles do not inherit from other roles. Each role stores its complete permission list. To change what a role can do, edit the role and update the checked permissions.
 
@@ -230,11 +233,11 @@ From **Data > Roles**, click a role's user count to open **Data > Collaborators*
 
 ## Upgrade Notes
 
-Roles are now stored in the database. `backend/src/config/roles.json` is no longer used.
+Roles are now stored in the database. During upgrade, PwnDoc imports legacy custom roles from `backend/src/config/roles.json`; after migration, that file is no longer used for role checks.
 
-User accounts now store `roles: ['user']` instead of a single `role: 'user'` value. Existing normal users are migrated to the built-in `user` role. The empty-role fallback remains only as a safety net.
+User accounts now store `roles: ['user']` instead of a single `role: 'user'` value. Existing users are migrated to the matching built-in or custom role. The empty-role fallback remains only as a safety net.
 
-Administrators must be restored manually after upgrading:
+If an administrator was created or modified outside the normal user model and does not have the `admin` role after upgrading, restore it manually:
 
 ```js
 db.users.updateOne({username: '<admin>'}, {$set: {roles: ['admin']}})
