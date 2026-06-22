@@ -220,7 +220,11 @@ export default {
         },
 
         canCreateComment: function() {
-            return userStore.isAllowed('audits:comments:create') 
+            return userStore.isAllowed('audits:comments:create') && this.canManageAuditComments('create')
+        },
+
+        canEditComments: function() {
+            return this.canManageAuditComments('update') || this.canManageAuditComments('delete')
         },
 
         saveButtonState: function() {
@@ -364,6 +368,25 @@ export default {
                 this.saveSuccessTimer = null
             }
             this.saveSuccess = false
+        },
+
+        isCurrentUserAuditMember: function() {
+            const creatorId = this.auditParent.creator?._id || this.auditParent.creator
+            const collaborators = this.auditParent.collaborators || []
+            return creatorId === userStore.id || collaborators.some(collaborator => (collaborator._id || collaborator) === userStore.id)
+        },
+
+        hasExactPermission: function(scope) {
+            return userStore.permissions === '*' || Boolean(userStore.permissions?.includes(scope))
+        },
+
+        canManageAuditComments: function(action) {
+            return this.isCurrentUserAuditMember() || this.hasExactPermission(`audits:comments:${action}-all`)
+        },
+
+        updateFindingIfEditable: function() {
+            if (this.frontEndAuditState === this.AUDIT_VIEW_STATE.EDIT)
+                this.updateFinding()
         },
 
         setupDraftRecovery: function() {
@@ -629,6 +652,9 @@ export default {
         },
 
         createComment: function(fieldName, commentId) {
+            if (!this.canCreateComment)
+                return
+
             let comment = {
                 findingId: this.findingId,
                 fieldName: fieldName,
@@ -649,7 +675,7 @@ export default {
                 this.fieldHighlighted = fieldName
                 this.focusComment(comment)
                 this.scrollSidebarCommentIntoView(newComment._id, "end")
-                this.updateFinding()
+                this.updateFindingIfEditable()
             })
             .catch((err) => {
                 Notify.create({
@@ -662,6 +688,9 @@ export default {
         },
 
         deleteComment: function(comment) {
+            if (!userStore.isAllowed('audits:comments:delete') || !this.canManageAuditComments('delete'))
+                return
+
             this.editComment = null
             let commentId = comment._id || comment.commentId
             AuditService.deleteComment(this.auditId, commentId)
@@ -669,7 +698,7 @@ export default {
                 if (this.focusedComment === commentId)
                     this.fieldHighlighted = ""
                 document.dispatchEvent(new CustomEvent('comment-deleted', { detail: { id: commentId } }))
-                this.updateFinding()
+                this.updateFindingIfEditable()
             })
             .catch((err) => {
                 Notify.create({
@@ -682,6 +711,9 @@ export default {
         },
 
         updateComment: function(comment) {
+            if (!userStore.isAllowed('audits:comments:update') || !this.canManageAuditComments('update'))
+                return
+
             if (comment.textTemp)
                 comment.text = comment.textTemp
             if (comment.replyTemp){
@@ -694,7 +726,7 @@ export default {
                 .then(() => {
                     this.editComment = null
                     this.editReply = null
-                    this.updateFinding()
+                    this.updateFindingIfEditable()
                 })
                 .catch((err) => {
                     Notify.create({
