@@ -89,4 +89,9 @@ export default {
 .home-background {
     background-color: #e6ecf0;
 }
+
+:deep(.q-header) {
+    /* Quasar sets inline right from ai-chat drawer width (480px); override with active drawer inset */
+    right: var(--layout-right-inset, 0px) !important;
+}
 </style>

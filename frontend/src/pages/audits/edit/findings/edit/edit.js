@@ -58,6 +58,7 @@ export default {
     inject: [
         'frontEndAuditState',
         'auditParent',
+        'auditDrawerOpen',
         'retestSplitView',
         'retestSplitRatio',
         'retestSplitLimits',
@@ -202,13 +203,10 @@ export default {
 
         findingTabsBarStyle: function() {
             const inset = useAiGenerationStore().layoutRightInset
-            if (!inset)
-                return {}
-
+            const hasDesktopDrawer = this.auditDrawerOpen && this.$q.screen.gt.sm
             return {
-                right: `${inset}px`,
-                left: '0',
-                width: 'auto'
+                left: hasDesktopDrawer ? '400px' : '0px',
+                right: inset ? `${inset}px` : '0px'
             }
         },
     },

@@ -87,7 +87,7 @@
 							</q-item-section>
 						</template>
 						<q-item-section side class="topButtonSection" v-if="aiQaEnabled">
-							<q-btn class="audit-qa-btn" flat color="secondary" @click="runAuditQa">
+							<q-btn class="audit-qa-btn" flat :color="qaDrawerOpen ? 'primary' : 'secondary'" @click="runAuditQa">
 								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
 									{{ $t('tooltip.auditQa') }}
 								</q-tooltip>
@@ -374,12 +374,19 @@
 			
 		</q-splitter>
 	</q-drawer>
+	<audit-qa-sidebar
+		:audit-id="auditId"
+		:findings="audit.findings || []"
+		:sections="audit.sections || []"
+		@highlight-field="highlightQaField"
+	/>
 	<router-view :key="$route.fullPath"/>
 </template>
 
 <script>
 import { Dialog, Notify, QSpinnerGears, LocalStorage } from 'quasar';
-import AuditQaDialog from '@/components/audit-qa-dialog.vue'
+import { useAuditQaStore } from '@/stores/audit-qa'
+import AuditQaSidebar from '@/components/audit-qa-sidebar.vue'
 import { computed, ref } from 'vue';
 import draggable from 'vuedraggable'
 import CommentsList from 'components/comments-list'
@@ -464,7 +471,8 @@ export default {
 
 	components: {
 		draggable,
-		CommentsList
+		CommentsList,
+		AuditQaSidebar
 	},
 
 	created: function() {
@@ -556,6 +564,10 @@ export default {
 	},
 
 	computed: {
+		qaDrawerOpen: function() {
+			return useAuditQaStore().drawerOpen
+		},
+
 		isDesktop: function() {
 			return this.$q.screen.gt.sm
 		},
@@ -931,12 +943,11 @@ export default {
 		},
 
 		runAuditQa: function() {
-			Dialog.create({
-				component: AuditQaDialog,
-				componentProps: {
-					auditId: this.auditId
-				}
-			})
+			useAuditQaStore().open(this.auditId)
+		},
+
+		highlightQaField: function(fieldName) {
+			this.fieldHighlighted = fieldName
 		},
 
 		generateReport: function() {

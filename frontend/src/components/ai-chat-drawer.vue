@@ -89,6 +89,7 @@
 import { Dialog } from 'quasar'
 import { mapState, mapActions } from 'pinia'
 import { useAiGenerationStore } from '@/stores/ai-generation'
+import { useAuditQaStore } from '@/stores/audit-qa'
 import AiService from '@/services/ai'
 import Utils from '@/services/utils'
 import { $t } from '@/boot/i18n'
@@ -123,7 +124,9 @@ export default {
   watch: {
     drawerOpen: {
       immediate: true,
-      handler() {
+      handler(value) {
+        if (value)
+          useAuditQaStore().close()
         this.syncLayoutInset()
       }
     },
