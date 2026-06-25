@@ -96,6 +96,9 @@
                         <q-icon v-if="isSystem(props.row)" name="lock" color="grey-7">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('cannotEditSystemRole')}}</q-tooltip>
                         </q-icon>
+                        <q-btn v-if="userStore.isAllowed('roles:read') && (!userStore.isAllowed('roles:update') || isSystem(props.row))" size="sm" flat round color="primary" icon="visibility" @click="viewRole(props.row); $refs.viewModal.show()">
+                            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.view')}}</q-tooltip>
+                        </q-btn>
                         <q-btn v-if="userStore.isAllowed('roles:update') && !isSystem(props.row)" size="sm" flat round color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                         </q-btn>
@@ -135,43 +138,16 @@
             <q-card-section>
                 <q-select dense :label="$t('cloneFrom')" v-model="cloneFrom" :options="roleOptions()" emit-value map-options clearable outlined @update:model-value="applyClone" />
             </q-card-section>
-            <q-card-section class="q-pt-none role-permission-toolbar">
-                <div class="row items-center q-col-gutter-sm q-mb-sm">
-                    <div class="col-md-6 col-12">
-                        <q-input dense outlined clearable v-model="permissionSearch" :placeholder="$t('searchPermissions')">
-                            <template v-slot:prepend>
-                                <q-icon name="search" />
-                            </template>
-                        </q-input>
-                    </div>
-                    <div class="col-md-6 col-12 row items-center justify-end q-gutter-sm">
-                        <q-chip dense square color="grey-7" text-color="white" :label="selectedPermissionsCount + ' / ' + permissionsCount + ' ' + $t('selected')" />
-                        <q-btn flat dense no-caps color="primary" :label="$t('expandAll')" @click="expandAllPermissionGroups()" />
-                        <q-btn flat dense no-caps color="primary" :label="$t('collapseAll')" @click="collapseAllPermissionGroups()" />
-                        <q-btn flat dense no-caps color="negative" :label="$t('clearAll')" @click="clearPermissions()" />
-                    </div>
-                </div>
-            </q-card-section>
-            <q-card-section class="q-pt-none role-modal-content">
-                <div class="role-permissions">
-                    <q-expansion-item v-for="group in filteredPermissionsCatalog" :key="group.key" v-model="expandedPermissionGroups[group.key]" expand-separator dense header-class="bg-blue-grey-1">
-                        <template v-slot:header>
-                            <q-item-section>
-                                <div class="text-weight-bold">{{group.label}}</div>
-                            </q-item-section>
-                            <q-item-section side>
-                                <q-badge rounded color="grey-7" :label="groupCheckedCount(group) + ' / ' + group.permissions.length" />
-                            </q-item-section>
-                        </template>
-                        <div class="row q-col-gutter-sm q-pa-sm">
-                            <div v-for="permission in group.permissions" :key="permission.scope" class="col-md-6 col-12">
-                                <q-checkbox dense :model-value="isPermissionChecked(permission.scope)" @update:model-value="togglePermission(permission.scope)" :label="permissionLabel(permission.scope)" :color="permission.core ? 'secondary' : 'primary'" />
-                            </div>
-                        </div>
-                    </q-expansion-item>
-                    <div v-if="filteredPermissionsCatalog.length === 0" class="text-grey-7 q-pa-md text-center">{{$t('noPermissionsFound')}}</div>
-                </div>
-            </q-card-section>
+            <role-permissions-panel
+            :permissions-catalog="permissionsCatalog"
+            :allows="roleAllowsList(currentRole)"
+            :all-permissions="roleAllowsAll(currentRole)"
+            :editable="true"
+            v-model:search="permissionSearch"
+            v-model:expanded-permission-groups="expandedPermissionGroups"
+            @toggle="togglePermission"
+            @clear="clearPermissions"
+            />
             <q-card-actions class="role-modal-actions bg-white" align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
                 <q-btn color="secondary" unelevated @click="createRole()">{{$t('btn.create')}}</q-btn>
@@ -195,46 +171,60 @@
             <q-card-section>
                 <q-input dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
             </q-card-section>
-            <q-card-section class="q-pt-none role-permission-toolbar">
-                <div class="row items-center q-col-gutter-sm q-mb-sm">
-                    <div class="col-md-6 col-12">
-                        <q-input dense outlined clearable v-model="permissionSearch" :placeholder="$t('searchPermissions')">
-                            <template v-slot:prepend>
-                                <q-icon name="search" />
-                            </template>
-                        </q-input>
-                    </div>
-                    <div class="col-md-6 col-12 row items-center justify-end q-gutter-sm">
-                        <q-chip dense square color="grey-7" text-color="white" :label="selectedPermissionsCount + ' / ' + permissionsCount + ' ' + $t('selected')" />
-                        <q-btn flat dense no-caps color="primary" :label="$t('expandAll')" @click="expandAllPermissionGroups()" />
-                        <q-btn flat dense no-caps color="primary" :label="$t('collapseAll')" @click="collapseAllPermissionGroups()" />
-                        <q-btn flat dense no-caps color="negative" :label="$t('clearAll')" @click="clearPermissions()" />
-                    </div>
-                </div>
-            </q-card-section>
-            <q-card-section class="q-pt-none role-modal-content">
-                <div class="role-permissions">
-                    <q-expansion-item v-for="group in filteredPermissionsCatalog" :key="group.key" v-model="expandedPermissionGroups[group.key]" expand-separator dense header-class="bg-blue-grey-1">
-                        <template v-slot:header>
-                            <q-item-section>
-                                <div class="text-weight-bold">{{group.label}}</div>
-                            </q-item-section>
-                            <q-item-section side>
-                                <q-badge rounded color="grey-7" :label="groupCheckedCount(group) + ' / ' + group.permissions.length" />
-                            </q-item-section>
-                        </template>
-                        <div class="row q-col-gutter-sm q-pa-sm">
-                            <div v-for="permission in group.permissions" :key="permission.scope" class="col-md-6 col-12">
-                                <q-checkbox dense :model-value="isPermissionChecked(permission.scope)" @update:model-value="togglePermission(permission.scope)" :label="permissionLabel(permission.scope)" :color="permission.core ? 'secondary' : 'primary'" />
-                            </div>
-                        </div>
-                    </q-expansion-item>
-                    <div v-if="filteredPermissionsCatalog.length === 0" class="text-grey-7 q-pa-md text-center">{{$t('noPermissionsFound')}}</div>
-                </div>
-            </q-card-section>
+            <role-permissions-panel
+            :permissions-catalog="permissionsCatalog"
+            :allows="roleAllowsList(currentRole)"
+            :all-permissions="roleAllowsAll(currentRole)"
+            :editable="true"
+            v-model:search="permissionSearch"
+            v-model:expanded-permission-groups="expandedPermissionGroups"
+            @toggle="togglePermission"
+            @clear="clearPermissions"
+            />
             <q-card-actions class="role-modal-actions bg-white" align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
                 <q-btn color="secondary" unelevated @click="updateRole()">{{$t('btn.update')}}</q-btn>
+            </q-card-actions>
+        </q-card>
+    </q-dialog>
+
+    <q-dialog ref="viewModal">
+        <q-card class="role-modal-card" style="width:900px; max-width:95vw">
+            <q-bar class="bg-fixed-primary text-white">
+                <div class="q-toolbar-title">{{$t('viewRole')}}</div>
+                <q-space />
+                <q-btn dense flat icon="close" @click="$refs.viewModal.hide()" />
+            </q-bar>
+            <q-card-section>
+                <div class="row q-col-gutter-md">
+                    <div class="col-md-6 col-12">
+                        <div class="text-caption text-grey-7">{{$t('roleDisplayName')}}</div>
+                        <div class="text-body1 text-weight-bold">{{roleDisplayName(currentRole)}}</div>
+                    </div>
+                    <div class="col-md-6 col-12">
+                        <div class="text-caption text-grey-7">{{$t('roleName')}}</div>
+                        <div class="text-body1">{{currentRole.name}}</div>
+                    </div>
+                    <div class="col-md-6 col-12">
+                        <div class="text-caption text-grey-7">{{$t('roleType')}}</div>
+                        <q-chip dense square :color="isSystem(currentRole) ? 'grey-7' : 'blue-grey'" text-color="white" class="q-ma-none" :label="typeLabel(currentRole)" />
+                    </div>
+                    <div class="col-12">
+                        <div class="text-caption text-grey-7">{{$t('description')}}</div>
+                        <div class="text-body1">{{roleDescription(currentRole)}}</div>
+                    </div>
+                </div>
+            </q-card-section>
+            <role-permissions-panel
+            :permissions-catalog="permissionsCatalog"
+            :allows="roleAllowsList(currentRole)"
+            :all-permissions="roleAllowsAll(currentRole)"
+            :editable="false"
+            v-model:search="permissionSearch"
+            v-model:expanded-permission-groups="expandedPermissionGroups"
+            />
+            <q-card-actions class="role-modal-actions bg-white" align="right">
+                <q-btn color="primary" unelevated @click="$refs.viewModal.hide()">{{$t('btn.close')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

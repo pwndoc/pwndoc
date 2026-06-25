@@ -3,10 +3,15 @@ import RoleService from '@/services/role'
 import Utils from '@/services/utils'
 import { useUserStore } from 'src/stores/user'
 import { $t } from '@/boot/i18n'
+import RolePermissionsPanel from './role-permissions-panel.vue'
 
 const userStore = useUserStore()
 
 export default {
+    components: {
+        RolePermissionsPanel
+    },
+
     data: () => {
         return {
             userStore: userStore,
@@ -153,7 +158,7 @@ export default {
         applyClone: function() {
             const role = this.roles.find(role => role.name === this.cloneFrom)
             if (role)
-                this.currentRole.allows = [...(role.allows || [])]
+                this.currentRole.allows = role.allows === '*' ? this.allPermissionScopes() : [...(role.allows || [])]
         },
 
         togglePermission: function(scope) {
@@ -164,7 +169,7 @@ export default {
         },
 
         isPermissionChecked: function(scope) {
-            return this.currentRole.allows.includes(scope)
+            return this.currentRole.allows === '*' || this.currentRole.allows.includes(scope)
         },
 
         cleanCurrentRole: function() {
@@ -190,6 +195,23 @@ export default {
                 this.clone(row)
                 this.$refs.editModal.show()
             }
+            else if (userStore.isAllowed('roles:read')) {
+                this.viewRole(row)
+                this.$refs.viewModal.show()
+            }
+        },
+
+        viewRole: function(row) {
+            this.currentRole = {
+                name: row.name,
+                displayName: this.roleDisplayName(row),
+                description: row.description || '',
+                allows: row.allows === '*' ? '*' : [...(row.allows || [])],
+                type: row.type,
+                virtual: row.virtual
+            }
+            this.permissionSearch = ''
+            this.expandAllPermissionGroups()
         },
 
         isSystem: function(row) {
@@ -234,6 +256,18 @@ export default {
 
         clearPermissions: function() {
             this.currentRole.allows = []
+        },
+
+        allPermissionScopes: function() {
+            return this.permissionsCatalog.flatMap(group => group.permissions.map(permission => permission.scope))
+        },
+
+        roleAllowsAll: function(role) {
+            return role.allows === '*'
+        },
+
+        roleAllowsList: function(role) {
+            return role.allows === '*' ? [] : (role.allows || [])
         },
 
         roleFilter: function(rows, terms) {
@@ -345,7 +379,7 @@ export default {
         },
 
         selectedPermissionsCount: function() {
-            return this.currentRole.allows.length
+            return this.currentRole.allows === '*' ? this.permissionsCount : this.currentRole.allows.length
         },
 
         permissionsCount: function() {
