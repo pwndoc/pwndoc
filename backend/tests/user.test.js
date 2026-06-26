@@ -288,16 +288,6 @@ module.exports = function(request, app) {
         expect(response.body.datas).toEqual(expect.objectContaining(expected))
       })
 
-      it('Counts assignable user role members', async () => {
-        var response = await request(app).get('/api/data/roles/user/users-count')
-          .set('Cookie', [
-            `token=JWT ${userToken}`
-          ])
-
-        expect(response.status).toBe(200)
-        expect(response.body.datas.count).toBeGreaterThanOrEqual(4)
-      })
-
       it('Get users list and reviewers list', async () => {
         var response = await request(app).get('/api/users')
           .set('Cookie', [

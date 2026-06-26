@@ -69,12 +69,6 @@ module.exports = function(app) {
         Response.Ok(res, permissionsCatalog.catalog)
     })
 
-    app.get("/api/data/roles/:name/users-count", acl.hasPermission('roles:read'), function(req, res) {
-        Role.countUsers(req.params.name)
-        .then(count => Response.Ok(res, {count: count}))
-        .catch(err => Response.Internal(res, err))
-    })
-
     app.post("/api/data/roles", acl.hasPermission('roles:create'), function(req, res) {
         const allows = req.body.allows || []
         if (!validateMutableRole(res, req.body.name) || !validateDisplayName(res, req.body.displayName) || !validateAllows(res, allows))
@@ -95,12 +89,10 @@ module.exports = function(app) {
 
     app.put("/api/data/roles/:name", acl.hasPermission('roles:update'), function(req, res) {
         const allows = req.body.allows || []
-        const newName = req.body.name || req.params.name
-        if (!validateMutableRole(res, req.params.name) || !validateMutableRole(res, newName) || !validateDisplayName(res, req.body.displayName) || !validateAllows(res, allows))
+        if (!validateMutableRole(res, req.params.name) || !validateDisplayName(res, req.body.displayName) || !validateAllows(res, allows))
             return
 
         Role.update(req.params.name, {
-            name: newName,
             displayName: req.body.displayName,
             description: req.body.description,
             allows: allows

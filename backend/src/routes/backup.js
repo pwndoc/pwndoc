@@ -877,7 +877,6 @@ module.exports = function(app) {
             })
 
             if (errors.length === 0){
-                await acl.reload()
                 setBackupState(STATE_IDLE)
                 console.log('restore successfull')
             }

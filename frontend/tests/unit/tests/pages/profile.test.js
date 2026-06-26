@@ -59,7 +59,7 @@ describe('Profile Page', () => {
     lastname: 'User',
     email: 'test@example.com',
     phone: '1234567890',
-    role: 'user',
+    roles: ['user'],
     totpEnabled: false
   }
 
@@ -155,7 +155,30 @@ describe('Profile Page', () => {
       expect(wrapper.vm.user.lastname).toBe('User')
       expect(wrapper.vm.user.email).toBe('test@example.com')
       expect(wrapper.vm.user.phone).toBe('1234567890')
-      expect(wrapper.vm.user.role).toBe('user')
+      expect(wrapper.vm.user.roles).toEqual(['user'])
+    })
+
+    it('should render one chip per role in user.roles', async () => {
+      UserService.getProfile.mockResolvedValue({
+        data: { datas: { ...mockUser, roles: ['user', 'admin', 'pentester'] } }
+      })
+
+      wrapper = createWrapper({
+        stubs: {
+          'q-card': { template: '<div><slot/></div>' },
+          'q-card-section': { template: '<div><slot/></div>' },
+          'q-list': { template: '<div><slot/></div>' },
+          'q-item': { template: '<div><slot/></div>' },
+          'q-item-section': { template: '<div><slot/></div>' },
+          'q-chip': { template: '<div class="role-chip">{{ label }}</div>', props: ['label'] }
+        }
+      })
+      await wrapper.vm.$nextTick()
+      await wrapper.vm.$nextTick()
+
+      const chips = wrapper.findAll('.role-chip')
+      expect(chips).toHaveLength(3)
+      expect(chips.map(chip => chip.text())).toEqual(['user', 'admin', 'pentester'])
     })
 
     it('should set totpEnabled from user data', async () => {

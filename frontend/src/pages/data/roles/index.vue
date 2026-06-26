@@ -130,7 +130,7 @@
                 <q-input dense :label="$t('roleDisplayName')+' *'" :model-value="currentRole.displayName" @update:model-value="updateDisplayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
-                <q-input dense :label="$t('roleName')+' *'" :model-value="currentRole.name" @update:model-value="updateRoleName" :error="!!errors.name" :error-message="errors.name" hide-bottom-space outlined />
+                <q-input dense :label="$t('roleName')+' *'" :model-value="currentRole.name" @update:model-value="updateRoleName" :error="!!errors.name" :error-message="errors.name" :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
                 <q-input dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
@@ -166,7 +166,7 @@
                 <q-input dense :label="$t('roleDisplayName')+' *'" v-model="currentRole.displayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
-                <q-input dense :label="$t('roleName')+' *'" v-model="currentRole.name" :error="!!errors.name" :error-message="errors.name" hide-bottom-space outlined />
+                <q-input dense :label="$t('roleName')+' *'" v-model="currentRole.name" disable :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
                 <q-input dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />

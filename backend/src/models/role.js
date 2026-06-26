@@ -17,10 +17,6 @@ function serializeMutation(work) {
     return run
 }
 
-async function roleExists(name) {
-    return !!(await Role.findOne({name: name}).lean())
-}
-
 async function withOptionalTransaction(work) {
     const session = await mongoose.startSession()
     try {
@@ -102,55 +98,20 @@ RoleSchema.statics.create = async (role) => {
     }
 }
 
+// Role name is immutable once created (the frontend locks it after creation);
+// only displayName/description/allows can change, so there is no rename to
+// keep in sync with User documents here.
 RoleSchema.statics.update = (name, role) => {
     return serializeMutation(async () => {
-        const User = require('mongoose').model('User')
         try {
-            const newName = role.name || name
-
-            if (newName !== name && await roleExists(newName))
-                throw({fn: 'BadParameters', message: 'Role already exists'})
-
-            const displayName = (role.displayName || newName).trim()
-            const update = {
+            const displayName = (role.displayName || name).trim()
+            const result = await Role.updateOne({name: name}, {$set: {
                 displayName: displayName,
                 description: role.description || '',
                 allows: role.allows || []
-            }
-            if (newName !== name)
-                update.name = newName
-
-            const transactional = await withOptionalTransaction(async (session) => {
-                if (newName !== name) {
-                    await User.updateMany(
-                        {roles: name},
-                        {$set: {'roles.$[roleName]': newName}},
-                        {arrayFilters: [{roleName: name}], session: session}
-                    )
-                }
-                const result = await Role.updateOne({name: name}, {$set: update}, {session: session})
-                if (result.matchedCount !== 1)
-                    throw({fn: 'NotFound', message: 'Role not found'})
-            })
-
-            if (!transactional) {
-                // Update the Role document first: if it fails (not found, or a concurrent
-                // rename already took newName), no User document has been touched yet, so
-                // there is nothing to roll back.
-                const result = await Role.updateOne({name: name}, {$set: update})
-                if (result.matchedCount !== 1)
-                    throw({fn: 'NotFound', message: 'Role not found'})
-
-                if (newName !== name) {
-                    try {
-                        await User.updateMany({roles: name}, {$set: {'roles.$[roleName]': newName}}, {arrayFilters: [{roleName: name}]})
-                    }
-                    catch (error) {
-                        await Role.updateOne({name: newName}, {$set: {name: name}})
-                        throw error
-                    }
-                }
-            }
+            }})
+            if (result.matchedCount !== 1)
+                throw({fn: 'NotFound', message: 'Role not found'})
 
             return 'Role updated successfully'
         }
@@ -165,30 +126,24 @@ RoleSchema.statics.update = (name, role) => {
 RoleSchema.statics.delete = (name) => {
     return serializeMutation(async () => {
         const User = require('mongoose').model('User')
-        const result = await Role.deleteOne({name: name})
-        if (result.deletedCount !== 1)
-            throw({fn: 'NotFound', message: 'Role not found'})
-        await User.updateMany({roles: name}, [
-            {$set: {roles: {$filter: {input: '$roles', cond: {$ne: ['$$this', name]}}}}},
-            {$set: {roles: {$cond: [{$eq: [{$size: '$roles'}, 0]}, ['user'], '$roles']}}}
-        ], {updatePipeline: true})
+
+        async function removeRole(session) {
+            const options = session ? {session: session} : {}
+            const result = await Role.deleteOne({name: name}, options)
+            if (result.deletedCount !== 1)
+                throw({fn: 'NotFound', message: 'Role not found'})
+            await User.updateMany({roles: name}, [
+                {$set: {roles: {$filter: {input: '$roles', cond: {$ne: ['$$this', name]}}}}},
+                {$set: {roles: {$cond: [{$eq: [{$size: '$roles'}, 0]}, ['user'], '$roles']}}}
+            ], {...options, updatePipeline: true})
+        }
+
+        const transactional = await withOptionalTransaction(removeRole)
+        if (!transactional)
+            await removeRole()
+
         return 'Role deleted successfully'
     })
-}
-
-RoleSchema.statics.countUsers = async (name) => {
-    const User = require('mongoose').model('User')
-    if (name === 'user') {
-        const customRoles = await Role.find().select('name').lean()
-        const knownRoles = ['admin', 'user', ...customRoles.map(role => role.name)]
-        return User.countDocuments({
-            $or: [
-                {roles: 'user'},
-                {roles: {$nin: knownRoles, $ne: []}}
-            ]
-        })
-    }
-    return User.countDocuments({roles: name})
 }
 
 RoleSchema.statics.ensureDisplayNames = async () => {
@@ -243,6 +198,11 @@ RoleSchema.statics.restore = (path, mode = "upsert") => {
         if (!fs.existsSync(`${path}/roles.json`)) {
             resolve()
             return
+        }
+
+        async function reloadAcl() {
+            const acl = require('../lib/auth').acl
+            await acl.reload()
         }
 
         function importRolesPromise() {
@@ -303,16 +263,21 @@ RoleSchema.statics.restore = (path, mode = "upsert") => {
             if (mode === "revert")
                 await Role.deleteMany()
             await importRolesPromise()
+            await reloadAcl()
             resolve()
         }
         catch (error) {
+            try {
+                await reloadAcl()
+            }
+            catch (reloadError) {
+                console.log(reloadError)
+            }
             reject({error: error, model: 'Roles'})
         }
     })
 }
 
 var Role = mongoose.model('Role', RoleSchema);
-Role.ensureDisplayNames()
-.then(() => Role.syncIndexes())
-.catch(err => console.error(err))
+Role.syncIndexes();
 module.exports = Role;

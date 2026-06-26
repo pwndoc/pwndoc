@@ -177,6 +177,7 @@ export default {
     allPermissions: 'All permissions',
     roleDisplayName: 'Display Name',
     roleName: 'Role Name',
+    roleNameImmutableHint: 'Cannot be changed after creation',
     permissions: 'Permissions',
     coreAccess: 'Core Access',
     featurePermissions: 'Feature Permissions',

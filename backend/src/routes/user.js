@@ -25,6 +25,15 @@ module.exports = function(app) {
         await validateAssignableRoles(nextRoles)
         return nextRoles.length > 0 ? nextRoles : ['user']
     }
+
+    // Guards against leaving the application with zero admins: excludedUserIds are
+    // the users about to lose the admin role, so any admin left outside that set
+    // is enough to allow the change.
+    async function assertAdminRemains(excludedUserIds) {
+        const remainingAdmins = await User.countDocuments({roles: 'admin', _id: {$nin: excludedUserIds}})
+        if (remainingAdmins === 0)
+            throw({fn: 'BadParameters', message: 'Cannot remove the admin role from the last remaining admin'})
+    }
 	
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
@@ -316,6 +325,8 @@ module.exports = function(app) {
         try {
             await validateAssignableRoles(add)
             await validateAssignableRoles(remove)
+            if (remove.includes('admin'))
+                await assertAdminRemains(req.body.userIds)
             if (remove.length > 0)
                 await User.updateMany({_id: {$in: req.body.userIds}}, {$pull: {roles: {$in: remove}}})
             if (add.length > 0)
@@ -358,8 +369,11 @@ module.exports = function(app) {
         if (typeof(req.body.enabled) === 'boolean') user.enabled = req.body.enabled;
 
         try {
-            if (Array.isArray(req.body.roles))
+            if (Array.isArray(req.body.roles)) {
                 user.roles = await sanitizeAssignableRoles(req.body.roles)
+                if (!user.roles.includes('admin'))
+                    await assertAdminRemains([req.params.id])
+            }
         }
         catch (err) {
             Response.Internal(res, err)
