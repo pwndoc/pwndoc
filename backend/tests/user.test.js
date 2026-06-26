@@ -307,6 +307,38 @@ module.exports = function(request, app) {
         })
       })
 
+      it('Prevents disabling the last enabled admin through single and bulk updates', async () => {
+        var adminRequest = await request(app).get('/api/users/admin')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        var adminId = adminRequest.body.datas._id
+
+        var response = await request(app).put(`/api/users/${adminId}`)
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({enabled: false})
+
+        expect(response.status).toBe(422)
+        expect(response.body.datas).toBe('Cannot disable the last remaining enabled admin')
+
+        response = await request(app).put('/api/users/bulk-status')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({userIds: [adminId], enabled: false})
+
+        expect(response.status).toBe(422)
+        expect(response.body.datas).toBe('Cannot disable the last remaining enabled admin')
+
+        response = await request(app).get('/api/users/admin')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+        expect(response.body.datas.enabled).not.toBe(false)
+      })
+
       it('Rejects authentication requests with missing or invalid password payloads', async () => {
         var response = await request(app).post('/api/users/token').send({username: 'admin'})
         expect(response.status).toBe(422)

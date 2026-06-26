@@ -218,38 +218,9 @@ export default {
             return row.virtual === true
         },
 
-        permissionLabel: function(scope) {
-            return scope
-        },
-
-        permissionMatchesSearch: function(permission, group) {
-            const needle = this.permissionSearch.trim().toLowerCase()
-            if (!needle)
-                return true
-            return (
-                permission.scope.toLowerCase().includes(needle) ||
-                group.label.toLowerCase().includes(needle)
-            )
-        },
-
-        groupPermissions: function(group) {
-            return group.permissions.filter(permission => this.permissionMatchesSearch(permission, group))
-        },
-
-        groupCheckedCount: function(group) {
-            return group.permissions.filter(permission => this.isPermissionChecked(permission.scope)).length
-        },
-
         expandAllPermissionGroups: function() {
             this.expandedPermissionGroups = this.permissionsCatalog.reduce((acc, group) => {
                 acc[group.key] = true
-                return acc
-            }, {})
-        },
-
-        collapseAllPermissionGroups: function() {
-            this.expandedPermissionGroups = this.permissionsCatalog.reduce((acc, group) => {
-                acc[group.key] = false
                 return acc
             }, {})
         },
@@ -367,17 +338,6 @@ export default {
     },
 
     computed: {
-        filteredPermissionsCatalog: function() {
-            return this.permissionsCatalog
-            .map(group => {
-                return {
-                    ...group,
-                    permissions: this.groupPermissions(group)
-                }
-            })
-            .filter(group => group.permissions.length > 0)
-        },
-
         selectedPermissionsCount: function() {
             return this.currentRole.allows === '*' ? this.permissionsCount : this.currentRole.allows.length
         },

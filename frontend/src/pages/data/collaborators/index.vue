@@ -79,8 +79,6 @@
                                 />
                             </div>
                         </div>
-
-                        
                     </div>
                 </template>
 

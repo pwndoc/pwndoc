@@ -34,6 +34,16 @@ module.exports = function(app) {
         if (remainingAdmins === 0)
             throw({fn: 'BadParameters', message: 'Cannot remove the admin role from the last remaining admin'})
     }
+
+    async function assertEnabledAdminRemains(excludedUserIds) {
+        const remainingEnabledAdmins = await User.countDocuments({
+            roles: 'admin',
+            enabled: {$ne: false},
+            _id: {$nin: excludedUserIds}
+        })
+        if (remainingEnabledAdmins === 0)
+            throw({fn: 'BadParameters', message: 'Cannot disable the last remaining enabled admin'})
+    }
 	
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
@@ -340,8 +350,17 @@ module.exports = function(app) {
     });
 
     app.put("/api/users/bulk-status", acl.hasPermission('users:update'), async function(req, res) {
-        if (!Array.isArray(req.body.userIds) || typeof req.body.enabled !== 'boolean') {
+        if (!Array.isArray(req.body.userIds) || req.body.userIds.some(id => !mongoose.isValidObjectId(id)) || typeof req.body.enabled !== 'boolean') {
             Response.BadParameters(res, 'Required parameters: userIds, enabled')
+            return
+        }
+
+        try {
+            if (!req.body.enabled)
+                await assertEnabledAdminRemains(req.body.userIds)
+        }
+        catch (err) {
+            Response.Internal(res, err)
             return
         }
 
@@ -374,6 +393,8 @@ module.exports = function(app) {
                 if (!user.roles.includes('admin'))
                     await assertAdminRemains([req.params.id])
             }
+            if (req.body.enabled === false)
+                await assertEnabledAdminRemains([req.params.id])
         }
         catch (err) {
             Response.Internal(res, err)
