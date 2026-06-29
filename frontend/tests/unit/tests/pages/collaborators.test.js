@@ -21,7 +21,9 @@ vi.mock('@/services/collaborator', () => ({
     getCollabs: vi.fn(),
     createCollab: vi.fn(),
     updateCollab: vi.fn(),
-    deleteCollab: vi.fn()
+    deleteCollab: vi.fn(),
+    bulkRoles: vi.fn(),
+    bulkStatus: vi.fn()
   }
 }))
 
@@ -31,9 +33,20 @@ vi.mock('@/services/data', () => ({
   }
 }))
 
+vi.mock('@/services/role', () => ({
+  default: {
+    getRoles: vi.fn()
+  }
+}))
+
 vi.mock('@/services/utils', () => ({
   default: {
     customFilter: vi.fn(),
+    normalizeString: vi.fn((value) => String(value || '').toLowerCase()),
+    paginationRange: vi.fn((page, rowsPerPage, count) => ({
+      start: count === 0 ? 0 : ((page - 1) * rowsPerPage) + 1,
+      end: rowsPerPage === 0 ? count : Math.min(page * rowsPerPage, count)
+    })),
     strongPassword: vi.fn()
   }
 }))
@@ -66,6 +79,7 @@ vi.mock('quasar', async () => {
 // Must import after mocks are set up
 import CollabService from '@/services/collaborator'
 import DataService from '@/services/data'
+import RoleService from '@/services/role'
 import { Notify } from 'quasar'
 import CollaboratorsPage from '@/pages/data/collaborators/index.vue'
 
@@ -84,6 +98,10 @@ function setRefs(wrapper, refs) {
       Object.assign(existingRef, refValue)
     }
   })
+}
+
+function flushPromises() {
+  return new Promise(resolve => setTimeout(resolve, 0))
 }
 
 describe('Collaborators Page', () => {
@@ -112,6 +130,7 @@ describe('Collaborators Page', () => {
           phone: 'Phone',
           jobTitle: 'Job Title',
           role: 'Role',
+          roles: 'Roles',
           password: 'Password',
           search: 'Search',
           addCollaborator: 'Add Collaborator',
@@ -146,8 +165,8 @@ describe('Collaborators Page', () => {
     CollabService.getCollabs.mockResolvedValue({
       data: { datas: [] }
     })
-    DataService.getRoles.mockResolvedValue({
-      data: { datas: ['admin', 'user'] }
+    RoleService.getRoles.mockResolvedValue({
+      data: { datas: [{name: 'admin'}, {name: 'user'}] }
     })
   })
 
@@ -197,7 +216,7 @@ describe('Collaborators Page', () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
 
-      expect(DataService.getRoles).toHaveBeenCalled()
+      expect(RoleService.getRoles).toHaveBeenCalled()
     })
 
     it('should have correct initial data state', () => {
@@ -209,7 +228,7 @@ describe('Collaborators Page', () => {
         lastname: '',
         firstname: '',
         username: '',
-        role: '',
+        roles: ['user'],
         email: '',
         phone: '',
         jobTitle: '',
@@ -229,7 +248,7 @@ describe('Collaborators Page', () => {
 
       expect(wrapper.vm.pagination).toEqual({
         page: 1,
-        rowsPerPage: 25,
+        rowsPerPage: 10,
         sortBy: 'username'
       })
     })
@@ -238,12 +257,8 @@ describe('Collaborators Page', () => {
       const wrapper = createWrapper()
 
       expect(wrapper.vm.search).toEqual({
-        username: '',
-        firstname: '',
-        lastname: '',
-        role: '',
-        email: '',
-        jobTitle: '',
+        query: '',
+        roles: null,
         enabled: true
       })
     })
@@ -291,20 +306,20 @@ describe('Collaborators Page', () => {
   describe('getRoles', () => {
     it('should populate roles on success', async () => {
       const mockRoles = ['admin', 'user', 'reviewer']
-      DataService.getRoles.mockResolvedValue({
-        data: { datas: mockRoles }
+      RoleService.getRoles.mockResolvedValue({
+        data: { datas: mockRoles.map(name => ({name: name})) }
       })
 
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
       await wrapper.vm.$nextTick()
 
-      expect(wrapper.vm.roles).toEqual(mockRoles)
+      expect(wrapper.vm.roles).toEqual(mockRoles.map(name => ({name: name, displayName: name})))
     })
 
     it('should handle getRoles error gracefully', async () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-      DataService.getRoles.mockRejectedValue(new Error('Network error'))
+      RoleService.getRoles.mockRejectedValue(new Error('Network error'))
 
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()
@@ -312,6 +327,44 @@ describe('Collaborators Page', () => {
 
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
+    })
+  })
+
+  describe('roleFilterOptions', () => {
+    it('should derive role filter options from assigned collaborator roles', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.roles = []
+      wrapper.vm.rolesByName = {}
+      wrapper.vm.collabs = [
+        { username: 'alice', roles: ['user', 'reviewer'] },
+        { username: 'bob', roles: ['admin'] },
+        { username: 'charlie', roles: ['reviewer'] }
+      ]
+
+      expect(wrapper.vm.roleFilterOptions()).toEqual([
+        { label: 'any', value: null },
+        { label: 'admin', value: 'admin' },
+        { label: 'reviewer', value: 'reviewer' },
+        { label: 'user', value: 'user' }
+      ])
+    })
+
+    it('should use role display names when the role catalog is available', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.rolesByName = {
+        admin: { name: 'admin', displayName: 'Admin' },
+        user: { name: 'user', displayName: 'User' }
+      }
+      wrapper.vm.collabs = [
+        { username: 'alice', roles: ['user'] },
+        { username: 'bob', roles: ['admin'] }
+      ]
+
+      expect(wrapper.vm.roleFilterOptions()).toEqual([
+        { label: 'any', value: null },
+        { label: 'Admin', value: 'admin' },
+        { label: 'User', value: 'user' }
+      ])
     })
   })
 
@@ -837,7 +890,7 @@ describe('Collaborators Page', () => {
         lastname: 'Doe',
         firstname: 'John',
         username: 'johndoe',
-        role: 'admin',
+        roles: ['admin'],
         password: 'secret',
         email: 'john@example.com',
         phone: '555-1234',
@@ -849,7 +902,7 @@ describe('Collaborators Page', () => {
       expect(wrapper.vm.currentCollab.lastname).toBe('')
       expect(wrapper.vm.currentCollab.firstname).toBe('')
       expect(wrapper.vm.currentCollab.username).toBe('')
-      expect(wrapper.vm.currentCollab.role).toBe('user')
+      expect(wrapper.vm.currentCollab.roles).toEqual(['user'])
       expect(wrapper.vm.currentCollab.password).toBe('')
       expect(wrapper.vm.currentCollab.email).toBe('')
       expect(wrapper.vm.currentCollab.phone).toBe('')
@@ -879,7 +932,7 @@ describe('Collaborators Page', () => {
 
       wrapper.vm.dblClick({}, row)
 
-      expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:updates')
+      expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:update')
       expect(wrapper.vm.idUpdate).toBe('abc123')
       expect(showMock).toHaveBeenCalled()
     })
@@ -904,8 +957,221 @@ describe('Collaborators Page', () => {
 
       wrapper.vm.dblClick({}, row)
 
-      expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:updates')
+      expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:update')
       expect(showMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('bulk role and status actions', () => {
+    it('should open bulk roles modal with requested action and reset selected roles', () => {
+      const wrapper = createWrapper()
+      const showMock = vi.fn()
+      wrapper.vm.bulkRoles = ['admin']
+
+      setRefs(wrapper, {
+        bulkRolesModal: { show: showMock }
+      })
+
+      wrapper.vm.openBulkRoles('remove')
+
+      expect(wrapper.vm.bulkAction).toBe('remove')
+      expect(wrapper.vm.bulkRoles).toEqual([])
+      expect(showMock).toHaveBeenCalled()
+    })
+
+    it('should add selected bulk roles and refresh collaborators', async () => {
+      CollabService.bulkRoles.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      wrapper.vm.selected = [{ _id: 'user-1' }, { _id: 'user-2' }]
+      wrapper.vm.bulkAction = 'add'
+      wrapper.vm.bulkRoles = ['reviewer']
+
+      setRefs(wrapper, {
+        bulkRolesModal: { hide: vi.fn() }
+      })
+
+      wrapper.vm.applyBulkRoles()
+      await flushPromises()
+
+      expect(CollabService.bulkRoles).toHaveBeenCalledWith({
+        userIds: ['user-1', 'user-2'],
+        add: ['reviewer'],
+        remove: []
+      })
+      expect(wrapper.vm.selected).toEqual([])
+      expect(CollabService.getCollabs).toHaveBeenCalled()
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'msg.usersUpdatedOk',
+        color: 'positive'
+      }))
+    })
+
+    it('should remove selected bulk roles', async () => {
+      CollabService.bulkRoles.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      wrapper.vm.selected = [{ _id: 'user-1' }]
+      wrapper.vm.bulkAction = 'remove'
+      wrapper.vm.bulkRoles = ['reviewer']
+
+      setRefs(wrapper, {
+        bulkRolesModal: { hide: vi.fn() }
+      })
+
+      wrapper.vm.applyBulkRoles()
+      await flushPromises()
+
+      expect(CollabService.bulkRoles).toHaveBeenCalledWith({
+        userIds: ['user-1'],
+        add: [],
+        remove: ['reviewer']
+      })
+    })
+
+    it('should show error notification when bulk roles update fails', async () => {
+      CollabService.bulkRoles.mockRejectedValue({
+        response: { data: { datas: 'Unknown roles: reviewer' } }
+      })
+
+      const wrapper = createWrapper()
+      wrapper.vm.selected = [{ _id: 'user-1' }]
+      wrapper.vm.bulkAction = 'add'
+      wrapper.vm.bulkRoles = ['reviewer']
+
+      wrapper.vm.applyBulkRoles()
+      await flushPromises()
+
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'Unknown roles: reviewer',
+        color: 'negative'
+      }))
+    })
+
+    it('should enable selected users immediately', async () => {
+      CollabService.bulkStatus.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      wrapper.vm.selected = [{ _id: 'user-1' }, { _id: 'user-2' }]
+
+      wrapper.vm.bulkSetEnabled(true)
+      await flushPromises()
+
+      expect(CollabService.bulkStatus).toHaveBeenCalledWith({
+        userIds: ['user-1', 'user-2'],
+        enabled: true
+      })
+      expect(wrapper.vm.selected).toEqual([])
+      expect(CollabService.getCollabs).toHaveBeenCalled()
+    })
+
+    it('should ask for confirmation before disabling selected users', () => {
+      const wrapper = createWrapper()
+      const showMock = vi.fn()
+      wrapper.vm.selected = [{ _id: 'user-1', username: 'alice' }]
+
+      setRefs(wrapper, {
+        disableModal: { show: showMock }
+      })
+
+      wrapper.vm.bulkSetEnabled(false)
+
+      expect(CollabService.bulkStatus).not.toHaveBeenCalled()
+      expect(wrapper.vm.disableUsers).toEqual([{ _id: 'user-1', username: 'alice' }])
+      expect(showMock).toHaveBeenCalled()
+    })
+
+    it('should enable a single user immediately', async () => {
+      CollabService.bulkStatus.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      const row = { _id: 'user-1', username: 'alice' }
+
+      wrapper.vm.setEnabled(row, true)
+      await flushPromises()
+
+      expect(CollabService.bulkStatus).toHaveBeenCalledWith({
+        userIds: ['user-1'],
+        enabled: true
+      })
+      expect(CollabService.getCollabs).toHaveBeenCalled()
+    })
+
+    it('should ask for confirmation before disabling a single user', () => {
+      const wrapper = createWrapper()
+      const showMock = vi.fn()
+      const row = { _id: 'user-1', username: 'alice' }
+
+      setRefs(wrapper, {
+        disableModal: { show: showMock }
+      })
+
+      wrapper.vm.setEnabled(row, false)
+
+      expect(CollabService.bulkStatus).not.toHaveBeenCalled()
+      expect(wrapper.vm.disableUsers).toEqual([row])
+      expect(showMock).toHaveBeenCalled()
+    })
+
+    it('should disable confirmed users and remove them from selected rows', async () => {
+      CollabService.bulkStatus.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      wrapper.vm.disableUsers = [{ _id: 'user-1' }]
+      wrapper.vm.selected = [{ _id: 'user-1' }, { _id: 'user-2' }]
+
+      setRefs(wrapper, {
+        disableModal: { hide: vi.fn() }
+      })
+
+      wrapper.vm.confirmDisableUsers()
+      await flushPromises()
+
+      expect(CollabService.bulkStatus).toHaveBeenCalledWith({
+        userIds: ['user-1'],
+        enabled: false
+      })
+      expect(wrapper.vm.selected).toEqual([{ _id: 'user-2' }])
+      expect(wrapper.vm.disableUsers).toEqual([])
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'msg.usersUpdatedOk',
+        color: 'positive'
+      }))
+    })
+
+    it('should show error notification when status update fails', async () => {
+      CollabService.bulkStatus.mockRejectedValue({
+        response: { data: { datas: 'Cannot disable the last remaining enabled admin' } }
+      })
+
+      const wrapper = createWrapper()
+      wrapper.vm.disableUsers = [{ _id: 'admin-id' }]
+
+      wrapper.vm.confirmDisableUsers()
+      await flushPromises()
+
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'Cannot disable the last remaining enabled admin',
+        color: 'negative'
+      }))
+    })
+
+    it('should build clear confirmation titles for one or many users', () => {
+      const wrapper = createWrapper()
+
+      wrapper.vm.disableUsers = [{ firstname: 'Alice', lastname: 'Admin', username: 'alice' }]
+      expect(wrapper.vm.disableConfirmationTitle()).toBe('btn.disable Alice Admin?')
+
+      wrapper.vm.disableUsers = [
+        { username: 'alice' },
+        { username: 'bob' }
+      ]
+      expect(wrapper.vm.disableConfirmationTitle()).toBe('btn.disable 2 users?')
     })
   })
 
@@ -914,19 +1180,18 @@ describe('Collaborators Page', () => {
       const wrapper = createWrapper()
 
       const headerNames = wrapper.vm.dtHeaders.map(h => h.name)
+      expect(headerNames).toContain('name')
       expect(headerNames).toContain('username')
-      expect(headerNames).toContain('firstname')
-      expect(headerNames).toContain('lastname')
       expect(headerNames).toContain('email')
-      expect(headerNames).toContain('jobTitle')
-      expect(headerNames).toContain('role')
+      expect(headerNames).toContain('roles')
+      expect(headerNames).toContain('status')
       expect(headerNames).toContain('action')
     })
 
     it('should have correct number of columns', () => {
       const wrapper = createWrapper()
 
-      expect(wrapper.vm.dtHeaders).toHaveLength(7)
+      expect(wrapper.vm.dtHeaders).toHaveLength(6)
     })
   })
 })

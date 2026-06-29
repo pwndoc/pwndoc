@@ -13,6 +13,12 @@
                 </q-item-section>
                 <q-item-section>{{$t('collaborators')}}</q-item-section>
             </q-item>
+            <q-item v-if="userStore.isAllowed('roles:read')" to='/data/roles'>
+                <q-item-section avatar>
+                    <q-icon name="fa fa-user-shield" />
+                </q-item-section>
+                <q-item-section>{{$t('roles')}}</q-item-section>
+            </q-item>
             <q-item to='/data/companies'>
                 <q-item-section avatar>
                     <q-icon name="fa fa-building" />
@@ -68,9 +74,14 @@
 </template>
 
 <script>
+import { useUserStore } from 'src/stores/user'
+
+const userStore = useUserStore()
+
 export default {
     data() {
         return {
+            userStore: userStore,
             desktopDrawerOpen: true,
             mobileDrawerOpen: false
         }

@@ -1,10 +1,6 @@
 import { api } from 'boot/axios'
 
 export default {
-    getRoles: function() {
-        return api.get(`data/roles`)
-    },
-
     getLanguages: function() {
         return api.get(`data/languages`)
     },

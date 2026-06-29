@@ -36,8 +36,93 @@ module.exports = function(request, app) {
           ])
 
         expect(response.status).toBe(200)
-        expect(response.body.datas).toContain('admin')
-        expect(response.body.datas).toContain('user')
+        expect(response.body.datas.map(role => role.name)).toContain('admin')
+        expect(response.body.datas.map(role => role.name)).toContain('user')
+      })
+
+      it('Creates and updates roles with descriptions', async () => {
+        var role = {
+          name: 'described-role',
+          displayName: 'Described Role',
+          description: 'Can manage described data',
+          allows: ['clients:read']
+        }
+        var response = await request(app).post('/api/data/roles')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send(role)
+
+        expect(response.status).toBe(201)
+        expect(response.body.datas.displayName).toBe(role.displayName)
+        expect(response.body.datas.description).toBe(role.description)
+
+        response = await request(app).put('/api/data/roles/described-role')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({
+            name: 'described-role',
+            displayName: 'Updated Described Role',
+            description: 'Updated role description',
+            allows: ['clients:read']
+          })
+
+        expect(response.status).toBe(200)
+
+        response = await request(app).get('/api/data/roles')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+
+        expect(response.body.datas).toEqual(expect.arrayContaining([
+          expect.objectContaining({
+            name: 'described-role',
+            displayName: 'Updated Described Role',
+            description: 'Updated role description'
+          })
+        ]))
+
+        response = await request(app).delete('/api/data/roles/described-role')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+
+        expect(response.status).toBe(200)
+      })
+
+      it('Rejects duplicate role display names case-insensitively', async () => {
+        var response = await request(app).post('/api/data/roles')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({
+            name: 'display-name-role',
+            displayName: 'Display Name Role',
+            allows: ['clients:read']
+          })
+
+        expect(response.status).toBe(201)
+
+        response = await request(app).post('/api/data/roles')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+          .send({
+            name: 'display-name-role-copy',
+            displayName: 'display name role',
+            allows: ['clients:read']
+          })
+
+        expect(response.status).toBe(422)
+        expect(response.body.datas).toBe('Role display name already exists')
+
+        response = await request(app).delete('/api/data/roles/display-name-role')
+          .set('Cookie', [
+            `token=JWT ${userToken}`
+          ])
+
+        expect(response.status).toBe(200)
       })
     })
 

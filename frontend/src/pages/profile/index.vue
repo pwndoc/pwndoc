@@ -7,13 +7,15 @@
                 </q-card-section>
                 <q-separator />
                 <q-card-section class="row">
-                    <q-list class="col-md-6 col-12">
-                        <q-item>
-                            <q-item-section side>{{$t('role')}}</q-item-section>
-                            <q-item-section side>
-                                <q-chip square :label="user.role" class="text-white" :color="(user.role === 'admin')?'orange':'info'" />
-                            </q-item-section>
-                        </q-item>
+	                    <q-list class="col-md-6 col-12">
+	                        <q-item>
+	                            <q-item-section side>{{$t('roles')}}</q-item-section>
+	                            <q-item-section>
+	                                <div>
+	                                    <q-chip v-for="role in user.roles" :key="role" dense square :label="role" class="q-ml-none text-white" :color="(role === 'admin')?'orange':'info'" />
+	                                </div>
+	                            </q-item-section>
+	                        </q-item>
                         <q-item>
                             <q-item-section>
                                 <q-input 

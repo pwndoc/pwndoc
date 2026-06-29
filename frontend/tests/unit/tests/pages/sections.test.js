@@ -35,6 +35,11 @@ vi.mock('src/stores/user', () => {
     id: 'user123',
     firstname: 'Test',
     lastname: 'User',
+    permissions: [
+      'audits:comments:create',
+      'audits:comments:update',
+      'audits:comments:delete'
+    ],
     isAllowed: vi.fn().mockReturnValue(true)
   }
   return {
@@ -188,6 +193,8 @@ describe('Sections Page', () => {
             parentId: null,
             type: 'default',
             language: 'en',
+            creator: { _id: 'user123' },
+            collaborators: [],
             comments: []
           },
           commentMode: options.commentMode ?? false,
@@ -495,6 +502,25 @@ describe('Sections Page', () => {
       const result = wrapper.vm.canCreateComment
       expect(userStore.isAllowed).toHaveBeenCalledWith('audits:comments:create')
       expect(result).toBe(true)
+    })
+
+    it('should not allow core comment creation on audits where the user is not creator or collaborator', () => {
+      const wrapper = createWrapper({
+        auditParent: {
+          name: 'Test Audit',
+          auditType: 'Internal',
+          state: 'In Progress',
+          approvals: [],
+          parentId: null,
+          type: 'default',
+          language: 'en',
+          creator: { _id: 'other-user' },
+          collaborators: [],
+          comments: []
+        }
+      })
+
+      expect(wrapper.vm.canCreateComment).toBe(false)
     })
   })
 

@@ -140,6 +140,16 @@ export default {
     let result = rows && rows.filter(row => {
         for (const [key, value] of Object.entries(terms)) { // for each search term
           let searchString = (_.get(row, key) || "")
+          if (Array.isArray(value)) {
+            if (value.length === 0)
+              continue
+            const rowValues = Array.isArray(searchString) ? searchString : [searchString]
+            if (!value.some(term => rowValues.includes(term)))
+              return false
+            continue
+          }
+          if (Array.isArray(searchString))
+            searchString = searchString.join(' ')
           if (typeof searchString === "string")
             searchString = searchString.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
           let termString = (value || "")
@@ -210,6 +220,17 @@ export default {
 
   normalizeString: function(value) {
     return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  },
+
+  paginationRange: function(page, rowsPerPage, count) {
+    if (count === 0)
+      return {start: 0, end: 0}
+    if (!rowsPerPage)
+      return {start: 1, end: count}
+    return {
+      start: ((page - 1) * rowsPerPage) + 1,
+      end: Math.min(page * rowsPerPage, count)
+    }
   },
 
   AUDIT_VIEW_STATE: { 

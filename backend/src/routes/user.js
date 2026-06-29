@@ -2,11 +2,48 @@ module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
     var User = require('mongoose').model('User');
+    var Role = require('mongoose').model('Role');
     var acl = require('../lib/auth').acl;
     var jwtRefreshSecret = require('../lib/auth').jwtRefreshSecret
     var jwt = require('jsonwebtoken')
     var _ = require('lodash')
     var passwordpolicy = require('../lib/passwordpolicy')
+    var mongoose = require('mongoose')
+
+    async function validateAssignableRoles(roles) {
+        if (!Array.isArray(roles))
+            throw({fn: 'BadParameters', message: 'roles must be an array'})
+        const customRoles = await Role.getAll()
+        const allowedRoles = new Set(['admin', 'user', ...customRoles.map(role => role.name)])
+        const unknown = roles.filter(roleName => !allowedRoles.has(roleName))
+        if (unknown.length > 0)
+            throw({fn: 'BadParameters', message: `Unknown roles: ${unknown.join(', ')}`})
+    }
+
+    async function sanitizeAssignableRoles(roles) {
+        const nextRoles = Array.isArray(roles) ? [...new Set(roles)] : ['user']
+        await validateAssignableRoles(nextRoles)
+        return nextRoles.length > 0 ? nextRoles : ['user']
+    }
+
+    // Guards against leaving the application with zero admins: excludedUserIds are
+    // the users about to lose the admin role, so any admin left outside that set
+    // is enough to allow the change.
+    async function assertAdminRemains(excludedUserIds) {
+        const remainingAdmins = await User.countDocuments({roles: 'admin', _id: {$nin: excludedUserIds}})
+        if (remainingAdmins === 0)
+            throw({fn: 'BadParameters', message: 'Cannot remove the admin role from the last remaining admin'})
+    }
+
+    async function assertEnabledAdminRemains(excludedUserIds) {
+        const remainingEnabledAdmins = await User.countDocuments({
+            roles: 'admin',
+            enabled: {$ne: false},
+            _id: {$nin: excludedUserIds}
+        })
+        if (remainingEnabledAdmins === 0)
+            throw({fn: 'BadParameters', message: 'Cannot disable the last remaining enabled admin'})
+    }
 	
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
@@ -109,7 +146,7 @@ module.exports = function(app) {
         .then((users) => {
             var reviewers = [];
             users.forEach(user => {
-                if (acl.isAllowed(user.role, 'audits:review') || acl.isAllowed(user.role, 'audits:review-all')) {
+                if (acl.isAllowed(user.roles, 'audits:review') || acl.isAllowed(user.roles, 'audits:review-all')) {
                     reviewers.push(user);
                 }
             })
@@ -164,7 +201,7 @@ module.exports = function(app) {
     });
 
     // Create user
-    app.post("/api/users", acl.hasPermission('users:create'), function(req, res) {
+    app.post("/api/users", acl.hasPermission('users:create'), async function(req, res) {
         if (!req.body.username || !req.body.password || !req.body.firstname || !req.body.lastname) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;
@@ -182,10 +219,18 @@ module.exports = function(app) {
         user.lastname = req.body.lastname;
 
         //Optionals params
-        user.role = req.body.role || 'user';
+        user.roles = Array.isArray(req.body.roles) ? req.body.roles : ['user'];
         if (req.body.email) user.email = req.body.email;
         if (req.body.phone) user.phone = req.body.phone;
         if (req.body.jobTitle) user.jobTitle = req.body.jobTitle;
+
+        try {
+            user.roles = await sanitizeAssignableRoles(user.roles)
+        }
+        catch (err) {
+            Response.Internal(res, err)
+            return
+        }
 
         User.create(user)
         .then(msg => Response.Created(res, 'User created successfully'))
@@ -208,7 +253,7 @@ module.exports = function(app) {
         user.password = req.body.password;
         user.firstname = req.body.firstname;
         user.lastname = req.body.lastname;
-        user.role = 'admin';
+        user.roles = ['admin'];
 
         User.getAll()
         .then(users => {
@@ -274,7 +319,57 @@ module.exports = function(app) {
     });
 
     // Update any user (admin only)
-    app.put("/api/users/:id", acl.hasPermission('users:update'), function(req, res) {
+    app.put("/api/users/bulk-roles", acl.hasPermission('users:update'), async function(req, res) {
+        if (!Array.isArray(req.body.userIds) || req.body.userIds.some(id => !mongoose.isValidObjectId(id))) {
+            Response.BadParameters(res, 'userIds must be an array of valid user ids')
+            return
+        }
+        const add = Array.isArray(req.body.add) ? req.body.add : []
+        const remove = Array.isArray(req.body.remove) ? req.body.remove : []
+        const overlap = add.filter(roleName => remove.includes(roleName))
+        if (overlap.length > 0) {
+            Response.BadParameters(res, 'add and remove cannot contain the same role')
+            return
+        }
+
+        try {
+            await validateAssignableRoles(add)
+            await validateAssignableRoles(remove)
+            if (remove.includes('admin'))
+                await assertAdminRemains(req.body.userIds)
+            if (remove.length > 0)
+                await User.updateMany({_id: {$in: req.body.userIds}}, {$pull: {roles: {$in: remove}}})
+            if (add.length > 0)
+                await User.updateMany({_id: {$in: req.body.userIds}}, {$addToSet: {roles: {$each: add}}})
+            await User.updateMany({_id: {$in: req.body.userIds}, roles: {$size: 0}}, {$set: {roles: ['user']}})
+            Response.Ok(res, 'Users updated successfully')
+        }
+        catch (err) {
+            Response.Internal(res, err)
+        }
+    });
+
+    app.put("/api/users/bulk-status", acl.hasPermission('users:update'), async function(req, res) {
+        if (!Array.isArray(req.body.userIds) || req.body.userIds.some(id => !mongoose.isValidObjectId(id)) || typeof req.body.enabled !== 'boolean') {
+            Response.BadParameters(res, 'Required parameters: userIds, enabled')
+            return
+        }
+
+        try {
+            if (!req.body.enabled)
+                await assertEnabledAdminRemains(req.body.userIds)
+        }
+        catch (err) {
+            Response.Internal(res, err)
+            return
+        }
+
+        User.updateMany({_id: {$in: req.body.userIds}}, {$set: {enabled: req.body.enabled}})
+        .then(() => Response.Ok(res, 'Users updated successfully'))
+        .catch(err => Response.Internal(res, err))
+    });
+
+    app.put("/api/users/:id", acl.hasPermission('users:update'), async function(req, res) {
         if (req.body.password && !passwordpolicy.strongPassword(req.body.password)){
             Response.BadParameters(res, 'New Password does not match the password policy');
             return;
@@ -289,9 +384,22 @@ module.exports = function(app) {
         if (!_.isNil(req.body.email)) user.email = req.body.email;
         if (!_.isNil(req.body.phone)) user.phone = req.body.phone;
         if (!_.isNil(req.body.jobTitle)) user.jobTitle = req.body.jobTitle;
-        if (req.body.role) user.role = req.body.role;
         if (typeof(req.body.totpEnabled) === 'boolean') user.totpEnabled = req.body.totpEnabled;
         if (typeof(req.body.enabled) === 'boolean') user.enabled = req.body.enabled;
+
+        try {
+            if (Array.isArray(req.body.roles)) {
+                user.roles = await sanitizeAssignableRoles(req.body.roles)
+                if (!user.roles.includes('admin'))
+                    await assertAdminRemains([req.params.id])
+            }
+            if (req.body.enabled === false)
+                await assertEnabledAdminRemains([req.params.id])
+        }
+        catch (err) {
+            Response.Internal(res, err)
+            return
+        }
 
         User.updateUser(req.params.id, user)
         .then(msg => Response.Ok(res, msg))

@@ -14,25 +14,14 @@ A Collaborator is defined by:
 - Username
 - Lastname
 - Firstname
-- Role
+- Roles
 - Password
 
-There are 3 different roles:
+Collaborators can have multiple roles. New collaborators start with the built-in `user` role, and you can keep it assigned alongside custom roles when the collaborator needs the core application permissions.
 
-**user**
+The Collaborators table supports bulk role and status updates. Select users in the table, then use the bulk actions to add roles, remove roles, enable accounts, or disable accounts.
 
-- Read/Write on created and collaboration Audits
-- Readonly on Vulnerabilities
-- Read/Write on *Companies* and *Clients* Data
-
-**report**
-
-- Inherit from user role
-- \+ Read/Write on all Audits
-
-**admin**
-
-- Read/Write on everything
+Roles are managed in **Data > Roles**. See [Roles](/roles.md) for the permission matrix and built-in role behavior.
 
 
 ## Companies

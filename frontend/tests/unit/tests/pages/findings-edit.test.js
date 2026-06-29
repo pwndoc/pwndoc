@@ -46,6 +46,11 @@ vi.mock('src/stores/user', () => ({
     id: 'user1',
     firstname: 'Test',
     lastname: 'User',
+    permissions: [
+      'audits:comments:create',
+      'audits:comments:update',
+      'audits:comments:delete'
+    ],
     isAllowed: vi.fn(() => true)
   }))
 }))
@@ -209,6 +214,8 @@ describe('Findings Edit Page', () => {
             approvals: [],
             type: 'default',
             parentId: null,
+            creator: { _id: 'user1' },
+            collaborators: [],
             findings: [{ _id: 'finding1' }, { _id: 'finding2' }],
             comments: [],
             ...(options.auditParent || {})
@@ -392,6 +399,17 @@ describe('Findings Edit Page', () => {
     it('should compute canCreateComment based on user permissions', () => {
       const wrapper = createWrapper()
       expect(wrapper.vm.canCreateComment).toBe(true)
+    })
+
+    it('should not allow core comment creation on audits where the user is not creator or collaborator', () => {
+      const wrapper = createWrapper({
+        auditParent: {
+          creator: { _id: 'other-user' },
+          collaborators: []
+        }
+      })
+
+      expect(wrapper.vm.canCreateComment).toBe(false)
     })
   })
 

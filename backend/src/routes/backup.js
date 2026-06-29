@@ -32,6 +32,7 @@ module.exports = function(app) {
     const CustomField = require('mongoose').model('CustomField');
     const CustomSection = require('mongoose').model('CustomSection');
     const Language = require('mongoose').model('Language');
+    const Role = require('mongoose').model('Role');
     const Settings = require('mongoose').model('Settings');
     const Template = require('mongoose').model('Template');
     const User = require('mongoose').model('User');
@@ -317,6 +318,7 @@ module.exports = function(app) {
             "Vulnerabilities",
             "Vulnerabilities Updates",
             "Users",
+            "Roles",
             "Clients",
             "Companies",
             "Templates",
@@ -339,6 +341,8 @@ module.exports = function(app) {
         // Params
         if (req.body.data && Array.isArray(req.body.data))
             backup.data = allData.filter(e => req.body.data.includes(e))
+        if (backup.data.includes('Users') && !backup.data.includes('Roles'))
+            backup.data.push('Roles')
         if (backup.data.length === 0)
             backup.data = allData
         if (backup.data.length < allData.length)
@@ -371,6 +375,9 @@ module.exports = function(app) {
             // Users
             if (e === "Users") {
                 backupPromises.push(User.backup(backupTmpPath))
+            }
+            if (e === "Roles") {
+                backupPromises.push(Role.backup(backupTmpPath))
             }
 
             // Customers
@@ -649,6 +656,7 @@ module.exports = function(app) {
             "Vulnerabilities",
             "Vulnerabilities Updates",
             "Users",
+            "Roles",
             "Clients",
             "Companies",
             "Templates",
@@ -688,6 +696,8 @@ module.exports = function(app) {
         // Params
         if (req.body.data && Array.isArray(req.body.data))
             backupData = allData.filter(e => req.body.data.includes(e))
+        if (backupData.includes('Users') && !backupData.includes('Roles'))
+            backupData.push('Roles')
         if (backupData.length === 0)
             backupData = allData
         if (req.body.mode && req.body.mode === 'revert')
@@ -738,6 +748,11 @@ module.exports = function(app) {
             // Users
             if (info.data.includes('Users') && backupData.includes('Users')) {
                 files.push('users.json')
+            }
+
+            // Roles
+            if (info.data.includes('Roles') && backupData.includes('Roles')) {
+                files.push('roles.json')
             }
 
             // Customers
@@ -805,6 +820,11 @@ module.exports = function(app) {
                 restorePromises.push(VulnerabilityUpdate.restore(restoreTmpPath, restoreMode))
             }
 
+            // Roles
+            if (info.data.includes('Roles') && backupData.includes('Roles')) {
+                restorePromises.push(Role.restore(restoreTmpPath, restoreMode))
+            }
+
             // Users
             if (info.data.includes('Users') && backupData.includes('Users')) {
                 restorePromises.push(User.restore(restoreTmpPath, restoreMode))
@@ -849,7 +869,7 @@ module.exports = function(app) {
             // return Promise.allSettled(restorePromises)
             return processPromisesSequentially(restorePromises)
         })
-        .then(results => {
+        .then(async results => {
             let errors = []
             results.forEach(e => {
                 if (e.status === 'rejected')
