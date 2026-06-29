@@ -473,6 +473,9 @@
                     :focusComment="focusComment"
                     :updateComment="updateComment"
                     :deleteComment="deleteComment"
+                    :editable="canEditComments"
+                    :can-update="canManageAuditComments('update')"
+                    :can-delete="canManageAuditComments('delete')"
                     >
                     </comments-list>
                 </q-scroll-area>
@@ -728,6 +731,9 @@
                 :focusComment="focusComment"
                 :updateComment="updateComment"
                 :deleteComment="deleteComment"
+                :editable="canEditComments"
+                :can-update="canManageAuditComments('update')"
+                :can-delete="canManageAuditComments('delete')"
                 >
                 </comments-list>
             </q-scroll-area>

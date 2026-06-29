@@ -749,6 +749,13 @@ module.exports = function () {
       var defaultFilters = reportFilters.defaultFilters
       var subTemplatingFilters = reportFilters.subTemplatingFilters
 
+      it('rejects sandbox-escape expressions (CVE-2026-44643)', () => {
+        var expressions = require('angular-expressions')
+        var version = require('angular-expressions/package.json').version
+        expect(version).not.toMatch(/^1\.5\.[01]$/)
+        expect(() => expressions.compile('a | __proto__')({}, {})).toThrow(/Filter '__proto__' is not defined/)
+      })
+
       it('bookmark filters sanitize identifiers', () => {
         var bookmark = defaultFilters.bookmarkCreate("hello", "id/unsafe?name")
         expect(bookmark).toContain('w:name="id_unsafe_name"')

@@ -86,7 +86,7 @@
                             <!-- Comment -->
                             <q-item class="q-pt-none">
                                 <q-item-section>
-                                    <div v-if="editComment === comment._id" class="q-gutter-sm">
+                                    <div v-if="editComment === comment._id && canUpdateComment" class="q-gutter-sm">
                                         <q-input
                                         v-model="comment.textTemp"
                                         autogrow
@@ -116,7 +116,7 @@
                                         {{(reply.author && reply.author.firstname)?reply.author.firstname:''}}
                                         {{(reply.author && reply.author.lastname)?reply.author.lastname:''}}
                                     </span>
-                                    <div v-if="editReply === reply._id" class="q-gutter-sm">
+                                    <div v-if="editReply === reply._id && canUpdateComment" class="q-gutter-sm">
                                         <q-input 
                                         v-model="reply.textTemp"
                                         autogrow
@@ -229,6 +229,18 @@ export default {
         focusComment: {
             type: Function,
             default: () => {}
+        },
+        editable: {
+            type: Boolean,
+            default: true
+        },
+        canUpdate: {
+            type: Boolean,
+            default: true
+        },
+        canDelete: {
+            type: Boolean,
+            default: true
         }
     },
 
@@ -269,11 +281,11 @@ export default {
 		},
 
         canUpdateComment: function() {
-            return userStore.isAllowed('audits:comments:update')
+            return this.editable && this.canUpdate && userStore.isAllowed('audits:comments:update')
         },
 
         canDeleteComment: function() {
-            return userStore.isAllowed('audits:comments:delete')
+            return this.editable && this.canDelete && userStore.isAllowed('audits:comments:delete')
         },
 
         numberOfFilteredComments: function() {

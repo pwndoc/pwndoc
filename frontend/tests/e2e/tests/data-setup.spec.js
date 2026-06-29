@@ -1,6 +1,135 @@
 import { test, expect } from './base.js';
 import path from 'path';
 
+test.describe('Roles', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  const roleName = 'e2e-role-manager';
+  const roleDisplayName = 'E2E Role Manager';
+  const editedRoleDisplayName = 'E2E Role Lead';
+  const collaboratorUsername = 'rolemanager';
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/data/roles');
+  });
+
+  test('should display roles page heading and table', async ({ page }) => {
+    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page.getByText('Manage roles and their permissions')).toBeVisible();
+    await expect(page.getByTestId('create-role-button')).toBeVisible();
+    await expect(page.getByRole('row', { name: /Admin admin Full platform/i })).toBeVisible();
+    await expect(page.getByRole('row', { name: /User user Basic access/i })).toBeVisible();
+  });
+
+  test('should show validation error when required fields are missing', async ({ page }) => {
+    await page.getByTestId('create-role-button').click();
+    await expect(page.getByRole('dialog').getByText(/create role/i)).toBeVisible();
+
+    await page.getByTestId('create-role-submit-button').click();
+
+    await expect(page.getByText(/role display name required/i)).toBeVisible();
+    await expect(page.getByText(/role name required/i)).toBeVisible();
+  });
+
+  test('should create a role with selected permissions', async ({ page }) => {
+    await page.getByTestId('create-role-button').click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText(/create role/i)).toBeVisible();
+
+    await dialog.getByTestId('create-role-display-name-input').fill(roleDisplayName);
+    await expect(dialog.getByTestId('create-role-name-input')).toHaveValue(roleName);
+    await dialog.getByTestId('create-role-description-input').fill('Created by the roles E2E flow');
+    await dialog.getByTestId('role-permission-templates:create-checkbox').click();
+
+    await dialog.getByTestId('create-role-submit-button').click();
+
+    await expect(page.getByText(/role created successfully/i)).toBeVisible();
+    await expect(page.getByRole('row').filter({ hasText: roleDisplayName })).toBeVisible();
+  });
+
+  test('should edit a role', async ({ page }) => {
+    const row = page.getByRole('row').filter({ hasText: roleDisplayName });
+    await row.getByTestId(`edit-role-${roleName}-button`).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText(/edit role/i)).toBeVisible();
+    await expect(dialog.getByTestId('edit-role-name-input')).toHaveValue(roleName);
+
+    await dialog.getByTestId('edit-role-display-name-input').clear();
+    await dialog.getByTestId('edit-role-display-name-input').fill(editedRoleDisplayName);
+    await dialog.getByTestId('edit-role-description-input').clear();
+    await dialog.getByTestId('edit-role-description-input').fill('Updated by the roles E2E flow');
+    await dialog.getByTestId('role-permission-roles:update-checkbox').click();
+
+    await dialog.getByTestId('edit-role-submit-button').click();
+
+    await expect(page.getByText(/role updated successfully/i)).toBeVisible();
+    await expect(page.getByRole('row').filter({ hasText: editedRoleDisplayName })).toBeVisible();
+  });
+
+  test('should show permissions in the view modal', async ({ page }) => {
+    const row = page.getByRole('row').filter({ hasText: 'Admin' });
+    await row.getByTestId('view-role-admin-button').click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText(/view role/i)).toBeVisible();
+
+    await dialog.getByTestId('role-permission-search-input').fill('clients:read');
+    await expect(dialog.getByText('clients:read')).toBeVisible();
+
+    await dialog.getByTestId('view-role-close-button').click();
+    await expect(dialog).not.toBeVisible();
+  });
+
+  test('should navigate from a role to collaborators filtered by that role', async ({ page, request }) => {
+    const response = await request.post('/api/users', {
+      data: {
+        username: collaboratorUsername,
+        password: 'Rolemanager123',
+        firstname: 'Role',
+        lastname: 'Manager',
+        roles: ['user', roleName]
+      }
+    });
+    expect(response.status()).toBe(201);
+
+    await page.reload();
+    const row = page.getByRole('row').filter({ hasText: editedRoleDisplayName });
+    await row.getByRole('link').click();
+
+    await expect(page).toHaveURL(`/data/collaborators?role=${roleName}`);
+    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page.getByRole('row').filter({ hasText: collaboratorUsername })).toBeVisible();
+  });
+
+  test('should protect the last enabled admin from bulk disable', async ({ request }) => {
+    let response = await request.get('/api/users/admin');
+    expect(response.status()).toBe(200);
+    const admin = (await response.json()).datas;
+
+    response = await request.put('/api/users/bulk-status', {
+      data: {
+        userIds: [admin._id],
+        enabled: false
+      }
+    });
+    expect(response.status()).toBe(422);
+    expect((await response.json()).datas).toBe('Cannot disable the last remaining enabled admin');
+  });
+
+  test('should delete a role', async ({ page }) => {
+    const row = page.getByRole('row').filter({ hasText: editedRoleDisplayName });
+    await row.getByTestId(`delete-role-${roleName}-button`).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText(/delete role/i)).toBeVisible();
+    await dialog.getByTestId('delete-role-submit-button').click();
+
+    await expect(page.getByText(/role deleted successfully/i)).toBeVisible();
+    await expect(page.getByRole('row').filter({ hasText: editedRoleDisplayName })).not.toBeVisible();
+  });
+});
+
 test.describe('Collaborators', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/data/collaborators');
@@ -24,6 +153,7 @@ test.describe('Collaborators', () => {
 
     await page.getByTestId('create-collaborator-role-select').click();
     await page.getByRole('option', { name: /user/i }).first().click();
+    await page.keyboard.press('Escape');
 
     await page.getByTestId('create-collaborator-password-input').fill('StrongP@ssw0rd123');
 
@@ -42,6 +172,7 @@ test.describe('Collaborators', () => {
 
     await page.getByTestId('create-collaborator-role-select').click();
     await page.getByRole('option', { name: /user/i }).first().click();
+    await page.keyboard.press('Escape');
 
     await page.getByTestId('create-collaborator-password-input').fill('AnotherP@ss123');
 

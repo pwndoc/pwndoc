@@ -579,7 +579,7 @@ async function prepAuditData(data, settings) {
             lastname: reviewer.lastname || "undefined",
             email: reviewer.email || "undefined",
             phone: reviewer.phone || "undefined",
-            role: reviewer.role || "undefined"
+            role: (reviewer.roles || []).join(', ') || "undefined"
         })
     })
     
@@ -592,7 +592,7 @@ async function prepAuditData(data, settings) {
             email: collab.email || "undefined",
             phone: collab.phone || "undefined",
             jobTitle: collab.jobTitle || "undefined",
-            role: collab.role || "undefined"
+            role: (collab.roles || []).join(', ') || "undefined"
         })
     })
     result.language = data.language || "undefined"
@@ -726,7 +726,7 @@ async function prepAuditData(data, settings) {
         result.creator.lastname = data.creator.lastname || "undefined"
         result.creator.email = data.creator.email || "undefined"
         result.creator.phone = data.creator.phone || "undefined"
-        result.creator.role = data.creator.role || "undefined"
+        result.creator.role = (data.creator.roles || []).join(', ') || "undefined"
     }
 
     for (var section of data.sections) {

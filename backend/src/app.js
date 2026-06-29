@@ -57,6 +57,8 @@ if (process.env.MONGODB_URI) {
 
 // Models import
 require('./models/user');
+require('./models/migration');
+require('./models/role');
 require('./models/audit');
 require('./models/client');
 require('./models/company');
@@ -165,6 +167,7 @@ app.use(cookieParser())
 
 // Routes import
 require('./routes/user')(app);
+require('./routes/role')(app);
 require('./routes/audit')(app, io);
 require('./routes/client')(app);
 require('./routes/company')(app);
@@ -188,16 +191,24 @@ app.all(/(.*)/, function(req, res) {
 app.use((err, req, res, next) => {
   console.error(err.stack)
   res.status(500).send('Something went wrong. Please contact your administrator.')
-})
+});
 
 // Start server
-
-https.listen(4242, () => {
-    // Best-effort async: push custom rules to LanguageTool on startup
-    const { syncRulesToLanguageTool } = require('./lib/languagetool-sync');
-    syncRulesToLanguageTool().catch(err => {
-        console.warn('LanguageTool startup sync failed (non-blocking):', err.message);
-    });
-})
+;
+(async () => {
+    await mongoose.connection.asPromise();
+    await require('./migrations').run();
+    await require('./lib/auth').acl.reload();
+    https.listen(4242, () => {
+        // Best-effort async: push custom rules to LanguageTool on startup
+        const { syncRulesToLanguageTool } = require('./lib/languagetool-sync');
+        syncRulesToLanguageTool().catch(err => {
+            console.warn('LanguageTool startup sync failed (non-blocking):', err.message);
+        });
+    })
+})().catch(err => {
+    console.error(err)
+    process.exit(1)
+});
 
 module.exports = app;

@@ -12,13 +12,13 @@ describe('User Store', () => {
       const store = useUserStore()
       expect(store.id).toBe('')
       expect(store.username).toBe('')
-      expect(store.role).toBe('')
+      expect(store.roles).toEqual([])
       expect(store.firstname).toBe('')
       expect(store.lastname).toBe('')
       expect(store.email).toBe('')
       expect(store.phone).toBe('')
       expect(store.totpEnabled).toBe(false)
-      expect(store.roles).toBe('')
+      expect(store.permissions).toEqual([])
       expect(store.isLoggedIn).toBe(false)
     })
   })
@@ -29,26 +29,26 @@ describe('User Store', () => {
       const decodedToken = {
         id: '123',
         username: 'testuser',
-        role: 'admin',
+        roles: ['admin'],
         firstname: 'Test',
         lastname: 'User',
         email: 'test@example.com',
         phone: '1234567890',
         totpEnabled: true,
-        roles: 'admin'
+        permissions: ['users:read']
       }
 
       store.setUser(decodedToken)
 
       expect(store.id).toBe('123')
       expect(store.username).toBe('testuser')
-      expect(store.role).toBe('admin')
+      expect(store.roles).toEqual(['admin'])
       expect(store.firstname).toBe('Test')
       expect(store.lastname).toBe('User')
       expect(store.email).toBe('test@example.com')
       expect(store.phone).toBe('1234567890')
       expect(store.totpEnabled).toBe(true)
-      expect(store.roles).toBe('admin')
+      expect(store.permissions).toEqual(['users:read'])
       expect(store.isLoggedIn).toBe(true)
     })
 
@@ -81,63 +81,63 @@ describe('User Store', () => {
       store.setUser({
         id: '123',
         username: 'testuser',
-        role: 'admin',
+        roles: ['admin'],
         firstname: 'Test',
         lastname: 'User',
         totpEnabled: true,
-        roles: 'admin'
+        permissions: ['users:read']
       })
 
       store.clearUser()
 
       expect(store.username).toBe('')
-      expect(store.role).toBe('')
       expect(store.firstname).toBe('')
       expect(store.lastname).toBe('')
       expect(store.totpEnabled).toBe(false)
-      expect(store.roles).toBe('')
+      expect(store.roles).toEqual([])
+      expect(store.permissions).toEqual([])
       expect(store.isLoggedIn).toBe(false)
     })
   })
 
   describe('isAllowed getter', () => {
-    it('should return true for matching role', () => {
+    it('should return true for matching permission', () => {
       const store = useUserStore()
-      store.setUser({ roles: 'admin' })
+      store.setUser({ permissions: ['users:read'] })
 
-      expect(store.isAllowed('admin')).toBe(true)
+      expect(store.isAllowed('users:read')).toBe(true)
     })
 
-    it('should return true for role with -all suffix', () => {
+    it('should return true for permission with -all suffix', () => {
       const store = useUserStore()
-      store.setUser({ roles: 'admin-all' })
+      store.setUser({ permissions: ['users:read-all'] })
 
-      expect(store.isAllowed('admin')).toBe(true)
+      expect(store.isAllowed('users:read')).toBe(true)
     })
 
-    it('should return true for wildcard role', () => {
+    it('should return true for wildcard permissions', () => {
       const store = useUserStore()
-      store.setUser({ roles: '*' })
+      store.setUser({ permissions: '*' })
 
-      expect(store.isAllowed('admin')).toBe(true)
-      expect(store.isAllowed('user')).toBe(true)
+      expect(store.isAllowed('users:read')).toBe(true)
+      expect(store.isAllowed('audits:create')).toBe(true)
     })
 
-    it('should return false for non-matching role', () => {
+    it('should return false for non-matching permission', () => {
       const store = useUserStore()
-      store.setUser({ roles: 'user' })
+      store.setUser({ permissions: ['users:read'] })
+
+      expect(store.isAllowed('users:update')).toBe(false)
+    })
+
+    it('should return false when permissions is empty', () => {
+      const store = useUserStore()
+      store.setUser({ permissions: [] })
 
       expect(store.isAllowed('admin')).toBe(false)
     })
 
-    it('should return false when roles is empty', () => {
-      const store = useUserStore()
-      store.setUser({ roles: '' })
-
-      expect(store.isAllowed('admin')).toBe(false)
-    })
-
-    it('should return false when roles is undefined', () => {
+    it('should return false when permissions is undefined', () => {
       const store = useUserStore()
       store.setUser({})
 

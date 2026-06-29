@@ -2,6 +2,7 @@
 var fs = require('fs')
 var env = process.env.NODE_ENV || 'dev'
 var config = require('../config/config.json')
+var permissionsCatalog = require('./permissions-catalog')
 
 if (!config[env].jwtSecret) {
     config[env].jwtSecret = require('crypto').randomBytes(32).toString('hex')
@@ -102,25 +103,39 @@ class ACL {
         this.roles = roles
     }
 
-    isAllowed(role, permission) {
-        // Check if role exists
-        if(!this.roles[role] && !this.roles['user']) {
+    async reload() {
+        const Role = require('mongoose').model('Role')
+        const dbRoles = await Role.getAll()
+        const roles = {
+            admin: {allows: '*'},
+            user: {allows: CORE_PERMISSIONS}
+        }
+        dbRoles.forEach(role => {
+            roles[role.name] = {allows: role.allows || []}
+        })
+        this.roles = roles
+    }
+
+    normalizeRoleNames(roleNames) {
+        if (typeof roleNames === 'string')
+            roleNames = [roleNames]
+        if (!Array.isArray(roleNames))
+            roleNames = []
+        const known = roleNames.filter(roleName => this.roles[roleName])
+        if (known.length === 0)
+            return ['user']
+        return known
+    }
+
+    roleAllows(roleName, permission) {
+        const role = this.roles[roleName]
+        if (!role || !role.allows)
             return false
-        }
+        return role.allows === '*' || role.allows.indexOf(permission) !== -1 || role.allows.indexOf(`${permission}-all`) !== -1
+    }
 
-        let $role = this.roles[role] || this.roles['user'] // Default to user role in case of inexistant role
-        // Check if role is allowed with permission
-        if ($role.allows && ($role.allows === "*" || $role.allows.indexOf(permission) !== -1 || $role.allows.indexOf(`${permission}-all`) !== -1)) {
-            return true
-        }
-
-        // Check if there is inheritance
-        if(!$role.inherits || $role.inherits.length < 1) {
-            return false
-        }
-
-        // Recursive check childs until true or false
-        return $role.inherits.some(role => this.isAllowed(role, permission))
+    isAllowed(roleNames, permission) {
+        return this.normalizeRoleNames(roleNames).some(roleName => this.roleAllows(roleName, permission))
     }
 
     hasPermission (permission) {
@@ -148,8 +163,17 @@ class ACL {
                         Response.Unauthorized(res, 'Invalid token')
                     return
                 }
-                
-                if ( permission === "validtoken" || this.isAllowed(decoded.role, permission)) {
+
+                // Tokens issued before the roles/permissions payload migration lack `permissions`
+                // and have `roles` populated with permission strings instead of role names.
+                // Reject them so the client immediately refreshes instead of running with
+                // permissions silently resolved from those stale, mismatched roles.
+                if (decoded.permissions === undefined) {
+                    Response.Unauthorized(res, 'Invalid token')
+                    return
+                }
+
+                if ( permission === "validtoken" || this.isAllowed(decoded.roles, permission)) {
                     req.decodedToken = decoded
                     return next()
                 }
@@ -161,28 +185,27 @@ class ACL {
         }
     }
 
-    buildRoles(role) {
-        var currentRole = this.roles[role] || this.roles['user'] // Default to user role in case of inexistant role
-
-        var result = currentRole.allows || []
-
-        if (currentRole.inherits) {
-            currentRole.inherits.forEach(element => {
-                result = [...new Set([...result, ...this.buildRoles(element)])]
-            })
-        }
-
-        return result
-    }
-
-    getRoles(role) {
-        var result = this.buildRoles(role)
-
-        if (result.includes('*'))
+    getRoles(roleNames) {
+        const normalizedRoleNames = this.normalizeRoleNames(roleNames)
+        if (normalizedRoleNames.includes('admin'))
             return '*'
+
+        let result = []
+        normalizedRoleNames.forEach(roleName => {
+            const role = this.roles[roleName]
+            if (role && Array.isArray(role.allows))
+                result = [...new Set([...result, ...role.allows])]
+        })
         
         return result
     }
 }
 
+<<<<<<< HEAD
 exports.acl = new ACL(roles)
+=======
+exports.acl = new ACL({
+    admin: {allows: '*'},
+    user: {allows: CORE_PERMISSIONS}
+})
+>>>>>>> 2050abcfa44a63ae8ed41b205046518e67535215
