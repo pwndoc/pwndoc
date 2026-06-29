@@ -46,7 +46,7 @@ export default {
         editAudit: 'Edit Audit',
         downloadReport: 'Download Report',
         auditQa: 'Run report QA review',
-        vulnerabilityQa: 'Run vulnerability template QA',
+        vulnerabilityQa: 'Run vulnerabilities QA',
         downloadReportWithUnsavedDrafts: 'Local recovery changes exist and will not be included in the report until saved',
         auditDraftUnsavedChanges: 'Local recovery changes exist',
         deleteAudit: 'Delete Audit',
@@ -919,12 +919,12 @@ export default {
     vulnerabilityQa: {
         titleSingle: 'QA: {title}',
         titleAll: 'Vulnerability database QA',
-        running: 'Reviewing vulnerability templates for completeness, duplicate entries, reference links, and content guidelines...',
+        running: 'Reviewing vulnerabilities for completeness, duplicate entries, reference links, and content guidelines...',
         failed: 'Unable to run vulnerability QA review',
-        runAll: 'QA all templates',
-        allWarningTitle: 'Run QA on all templates?',
-        allWarningMessage: 'This will run QA on {count} vulnerability template(s) for the current language. AI-enabled checks, including AI duplicate detection, may consume a large number of tokens.',
-        reviewedCount: 'Reviewed {count} vulnerability template(s) for the selected language.',
+        runAll: 'QA all vulnerabilities',
+        allWarningTitle: 'Run QA on all vulnerabilities?',
+        allWarningMessage: 'This will run QA on {count} vulnerabilities for the current language. AI-enabled checks, including AI duplicate detection, may consume a large number of tokens.',
+        reviewedCount: 'Reviewed {count} vulnerabilities for the selected language.',
         location: {
             database: 'Vulnerability database'
         }
