@@ -21,7 +21,9 @@ vi.mock('@/services/collaborator', () => ({
     getCollabs: vi.fn(),
     createCollab: vi.fn(),
     updateCollab: vi.fn(),
-    deleteCollab: vi.fn()
+    deleteCollab: vi.fn(),
+    bulkRoles: vi.fn(),
+    bulkStatus: vi.fn()
   }
 }))
 
@@ -40,6 +42,11 @@ vi.mock('@/services/role', () => ({
 vi.mock('@/services/utils', () => ({
   default: {
     customFilter: vi.fn(),
+    normalizeString: vi.fn((value) => String(value || '').toLowerCase()),
+    paginationRange: vi.fn((page, rowsPerPage, count) => ({
+      start: count === 0 ? 0 : ((page - 1) * rowsPerPage) + 1,
+      end: rowsPerPage === 0 ? count : Math.min(page * rowsPerPage, count)
+    })),
     strongPassword: vi.fn()
   }
 }))
@@ -91,6 +98,10 @@ function setRefs(wrapper, refs) {
       Object.assign(existingRef, refValue)
     }
   })
+}
+
+function flushPromises() {
+  return new Promise(resolve => setTimeout(resolve, 0))
 }
 
 describe('Collaborators Page', () => {
@@ -948,6 +959,219 @@ describe('Collaborators Page', () => {
 
       expect(wrapper.vm.userStore.isAllowed).toHaveBeenCalledWith('users:update')
       expect(showMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('bulk role and status actions', () => {
+    it('should open bulk roles modal with requested action and reset selected roles', () => {
+      const wrapper = createWrapper()
+      const showMock = vi.fn()
+      wrapper.vm.bulkRoles = ['admin']
+
+      setRefs(wrapper, {
+        bulkRolesModal: { show: showMock }
+      })
+
+      wrapper.vm.openBulkRoles('remove')
+
+      expect(wrapper.vm.bulkAction).toBe('remove')
+      expect(wrapper.vm.bulkRoles).toEqual([])
+      expect(showMock).toHaveBeenCalled()
+    })
+
+    it('should add selected bulk roles and refresh collaborators', async () => {
+      CollabService.bulkRoles.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      wrapper.vm.selected = [{ _id: 'user-1' }, { _id: 'user-2' }]
+      wrapper.vm.bulkAction = 'add'
+      wrapper.vm.bulkRoles = ['reviewer']
+
+      setRefs(wrapper, {
+        bulkRolesModal: { hide: vi.fn() }
+      })
+
+      wrapper.vm.applyBulkRoles()
+      await flushPromises()
+
+      expect(CollabService.bulkRoles).toHaveBeenCalledWith({
+        userIds: ['user-1', 'user-2'],
+        add: ['reviewer'],
+        remove: []
+      })
+      expect(wrapper.vm.selected).toEqual([])
+      expect(CollabService.getCollabs).toHaveBeenCalled()
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'msg.usersUpdatedOk',
+        color: 'positive'
+      }))
+    })
+
+    it('should remove selected bulk roles', async () => {
+      CollabService.bulkRoles.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      wrapper.vm.selected = [{ _id: 'user-1' }]
+      wrapper.vm.bulkAction = 'remove'
+      wrapper.vm.bulkRoles = ['reviewer']
+
+      setRefs(wrapper, {
+        bulkRolesModal: { hide: vi.fn() }
+      })
+
+      wrapper.vm.applyBulkRoles()
+      await flushPromises()
+
+      expect(CollabService.bulkRoles).toHaveBeenCalledWith({
+        userIds: ['user-1'],
+        add: [],
+        remove: ['reviewer']
+      })
+    })
+
+    it('should show error notification when bulk roles update fails', async () => {
+      CollabService.bulkRoles.mockRejectedValue({
+        response: { data: { datas: 'Unknown roles: reviewer' } }
+      })
+
+      const wrapper = createWrapper()
+      wrapper.vm.selected = [{ _id: 'user-1' }]
+      wrapper.vm.bulkAction = 'add'
+      wrapper.vm.bulkRoles = ['reviewer']
+
+      wrapper.vm.applyBulkRoles()
+      await flushPromises()
+
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'Unknown roles: reviewer',
+        color: 'negative'
+      }))
+    })
+
+    it('should enable selected users immediately', async () => {
+      CollabService.bulkStatus.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      wrapper.vm.selected = [{ _id: 'user-1' }, { _id: 'user-2' }]
+
+      wrapper.vm.bulkSetEnabled(true)
+      await flushPromises()
+
+      expect(CollabService.bulkStatus).toHaveBeenCalledWith({
+        userIds: ['user-1', 'user-2'],
+        enabled: true
+      })
+      expect(wrapper.vm.selected).toEqual([])
+      expect(CollabService.getCollabs).toHaveBeenCalled()
+    })
+
+    it('should ask for confirmation before disabling selected users', () => {
+      const wrapper = createWrapper()
+      const showMock = vi.fn()
+      wrapper.vm.selected = [{ _id: 'user-1', username: 'alice' }]
+
+      setRefs(wrapper, {
+        disableModal: { show: showMock }
+      })
+
+      wrapper.vm.bulkSetEnabled(false)
+
+      expect(CollabService.bulkStatus).not.toHaveBeenCalled()
+      expect(wrapper.vm.disableUsers).toEqual([{ _id: 'user-1', username: 'alice' }])
+      expect(showMock).toHaveBeenCalled()
+    })
+
+    it('should enable a single user immediately', async () => {
+      CollabService.bulkStatus.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      const row = { _id: 'user-1', username: 'alice' }
+
+      wrapper.vm.setEnabled(row, true)
+      await flushPromises()
+
+      expect(CollabService.bulkStatus).toHaveBeenCalledWith({
+        userIds: ['user-1'],
+        enabled: true
+      })
+      expect(CollabService.getCollabs).toHaveBeenCalled()
+    })
+
+    it('should ask for confirmation before disabling a single user', () => {
+      const wrapper = createWrapper()
+      const showMock = vi.fn()
+      const row = { _id: 'user-1', username: 'alice' }
+
+      setRefs(wrapper, {
+        disableModal: { show: showMock }
+      })
+
+      wrapper.vm.setEnabled(row, false)
+
+      expect(CollabService.bulkStatus).not.toHaveBeenCalled()
+      expect(wrapper.vm.disableUsers).toEqual([row])
+      expect(showMock).toHaveBeenCalled()
+    })
+
+    it('should disable confirmed users and remove them from selected rows', async () => {
+      CollabService.bulkStatus.mockResolvedValue({})
+      CollabService.getCollabs.mockResolvedValue({ data: { datas: [] } })
+
+      const wrapper = createWrapper()
+      wrapper.vm.disableUsers = [{ _id: 'user-1' }]
+      wrapper.vm.selected = [{ _id: 'user-1' }, { _id: 'user-2' }]
+
+      setRefs(wrapper, {
+        disableModal: { hide: vi.fn() }
+      })
+
+      wrapper.vm.confirmDisableUsers()
+      await flushPromises()
+
+      expect(CollabService.bulkStatus).toHaveBeenCalledWith({
+        userIds: ['user-1'],
+        enabled: false
+      })
+      expect(wrapper.vm.selected).toEqual([{ _id: 'user-2' }])
+      expect(wrapper.vm.disableUsers).toEqual([])
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'msg.usersUpdatedOk',
+        color: 'positive'
+      }))
+    })
+
+    it('should show error notification when status update fails', async () => {
+      CollabService.bulkStatus.mockRejectedValue({
+        response: { data: { datas: 'Cannot disable the last remaining enabled admin' } }
+      })
+
+      const wrapper = createWrapper()
+      wrapper.vm.disableUsers = [{ _id: 'admin-id' }]
+
+      wrapper.vm.confirmDisableUsers()
+      await flushPromises()
+
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'Cannot disable the last remaining enabled admin',
+        color: 'negative'
+      }))
+    })
+
+    it('should build clear confirmation titles for one or many users', () => {
+      const wrapper = createWrapper()
+
+      wrapper.vm.disableUsers = [{ firstname: 'Alice', lastname: 'Admin', username: 'alice' }]
+      expect(wrapper.vm.disableConfirmationTitle()).toBe('btn.disable Alice Admin?')
+
+      wrapper.vm.disableUsers = [
+        { username: 'alice' },
+        { username: 'bob' }
+      ]
+      expect(wrapper.vm.disableConfirmationTitle()).toBe('btn.disable 2 users?')
     })
   })
 

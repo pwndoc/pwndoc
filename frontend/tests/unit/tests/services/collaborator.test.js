@@ -78,4 +78,44 @@ describe('CollaboratorService', () => {
     })
   })
 
+  describe('bulkRoles', () => {
+    it('should call the correct API endpoint with bulk role payload', async () => {
+      const payload = { userIds: ['user-1'], add: ['reviewer'], remove: [] }
+      const mockResponse = { data: { datas: 'Users updated successfully' } }
+      api.put.mockResolvedValue(mockResponse)
+
+      const result = await CollaboratorService.bulkRoles(payload)
+
+      expect(api.put).toHaveBeenCalledWith('users/bulk-roles', payload)
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should handle errors', async () => {
+      const mockError = { response: { status: 422, data: { datas: 'Unknown roles: missing' } } }
+      api.put.mockRejectedValue(mockError)
+
+      await expect(CollaboratorService.bulkRoles({})).rejects.toEqual(mockError)
+    })
+  })
+
+  describe('bulkStatus', () => {
+    it('should call the correct API endpoint with bulk status payload', async () => {
+      const payload = { userIds: ['user-1'], enabled: false }
+      const mockResponse = { data: { datas: 'Users updated successfully' } }
+      api.put.mockResolvedValue(mockResponse)
+
+      const result = await CollaboratorService.bulkStatus(payload)
+
+      expect(api.put).toHaveBeenCalledWith('users/bulk-status', payload)
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should handle errors', async () => {
+      const mockError = { response: { status: 422, data: { datas: 'Required parameters: userIds, enabled' } } }
+      api.put.mockRejectedValue(mockError)
+
+      await expect(CollaboratorService.bulkStatus({})).rejects.toEqual(mockError)
+    })
+  })
+
 })

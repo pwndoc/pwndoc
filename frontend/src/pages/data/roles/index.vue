@@ -27,6 +27,7 @@
                                 :label="$t('createRole')"
                                 color="secondary"
                                 no-caps
+                                data-testid="create-role-button"
                                 @click="cleanCurrentRole(); $refs.createModal.show()"
                                 />
                             </div>
@@ -96,13 +97,13 @@
                         <q-icon v-if="isSystem(props.row)" name="lock" color="grey-7">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('cannotEditSystemRole')}}</q-tooltip>
                         </q-icon>
-                        <q-btn v-if="userStore.isAllowed('roles:read') && (!userStore.isAllowed('roles:update') || isSystem(props.row))" size="sm" flat round color="primary" icon="visibility" @click="viewRole(props.row); $refs.viewModal.show()">
+                        <q-btn v-if="userStore.isAllowed('roles:read') && (!userStore.isAllowed('roles:update') || isSystem(props.row))" :data-testid="`view-role-${props.row.name}-button`" size="sm" flat round color="primary" icon="visibility" @click="viewRole(props.row); $refs.viewModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.view')}}</q-tooltip>
                         </q-btn>
-                        <q-btn v-if="userStore.isAllowed('roles:update') && !isSystem(props.row)" size="sm" flat round color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
+                        <q-btn v-if="userStore.isAllowed('roles:update') && !isSystem(props.row)" :data-testid="`edit-role-${props.row.name}-button`" size="sm" flat round color="primary" icon="fa fa-edit" @click="clone(props.row); $refs.editModal.show()">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.edit')}}</q-tooltip>
                         </q-btn>
-                        <q-btn v-if="userStore.isAllowed('roles:delete') && !isSystem(props.row)" size="sm" flat round color="negative" icon="fa fa-trash" @click="confirmDeleteRole(props.row)">
+                        <q-btn v-if="userStore.isAllowed('roles:delete') && !isSystem(props.row)" :data-testid="`delete-role-${props.row.name}-button`" size="sm" flat round color="negative" icon="fa fa-trash" @click="confirmDeleteRole(props.row)">
                             <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                         </q-btn>
                     </q-td>
@@ -127,13 +128,13 @@
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
             <q-card-section>
-                <q-input dense :label="$t('roleDisplayName')+' *'" :model-value="currentRole.displayName" @update:model-value="updateDisplayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
+                <q-input data-testid="create-role-display-name-input" dense :label="$t('roleDisplayName')+' *'" :model-value="currentRole.displayName" @update:model-value="updateDisplayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
-                <q-input dense :label="$t('roleName')+' *'" :model-value="currentRole.name" @update:model-value="updateRoleName" :error="!!errors.name" :error-message="errors.name" :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
+                <q-input data-testid="create-role-name-input" dense :label="$t('roleName')+' *'" :model-value="currentRole.name" @update:model-value="updateRoleName" :error="!!errors.name" :error-message="errors.name" :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
-                <q-input dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
+                <q-input data-testid="create-role-description-input" dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
             </q-card-section>
             <q-card-section>
                 <q-select dense :label="$t('cloneFrom')" v-model="cloneFrom" :options="roleOptions()" emit-value map-options clearable outlined @update:model-value="applyClone" />
@@ -150,7 +151,7 @@
             />
             <q-card-actions class="role-modal-actions bg-white" align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="createRole()">{{$t('btn.create')}}</q-btn>
+                <q-btn data-testid="create-role-submit-button" color="secondary" unelevated @click="createRole()">{{$t('btn.create')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -163,13 +164,13 @@
                 <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
             </q-bar>
             <q-card-section>
-                <q-input dense :label="$t('roleDisplayName')+' *'" v-model="currentRole.displayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
+                <q-input data-testid="edit-role-display-name-input" dense :label="$t('roleDisplayName')+' *'" v-model="currentRole.displayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
-                <q-input dense :label="$t('roleName')+' *'" v-model="currentRole.name" disable :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
+                <q-input data-testid="edit-role-name-input" dense :label="$t('roleName')+' *'" v-model="currentRole.name" disable :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
             </q-card-section>
             <q-card-section>
-                <q-input dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
+                <q-input data-testid="edit-role-description-input" dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
             </q-card-section>
             <role-permissions-panel
             :permissions-catalog="permissionsCatalog"
@@ -183,7 +184,7 @@
             />
             <q-card-actions class="role-modal-actions bg-white" align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="secondary" unelevated @click="updateRole()">{{$t('btn.update')}}</q-btn>
+                <q-btn data-testid="edit-role-submit-button" color="secondary" unelevated @click="updateRole()">{{$t('btn.update')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -224,7 +225,7 @@
             v-model:expanded-permission-groups="expandedPermissionGroups"
             />
             <q-card-actions class="role-modal-actions bg-white" align="right">
-                <q-btn color="primary" unelevated @click="$refs.viewModal.hide()">{{$t('btn.close')}}</q-btn>
+                <q-btn data-testid="view-role-close-button" color="primary" unelevated @click="$refs.viewModal.hide()">{{$t('btn.close')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -242,7 +243,7 @@
             </q-card-section>
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.deleteModal.hide()">{{$t('btn.cancel')}}</q-btn>
-                <q-btn color="negative" unelevated @click="deleteRole()">{{$t('btn.delete')}}</q-btn>
+                <q-btn data-testid="delete-role-submit-button" color="negative" unelevated @click="deleteRole()">{{$t('btn.delete')}}</q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>

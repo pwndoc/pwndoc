@@ -3,7 +3,7 @@
         <q-card-section class="q-pt-none role-permission-toolbar">
             <div class="row items-center q-col-gutter-sm q-mb-sm">
                 <div class="col-md-6 col-12">
-                    <q-input dense outlined clearable :model-value="search" :placeholder="$t('searchPermissions')" @update:model-value="$emit('update:search', $event)">
+                    <q-input data-testid="role-permission-search-input" dense outlined clearable :model-value="search" :placeholder="$t('searchPermissions')" @update:model-value="$emit('update:search', $event)">
                         <template v-slot:prepend>
                             <q-icon name="search" />
                         </template>
@@ -40,6 +40,7 @@
                         <div v-for="permission in group.permissions" :key="permission.scope" class="col-md-6 col-12">
                             <q-checkbox
                             dense
+                            :data-testid="`role-permission-${permission.scope}-checkbox`"
                             :model-value="isPermissionChecked(permission.scope)"
                             @update:model-value="togglePermission(permission.scope)"
                             :label="permission.scope"
