@@ -19,7 +19,13 @@ vi.mock('@/services/audit', () => ({
 
 vi.mock('@/services/data', () => ({
   default: {
-    getVulnerabilityTypes: vi.fn()
+    getVulnerabilityTypes: vi.fn(),
+  }
+}))
+
+vi.mock('@/services/ai', () => ({
+  default: {
+    getEnabledFields: vi.fn()
   }
 }))
 
@@ -77,6 +83,7 @@ vi.mock('quasar', async () => {
 
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
+import AiService from '@/services/ai'
 import VulnService from '@/services/vulnerability'
 import Utils from '@/services/utils'
 import { Notify, Dialog } from 'quasar'
@@ -137,6 +144,13 @@ describe('Findings Edit Page', () => {
     // Default mock responses
     AuditService.getFinding.mockResolvedValue({ data: { datas: { ...mockFinding } } })
     DataService.getVulnerabilityTypes.mockResolvedValue({ data: { datas: mockVulnTypes } })
+    AiService.getEnabledFields.mockResolvedValue({
+      data: {
+        datas: {
+          fields: []
+        }
+      }
+    })
   })
 
   const createWrapper = (options = {}) => {
@@ -192,6 +206,11 @@ describe('Findings Edit Page', () => {
             isEqual: (a, b) => JSON.stringify(a) === JSON.stringify(b)
           },
           $settings: {
+            ai: {
+              public: {
+                enabled: false
+              }
+            },
             report: {
               enabled: false,
               public: {

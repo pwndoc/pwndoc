@@ -21,6 +21,20 @@
                         {{(commentMode) ? $t('tooltip.hideComments') : $t('tooltip.showComments')}}
                     </q-tooltip> 
                 </q-btn>
+                <q-btn
+                v-if="aiQaEnabled"
+                color="primary"
+                :flat="!qaDrawerOpen"
+                :outline="qaDrawerOpen"
+                :class="{'bg-grey-3': qaDrawerOpen}"
+                icon="auto_awesome"
+                :ripple="false"
+                @click="toggleQaView()"
+                class="q-mr-sm">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+                        {{ $t('tooltip.auditQa') }}
+                    </q-tooltip>
+                </q-btn>
                 <q-separator vertical inset class="q-mr-sm" />
             <q-btn
             v-if="auditParent.type === 'default'"
@@ -89,7 +103,7 @@
     </breadcrumb>
 
     <div class="row" v-if="auditParent.type === 'default'">
-        <q-tabs data-testid="finding-tabs-bar" v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white full-width top-fixed">
+        <q-tabs data-testid="finding-tabs-bar" v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white top-fixed" :style="findingTabsBarStyle">
             <q-tab name="definition" default :label="$t('definition')" />
             <q-tab name="proofs" :label="$t('proofs')"/>
             <q-tab name="details" :label="$t('details')" />
@@ -101,7 +115,7 @@
         </q-tabs>
 
         <div class="row full-width content">
-            <q-tab-panels v-model="selectedTab" animated class="bg-transparent q-mt-md" :class="(commentMode)?'col-8':'col-xl-8 offset-xl-2 col-12'" @before-transition="syncEditors" @transition="updateOrig" >            
+            <q-tab-panels v-model="selectedTab" animated class="bg-transparent q-mt-md" :class="(sidePanelOpen)?'col-8':'col-xl-8 offset-xl-2 col-12'" @before-transition="syncEditors" @transition="updateOrig" >            
                 <q-tab-panel name="definition">
                     <q-card>
                         <q-card-section class="row q-col-gutter-md">
@@ -153,22 +167,26 @@
                             for="descriptionField"
                             class="col-md-12 basic-editor q-pt-none"
                             :class="{'highlighted-border': fieldHighlighted == 'descriptionField' && commentMode}"
-                            label-slot
                             borderless
+                            label-slot
                             stack-label
-                            :rules="($settings.report.public.requiredFields.findingDescription) ? [val => !!finding.description || $t('fieldIsRequired')] : ['']"
-                            lazy-rules="ondemand"
-                            >
+                                :rules="($settings.report.public.requiredFields.findingDescription) ? [val => !!finding.description || $t('fieldIsRequired')] : ['']"
+                                lazy-rules="ondemand"
+                                >
                                 <template v-slot="control">
                                     <basic-editor
                                     ref="basiceditor_description"
                                     noSync
                                     v-model="finding.description"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    :editable="isFieldEditable('description')"
                                     fieldName="descriptionField"
                                     :commentMode="commentMode && canCreateComment"
                                     :focusedComment="focusedComment"
                                     :commentIdList="commentIdList"
+                                    :showAiButton="canGenerateAi('description') && isFieldEditable('description')"
+                                    :aiLoading="isAiFieldLoading('description')"
+                                    :aiLocked="isAiFieldLocked('description')"
+                                    @ai-click="generateFieldDraftAI('description')"
                                     />
                                 </template>
                                 <template v-slot:label>
@@ -193,11 +211,15 @@
                                     ref="basiceditor_observation"
                                     noSync
                                     v-model="finding.observation"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    :editable="isFieldEditable('observation')"
                                     fieldName="observationField"
                                     :commentMode="commentMode && canCreateComment"
                                     :focusedComment="focusedComment"
                                     :commentIdList="commentIdList"
+                                    :showAiButton="canGenerateAi('observation') && isFieldEditable('observation')"
+                                    :aiLoading="isAiFieldLoading('observation')"
+                                    :aiLocked="isAiFieldLocked('observation')"
+                                    @ai-click="generateFieldDraftAI('observation')"
                                     />
                                 </template>
                                 <template v-slot:label>
@@ -219,7 +241,11 @@
                                 :label="$t('references')+' '+$t('one_per_line')"
                                 v-model="finding.references"
                                 :rules="($settings.report.public.requiredFields.findingReferences) ? [val => !!val || $t('fieldIsRequired')] : ['']"
-                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT" />
+                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT || isAiFieldLocked('references')"
+                                :showAiButton="canGenerateAi('references') && isFieldEditable('references')"
+                                :aiLoading="isAiFieldLoading('references')"
+                                @ai-click="generateFieldDraftAI('references')"
+                                />
                                 <q-badge v-if="commentMode && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment('referencesField')">
                                     <q-icon name="add_comment" size="xs" />
                                 </q-badge>
@@ -244,6 +270,11 @@
                             :fieldHighlighted="fieldHighlighted"
                             :createComment="createComment"
                             :canCreateComment="canCreateComment"
+                            :aiEnabled="aiEnabled"
+                            :canGenerateAiForField="canGenerateAi"
+                            :isAiGeneratingField="isAiFieldLoading"
+                            :isAiFieldLocked="isAiFieldLocked"
+                            :generateAiForField="generateCustomFieldDraftAI"
                             />
                         </q-expansion-item>
                     </q-card>
@@ -266,12 +297,15 @@
                                     <basic-editor
                                     ref="basiceditor_poc"
                                     noSync
-                                    v-model="finding.poc"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                    :editable="isFieldEditable('poc')"
                                     fieldName="pocField"
                                     :commentMode="commentMode && canCreateComment"
                                     :focusedComment="focusedComment"
                                     :commentIdList="commentIdList"
+                                    :showAiButton="canGenerateAi('poc') && isFieldEditable('poc')"
+                                    :aiLoading="isAiFieldLoading('poc')"
+                                    :aiLocked="isAiFieldLocked('poc')"
+                                    @ai-click="generateFieldDraftAI('poc')"
                                     />
                                 </template>
                                 <template v-slot:label>
@@ -302,7 +336,7 @@
                                         <basic-editor 
                                         v-model="finding.scope"
                                         :toolbar="['format', 'marks', 'list']"
-                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        :editable="isFieldEditable('scope')"
                                         fieldName="affectedField"
                                         :commentMode="commentMode && canCreateComment"
                                         :focusedComment="focusedComment"
@@ -419,15 +453,21 @@
                                         ref="basiceditor_remediation"
                                         noSync
                                         v-model="finding.remediation"
-                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        :editable="isFieldEditable('remediation')"
                                         fieldName="remediationField"
                                         :commentMode="commentMode && canCreateComment"
                                         :focusedComment="focusedComment"
                                         :commentIdList="commentIdList"
+                                        :showAiButton="canGenerateAi('remediation') && isFieldEditable('remediation')"
+                                        :aiLoading="isAiFieldLoading('remediation')"
+                                        :aiLocked="isAiFieldLocked('remediation')"
+                                        @ai-click="generateFieldDraftAI('remediation')"
                                         />
                                     </template>
                                     <template v-slot:label>
-                                        {{$t('remediation')}} <span v-if="$settings.report.public.requiredFields.findingRemediation" class="text-red">*</span>
+                                        <div id="remediationField">
+                                            {{$t('remediation')}} <span v-if="$settings.report.public.requiredFields.findingRemediation" class="text-red">*</span>
+                                        </div>
                                     </template>
                                 </q-field>
                             </q-card-section>
@@ -454,13 +494,28 @@
                     </comments-list>
                 </q-scroll-area>
             </q-card>
+
+            <q-card v-else-if="qaDrawerOpen" class="col-3 bg-grey-11 sidebar-comments">
+                <q-scroll-area class="scrollarea-comments">
+                    <audit-qa-sidebar
+                    :audit-id="auditParent._id"
+                    :findings="auditParent.findings || []"
+                    :sections="auditParent.sections || []"
+                    @highlight-field="highlightQaField"
+                    />
+                </q-scroll-area>
+            </q-card>
+
+            <q-card v-else-if="aiDrawerOpen" class="col-3 bg-grey-11 sidebar-comments sidebar-ai">
+                <ai-chat-drawer />
+            </q-card>
         </div>
     </div>
 
     <!-- RETEST VIEW -->
 
     <div class="row content-retest" v-if="auditParent.type === 'retest'">
-        <div class="row q-pa-md" :class="(commentMode) ? 'col-8' : (retestSplitView) ? 'col-12' : 'col-xl-8 col-12 offset-xl-2'">
+        <div class="row q-pa-md" :class="(sidePanelOpen) ? 'col-8' : (retestSplitView) ? 'col-12' : 'col-xl-8 col-12 offset-xl-2'">
             <q-splitter
             v-model="retestSplitRatio" 
             :limits="retestSplitLimits" 
@@ -527,7 +582,7 @@
                                         <basic-editor
                                         ref="basiceditor_retestdescription"
                                         v-model="finding.retestDescription"
-                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        :editable="isFieldEditable('retestDescription')"
                                         fieldName="retestDescriptionField"
                                         :commentMode="commentMode && canCreateComment"
                                         :focusedComment="focusedComment"
@@ -712,6 +767,21 @@
                 </comments-list>
             </q-scroll-area>
         </q-card>
+
+        <q-card v-else-if="qaDrawerOpen" class="col-3 bg-grey-11 sidebar-comments">
+            <q-scroll-area class="scrollarea-comments-retest">
+                <audit-qa-sidebar
+                :audit-id="auditParent._id"
+                :findings="auditParent.findings || []"
+                :sections="auditParent.sections || []"
+                @highlight-field="highlightQaField"
+                />
+            </q-scroll-area>
+        </q-card>
+
+        <q-card v-else-if="aiDrawerOpen" class="col-3 bg-grey-11 sidebar-comments sidebar-ai-retest">
+            <ai-chat-drawer />
+        </q-card>
     </div>
 </template>
 
@@ -735,6 +805,8 @@
 .top-fixed {
     position: fixed;
     top: 100px;
+    left: 0;
+    right: 0;
     z-index: 1000;
 }
 
@@ -746,6 +818,14 @@
     height: calc(100vh - 104px)!important;
 }
 
+.sidebar-ai {
+    height: calc(100vh - 152px);
+}
+
+.sidebar-ai-retest {
+    height: calc(100vh - 104px);
+}
+
 .content {
     margin-top: 100px;
 }
@@ -753,4 +833,5 @@
 .content-retest {
     margin-top: 50px;
 }
+
 </style>

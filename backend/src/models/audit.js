@@ -97,12 +97,51 @@ var AuditSchema = new Schema({
     approvals:          [{type: Schema.Types.ObjectId, ref: 'User'}],
     type:               {type: String, enum: ['default', 'multi', 'retest'], default: 'default'},
     parentId:           {type: Schema.Types.ObjectId, ref: 'Audit'},
-    comments:           [Comment]
+    comments:           [Comment],
+    qaReport: {
+        type: new Schema({
+            fingerprint:    String,
+            ranAt:          Date,
+            summary:        String,
+            issues:         [{
+                _id: false,
+                severity:   String,
+                category:   String,
+                title:      String,
+                message:    String,
+                location:   String,
+                source:     String
+            }],
+            aiAnalysis:     Boolean,
+            provider:       String,
+            model:          String,
+            counts: {
+                total:      Number,
+                error:      Number,
+                warning:    Number,
+                info:       Number
+            }
+        }, { _id: false }),
+        default: undefined
+    }
 }, {timestamps: true});
 
 /*
 *** Statics ***
 */
+
+// Replace the single stored QA report for an audit (latest only).
+AuditSchema.statics.saveLatestQaReport = (auditId, qaReport) => {
+    return new Promise((resolve, reject) => {
+        Audit.findByIdAndUpdate(auditId, {
+            $set: { qaReport: qaReport },
+            $unset: { qaReports: '' }
+        }, { new: true, runValidators: true })
+        .exec()
+        .then((row) => resolve(row))
+        .catch((err) => reject(err));
+    });
+};
 
 // Get all audits (admin)
 AuditSchema.statics.getAudits = (isAdmin, userId, filters) => {

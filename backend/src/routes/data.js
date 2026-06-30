@@ -1,5 +1,3 @@
-const { isArray } = require('lodash');
-
 module.exports = function(app) {
 
     var Response = require('../lib/httpResponse.js');
@@ -11,8 +9,254 @@ module.exports = function(app) {
     var VulnerabilityCategory = require('mongoose').model('VulnerabilityCategory');
     var CustomSection = require('mongoose').model('CustomSection');
     var CustomField = require('mongoose').model('CustomField');
+    var AiPrompt = require('mongoose').model('AiPrompt');
+    var Settings = require('mongoose').model('Settings');
+    const {
+        normalizePromptValue,
+        toPromptCompositeKey,
+        buildAiFieldCatalog,
+        buildPromptMappings
+    } = require('../lib/ai-prompts');
+    const {
+        normalizeRedactionGuidelines,
+        validateRedactionGuidelinesPayload,
+        buildRedactionGuidelinesSettingsUpdate
+    } = require('../lib/ai-redaction-guidelines');
+    const {
+        normalizeQaInstructions,
+        validateQaInstructionsPayload,
+        buildQaInstructionsSettingsUpdate
+    } = require('../lib/ai-qa-instructions');
+    const {
+        normalizeQaChecks,
+        validateQaChecksPayload,
+        buildQaChecksSettingsUpdate
+    } = require('../lib/ai-qa-checks');
 
     var _ = require('lodash')
+
+    const getAiIntegrationAccess = (roles) => ({
+        readPrompts: acl.isAllowed(roles, 'ai:prompts:read'),
+        readGuidelines: acl.isAllowed(roles, 'ai:redaction-guidelines:read'),
+        readQa: acl.isAllowed(roles, 'ai:qa-instructions:read'),
+        updatePrompts: acl.isAllowed(roles, 'ai:prompts:update'),
+        updateGuidelines: acl.isAllowed(roles, 'ai:redaction-guidelines:update'),
+        updateQa: acl.isAllowed(roles, 'ai:qa-instructions:update')
+    });
+
+    const canReadAiIntegration = (access) =>
+        access.readPrompts || access.readGuidelines || access.readQa;
+
+    const getAiIntegrationAdminPayload = async (settings, access = null) => {
+        const payload = {
+            aiEnabled: settings?.ai?.public?.enabled !== false
+        };
+
+        if (!access || access.readPrompts) {
+            const customFields = await CustomField.getAll();
+            const fieldCatalog = buildAiFieldCatalog(customFields);
+            const promptRows = await AiPrompt.find({}).select('entityType fieldKey fieldLabel outputType enabled prompt customFieldId').lean();
+            payload.promptMappings = buildPromptMappings(fieldCatalog, promptRows);
+        }
+
+        if (!access || access.readGuidelines)
+            payload.redactionGuidelines = normalizeRedactionGuidelines(settings?.ai?.public?.redactionGuidelines || {});
+
+        if (!access || access.readQa) {
+            payload.qaInstructions = normalizeQaInstructions(settings?.ai?.public?.qaInstructions || {});
+            payload.qaChecks = normalizeQaChecks(settings?.ai?.public?.qaChecks || {});
+        }
+
+        return payload;
+    };
+
+    const handleGetAiIntegration = async (req, res) => {
+        try {
+            const access = getAiIntegrationAccess(req.decodedToken.roles);
+            if (!canReadAiIntegration(access))
+                return Response.Forbidden(res, 'Insufficient privileges');
+
+            const settings = await Settings.getAll();
+            const payload = await getAiIntegrationAdminPayload(settings, access);
+            Response.Ok(res, payload);
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    };
+
+    const updateAiIntegration = async (req, res) => {
+        try {
+            const access = getAiIntegrationAccess(req.decodedToken.roles);
+            const hasPromptMappings = Array.isArray(req.body.promptMappings);
+            const hasRedactionGuidelines = req.body.redactionGuidelines !== undefined;
+            const hasQaInstructions = req.body.qaInstructions !== undefined;
+            const hasQaChecks = req.body.qaChecks !== undefined;
+
+            if (!hasPromptMappings && !hasRedactionGuidelines && !hasQaInstructions && !hasQaChecks) {
+                Response.BadParameters(res, 'Missing promptMappings, redactionGuidelines, qaInstructions, or qaChecks payload');
+                return;
+            }
+
+            if (hasPromptMappings && !access.updatePrompts)
+                return Response.Forbidden(res, 'Insufficient privileges');
+            if (hasRedactionGuidelines && !access.updateGuidelines)
+                return Response.Forbidden(res, 'Insufficient privileges');
+            if ((hasQaInstructions || hasQaChecks) && !access.updateQa)
+                return Response.Forbidden(res, 'Insufficient privileges');
+
+            let currentSettings = await Settings.getAll() || {};
+
+            if (hasPromptMappings) {
+                const customFields = await CustomField.getAll();
+                const fieldCatalog = buildAiFieldCatalog(customFields);
+                const fieldByCompositeKey = new Map(
+                    fieldCatalog.map((field) => [toPromptCompositeKey(field.entityType, field.fieldKey), field])
+                );
+                const seenCompositeKeys = new Set();
+                const operations = [];
+
+                for (const mapping of req.body.promptMappings) {
+                    if (!mapping || typeof mapping !== 'object') {
+                        Response.BadParameters(res, 'Invalid promptMappings payload');
+                        return;
+                    }
+
+                    const entityType = String(mapping.entityType || '').trim();
+                    const fieldKey = String(mapping.fieldKey || '').trim();
+                    const compositeKey = toPromptCompositeKey(entityType, fieldKey);
+                    if (!entityType || !fieldKey || !fieldByCompositeKey.has(compositeKey)) {
+                        Response.BadParameters(res, `Invalid prompt mapping: ${entityType || '(entityType missing)'} / ${fieldKey || '(fieldKey missing)'}`);
+                        return;
+                    }
+                    if (seenCompositeKeys.has(compositeKey))
+                        continue;
+
+                    seenCompositeKeys.add(compositeKey);
+                    const fieldMeta = fieldByCompositeKey.get(compositeKey);
+                    const prompt = normalizePromptValue(mapping.prompt);
+                    let enabled = true;
+                    if (Object.prototype.hasOwnProperty.call(mapping, 'enabled')) {
+                        if (typeof mapping.enabled !== 'boolean') {
+                            Response.BadParameters(res, `Invalid prompt enabled flag for: ${fieldMeta.entityType} / ${fieldMeta.fieldKey}`);
+                            return;
+                        }
+                        enabled = mapping.enabled;
+                    }
+                    operations.push({
+                        updateOne: {
+                            filter: {entityType: fieldMeta.entityType, fieldKey: fieldMeta.fieldKey},
+                            update: {
+                                $set: {
+                                    entityType: fieldMeta.entityType,
+                                    fieldKey: fieldMeta.fieldKey,
+                                    fieldLabel: fieldMeta.fieldLabel,
+                                    outputType: fieldMeta.outputType,
+                                    customFieldId: fieldMeta.customFieldId || null,
+                                    enabled: enabled,
+                                    prompt: prompt
+                                }
+                            },
+                            upsert: true
+                        }
+                    });
+                }
+
+                if (operations.length > 0)
+                    await AiPrompt.bulkWrite(operations);
+
+                const validCompositeKeys = new Set(Array.from(fieldByCompositeKey.keys()));
+                const existingRows = await AiPrompt.find({}).select('_id entityType fieldKey').lean();
+                const staleIds = existingRows
+                .filter((row) => !validCompositeKeys.has(toPromptCompositeKey(row.entityType, row.fieldKey)))
+                .map((row) => row._id);
+                if (staleIds.length > 0)
+                    await AiPrompt.deleteMany({_id: {$in: staleIds}});
+            }
+
+            if (hasRedactionGuidelines) {
+                const validation = validateRedactionGuidelinesPayload(req.body.redactionGuidelines);
+                if (!validation.valid) {
+                    Response.BadParameters(res, validation.message);
+                    return;
+                }
+
+                currentSettings = await Settings.findOneAndUpdate({}, {
+                    $set: buildRedactionGuidelinesSettingsUpdate(req.body.redactionGuidelines)
+                }, {
+                    new: true,
+                    runValidators: true,
+                    upsert: true
+                });
+            }
+
+            if (hasQaInstructions) {
+                const validation = validateQaInstructionsPayload(req.body.qaInstructions);
+                if (!validation.valid) {
+                    Response.BadParameters(res, validation.message);
+                    return;
+                }
+
+                currentSettings = await Settings.findOneAndUpdate({}, {
+                    $set: buildQaInstructionsSettingsUpdate(req.body.qaInstructions)
+                }, {
+                    new: true,
+                    runValidators: true,
+                    upsert: true
+                });
+            }
+
+            if (hasQaChecks) {
+                const validation = validateQaChecksPayload(req.body.qaChecks);
+                if (!validation.valid) {
+                    Response.BadParameters(res, validation.message);
+                    return;
+                }
+
+                currentSettings = await Settings.findOneAndUpdate({}, {
+                    $set: buildQaChecksSettingsUpdate(req.body.qaChecks)
+                }, {
+                    new: true,
+                    runValidators: true,
+                    upsert: true
+                });
+            }
+
+            if (!currentSettings)
+                currentSettings = await Settings.getAll() || {};
+
+            const payload = await getAiIntegrationAdminPayload(currentSettings, access);
+            Response.Ok(res, payload);
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    };
+
+/* ===== ROLES ===== */
+
+    // Get Roles list
+    app.get("/api/data/roles", acl.hasPermission('roles:read'), function(req, res) {
+        try {
+            var result = Object.keys(acl.roles)
+            Response.Ok(res, result)
+        }
+        catch (error) {
+            Response.Internal(res, error)
+        }
+    });
+
+/* ===== AI INTEGRATION ===== */
+
+    // Get AI integration configuration (admin only)
+    app.get("/api/data/ai-integration", acl.hasPermission('validtoken'), handleGetAiIntegration);
+
+    // Backward-compatible alias
+    app.get("/api/data/ai-prompts", acl.hasPermission('validtoken'), handleGetAiIntegration);
+
+    // Update AI integration configuration (admin only)
+    app.put("/api/data/ai-integration", acl.hasPermission('validtoken'), updateAiIntegration);
+
+    // Backward-compatible alias
+    app.put("/api/data/ai-prompts", acl.hasPermission('validtoken'), updateAiIntegration);
 
 /* ===== LANGUAGES ===== */
 
@@ -415,7 +659,7 @@ module.exports = function(app) {
                 Response.BadParameters(res, 'Missing required parameters: _id, label, display')
                 return
             }
-            if ((!utils.validFilename(customField.label || !utils.validFilename(customField.fieldType))) && customField.fieldType !== 'space') {
+            if ((!utils.validFilename(customField.label) || (customField.fieldType && !utils.validFilename(customField.fieldType))) && customField.fieldType !== 'space') {
                 Response.BadParameters(res, 'label and fieldType value must match /^[\p{Letter}\p{Mark}0-9 \[\]\'()_-]+$/iu')
                 return
             }
@@ -430,7 +674,7 @@ module.exports = function(app) {
             if (typeof e.inline === 'boolean') field.inline = e.inline
             if (!_.isNil(e.description)) field.description = e.description
             if (!_.isNil(e.text)) field.text = e.text
-            if (isArray(e.options)) field.options = e.options
+            if (Array.isArray(e.options)) field.options = e.options
             if (typeof e.position === 'number') field.position = e.position
             customFields.push(field)
         })

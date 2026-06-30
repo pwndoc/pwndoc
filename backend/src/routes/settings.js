@@ -4,10 +4,11 @@ module.exports = function(app) {
     var Settings = require('mongoose').model('Settings');
     var { invalidateLanguageToolConfigCache } = require('../lib/languagetool-config');
     var { testLanguageToolConnection } = require('../lib/languagetool-test');
+    var { sanitizeSettingsForClient, mergeSettingsSecrets } = require('../lib/settings-secrets');
 
     app.get("/api/settings", acl.hasPermission('settings:read'), function(req, res) {
         Settings.getAll()
-        .then(settings => Response.Ok(res, settings))
+        .then(settings => Response.Ok(res, sanitizeSettingsForClient(settings)))
         .catch(err => Response.Internal(res, err));
     });
 
@@ -18,6 +19,9 @@ module.exports = function(app) {
     });
 
     app.put("/api/settings", acl.hasPermission('settings:update'), async function(req, res) {
+        const existing = await Settings.getAll();
+        req.body = mergeSettingsSecrets(req.body, existing);
+
         const spellcheckEnabled = req.body?.report?.public?.enableSpellCheck;
         const ltUrl = req.body?.report?.private?.languageToolUrl;
 
@@ -30,7 +34,6 @@ module.exports = function(app) {
             }
         } else if (req.body?.report?.private) {
             // Spellcheck disabled: restore existing LT values from DB so they are not overwritten
-            const existing = await Settings.getAll();
             const existingPrivate = existing?.report?.private;
             if (existingPrivate) {
                 req.body.report.private.languageToolUrl = existingPrivate.languageToolUrl ?? '';
@@ -58,7 +61,7 @@ module.exports = function(app) {
 
     app.get("/api/settings/export", acl.hasPermission("settings:read"), function(req, res) {
         Settings.getAll()
-        .then(settings => Response.SendFile(res, "app-settings.json", settings))
+        .then(settings => Response.SendFile(res, "app-settings.json", sanitizeSettingsForClient(settings)))
         .catch(err => Response.Internal(res, err))
     });
 }

@@ -93,6 +93,13 @@ import BackupService from '@/services/backup'
 import { Notify, Dialog } from 'quasar'
 
 const mockSettings = {
+  ai: {
+    private: {},
+    public: {
+      enabled: true,
+      defaultProvider: 'openai'
+    }
+  },
   report: {
     private: {
       imageBorder: false,
@@ -147,12 +154,20 @@ const mockSettings = {
 
 const mockSettingsWithLt = {
   ...JSON.parse(JSON.stringify({
+    ai: {
+      private: {},
+      public: {
+        enabled: true,
+        defaultProvider: 'openai'
+      }
+    },
     report: {
       private: {
         imageBorder: false,
         imageBorderColor: '#000000',
         languageToolUrl: 'http://lt:8020',
-        languageToolApiKey: 'original-key',
+        languageToolApiKey: '',
+        languageToolApiKeyConfigured: true,
         languageToolUsername: ''
       },
       public: {
@@ -493,7 +508,7 @@ describe('Settings Page', () => {
 
         expect(SpellcheckService.testConnection).toHaveBeenCalledWith(
           'http://new-lt:8020',
-          'original-key',
+          '',
           ''
         )
         expect(SettingsService.updateSettings).toHaveBeenCalled()
@@ -527,7 +542,7 @@ describe('Settings Page', () => {
         await wrapper.vm.$nextTick()
         await wrapper.vm.$nextTick()
 
-        wrapper.vm.settings.report.private.languageToolApiKey = 'bad-key'
+        wrapper.vm.languageToolApiKeyInput = 'bad-key'
 
         await wrapper.vm.updateSettings()
 
@@ -538,6 +553,18 @@ describe('Settings Page', () => {
       })
 
       it('should block save when requiresApiKey is true but no key provided', async () => {
+        SettingsService.getSettings.mockResolvedValue({
+          data: { datas: JSON.parse(JSON.stringify({
+            ...mockSettingsWithLt,
+            report: {
+              ...mockSettingsWithLt.report,
+              private: {
+                ...mockSettingsWithLt.report.private,
+                languageToolApiKeyConfigured: false
+              }
+            }
+          })) }
+        })
         SpellcheckService.testConnection.mockResolvedValue({
           data: { datas: { reachable: true, supportsCustomRules: true, authValid: false, requiresApiKey: true } }
         })
@@ -546,7 +573,8 @@ describe('Settings Page', () => {
         await wrapper.vm.$nextTick()
         await wrapper.vm.$nextTick()
 
-        wrapper.vm.settings.report.private.languageToolApiKey = ''
+        wrapper.vm.languageToolApiKeyInput = ''
+        wrapper.vm.settings.report.private.languageToolUrl = 'http://new-lt:8020'
 
         await wrapper.vm.updateSettings()
 

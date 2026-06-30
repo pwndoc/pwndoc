@@ -43,6 +43,39 @@ module.exports = function(request, app) {
             permissions: expect.arrayContaining([
               expect.objectContaining({scope: 'roles:read'})
             ])
+          }),
+          expect.objectContaining({
+            key: 'audits',
+            permissions: expect.arrayContaining([
+              expect.objectContaining({scope: 'audits:ai-generate', core: true}),
+              expect.objectContaining({scope: 'audits:ai-qa', core: true})
+            ])
+          }),
+          expect.objectContaining({
+            key: 'vulnerabilities',
+            permissions: expect.arrayContaining([
+              expect.objectContaining({scope: 'vulnerabilities:ai-qa', core: false}),
+              expect.objectContaining({scope: 'vulnerabilities:ai-qa-all', core: false}),
+              expect.objectContaining({scope: 'vulnerabilities:ai-generate', core: false})
+            ])
+          }),
+          expect.objectContaining({
+            key: 'settings',
+            permissions: expect.arrayContaining([
+              expect.objectContaining({scope: 'ai-settings:read'}),
+              expect.objectContaining({scope: 'ai-settings:update'})
+            ])
+          }),
+          expect.objectContaining({
+            key: 'ai',
+            permissions: expect.arrayContaining([
+              expect.objectContaining({scope: 'ai:prompts:read'}),
+              expect.objectContaining({scope: 'ai:prompts:update'}),
+              expect.objectContaining({scope: 'ai:redaction-guidelines:read', core: true}),
+              expect.objectContaining({scope: 'ai:redaction-guidelines:update'}),
+              expect.objectContaining({scope: 'ai:qa-instructions:read'}),
+              expect.objectContaining({scope: 'ai:qa-instructions:update'})
+            ])
           })
         ]))
       })

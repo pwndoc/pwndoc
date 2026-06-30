@@ -1,6 +1,23 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createTestWrapper } from '../../test-utils'
-import CustomFields from '@/components/custom-fields.vue'
+
+vi.mock('src/stores/user', () => ({
+  useUserStore: vi.fn(() => ({
+    isAllowed: vi.fn(() => true)
+  }))
+}))
+
+vi.mock('boot/axios', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
+  }
+}))
+
+vi.mock('@/boot/i18n', () => ({
+  $t: (key) => key
+}))
 
 // Stub the BasicEditor component to avoid complex dependency loading
 vi.mock('components/editor/Editor.vue', () => ({
@@ -10,6 +27,9 @@ vi.mock('components/editor/Editor.vue', () => ({
     props: ['modelValue', 'diff', 'editable', 'noSync', 'fieldName', 'commentMode', 'focusedComment', 'commentIdList']
   }
 }))
+
+import { createTestWrapper } from '../../test-utils'
+import CustomFields from '@/components/custom-fields.vue'
 
 describe('CustomFields Component', () => {
   const makeField = (overrides = {}) => ({
@@ -494,6 +514,53 @@ describe('CustomFields Component', () => {
       const wrapper = createWrapper({ props: { modelValue: [field], locale: 'en-US' } })
       vi.spyOn(wrapper.vm, 'validate').mockImplementation(() => {})
       expect(wrapper.vm.requiredFieldsEmpty()).toBe(false)
+    })
+  })
+
+  describe('syncEditors', () => {
+    it('should call updateHTML on registered text editors', () => {
+      const wrapper = createWrapper()
+      const updateHTML = vi.fn()
+      wrapper.vm.editorRefs.cf1 = { updateHTML }
+
+      wrapper.vm.syncEditors()
+
+      expect(updateHTML).toHaveBeenCalledOnce()
+    })
+  })
+
+  describe('showAiButton', () => {
+    const aiField = makeField({ customField: { _id: 'cf-ai', fieldType: 'input' } })
+
+    const createAiWrapper = (overrides = {}) => createWrapper({
+      props: {
+        modelValue: [aiField],
+        aiEnabled: true,
+        canGenerateAiForField: () => true,
+        ...overrides.props
+      }
+    })
+
+    it('should hide the AI button for select fields', () => {
+      const field = makeField({ customField: { _id: 'cf-select', fieldType: 'select' } })
+      const wrapper = createAiWrapper({ props: { modelValue: [field] } })
+      expect(wrapper.vm.showAiButton(field)).toBe(false)
+    })
+
+    it('should hide the AI button for select-multiple fields', () => {
+      const field = makeField({ customField: { _id: 'cf-multi', fieldType: 'select-multiple', text: [] } })
+      const wrapper = createAiWrapper({ props: { modelValue: [field] } })
+      expect(wrapper.vm.showAiButton(field)).toBe(false)
+    })
+
+    it('should hide the AI button when the field is readonly', () => {
+      const wrapper = createAiWrapper({ props: { readonly: true } })
+      expect(wrapper.vm.showAiButton(aiField)).toBe(false)
+    })
+
+    it('should show the AI button for editable supported fields', () => {
+      const wrapper = createAiWrapper()
+      expect(wrapper.vm.showAiButton(aiField)).toBe(true)
     })
   })
 })

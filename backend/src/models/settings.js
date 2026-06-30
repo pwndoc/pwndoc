@@ -2,6 +2,7 @@ var mongoose = require('mongoose');//.set('debug', true);
 var Schema = mongoose.Schema;
 var _ = require('lodash');
 var Utils = require('../lib/utils.js');
+const { AI_PROVIDERS, AI_DEFAULT_PROVIDER } = require('../lib/ai-prompts');
 
 // https://stackoverflow.com/questions/25822289/what-is-the-best-way-to-store-color-hex-values-in-mongodb-mongoose
 const colorValidator = (v) => (/^#([0-9a-f]{3}){1,2}$/i).test(v);
@@ -63,6 +64,63 @@ const SettingSchema = new Schema({
         private: {
             removeApprovalsUponUpdate: { type: Boolean, default: false }
         }
+    },
+    ai: {
+        public: {
+            enabled: {type: Boolean, default: true},
+            defaultProvider: {type: String, enum: AI_PROVIDERS, default: AI_DEFAULT_PROVIDER},
+            redactionGuidelines: {
+                delivery: {type: String, enum: ['inline', 'bedrock_prompt_cache'], default: 'inline'},
+                content: {type: String, default: ''},
+                bedrockPromptCache: {
+                    cacheReference: {type: String, default: ''},
+                    region: {type: String, default: ''}
+                }
+            },
+            qaInstructions: {
+                delivery: {type: String, enum: ['inline', 'bedrock_prompt_cache'], default: 'inline'},
+                content: {type: String, default: ''},
+                bedrockPromptCache: {
+                    cacheReference: {type: String, default: ''},
+                    region: {type: String, default: ''}
+                }
+            },
+            qaChecks: {
+                completeness: {type: Boolean, default: true},
+                references: {type: Boolean, default: true},
+                imageCaptions: {type: Boolean, default: true},
+                duplicates: {type: Boolean, default: true},
+                aiDuplicates: {type: Boolean, default: true},
+                redaction: {type: Boolean, default: true},
+                customer: {type: Boolean, default: true},
+                instructions: {type: Boolean, default: true}
+            }
+        },
+        private: {
+            openaiApiKey: {type: String, default: ''},
+            openaiBaseUrl: {type: String, default: 'https://api.openai.com/v1'},
+            openaiModel: {type: String, default: 'gpt-5.4-mini'},
+            anthropicApiKey: {type: String, default: ''},
+            anthropicBaseUrl: {type: String, default: 'https://api.anthropic.com/v1'},
+            anthropicModel: {type: String, default: 'claude-opus-4.8'},
+            anthropicVersion: {type: String, default: '2023-06-01'},
+            deepseekApiKey: {type: String, default: ''},
+            deepseekBaseUrl: {type: String, default: 'https://api.deepseek.com/v1'},
+            deepseekModel: {type: String, default: 'deepseek-v4-flash'},
+            ollamaApiKey: {type: String, default: ''},
+            ollamaBaseUrl: {type: String, default: 'http://localhost:11434/v1'},
+            ollamaModel: {type: String, default: 'llama3.1'},
+            bedrockApiKey: {type: String, default: ''},
+            bedrockAccessKeyId: {type: String, default: ''},
+            bedrockSecretAccessKey: {type: String, default: ''},
+            bedrockSessionToken: {type: String, default: ''},
+            bedrockRegion: {type: String, default: 'us-east-1'},
+            bedrockModel: {type: String, default: 'global.anthropic.claude-opus-4-8'}
+        }
+    },
+    vulnerabilityQaReports: {
+        type: Schema.Types.Mixed,
+        default: undefined
     }
 }, {strict: true});
 
@@ -83,7 +141,7 @@ SettingSchema.statics.getAll = () => {
 SettingSchema.statics.getPublic = () => {
     return new Promise((resolve, reject) => {
         const query = Settings.findOne({});
-        query.select('-_id report.enabled report.public reviews.enabled reviews.public');
+        query.select('-_id report.enabled report.public reviews.enabled reviews.public ai.public.enabled');
         query.exec()
             .then(settings => resolve(settings))
             .catch(err => reject(err));
@@ -97,6 +155,23 @@ SettingSchema.statics.update = (settings) => {
         query.exec()
             .then(settings => resolve(settings))
             .catch(err => reject(err));
+    });
+};
+
+SettingSchema.statics.saveVulnerabilityQaReportForLocale = (locale, qaReport) => {
+    return new Promise((resolve, reject) => {
+        const localeKey = String(locale || '').trim();
+        Settings.findOneAndUpdate({}, {
+            $set: {
+                [`vulnerabilityQaReports.${localeKey}`]: {
+                    ...qaReport,
+                    locale: localeKey
+                }
+            }
+        }, { new: true, runValidators: true })
+        .exec()
+        .then((settings) => resolve(settings))
+        .catch((err) => reject(err));
     });
 };
 
@@ -119,6 +194,16 @@ SettingSchema.statics.ensureInitialized = async function() {
             _.set(liveSettings, path, undefined)
         }
     })
+
+    if (!AI_PROVIDERS.includes(liveSettings?.ai?.public?.defaultProvider)) {
+        needUpdate = true
+        _.set(liveSettings, 'ai.public.defaultProvider', AI_DEFAULT_PROVIDER)
+    }
+
+    if (typeof liveSettings?.ai?.public?.enabled !== 'boolean') {
+        needUpdate = true
+        _.set(liveSettings, 'ai.public.enabled', true)
+    }
 
     if (needUpdate) {
         console.log("Removing unused fields from Settings")

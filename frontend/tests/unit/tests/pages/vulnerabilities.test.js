@@ -5,11 +5,17 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
 
 // Must mock stores/user before component import - axios.js calls useUserStore() at module scope
-const { mockUserStore } = vi.hoisted(() => ({
+const { mockUserStore, mockApi } = vi.hoisted(() => ({
   mockUserStore: {
     id: '1',
     roles: '',
     isAllowed: vi.fn(() => true)
+  },
+  mockApi: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn()
   }
 }))
 vi.mock('src/stores/user', () => ({
@@ -18,7 +24,14 @@ vi.mock('src/stores/user', () => ({
 vi.mock('stores/user', () => ({
   useUserStore: vi.fn(() => mockUserStore)
 }))
-vi.mock('src/boot/axios.js', () => ({ default: {} }))
+vi.mock('src/boot/axios.js', () => ({
+  default: {},
+  api: mockApi
+}))
+vi.mock('boot/axios', () => ({
+  default: {},
+  api: mockApi
+}))
 
 // Mock services used by the page
 vi.mock('@/services/vulnerability', () => ({
@@ -181,6 +194,7 @@ const mockVulnerabilities = [
 ]
 
 function setupDefaultMocks() {
+  mockApi.get.mockResolvedValue({ data: { datas: { fields: [] } } })
   DataService.getLanguages.mockResolvedValue({ data: { datas: mockLanguages } })
   DataService.getVulnerabilityTypes.mockResolvedValue({ data: { datas: mockVulnTypes } })
   DataService.getVulnerabilityCategories.mockResolvedValue({ data: { datas: mockCategories } })
@@ -197,6 +211,8 @@ function setRefs(wrapper, refs) {
   Object.entries(refs).forEach(([name, refValue]) => {
     if (wrapper.vm.$refs[name]) {
       Object.assign(wrapper.vm.$refs[name], refValue)
+    } else {
+      wrapper.vm.$refs[name] = refValue
     }
   })
 }
@@ -450,7 +466,11 @@ describe('Vulnerabilities Page', () => {
       })
       await flushPromises()
 
-      expect(wrapper.findAll('[data-testid="draft-recovery-status-stub"]')).toHaveLength(3)
+      for (const modal of ['create', 'edit', 'updates']) {
+        wrapper.vm.activeModal = modal
+        await wrapper.vm.$nextTick()
+        expect(wrapper.find('[data-testid="draft-recovery-status-stub"]').exists()).toBe(true)
+      }
     })
 
     it('should request vulnerability drafts on mount', async () => {
@@ -687,6 +707,8 @@ describe('Vulnerabilities Page', () => {
       wrapper.vm.currentVulnerability.details = [
         { locale: 'en', title: 'New Vuln', customFields: [] }
       ]
+      wrapper.vm.activeModal = 'create'
+      await wrapper.vm.$nextTick()
       setRefs(wrapper, { createModal: { hide: vi.fn() } })
       wrapper.vm.createVulnerability()
       await flushPromises()
@@ -762,6 +784,8 @@ describe('Vulnerabilities Page', () => {
       wrapper.vm.currentVulnerability.details = [
         { locale: 'en', title: 'Updated Vuln', customFields: [] }
       ]
+      wrapper.vm.activeModal = 'edit'
+      await wrapper.vm.$nextTick()
       setRefs(wrapper, {
         editModal: { hide: vi.fn() },
         updatesModal: { hide: vi.fn() }

@@ -30,14 +30,18 @@
                         /> 
                         <basic-editor 
                         v-else
-                        ref="basiceditor_custom" 
+                        :ref="(el) => registerEditorRef(field.customField._id, el)"
                         v-model="field.text" 
                         :noSync="noSyncEditor"
-                        :editable="!readonly"
+                        :editable="isFieldEditable(field)"
                         :fieldName="`field-${field.customField.label}`"
                         :commentMode="commentMode && canCreateComment"
                         :focusedComment="focusedComment"
                         :commentIdList="commentIdList"
+                        :showAiButton="showAiButton(field)"
+                        :aiLoading="isAiLoading(field)"
+                        :aiLocked="isFieldLocked(field)"
+                        @ai-click="triggerGenerateAi(field)"
                         /> 
                     </template>
 
@@ -62,6 +66,21 @@
                 lazy-rules="ondemand"
                 outlined
                 >
+                    <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        flat
+                        size="sm"
+                        dense
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
+                        @click.stop="triggerGenerateAi(field)"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+                            <q-icon name="auto_awesome" />
+                        </q-btn>
+                    </template>
                     <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
@@ -87,6 +106,19 @@
                 outlined
                 >
                     <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        flat
+                        size="sm"
+                        dense
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
+                        @click.stop="triggerGenerateAi(field)"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+                            <q-icon name="auto_awesome" />
+                        </q-btn>
                         <q-icon name="event" class="cursor-pointer">
                         <q-popup-proxy ref="qDateProxyField" transition-show="scale" transition-hide="scale">
                             <q-date :readonly="readonly" first-day-of-week="1" mask="YYYY-MM-DD" v-model="field.text" @update:model-value="$refs.qDateProxyField.forEach(e => e.hide())" />
@@ -124,6 +156,21 @@
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
+                     <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        flat
+                        size="sm"
+                        dense
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
+                        @click.stop="triggerGenerateAi(field)"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+                            <q-icon name="auto_awesome" />
+                        </q-btn>
+                    </template>
                      <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
@@ -157,6 +204,21 @@
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
+                     <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        flat
+                        size="sm"
+                        dense
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
+                        @click.stop="triggerGenerateAi(field)"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+                            <q-icon name="auto_awesome" />
+                        </q-btn>
+                    </template>
                      <template v-slot:label>
                         {{field.customField.label}} <span v-if="field.customField.required" class="text-red">*</span>
                     </template>
@@ -194,6 +256,21 @@
                 :rules="(field.customField.required)? [val => !!val || 'Field is required', val => val && val.length > 0 || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
+                    <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        flat
+                        size="sm"
+                        dense
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
+                        @click.stop="triggerGenerateAi(field)"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+                            <q-icon name="auto_awesome" />
+                        </q-btn>
+                    </template>
                     <template v-slot:control>
                         <q-option-group
                         type="checkbox"
@@ -228,6 +305,21 @@
                 :rules="(field.customField.required)? [val => !!val || 'Field is required']: []"
                 lazy-rules="ondemand"
                 >
+                    <template v-slot:append>
+                        <q-btn
+                        v-if="showAiButton(field)"
+                        class="all-pointer-events"
+                        flat
+                        size="sm"
+                        dense
+                        :loading="isAiLoading(field)"
+                        :disable="readonly || isFieldLocked(field)"
+                        @click.stop="triggerGenerateAi(field)"
+                        >
+                            <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+                            <q-icon name="auto_awesome" />
+                        </q-btn>
+                    </template>
                     <template v-slot:control>
                         <q-option-group
                         type="radio"
@@ -252,6 +344,7 @@
 
 <script>
 import BasicEditor from 'components/editor/Editor.vue';
+import AiFieldHelper from '@/services/ai-field-helper';
 
 export default {
     name: 'custom-fields',
@@ -300,12 +393,32 @@ export default {
         canCreateComment: {
             type: Boolean,
             default: false
+        },
+        aiEnabled: {
+            type: Boolean,
+            default: false
+        },
+        canGenerateAiForField: {
+            type: Function,
+            default: () => false
+        },
+        isAiGeneratingField: {
+            type: Function,
+            default: () => false
+        },
+        isAiFieldLocked: {
+            type: Function,
+            default: () => false
+        },
+        generateAiForField: {
+            type: Function,
+            default: () => {}
         }
     },
 
     data: function() {
         return {
-            
+            editorRefs: {}
         }
     },
 
@@ -354,6 +467,100 @@ export default {
             return result
         },
 
+        getAiFieldKey: function(field) {
+            return `custom-field:${field.customField._id}`
+        },
+
+        showAiButton: function(field) {
+            const fieldType = field?.customField?.fieldType
+            if (fieldType === 'select' || fieldType === 'select-multiple')
+                return false
+
+            return this.aiEnabled &&
+                this.canGenerateAiForField(this.getAiFieldKey(field)) &&
+                this.isFieldEditable(field)
+        },
+
+        isAiLoading: function(field) {
+            return this.isAiGeneratingField(this.getAiFieldKey(field))
+        },
+
+        isFieldLocked: function(field) {
+            return this.isAiFieldLocked(this.getAiFieldKey(field))
+        },
+
+        isFieldEditable: function(field) {
+            return !this.readonly && !this.isFieldLocked(field)
+        },
+
+        triggerGenerateAi: function(field) {
+            this.generateAiForField(field)
+        },
+
+        registerEditorRef: function(customFieldId, el) {
+            if (!customFieldId)
+                return
+            if (el)
+                this.editorRefs[customFieldId] = el
+            else
+                delete this.editorRefs[customFieldId]
+        },
+
+        syncEditors: function() {
+            Object.values(this.editorRefs).forEach((editor) => {
+                if (editor && typeof editor.updateHTML === 'function')
+                    editor.updateHTML()
+            })
+        },
+
+        getAiSelectionTarget: function(field) {
+            const fieldType = field?.customField?.fieldType
+            const customFieldId = field?.customField?._id
+
+            if (fieldType === 'text') {
+                const editor = this.editorRefs[customFieldId]
+                return editor || null
+            }
+
+            if (fieldType === 'input') {
+                const fieldRef = this.getFieldRef(field)
+                if (!fieldRef)
+                    return null
+
+                return {
+                    getTextSelection: () => AiFieldHelper.getInputSelection(fieldRef),
+                    replaceTextSelection: (content, selection) => {
+                        const el = fieldRef.$el?.querySelector('textarea, input')
+                        if (!el || !selection)
+                            return
+
+                        const replacement = Array.isArray(content) ?
+                            content.join('\n') :
+                            String(content || '')
+                        const value = el.value
+                        field.text = value.substring(0, selection.start) + replacement + value.substring(selection.end)
+                    }
+                }
+            }
+
+            return null
+        },
+
+        getFieldRef: function(field) {
+            const refs = Object.keys(this.$refs)
+            .filter((key) => key.startsWith('field-'))
+            .map((key) => this.$refs[key]?.[0])
+            .filter(Boolean)
+
+            return refs.find((ref) => {
+                const el = ref.$el
+                if (!el)
+                    return false
+                const label = el.getAttribute('for') || el.id || el.querySelector('[for]')?.getAttribute('for')
+                return label === `field-${field.customField.label}`
+            }) || null
+        },
+
         validate: function() {
             Object.keys(this.$refs).forEach(key => key.startsWith('field') && this.$refs[key][0].validate())
         },
@@ -373,5 +580,3 @@ export default {
 
 </script>
 
-<style>
-</style>

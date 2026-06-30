@@ -99,5 +99,13 @@ export default {
 
     updateSections: function(sections) {
         return api.put(`data/sections`, sections)
+    },
+
+    getAiIntegration: function() {
+        return api.get('data/ai-integration')
+    },
+
+    updateAiIntegration: function(payload) {
+        return api.put('data/ai-integration', payload)
     }
 }

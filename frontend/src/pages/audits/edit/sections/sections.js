@@ -4,9 +4,16 @@ import BasicEditor from 'components/editor/Editor.vue';
 import Breadcrumb from 'components/breadcrumb';
 import CustomFields from 'components/custom-fields';
 import CommentsList from 'components/comments-list';
+import AuditQaSidebar from '@/components/audit-qa-sidebar.vue';
+import AiChatDrawer from '@/components/ai-chat-drawer.vue';
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
+import AiService from '@/services/ai';
+import AiFieldHelper from '@/services/ai-field-helper';
+import { useAiGenerationStore } from '@/stores/ai-generation';
+import { useAuditQaStore } from '@/stores/audit-qa';
+import { runAfterAiGenerationCheck } from '@/composables/confirmLeaveIfAiGenerating';
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils';
 import { createDraftRecovery } from '@/composables/useDraftRecovery';
@@ -30,6 +37,8 @@ export default {
             // List of CustomFields
             customFields: [],
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
+            aiPromptFieldKeys: [],
+            aiFieldPrompts: [],
             // Comments
             commentTemp: null,
             replyTemp: null,
@@ -63,13 +72,16 @@ export default {
         BasicEditor,
         Breadcrumb,
         CustomFields,
-        CommentsList
+        CommentsList,
+        AuditQaSidebar,
+        AiChatDrawer
     },
 
     mounted: async function() {
         this.auditId = this.$route.params.auditId;
         this.sectionId = this.$route.params.sectionId;
         this.getSection();
+        this.loadAiEnabledFieldKeys();
 
         this.$socket.emit('menu', {menu: 'editSection', section: this.sectionId, room: this.auditId});
 
@@ -116,78 +128,16 @@ export default {
             next()
             return
         }
-        
-        Utils.syncEditors(this.$refs)
 
-        var displayHighlightWarning = this.displayHighlightWarning()
-
-        if (this.unsavedChanges()) {
-            Dialog.create({
-            title: $t('msg.thereAreUnsavedChanges'),
-            message: $t('msg.doYouWantToLeave'),
-            ok: {label: $t('btn.confirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'},
-            focus: 'cancel'
-            })
-            .onOk(async () => {
-                if (this.draftRecovery)
-                    await this.draftRecovery.flushPendingWrite()
-                next()
-            })
-        }
-        else if (!this.commentMode && displayHighlightWarning) {
-            Dialog.create({
-                title: $t('msg.highlightWarningTitle'),
-                message: `${displayHighlightWarning}</mark>`,
-                html: true,
-                ok: {label: $t('btn.leave'), color: 'negative'},
-                cancel: {label: $t('btn.stay'), color: 'white'},
-            })
-            .onOk(async () => {
-                if (this.draftRecovery)
-                    await this.draftRecovery.flushPendingWrite()
-                next()
-            })
-        }
-        else
-            next()
+        runAfterAiGenerationCheck(() => {
+            this.continueRouteLeave(to, from, next)
+        })
     },
 
     beforeRouteUpdate (to, from , next) {
-        Utils.syncEditors(this.$refs)
-
-        var displayHighlightWarning = this.displayHighlightWarning()
-
-        if (this.unsavedChanges()) {
-            Dialog.create({
-            title: $t('msg.thereAreUnsavedChanges'),
-            message: $t('msg.doYouWantToLeave'),
-            ok: {label: $t('btn.confirm'), color: 'negative'},
-            cancel: {label: $t('btn.cancel'), color: 'white'},
-            focus: 'cancel'
-            })
-            .onOk(async () => {
-                if (this.draftRecovery)
-                    await this.draftRecovery.flushPendingWrite()
-                next()
-            })
-        }
-        else if (!this.commentMode && displayHighlightWarning) {
-            Dialog.create({
-                title: $t('msg.highlightWarningTitle'),
-                message: `${displayHighlightWarning}</mark>`,
-                html: true,
-                ok: {label: $t('btn.leave'), color: 'negative'},
-                cancel: {label: $t('btn.stay'), color: 'white'},
-            })
-            .onOk(async () => {
-                if (this.draftRecovery)
-                    await this.draftRecovery.flushPendingWrite()
-                next()
-            })
-        }
-        else
-            next()
+        runAfterAiGenerationCheck(() => {
+            this.continueRouteUpdate(to, from, next)
+        })
     },
 
     watch: {
@@ -207,6 +157,10 @@ export default {
 
         canEditComments: function() {
             return this.canManageAuditComments('update') || this.canManageAuditComments('delete')
+        },
+
+        aiEnabled: function() {
+            return this.$settings?.ai?.public?.enabled !== false && userStore.isAllowed('audits:ai-generate')
         },
 
         saveButtonState: function() {
@@ -235,10 +189,101 @@ export default {
             if (this.saveButtonState === 'saved')
                 return $t('btn.saved')
             return `${$t('btn.save')} (ctrl+s)`
+        },
+
+        qaDrawerOpen: function() {
+            return useAuditQaStore().drawerOpen
+        },
+
+        aiDrawerOpen: function() {
+            return useAiGenerationStore().drawerOpen
+        },
+
+        sidePanelOpen: function() {
+            return this.commentMode || this.qaDrawerOpen || this.aiDrawerOpen
+        },
+
+        aiQaEnabled: function() {
+            return this.$settings?.ai?.public?.enabled !== false &&
+                userStore.isAllowed('audits:ai-qa')
         }
     },
 
     methods: {
+        continueRouteLeave: function(to, from, next) {
+            Utils.syncEditors(this.$refs)
+
+            var displayHighlightWarning = this.displayHighlightWarning()
+
+            if (this.unsavedChanges()) {
+                Dialog.create({
+                title: $t('msg.thereAreUnsavedChanges'),
+                message: $t('msg.doYouWantToLeave'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'},
+                focus: 'cancel'
+                })
+                .onOk(async () => {
+                    if (this.draftRecovery)
+                        await this.draftRecovery.flushPendingWrite()
+                    next()
+                })
+            }
+            else if (!this.commentMode && displayHighlightWarning) {
+                Dialog.create({
+                    title: $t('msg.highlightWarningTitle'),
+                    message: `${displayHighlightWarning}</mark>`,
+                    html: true,
+                    ok: {label: $t('btn.leave'), color: 'negative'},
+                    cancel: {label: $t('btn.stay'), color: 'white'},
+                })
+                .onOk(async () => {
+                    if (this.draftRecovery)
+                        await this.draftRecovery.flushPendingWrite()
+                    next()
+                })
+            }
+            else
+                next()
+        },
+
+        continueRouteUpdate: function(to, from, next) {
+            Utils.syncEditors(this.$refs)
+
+            var displayHighlightWarning = this.displayHighlightWarning()
+
+            if (this.unsavedChanges()) {
+                Dialog.create({
+                title: $t('msg.thereAreUnsavedChanges'),
+                message: $t('msg.doYouWantToLeave'),
+                ok: {label: $t('btn.confirm'), color: 'negative'},
+                cancel: {label: $t('btn.cancel'), color: 'white'},
+                focus: 'cancel'
+                })
+                .onOk(async () => {
+                    if (this.draftRecovery)
+                        await this.draftRecovery.flushPendingWrite()
+                    next()
+                })
+            }
+            else if (!this.commentMode && displayHighlightWarning) {
+                Dialog.create({
+                    title: $t('msg.highlightWarningTitle'),
+                    message: `${displayHighlightWarning}</mark>`,
+                    html: true,
+                    ok: {label: $t('btn.leave'), color: 'negative'},
+                    cancel: {label: $t('btn.stay'), color: 'white'},
+                })
+                .onOk(async () => {
+                    if (this.draftRecovery)
+                        await this.draftRecovery.flushPendingWrite()
+                    next()
+                })
+            }
+            else
+                next()
+        },
+
         _listener: function(e) {
             if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.keyCode == 83) {
                 e.preventDefault();
@@ -266,6 +311,159 @@ export default {
             .catch((err) => {
                 console.log(err)
             })
+        },
+
+        loadAiEnabledFieldKeys: function() {
+            if (!this.aiEnabled) {
+                this.aiPromptFieldKeys = []
+                this.aiFieldPrompts = []
+                return
+            }
+
+            AiService.getEnabledFields('section')
+            .then((data) => {
+                const fields = data.data.datas?.fields || []
+                this.aiFieldPrompts = fields
+                this.aiPromptFieldKeys = fields.map((field) => String(field.fieldKey || ''))
+            })
+            .catch(() => {
+                this.aiPromptFieldKeys = []
+                this.aiFieldPrompts = []
+            })
+        },
+
+        getCustomFieldAiKey: function(customFieldId) {
+            return `custom-field:${customFieldId}`
+        },
+
+        canGenerateAi: function(fieldKey) {
+            return this.aiEnabled && this.aiPromptFieldKeys.includes(fieldKey)
+        },
+
+        buildAiLockKey: function(fieldKey) {
+            return `section:${this.auditId}:${this.section.field}:${fieldKey}`
+        },
+
+        isAiFieldLoading: function(fieldKey) {
+            return useAiGenerationStore().isFieldGenerating(this.buildAiLockKey(fieldKey))
+        },
+
+        isAiFieldLocked: function(fieldKey) {
+            return useAiGenerationStore().isFieldLocked(this.buildAiLockKey(fieldKey))
+        },
+
+        generateCustomFieldDraftAI: async function(customField) {
+            const fieldKey = this.getCustomFieldAiKey(customField?.customField?._id)
+            if (!fieldKey || !this.canGenerateAi(fieldKey))
+                return
+
+            if (this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT || this.isAiFieldLoading(fieldKey))
+                return
+
+            this.prepareSidePanel('ai')
+
+            const lockKey = this.buildAiLockKey(fieldKey)
+            const aiStore = useAiGenerationStore()
+            if (aiStore.drawerOpen && aiStore.isActive && aiStore.lockKey !== lockKey) {
+                Notify.create({
+                    message: $t('aiChat.activeSession'),
+                    color: 'warning',
+                    textColor: 'dark',
+                    position: 'top-right'
+                })
+                return
+            }
+
+            Utils.syncEditors(this.$refs)
+
+            const selectionTarget = this.$refs.customfields?.getAiSelectionTarget?.(customField)
+            const selection = selectionTarget?.getTextSelection?.()
+            const outputType = AiFieldHelper.getOutputType(null, customField)
+            const fieldLabel = AiFieldHelper.getFieldLabel(null, customField, fieldKey)
+            const baseContext = AiFieldHelper.buildSectionAiContext(this.section, customField)
+            const requestParams = {
+                entityType: 'section',
+                field: fieldKey,
+                locale: this.auditParent.language,
+                outputType,
+                context: baseContext
+            }
+
+            try {
+                if (selection?.text) {
+                    const draft = await AiFieldHelper.runSelectionAiChat({
+                        title: `AI - ${fieldLabel}`,
+                        selectedText: selection.text,
+                        outputType,
+                        lockKey,
+                        requestParams: {
+                            ...requestParams,
+                            context: {
+                                ...baseContext,
+                                selectedText: selection.text,
+                                selectedHtml: selection.html || selection.text
+                            }
+                        }
+                    })
+
+                    if (!draft)
+                        return
+
+                    AiFieldHelper.applySelectionDraft({
+                        selectionTarget,
+                        selection,
+                        draft,
+                        outputType
+                    })
+
+                    Notify.create({
+                        message: AiFieldHelper.appliedMessage(),
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                    return
+                }
+
+                const defaultPrompt = AiFieldHelper.getDefaultPrompt(
+                    this.aiFieldPrompts,
+                    fieldKey,
+                    baseContext
+                )
+
+                const draft = await AiFieldHelper.runFieldAiChat({
+                    title: `AI - ${fieldLabel}`,
+                    defaultPrompt,
+                    outputType,
+                    lockKey,
+                    requestParams
+                })
+
+                if (!draft)
+                    return
+
+                AiFieldHelper.applyFieldDraft({
+                    draft,
+                    outputType,
+                    setValue: (value) => {
+                        customField.text = value
+                    }
+                })
+
+                Notify.create({
+                    message: AiFieldHelper.appliedFieldMessage(),
+                    color: 'positive',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            } catch (err) {
+                Notify.create({
+                    message: err.response?.data?.datas || err.message || 'Unable to generate AI draft',
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            }
         },
 
 
@@ -360,13 +558,46 @@ export default {
 
         // *** Comments Handling ***
 
+        prepareSidePanel: function(except) {
+            if (except !== 'comments' && this.commentMode) {
+                this.commentMode = false
+                this.focusedComment = ''
+                this.fieldHighlighted = null
+            }
+            if (except !== 'qa')
+                useAuditQaStore().close()
+            if (except !== 'ai') {
+                const aiStore = useAiGenerationStore()
+                if (aiStore.isActive)
+                    aiStore.cancelSession({ force: true })
+            }
+        },
+
         toggleCommentView: function() {
             Utils.syncEditors(this.$refs)
+            if (!this.commentMode)
+                this.prepareSidePanel('comments')
+
             this.commentMode = !this.commentMode
             if (!this.commentMode) {
                 this.focusedComment = ""
                 this.fieldHighlighted = null
             }
+        },
+
+        toggleQaView: function() {
+            const qaStore = useAuditQaStore()
+            if (qaStore.drawerOpen) {
+                qaStore.close()
+                return
+            }
+
+            this.prepareSidePanel('qa')
+            qaStore.open(this.auditId)
+        },
+
+        highlightQaField: function(fieldName) {
+            this.fieldHighlighted = fieldName
         },
 
         focusComment: function(comment) {
@@ -576,7 +807,10 @@ export default {
                 })
         },
 
-        unsavedChanges: function() {  
+        unsavedChanges: function() {
+            if ((this.section.text || this.sectionOrig.text) && this.section.text !== this.sectionOrig.text)
+                return true
+
             if (!this.$_.isEqual(this.section.customFields, this.sectionOrig.customFields))
                 return true
 

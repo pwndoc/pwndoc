@@ -9,6 +9,22 @@
     >
         <template v-slot:buttons>
             <q-btn
+            v-if="aiQaEnabled"
+            color="primary"
+            :flat="!qaDrawerOpen"
+            :outline="qaDrawerOpen"
+            :class="{'bg-grey-3': qaDrawerOpen}"
+            icon="auto_awesome"
+            :ripple="false"
+            @click="toggleQaView()"
+            class="q-mr-sm"
+            >
+                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+                    {{ $t('tooltip.auditQa') }}
+                </q-tooltip>
+            </q-btn>
+            <q-separator v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" vertical inset class="q-mr-sm" />
+            <q-btn
                 v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
                 outline
                 :color="saveButtonColor"
@@ -31,7 +47,7 @@
     </breadcrumb>
 
     <div class="row content q-pa-md">
-        <q-card class=" col-xl-8 offset-xl-2 col-12">
+        <q-card :class="sidePanelOpen ? 'col-8' : 'col-xl-8 offset-xl-2 col-12'">
             <q-card-section>
                 <div class="row q-col-gutter-md">
                     <q-input
@@ -284,12 +300,25 @@
                 />
             </q-expansion-item>
         </q-card>
+        <q-card v-if="qaDrawerOpen" class="col-3 bg-grey-11 sidebar-comments">
+            <q-scroll-area class="scrollarea-comments">
+                <audit-qa-sidebar
+                :audit-id="auditId"
+                :findings="auditParent.findings || []"
+                :sections="auditParent.sections || []"
+                />
+            </q-scroll-area>
+        </q-card>
     </div>
 </template>
 
 <script src='./general.js'></script>
 
 <style scoped>
+.scrollarea-comments {
+    height: calc(100vh - 104px)!important;
+}
+
 .content {
     margin-top: 50px;
 }

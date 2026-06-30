@@ -49,6 +49,12 @@
                 </q-item-section>
                 <q-item-section>{{$t('languageToolRules')}}</q-item-section>
             </q-item>
+            <q-item v-if="showAiIntegration" to='/data/ai-integration'>
+                <q-item-section avatar>
+                    <q-icon name="auto_awesome" />
+                </q-item-section>
+                <q-item-section>AI Integration</q-item-section>
+            </q-item>
 
             <q-separator spaced />
 
@@ -88,6 +94,14 @@ export default {
     },
 
     computed: {
+        showAiIntegration() {
+            return this.$settings?.ai?.public?.enabled !== false && (
+                userStore.isAllowed('ai:prompts:read') ||
+                userStore.isAllowed('ai:redaction-guidelines:read') ||
+                userStore.isAllowed('ai:qa-instructions:read')
+            )
+        },
+
         isDesktop() {
             return this.$q.screen.gt.sm
         },

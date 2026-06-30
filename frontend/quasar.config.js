@@ -16,7 +16,8 @@ export default defineConfig((ctx) => {
       'lodash',
       'socketio',
       'settings',
-      'router-instance'
+      'router-instance',
+      'ai-generation'
     ],
     css: [
       'app.scss'

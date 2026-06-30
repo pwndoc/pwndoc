@@ -1,4 +1,15 @@
 <template>
+    <div>
+    <div v-if="showAiButton && !readonly" class="bg-grey-4 row items-center q-px-sm q-py-xs">
+        <q-btn flat size="sm" dense
+        :loading="aiLoading"
+        :disable="aiLoading || readonly"
+        @click="$emit('ai-click')"
+        >
+            <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+            <q-icon name="auto_awesome" />
+        </q-btn>
+    </div>
     <q-input
     ref="textareaField"
     label-slot
@@ -15,6 +26,7 @@
         {{label}} <span v-if="rules && rules[0] !== ''" class="text-red">*</span>
     </template>
     </q-input>
+    </div>
 </template>
 
 <script>
@@ -32,8 +44,18 @@ export default {
             type: Boolean,
             default: false
         },
-        rules: Array
+        rules: Array,
+        showAiButton: {
+            type: Boolean,
+            default: false
+        },
+        aiLoading: {
+            type: Boolean,
+            default: false
+        }
     },
+
+    emits: ['update:modelValue', 'ai-click'],
 
     data: function() {
         return {
@@ -67,6 +89,41 @@ export default {
         validate: function() {
             this.$refs.textareaField.validate()
             this.hasError = this.$refs.textareaField.hasError
+        },
+
+        getTextSelection: function() {
+            const el = this.$refs.textareaField?.$el?.querySelector('textarea')
+            if (!el)
+                return null
+
+            const start = el.selectionStart
+            const end = el.selectionEnd
+            if (start === end)
+                return null
+
+            const text = el.value.substring(start, end)
+            return {
+                start,
+                end,
+                text,
+                html: text
+            }
+        },
+
+        replaceTextSelection: function(content, range) {
+            if (!range)
+                return
+
+            const el = this.$refs.textareaField?.$el?.querySelector('textarea')
+            if (!el)
+                return
+
+            const replacement = Array.isArray(content) ?
+                content.join('\n') :
+                String(content || '')
+            const value = el.value
+            this.dataString = value.substring(0, range.start) + replacement + value.substring(range.end)
+            this.updateParent()
         }
     }
 }

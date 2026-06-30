@@ -371,6 +371,8 @@
 
 <script>
 import { Dialog, Notify, QSpinnerGears, LocalStorage } from 'quasar';
+import { useAuditQaStore } from '@/stores/audit-qa'
+import { useAiGenerationStore } from '@/stores/ai-generation'
 import { computed, ref } from 'vue';
 import draggable from 'vuedraggable'
 import CommentsList from 'components/comments-list'
@@ -469,6 +471,11 @@ export default {
 	},
 
 	unmounted: function() {
+		useAuditQaStore().close()
+		const aiStore = useAiGenerationStore()
+		if (aiStore.isActive)
+			aiStore.cancelSession({ force: true })
+
 		if (!this.loading) {
 			this.$socket.emit('leave', {username: userStore.username, room: this.auditId});
 			this.$socket.off()
@@ -543,6 +550,15 @@ export default {
 		},
 		draftRecoveryRevision: function() {
 			this.refreshAuditDrafts()
+		},
+		'$route.path': function(path) {
+			const onReportPage = /\/audits\/[^/]+\/(findings\/[^/]+|sections\/[^/]+)/.test(path)
+			if (!onReportPage) {
+				useAuditQaStore().close()
+				const aiStore = useAiGenerationStore()
+				if (aiStore.isActive)
+					aiStore.cancelSession({ force: true })
+			}
 		}
 	},
 

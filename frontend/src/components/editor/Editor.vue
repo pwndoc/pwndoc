@@ -1,5 +1,5 @@
 <template>
-<q-card flat bordered class="editor full-width" :style="(editable)?'':'border: 1px dashed lightgrey'">
+<q-card flat bordered class="editor full-width relative-position" :class="{'editor--ai-locked': aiLocked}" :style="(editable && !aiLocked)?'':'border: 1px dashed lightgrey'">
     <div v-sticky="!noAffix && !diff && editable" sticky-offset="affixOffset" class="bg-grey-4">
         <template v-if="editable">
             <q-toolbar data-testid="editor-toolbar" class="editor-toolbar">
@@ -185,6 +185,18 @@
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('caption') !== -1" />
 
+                <template v-if="showAiButton && editable">
+                    <q-btn flat size="sm" dense
+                    :loading="aiLoading"
+                    :disable="aiLoading || aiLocked"
+                    @click="$emit('ai-click')"
+                    >
+                        <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
+                        <q-icon name="auto_awesome" />
+                    </q-btn>
+                    <q-separator vertical class="q-mx-sm" />
+                </template>
+
                 <q-btn flat size="sm" dense
                 @click="editor.commands.undo"
                 >
@@ -292,6 +304,12 @@
     <div v-else class="editor__content q-pa-sm">
         <div class="ProseMirror" v-html="diffContent"></div>
     </div>
+    <q-inner-loading :showing="aiLocked && !aiLoading">
+        <q-badge color="secondary">{{ $t('aiChat.generatingSession') }}</q-badge>
+    </q-inner-loading>
+    <q-inner-loading :showing="aiLoading">
+        <q-badge color="secondary">{{ $t('aiChat.generating') }}</q-badge>
+    </q-inner-loading>
 </q-card>
 </template>
 
@@ -321,6 +339,7 @@ import {Diff} from 'diff';
 import Utils from '@/services/utils'
 import ImageService from '@/services/image'
 
+import { DOMSerializer } from '@tiptap/pm/model'
 import {common, createLowlight} from 'lowlight'
 const lowlight = createLowlight(common)
 lowlight.registerAlias('xml', ['html'])
@@ -369,8 +388,22 @@ export default {
         focusedComment: {
             type: String,
             default: ''
+        },
+        showAiButton: {
+            type: Boolean,
+            default: false
+        },
+        aiLoading: {
+            type: Boolean,
+            default: false
+        },
+        aiLocked: {
+            type: Boolean,
+            default: false
         }
     },
+
+    emits: ['update:modelValue', 'ai-click'],
     components: {
         EditorContent,
         BubbleMenu
@@ -465,7 +498,11 @@ export default {
        },
 
         editable (value) {
-            this.editor.setEditable(this.editable, false)
+            this.editor.setEditable(value && !this.aiLocked, false)
+       },
+
+        aiLocked () {
+            this.editor.setEditable(this.editable && !this.aiLocked, false)
        },
 
         highlightColor (value) {
@@ -487,7 +524,7 @@ export default {
     mounted: async function() {
         document.addEventListener('comment-deleted', this.handleDeleteComment)
         
-        this.editor.setEditable(this.editable, false)
+        this.editor.setEditable(this.editable && !this.aiLocked, false)
 
         if (typeof this.modelValue === "undefined" || this.modelValue === this.editor.getHTML()) {
             return;
@@ -734,6 +771,45 @@ export default {
                 this._spellcheckCategoryDirty = false
                 this.editor.commands.proofread()
             }
+        },
+
+        getTextSelection() {
+            if (!this.editor)
+                return null
+
+            const { from, to } = this.editor.state.selection
+            if (from === to)
+                return null
+
+            const text = this.editor.state.doc.textBetween(from, to, '\n')
+            const slice = this.editor.state.doc.slice(from, to)
+            const serializer = DOMSerializer.fromSchema(this.editor.schema)
+            const container = document.createElement('div')
+            container.appendChild(serializer.serializeFragment(slice.content))
+
+            return {
+                from,
+                to,
+                text,
+                html: container.innerHTML
+            }
+        },
+
+        replaceTextSelection(content, range) {
+            if (!this.editor)
+                return
+
+            const from = range?.from ?? this.editor.state.selection.from
+            const to = range?.to ?? this.editor.state.selection.to
+            const replacement = String(content || '')
+
+            this.editor.chain().focus()
+                .deleteRange({ from, to })
+                .insertContentAt(from, replacement, {
+                    parseOptions: { preserveWhitespace: 'full' }
+                })
+                .run()
+            this.updateHTML()
         }
     }
 }

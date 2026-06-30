@@ -22,6 +22,12 @@ vi.mock('@/services/data', () => ({
   }
 }))
 
+vi.mock('@/services/ai', () => ({
+  default: {
+    getEnabledFields: vi.fn()
+  }
+}))
+
 vi.mock('@/services/utils', () => ({
   default: {
     AUDIT_VIEW_STATE: { EDIT: 0, EDIT_READONLY: 1 },
@@ -69,6 +75,7 @@ vi.mock('quasar', async () => {
 
 import AuditService from '@/services/audit'
 import DataService from '@/services/data'
+import AiService from '@/services/ai'
 import Utils from '@/services/utils'
 import { Notify, Dialog } from 'quasar'
 import { useUserStore } from 'src/stores/user'
@@ -118,6 +125,13 @@ describe('Sections Page', () => {
     // Default mock implementations
     DataService.getCustomFields.mockResolvedValue({
       data: { datas: [] }
+    })
+    AiService.getEnabledFields.mockResolvedValue({
+      data: {
+        datas: {
+          fields: []
+        }
+      }
     })
     AuditService.getSection.mockResolvedValue({
       data: {
@@ -172,6 +186,11 @@ describe('Sections Page', () => {
             isEqual: vi.fn((a, b) => JSON.stringify(a) === JSON.stringify(b))
           },
           $settings: {
+            ai: {
+              public: {
+                enabled: false
+              }
+            },
             report: {
               enabled: false,
               public: {
@@ -418,6 +437,14 @@ describe('Sections Page', () => {
       wrapper.vm.$_.isEqual = vi.fn().mockReturnValue(false)
       wrapper.vm.section = { customFields: [{ text: 'changed' }] }
       wrapper.vm.sectionOrig = { customFields: [{ text: 'original' }] }
+
+      expect(wrapper.vm.unsavedChanges()).toBe(true)
+    })
+
+    it('should return true when legacy section text differs from original', () => {
+      const wrapper = createWrapper()
+      wrapper.vm.section = { text: '<p>dirty content</p>' }
+      wrapper.vm.sectionOrig = { text: '<p>original</p>' }
 
       expect(wrapper.vm.unsavedChanges()).toBe(true)
     })

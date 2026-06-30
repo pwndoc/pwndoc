@@ -21,8 +21,19 @@ exports.jwtSecret = jwtSecret
 var jwtRefreshSecret = config[env].jwtRefreshSecret
 exports.jwtRefreshSecret = jwtRefreshSecret
 
+/*  ROLES LOGIC
+
+    role_name: {
+        allows: [],
+        inherits: []
+    }
+    allows: allowed permissions to access | use * for all
+    inherits: inherits other users "allows"
+*/
+
 const CORE_PERMISSIONS = permissionsCatalog.core()
 exports.CORE_PERMISSIONS = CORE_PERMISSIONS
+const SYSTEM_ROLES = ['admin', 'user']
 
 class ACL {
     constructor(roles) {
@@ -40,6 +51,8 @@ class ACL {
             user: {allows: CORE_PERMISSIONS}
         }
         dbRoles.forEach(role => {
+            if (SYSTEM_ROLES.includes(role.name))
+                return
             roles[role.name] = {allows: role.allows || []}
         })
         this.roles = roles
@@ -63,8 +76,21 @@ class ACL {
         return role.allows === '*' || role.allows.indexOf(permission) !== -1 || role.allows.indexOf(`${permission}-all`) !== -1
     }
 
+    isAllowedPermissions(permissions, permission) {
+        if (permissions === '*')
+            return true
+        if (!Array.isArray(permissions))
+            return false
+        return permissions.includes(permission) || permissions.includes(`${permission}-all`)
+    }
+
     isAllowed(roleNames, permission) {
         return this.normalizeRoleNames(roleNames).some(roleName => this.roleAllows(roleName, permission))
+    }
+
+    isAllowedToken(decoded, permission) {
+        return this.isAllowedPermissions(decoded.permissions, permission) ||
+            this.isAllowed(decoded.roles, permission)
     }
 
     hasPermission (permission) {
@@ -102,7 +128,7 @@ class ACL {
                     return
                 }
 
-                if ( permission === "validtoken" || this.isAllowed(decoded.roles, permission)) {
+                if ( permission === "validtoken" || this.isAllowedToken(decoded, permission)) {
                     req.decodedToken = decoded
                     return next()
                 }

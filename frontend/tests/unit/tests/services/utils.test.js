@@ -296,6 +296,17 @@ describe('Utils Service', () => {
       expect(mockUpdateHTML).toHaveBeenCalledOnce()
     })
 
+    it('should call syncEditors on child components that expose it', () => {
+      const mockChildSync = vi.fn()
+      const refs = {
+        customfields: {
+          syncEditors: mockChildSync
+        }
+      }
+      Utils.syncEditors(refs)
+      expect(mockChildSync).toHaveBeenCalledOnce()
+    })
+
     it('should skip refs that do not start with basiceditor_', () => {
       const mockUpdateHTML = vi.fn()
       const refs = {

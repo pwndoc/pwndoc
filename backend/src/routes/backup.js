@@ -26,6 +26,7 @@ module.exports = function(app) {
     const STATE_RESTORE_ERROR = 'restore_error'
 
     const Audit = require('mongoose').model('Audit');
+    const AiPrompt = require('mongoose').model('AiPrompt');
     const AuditType = require('mongoose').model('AuditType');
     const Client = require('mongoose').model('Client');
     const Company = require('mongoose').model('Company');
@@ -413,6 +414,7 @@ module.exports = function(app) {
             // Settings
             if (e === "Settings") {
                 backupPromises.push(Settings.backup(backupTmpPath))
+                backupPromises.push(AiPrompt.backup(backupTmpPath))
             }
         })
 
@@ -786,7 +788,7 @@ module.exports = function(app) {
                 files.push('vulnerabilityCategories.json')
             }
 
-            // Settings
+            // Settings (aiPrompts.json restored separately when present — old backups omit it)
             if (info.data.includes('Settings') && backupData.includes('Settings')) {
                 files.push('settings.json')
             }
@@ -863,6 +865,7 @@ module.exports = function(app) {
             // Settings
             if (info.data.includes('Settings') && backupData.includes('Settings')) {
                 restorePromises.push(Settings.restore(restoreTmpPath))
+                restorePromises.push(AiPrompt.restore(restoreTmpPath, restoreMode))
             }
             
             
