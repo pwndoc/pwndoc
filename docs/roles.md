@@ -53,7 +53,8 @@ Common actions:
 | `vulnerabilities:delete` | Delete one vulnerability from the vulnerability database |
 | `vulnerabilities:delete-all` | Delete every vulnerability from the vulnerability database |
 | `vulnerability-updates:create` | Submit a new vulnerability or update request from an audit finding |
-| `vulnerabilities:ai-qa` | Run AI quality checks on vulnerabilities |
+| `vulnerabilities:ai-qa` | Run AI quality checks on an individual vulnerability |
+| `vulnerabilities:ai-qa-all` | Run AI quality checks on all vulnerabilities for the selected language |
 | `vulnerabilities:ai-generate` | Use AI-assisted drafting on vulnerability templates |
 
 ### Users And Roles
@@ -191,7 +192,7 @@ Common actions:
 
 | Role | Access |
 |------|--------|
-| `user` | Assignable core access. Can create, manage, and comment on assigned audits, upload and read images, read vulnerabilities, view users and roles, manage clients and companies, read templates and custom data, use spellcheck and AI features, and view public settings |
+| `user` | Assignable core access. Can create, manage, and comment on assigned audits, upload and read images, read vulnerabilities, view users and roles, manage clients and companies, read templates and custom data, use spellcheck and audit AI features, read organization redaction guidelines, and view public settings |
 | `admin` | Full access to all permissions |
 
 ### user
@@ -202,7 +203,8 @@ The `user` role has the following permissions:
 - audits:comments:create, audits:comments:update, audits:comments:delete
 - audits:ai-generate, audits:ai-qa
 - images:create, images:read
-- vulnerabilities:read, vulnerability-updates:create, vulnerabilities:ai-qa, vulnerabilities:ai-generate
+- vulnerabilities:read, vulnerability-updates:create
+- ai:redaction-guidelines:read
 - users:read, roles:read
 - clients:create, clients:read, clients:update, clients:delete
 - companies:create, companies:read, companies:update, companies:delete

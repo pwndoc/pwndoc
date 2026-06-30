@@ -382,9 +382,19 @@ const requireAiGeneratePermission = function(req, res, next) {
     Response.Forbidden(res, 'Insufficient privileges')
 };
 
+const requireVulnerabilityQaPermission = function(req, res, next) {
+    const vulnerabilityId = String(req.body?.vulnerabilityId || '').trim();
+    const permission = vulnerabilityId ? 'vulnerabilities:ai-qa' : 'vulnerabilities:ai-qa-all';
+
+    if (acl.isAllowedToken(req.decodedToken, permission))
+        return next();
+
+    Response.Forbidden(res, 'Insufficient privileges');
+};
+
 module.exports = function(app) {
     app.get('/api/ai/enabled-fields', acl.hasPermission('validtoken'), requireAiGeneratePermission, handleAiEnabledFields);
     app.post('/api/ai/generate', acl.hasPermission('validtoken'), requireAiGeneratePermission, handleAiGenerate);
     app.post('/api/ai/qa', acl.hasPermission('audits:ai-qa'), handleAiQa);
-    app.post('/api/ai/vulnerabilities/qa', acl.hasPermission('vulnerabilities:ai-qa'), handleVulnerabilityQa);
+    app.post('/api/ai/vulnerabilities/qa', acl.hasPermission('validtoken'), requireVulnerabilityQaPermission, handleVulnerabilityQa);
 };

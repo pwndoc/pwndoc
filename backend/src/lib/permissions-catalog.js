@@ -72,8 +72,9 @@ const catalog = [
             {scope: 'vulnerabilities:delete', core: false},
             {scope: 'vulnerabilities:delete-all', core: false},
             {scope: 'vulnerability-updates:create', core: true},
-            {scope: 'vulnerabilities:ai-qa', core: true},
-            {scope: 'vulnerabilities:ai-generate', core: true}
+            {scope: 'vulnerabilities:ai-qa', core: false},
+            {scope: 'vulnerabilities:ai-qa-all', core: false},
+            {scope: 'vulnerabilities:ai-generate', core: false}
         ]
     },
     {
@@ -165,7 +166,7 @@ const catalog = [
         permissions: [
             {scope: 'ai:prompts:read', core: false},
             {scope: 'ai:prompts:update', core: false},
-            {scope: 'ai:redaction-guidelines:read', core: false},
+            {scope: 'ai:redaction-guidelines:read', core: true},
             {scope: 'ai:redaction-guidelines:update', core: false},
             {scope: 'ai:qa-instructions:read', core: false},
             {scope: 'ai:qa-instructions:update', core: false}

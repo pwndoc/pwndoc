@@ -54,8 +54,9 @@ module.exports = function(request, app) {
           expect.objectContaining({
             key: 'vulnerabilities',
             permissions: expect.arrayContaining([
-              expect.objectContaining({scope: 'vulnerabilities:ai-qa', core: true}),
-              expect.objectContaining({scope: 'vulnerabilities:ai-generate', core: true})
+              expect.objectContaining({scope: 'vulnerabilities:ai-qa', core: false}),
+              expect.objectContaining({scope: 'vulnerabilities:ai-qa-all', core: false}),
+              expect.objectContaining({scope: 'vulnerabilities:ai-generate', core: false})
             ])
           }),
           expect.objectContaining({
@@ -70,7 +71,7 @@ module.exports = function(request, app) {
             permissions: expect.arrayContaining([
               expect.objectContaining({scope: 'ai:prompts:read'}),
               expect.objectContaining({scope: 'ai:prompts:update'}),
-              expect.objectContaining({scope: 'ai:redaction-guidelines:read'}),
+              expect.objectContaining({scope: 'ai:redaction-guidelines:read', core: true}),
               expect.objectContaining({scope: 'ai:redaction-guidelines:update'}),
               expect.objectContaining({scope: 'ai:qa-instructions:read'}),
               expect.objectContaining({scope: 'ai:qa-instructions:update'})

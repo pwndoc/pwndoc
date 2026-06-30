@@ -43,7 +43,7 @@
                     @click="$refs.mergeModal.show()"
                     />
                     <q-btn
-                    v-if="aiQaEnabled"
+                    v-if="aiQaAllEnabled"
                     class="q-ml-md"
                     :label="$t('vulnerabilityQa.runAll')"
                     outline
