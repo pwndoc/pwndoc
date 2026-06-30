@@ -12,7 +12,7 @@
             <q-space />
             <div class="scoreRating" :class="cvss.baseSeverity">
                 <div v-if="cvss.baseScore >= 0">
-                    <span class="baseMetricScore">{{cvss.baseScore}}</span>
+                    <span class="baseMetricScore">{{cvss.baseScore.toFixed(1)}}</span>
                     <span class="baseSeverity">({{cvss.baseSeverity}})</span>
                 </div>
                 <span class="baseSeverity" v-else>{{$t('cvss.infoWhenNoScore')}}</span>
@@ -297,7 +297,7 @@
             <div class="scoreRating" :class="cvss.temporalSeverity">
                 <span class="baseSeverity" v-if="!cvss.temporalScore">{{$t('cvss.infoWhenNoScore')}}</span>
                 <div v-else>
-                    <span class="baseMetricScore">{{cvss.temporalScore}}</span>
+                    <span class="baseMetricScore">{{cvss.temporalScore.toFixed(1)}}</span>
                     <span class="baseSeverity">({{cvss.temporalSeverity}})</span>
                 </div>
             </div>
@@ -449,7 +449,7 @@
                 <div class="scoreRating" :class="cvss.environmentalSeverity">
                     <span class="baseSeverity" v-if="!cvss.environmentalScore">{{$t('cvss.infoWhenNoScore')}}</span>
                     <div v-else>
-                        <span class="baseMetricScore">{{cvss.environmentalScore}}</span>
+                        <span class="baseMetricScore">{{cvss.environmentalScore.toFixed(1)}}</span>
                         <span class="baseSeverity">({{cvss.environmentalSeverity}})</span>
                     </div>
                 </div>

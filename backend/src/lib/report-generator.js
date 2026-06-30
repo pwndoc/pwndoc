@@ -172,6 +172,10 @@ function getSafeCvss4Data(vectorString) {
     }
 }
 
+function formatCvssScore(score) {
+    return typeof score === 'number' ? score.toFixed(1) : ""
+}
+
 function cvssStrToObject(cvss) {
     var initialState = 'Not Defined'
     var res = {AV:initialState, AC:initialState, PR:initialState, UI:initialState, S:initialState, C:initialState, I:initialState, A:initialState, E:initialState, RL:initialState, RC:initialState, CR:initialState, IR:initialState, AR:initialState, MAV:initialState, MAC:initialState, MPR:initialState, MUI:initialState, MS:initialState, MC:initialState, MI:initialState, MA:initialState};
@@ -637,11 +641,11 @@ async function prepAuditData(data, settings) {
 
                 tmpFinding.cvss = {
                     vectorString: tmpCVSS.vectorString || "",
-                    baseMetricScore: tmpCVSS.baseScore || "",
+                    baseMetricScore: formatCvssScore(tmpCVSS.baseScore),
                     baseSeverity: tmpCVSS.baseSeverity || "",
-                    temporalMetricScore: tmpCVSS.temporalScore || "",
+                    temporalMetricScore: formatCvssScore(tmpCVSS.temporalScore),
                     temporalSeverity: tmpCVSS.temporalSeverity || "",
-                    environmentalMetricScore: tmpCVSS.environmentalScore || "",
+                    environmentalMetricScore: formatCvssScore(tmpCVSS.environmentalScore),
                     environmentalSeverity: tmpCVSS.environmentalSeverity || ""
                 }
 
@@ -678,7 +682,7 @@ async function prepAuditData(data, settings) {
 
                 tmpFinding.cvss4 = {
                     vectorString: tmpCVSS.vectorString || "",
-                    baseScore: tmpCVSS.baseScore || "",
+                    baseScore: formatCvssScore(tmpCVSS.baseScore),
                     baseSeverity: tmpCVSS.baseSeverity || "",
                 }
 

@@ -396,4 +396,14 @@ describe('Cvss3Calculator Component', () => {
       expect(wrapper.vm.cvss).toEqual({})
     })
   })
+
+  describe('score badge formatting', () => {
+    it('should render an integer base score with one decimal place', () => {
+      const wrapper = createWrapper({
+        modelValue: 'CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:L/I:L/A:H'
+      })
+      expect(wrapper.vm.cvss.baseScore).toBe(6)
+      expect(wrapper.find('.baseMetricScore').text()).toBe('6.0')
+    })
+  })
 })
