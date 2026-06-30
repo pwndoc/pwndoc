@@ -242,7 +242,7 @@ module.exports = function(app) {
         catch (error) {
             Response.Internal(res, error)
         }
-    })
+    });
 
 /* ===== AI INTEGRATION ===== */
 
