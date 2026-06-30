@@ -1,5 +1,6 @@
 const Response = require('../lib/httpResponse.js');
 const SpellingDictionary = require("../models/dictionary");
+const Settings = require('mongoose').model('Settings');
 const acl = require('../lib/auth').acl
 const { getLanguageToolConfig } = require('../lib/languagetool-config');
 const { testLanguageToolConnection } = require('../lib/languagetool-test');
