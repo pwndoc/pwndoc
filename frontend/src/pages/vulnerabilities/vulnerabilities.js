@@ -190,7 +190,7 @@ export default {
 
         aiQaAllEnabled: function() {
             return this.$settings?.ai?.public?.enabled !== false &&
-                userStore.isAllowed('vulnerabilities:ai-qa-all')
+                userStore.isAllowed('vulnerabilities:ai-qa-all');
         },
 
         vulnerabilityQaCount: function() {

@@ -1,8 +1,8 @@
-import { Notify } from 'quasar'
-import DataService from '@/services/data'
-import { useUserStore } from '@/stores/user'
+import { Notify } from 'quasar';
+import DataService from '@/services/data';
+import { useUserStore } from '@/stores/user';
 
-const userStore = useUserStore()
+const userStore = useUserStore();
 
 const defaultMarkdownInstructions = () => ({
     delivery: 'inline',
@@ -11,7 +11,7 @@ const defaultMarkdownInstructions = () => ({
         cacheReference: '',
         region: ''
     }
-})
+});
 
 const defaultQaChecks = () => ({
     completeness: true,
@@ -22,7 +22,7 @@ const defaultQaChecks = () => ({
     redaction: true,
     customer: true,
     instructions: true
-})
+});
 
 const QA_CHECK_OPTIONS = [
     {
@@ -65,7 +65,7 @@ const QA_CHECK_OPTIONS = [
         label: 'QA instructions',
         description: 'AI review against organization QA instructions below, including any additional required sections or fields you define.'
     }
-]
+];
 
 const serializePromptMappings = (mappings = []) => {
     return mappings
@@ -75,8 +75,8 @@ const serializePromptMappings = (mappings = []) => {
         enabled: mapping.enabled !== false,
         prompt: String(mapping.prompt || '')
     }))
-    .sort((a, b) => `${a.entityType}:${a.fieldKey}`.localeCompare(`${b.entityType}:${b.fieldKey}`))
-}
+    .sort((a, b) => `${a.entityType}:${a.fieldKey}`.localeCompare(`${b.entityType}:${b.fieldKey}`));
+};
 
 const serializeMarkdownInstructions = (guidelines = {}) => ({
     delivery: String(guidelines.delivery || 'inline'),
@@ -85,7 +85,7 @@ const serializeMarkdownInstructions = (guidelines = {}) => ({
         cacheReference: String(guidelines.bedrockPromptCache?.cacheReference || ''),
         region: String(guidelines.bedrockPromptCache?.region || '')
     }
-})
+});
 
 const serializeQaChecks = (checks = {}) => ({
     completeness: checks.completeness !== false,
@@ -96,7 +96,7 @@ const serializeQaChecks = (checks = {}) => ({
     redaction: checks.redaction !== false,
     customer: checks.customer !== false,
     instructions: checks.instructions !== false
-})
+});
 
 export default {
     data: () => {
@@ -124,24 +124,24 @@ export default {
                 qaInstructions: serializeMarkdownInstructions(),
                 qaChecks: serializeQaChecks()
             }
-        }
+        };
     },
 
     mounted: function() {
-        this.selectDefaultTab()
-        this.getAiIntegration()
+        this.selectDefaultTab();
+        this.getAiIntegration();
     },
 
     computed: {
         visibleTabs: function() {
-            const tabs = []
+            const tabs = [];
             if (this.canReadPrompts)
-                tabs.push('prompts')
+                tabs.push('prompts');
             if (this.canReadGuidelines)
-                tabs.push('guidelines')
+                tabs.push('guidelines');
             if (this.canReadQa)
-                tabs.push('qa')
-            return tabs
+                tabs.push('qa');
+            return tabs;
         },
 
         hasPromptChanges: function() {
@@ -149,41 +149,41 @@ export default {
                 promptMappings: serializePromptMappings(this.promptMappings)
             }) !== JSON.stringify({
                 promptMappings: this.orig.promptMappings
-            })
+            });
         },
 
         hasGuidelineChanges: function() {
             return JSON.stringify(
                 serializeMarkdownInstructions(this.redactionGuidelines)
-            ) !== JSON.stringify(this.orig.redactionGuidelines)
+            ) !== JSON.stringify(this.orig.redactionGuidelines);
         },
 
         hasQaInstructionChanges: function() {
             return JSON.stringify(
                 serializeMarkdownInstructions(this.qaInstructions)
-            ) !== JSON.stringify(this.orig.qaInstructions)
+            ) !== JSON.stringify(this.orig.qaInstructions);
         },
 
         hasQaCheckChanges: function() {
             return JSON.stringify(
                 serializeQaChecks(this.qaChecks)
-            ) !== JSON.stringify(this.orig.qaChecks)
+            ) !== JSON.stringify(this.orig.qaChecks);
         },
 
         hasQaChanges: function() {
-            return this.hasQaInstructionChanges || this.hasQaCheckChanges
+            return this.hasQaInstructionChanges || this.hasQaCheckChanges;
         }
     },
 
     methods: {
         selectDefaultTab: function() {
-            const tab = this.visibleTabs[0]
+            const tab = this.visibleTabs[0];
             if (tab)
-                this.selectedTab = tab
+                this.selectedTab = tab;
         },
 
         applyPayload: function(payload) {
-            this.aiEnabled = payload.aiEnabled !== false
+            this.aiEnabled = payload.aiEnabled !== false;
 
             if (Array.isArray(payload.promptMappings)) {
                 this.promptMappings = payload.promptMappings.map((mapping) => ({
@@ -191,12 +191,12 @@ export default {
                     entityType: String(mapping.entityType || ''),
                     enabled: mapping.enabled !== false,
                     prompt: String(mapping.prompt || '')
-                }))
-                this.orig.promptMappings = serializePromptMappings(this.promptMappings)
+                }));
+                this.orig.promptMappings = serializePromptMappings(this.promptMappings);
             }
 
             if (payload.redactionGuidelines) {
-                const guidelines = payload.redactionGuidelines
+                const guidelines = payload.redactionGuidelines;
                 this.redactionGuidelines = {
                     delivery: guidelines.delivery || 'inline',
                     content: String(guidelines.content || ''),
@@ -204,13 +204,13 @@ export default {
                         cacheReference: String(guidelines.bedrockPromptCache?.cacheReference || ''),
                         region: String(guidelines.bedrockPromptCache?.region || '')
                     }
-                }
-                this.orig.redactionGuidelines = serializeMarkdownInstructions(this.redactionGuidelines)
+                };
+                this.orig.redactionGuidelines = serializeMarkdownInstructions(this.redactionGuidelines);
             }
 
             if (payload.qaInstructions || payload.qaChecks) {
                 if (payload.qaInstructions) {
-                    const qaInstructions = payload.qaInstructions
+                    const qaInstructions = payload.qaInstructions;
                     this.qaInstructions = {
                         delivery: qaInstructions.delivery || 'inline',
                         content: String(qaInstructions.content || ''),
@@ -218,12 +218,12 @@ export default {
                             cacheReference: String(qaInstructions.bedrockPromptCache?.cacheReference || ''),
                             region: String(qaInstructions.bedrockPromptCache?.region || '')
                         }
-                    }
-                    this.orig.qaInstructions = serializeMarkdownInstructions(this.qaInstructions)
+                    };
+                    this.orig.qaInstructions = serializeMarkdownInstructions(this.qaInstructions);
                 }
 
                 if (payload.qaChecks) {
-                    const qaChecks = payload.qaChecks
+                    const qaChecks = payload.qaChecks;
                     this.qaChecks = {
                         completeness: qaChecks.completeness !== false,
                         references: qaChecks.references !== false,
@@ -233,17 +233,17 @@ export default {
                         redaction: qaChecks.redaction !== false,
                         customer: qaChecks.customer !== false,
                         instructions: qaChecks.instructions !== false
-                    }
-                    this.orig.qaChecks = serializeQaChecks(this.qaChecks)
+                    };
+                    this.orig.qaChecks = serializeQaChecks(this.qaChecks);
                 }
             }
         },
 
         getAiIntegration: function() {
-            this.loading = true
+            this.loading = true;
             DataService.getAiIntegration()
             .then((data) => {
-                this.applyPayload(data.data.datas || {})
+                this.applyPayload(data.data.datas || {});
             })
             .catch((err) => {
                 Notify.create({
@@ -251,18 +251,18 @@ export default {
                     color: 'negative',
                     textColor: 'white',
                     position: 'top-right'
-                })
+                });
             })
             .finally(() => {
-                this.loading = false
-            })
+                this.loading = false;
+            });
         },
 
         savePrompts: function() {
             if (!this.canEditPrompts || this.savingPrompts)
-                return
+                return;
 
-            this.savingPrompts = true
+            this.savingPrompts = true;
             DataService.updateAiIntegration({
                 promptMappings: this.promptMappings.map((mapping) => ({
                     entityType: mapping.entityType,
@@ -272,13 +272,13 @@ export default {
                 }))
             })
             .then((data) => {
-                this.applyPayload(data.data.datas || {})
+                this.applyPayload(data.data.datas || {});
                 Notify.create({
                     message: 'AI prompts updated successfully',
                     color: 'positive',
                     textColor: 'white',
                     position: 'top-right'
-                })
+                });
             })
             .catch((err) => {
                 Notify.create({
@@ -286,29 +286,29 @@ export default {
                     color: 'negative',
                     textColor: 'white',
                     position: 'top-right'
-                })
+                });
             })
             .finally(() => {
-                this.savingPrompts = false
-            })
+                this.savingPrompts = false;
+            });
         },
 
         saveRedactionGuidelines: function() {
             if (!this.canEditGuidelines || this.savingGuidelines)
-                return
+                return;
 
-            this.savingGuidelines = true
+            this.savingGuidelines = true;
             DataService.updateAiIntegration({
                 redactionGuidelines: serializeMarkdownInstructions(this.redactionGuidelines)
             })
             .then((data) => {
-                this.applyPayload(data.data.datas || {})
+                this.applyPayload(data.data.datas || {});
                 Notify.create({
                     message: 'Redaction guidelines updated successfully',
                     color: 'positive',
                     textColor: 'white',
                     position: 'top-right'
-                })
+                });
             })
             .catch((err) => {
                 Notify.create({
@@ -316,35 +316,35 @@ export default {
                     color: 'negative',
                     textColor: 'white',
                     position: 'top-right'
-                })
+                });
             })
             .finally(() => {
-                this.savingGuidelines = false
-            })
+                this.savingGuidelines = false;
+            });
         },
 
         saveQaSettings: function() {
             if (!this.canEditQa || this.savingQaSettings || !this.hasQaChanges)
-                return
+                return;
 
-            this.savingQaSettings = true
-            const payload = {}
+            this.savingQaSettings = true;
+            const payload = {};
 
             if (this.hasQaCheckChanges)
-                payload.qaChecks = serializeQaChecks(this.qaChecks)
+                payload.qaChecks = serializeQaChecks(this.qaChecks);
 
             if (this.hasQaInstructionChanges)
-                payload.qaInstructions = serializeMarkdownInstructions(this.qaInstructions)
+                payload.qaInstructions = serializeMarkdownInstructions(this.qaInstructions);
 
             DataService.updateAiIntegration(payload)
             .then((data) => {
-                this.applyPayload(data.data.datas || {})
+                this.applyPayload(data.data.datas || {});
                 Notify.create({
                     message: 'QA settings updated successfully',
                     color: 'positive',
                     textColor: 'white',
                     position: 'top-right'
-                })
+                });
             })
             .catch((err) => {
                 Notify.create({
@@ -352,11 +352,11 @@ export default {
                     color: 'negative',
                     textColor: 'white',
                     position: 'top-right'
-                })
+                });
             })
             .finally(() => {
-                this.savingQaSettings = false
-            })
+                this.savingQaSettings = false;
+            });
         }
     }
-}
+};

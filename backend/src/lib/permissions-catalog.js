@@ -174,11 +174,11 @@ const catalog = [
     }
 ]
 
-const flatten = () => catalog.flatMap(group => group.permissions.map(permission => permission.scope))
-const core = () => catalog.flatMap(group => group.permissions.filter(permission => permission.core).map(permission => permission.scope))
+const flatten = () => catalog.flatMap(group => group.permissions.map(permission => permission.scope));
+const core = () => catalog.flatMap(group => group.permissions.filter(permission => permission.core).map(permission => permission.scope));
 
 module.exports = {
     catalog,
     flatten,
     core
-}
+};

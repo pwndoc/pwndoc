@@ -377,9 +377,9 @@ const handleAiEnabledFields = async (req, res) => {
 const requireAiGeneratePermission = function(req, res, next) {
     if (acl.isAllowedToken(req.decodedToken, 'audits:ai-generate') ||
         acl.isAllowedToken(req.decodedToken, 'vulnerabilities:ai-generate'))
-        return next()
+        return next();
 
-    Response.Forbidden(res, 'Insufficient privileges')
+    Response.Forbidden(res, 'Insufficient privileges');
 };
 
 const requireVulnerabilityQaPermission = function(req, res, next) {

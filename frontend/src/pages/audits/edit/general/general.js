@@ -3,7 +3,7 @@ import { Notify, Dialog } from 'quasar';
 import Breadcrumb from 'components/breadcrumb';
 import TextareaArray from 'components/textarea-array'
 import CustomFields from 'components/custom-fields'
-import AuditQaSidebar from '@/components/audit-qa-sidebar.vue'
+import AuditQaSidebar from '@/components/audit-qa-sidebar.vue';
 
 import AuditService from '@/services/audit';
 import ClientService from '@/services/client';
@@ -13,16 +13,16 @@ import ReviewerService from '@/services/reviewer';
 import TemplateService from '@/services/template';
 import DataService from '@/services/data';
 import Utils from '@/services/utils';
-import { useUserStore } from 'src/stores/user'
-import { useAuditQaStore } from '@/stores/audit-qa'
-import { useAiGenerationStore } from '@/stores/ai-generation'
+import { useUserStore } from 'src/stores/user';
+import { useAuditQaStore } from '@/stores/audit-qa';
+import { useAiGenerationStore } from '@/stores/ai-generation';
 import { createDraftRecovery } from '@/composables/useDraftRecovery';
 
-import { $t } from '@/boot/i18n'
+import { $t } from '@/boot/i18n';
 
-const userStore = useUserStore()
+const userStore = useUserStore();
 
-const SAVE_SUCCESS_TIMEOUT_MS = 2000
+const SAVE_SUCCESS_TIMEOUT_MS = 2000;
 
 export default {
     data: () => {
@@ -189,32 +189,32 @@ export default {
         },
 
         qaDrawerOpen: function() {
-            return useAuditQaStore().drawerOpen
+            return useAuditQaStore().drawerOpen;
         },
 
         sidePanelOpen: function() {
-            return this.qaDrawerOpen
+            return this.qaDrawerOpen;
         },
 
         aiQaEnabled: function() {
             return this.$settings?.ai?.public?.enabled !== false &&
-                userStore.isAllowed('audits:ai-qa')
+                userStore.isAllowed('audits:ai-qa');
         }
     },
 
     methods: {
         toggleQaView: function() {
-            const qaStore = useAuditQaStore()
+            const qaStore = useAuditQaStore();
             if (qaStore.drawerOpen) {
-                qaStore.close()
-                return
+                qaStore.close();
+                return;
             }
 
-            const aiStore = useAiGenerationStore()
+            const aiStore = useAiGenerationStore();
             if (aiStore.drawerOpen)
-                aiStore.closeDrawer()
+                aiStore.closeDrawer();
 
-            qaStore.open(this.auditId)
+            qaStore.open(this.auditId);
         },
 
         _listener: function(e) {

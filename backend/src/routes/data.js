@@ -42,15 +42,15 @@ module.exports = function(app) {
         updatePrompts: acl.isAllowed(roles, 'ai:prompts:update'),
         updateGuidelines: acl.isAllowed(roles, 'ai:redaction-guidelines:update'),
         updateQa: acl.isAllowed(roles, 'ai:qa-instructions:update')
-    })
+    });
 
     const canReadAiIntegration = (access) =>
-        access.readPrompts || access.readGuidelines || access.readQa
+        access.readPrompts || access.readGuidelines || access.readQa;
 
     const getAiIntegrationAdminPayload = async (settings, access = null) => {
         const payload = {
             aiEnabled: settings?.ai?.public?.enabled !== false
-        }
+        };
 
         if (!access || access.readPrompts) {
             const customFields = await CustomField.getAll();
@@ -60,11 +60,11 @@ module.exports = function(app) {
         }
 
         if (!access || access.readGuidelines)
-            payload.redactionGuidelines = normalizeRedactionGuidelines(settings?.ai?.public?.redactionGuidelines || {})
+            payload.redactionGuidelines = normalizeRedactionGuidelines(settings?.ai?.public?.redactionGuidelines || {});
 
         if (!access || access.readQa) {
-            payload.qaInstructions = normalizeQaInstructions(settings?.ai?.public?.qaInstructions || {})
-            payload.qaChecks = normalizeQaChecks(settings?.ai?.public?.qaChecks || {})
+            payload.qaInstructions = normalizeQaInstructions(settings?.ai?.public?.qaInstructions || {});
+            payload.qaChecks = normalizeQaChecks(settings?.ai?.public?.qaChecks || {});
         }
 
         return payload;
@@ -72,9 +72,9 @@ module.exports = function(app) {
 
     const handleGetAiIntegration = async (req, res) => {
         try {
-            const access = getAiIntegrationAccess(req.decodedToken.roles)
+            const access = getAiIntegrationAccess(req.decodedToken.roles);
             if (!canReadAiIntegration(access))
-                return Response.Forbidden(res, 'Insufficient privileges')
+                return Response.Forbidden(res, 'Insufficient privileges');
 
             const settings = await Settings.getAll();
             const payload = await getAiIntegrationAdminPayload(settings, access);
@@ -82,11 +82,11 @@ module.exports = function(app) {
         } catch (err) {
             Response.Internal(res, err);
         }
-    }
+    };
 
     const updateAiIntegration = async (req, res) => {
         try {
-            const access = getAiIntegrationAccess(req.decodedToken.roles)
+            const access = getAiIntegrationAccess(req.decodedToken.roles);
             const hasPromptMappings = Array.isArray(req.body.promptMappings);
             const hasRedactionGuidelines = req.body.redactionGuidelines !== undefined;
             const hasQaInstructions = req.body.qaInstructions !== undefined;
@@ -98,11 +98,11 @@ module.exports = function(app) {
             }
 
             if (hasPromptMappings && !access.updatePrompts)
-                return Response.Forbidden(res, 'Insufficient privileges')
+                return Response.Forbidden(res, 'Insufficient privileges');
             if (hasRedactionGuidelines && !access.updateGuidelines)
-                return Response.Forbidden(res, 'Insufficient privileges')
+                return Response.Forbidden(res, 'Insufficient privileges');
             if ((hasQaInstructions || hasQaChecks) && !access.updateQa)
-                return Response.Forbidden(res, 'Insufficient privileges')
+                return Response.Forbidden(res, 'Insufficient privileges');
 
             let currentSettings = await Settings.getAll() || {};
 
@@ -229,7 +229,7 @@ module.exports = function(app) {
         } catch (err) {
             Response.Internal(res, err);
         }
-    }
+    };
 
 /* ===== ROLES ===== */
 
