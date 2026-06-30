@@ -72,7 +72,8 @@ const catalog = [
             {scope: 'vulnerabilities:delete', core: false},
             {scope: 'vulnerabilities:delete-all', core: false},
             {scope: 'vulnerability-updates:create', core: true},
-            {scope: 'vulnerabilities:ai-qa', core: true}
+            {scope: 'vulnerabilities:ai-qa', core: true},
+            {scope: 'vulnerabilities:ai-generate', core: true}
         ]
     },
     {

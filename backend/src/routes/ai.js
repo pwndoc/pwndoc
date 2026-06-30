@@ -329,9 +329,17 @@ const handleAiEnabledFields = async (req, res) => {
     }
 };
 
+const requireAiGeneratePermission = function(req, res, next) {
+    if (acl.isAllowedToken(req.decodedToken, 'audits:ai-generate') ||
+        acl.isAllowedToken(req.decodedToken, 'vulnerabilities:ai-generate'))
+        return next()
+
+    Response.Forbidden(res, 'Insufficient privileges')
+};
+
 module.exports = function(app) {
-    app.get('/api/ai/enabled-fields', acl.hasPermission('audits:ai-generate'), handleAiEnabledFields);
-    app.post('/api/ai/generate', acl.hasPermission('audits:ai-generate'), handleAiGenerate);
+    app.get('/api/ai/enabled-fields', acl.hasPermission('validtoken'), requireAiGeneratePermission, handleAiEnabledFields);
+    app.post('/api/ai/generate', acl.hasPermission('validtoken'), requireAiGeneratePermission, handleAiGenerate);
     app.post('/api/ai/qa', acl.hasPermission('audits:ai-qa'), handleAiQa);
     app.post('/api/ai/vulnerabilities/qa', acl.hasPermission('vulnerabilities:ai-qa'), handleVulnerabilityQa);
 };

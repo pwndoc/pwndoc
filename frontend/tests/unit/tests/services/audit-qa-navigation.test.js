@@ -48,6 +48,8 @@ describe('audit-qa-navigation', () => {
     expect(isGeneralInformationLocation('general/Business Impact')).toBe(true)
     expect(isGeneralInformationLocation('field:client')).toBe(true)
     expect(isGeneralInformationLocation('field path: client')).toBe(true)
+    expect(isGeneralInformationLocation('field path: finding.references')).toBe(false)
+    expect(isGeneralInformationLocation('field:category')).toBe(false)
     expect(isGeneralInformationLocation('section:Executive Summary')).toBe(false)
     expect(parseIssueLocation('field:client')).toEqual({
       type: 'page',

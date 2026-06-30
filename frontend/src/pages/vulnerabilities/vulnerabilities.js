@@ -10,11 +10,16 @@ import DraftRecoveryStatus from 'components/draft-recovery-status.vue'
 
 import VulnerabilityService from '@/services/vulnerability'
 import DataService from '@/services/data'
+import AiService from '@/services/ai'
+import AiFieldHelper from '@/services/ai-field-helper'
+import { useAiGenerationStore } from '@/stores/ai-generation'
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
 import { createDraftRecovery } from '@/composables/useDraftRecovery'
 import DraftRecoveryService from '@/services/draft-recovery'
 import VulnerabilityQaDialog from '@/components/vulnerability-qa-dialog.vue'
+import VulnerabilityQaPanel from '@/components/vulnerability-qa-panel.vue'
+import AiChatDrawer from '@/components/ai-chat-drawer.vue'
 
 import { $t } from 'boot/i18n'
 
@@ -85,7 +90,11 @@ export default {
             customFields: [],
             draftRecovery: null,
             draftRecoveryPaused: false,
-            vulnerabilityDrafts: []
+            vulnerabilityDrafts: [],
+            aiPromptFieldKeys: [],
+            aiFieldPrompts: [],
+            activeModal: null,
+            vulnQaOpen: false
         }
     },
 
@@ -96,7 +105,9 @@ export default {
         Cvss4Calculator,
         TextareaArray,
         CustomFields,
-        DraftRecoveryStatus
+        DraftRecoveryStatus,
+        AiChatDrawer,
+        VulnerabilityQaPanel
     },
 
     mounted: function() {
@@ -107,6 +118,7 @@ export default {
         this.getCustomFields()
         this.setupDraftRecovery()
         this.refreshVulnerabilityDrafts()
+        this.loadAiEnabledFieldKeys()
     },
 
     unmounted: function() {
@@ -177,6 +189,37 @@ export default {
 
         vulnerabilityQaCount: function() {
             return this.computedVulnerabilities.length
+        },
+
+        aiEnabled: function() {
+            return this.$settings?.ai?.public?.enabled !== false && (
+                userStore.isAllowed('audits:ai-generate') ||
+                userStore.isAllowed('vulnerabilities:ai-generate')
+            )
+        },
+
+        aiDrawerOpen: function() {
+            return useAiGenerationStore().drawerOpen
+        },
+
+        sidePanelOpen: function() {
+            return this.aiDrawerOpen || this.vulnQaOpen
+        },
+
+        vulnModalCardStyle: function() {
+            return {
+                width: this.sidePanelOpen ? 'min(1400px, 98vw)' : 'min(1000px, 95vw)',
+                maxWidth: '98vw',
+                height: '90vh'
+            }
+        },
+
+        canUseAiInModal: function() {
+            if (!this.aiEnabled)
+                return false
+            if (this.vulnerabilityId)
+                return userStore.isAllowed('vulnerabilities:update')
+            return userStore.isAllowed('vulnerabilities:create')
         }
     },
 
@@ -375,10 +418,16 @@ export default {
         openVulnerability: async function(row) {
             this.clone(row)
             await this.draftRecovery.maybePromptRecovery()
-            if (userStore.isAllowed('vulnerabilities:update') && row.status === 2)
+            if (userStore.isAllowed('vulnerabilities:update') && row.status === 2) {
+                this.activeModal = 'updates'
+                await this.$nextTick()
                 this.$refs.updatesModal.show()
-            else
+            }
+            else {
+                this.activeModal = 'edit'
+                await this.$nextTick()
                 this.$refs.editModal.show()
+            }
         },
 
         openCreateVulnerability: async function(category) {
@@ -388,10 +437,17 @@ export default {
             this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
             await this.draftRecovery.maybePromptRecovery()
 
+            this.activeModal = 'create'
+            await this.$nextTick()
             this.$refs.createModal.show()
         },
 
         cleanupCurrentVulnerability: async function() {
+            const aiStore = useAiGenerationStore()
+            if (aiStore.isActive)
+                aiStore.cancelSession({ force: true })
+            this.vulnQaOpen = false
+
             if (this.draftRecovery) {
                 await this.draftRecovery.flushPendingWrite()
                 this.draftRecovery.resetForKey()
@@ -402,6 +458,7 @@ export default {
             this.currentVulnerabilityOrig = this.$_.cloneDeep(this.currentVulnerability)
             await this.$nextTick()
             this.draftRecoveryPaused = false
+            this.activeModal = null
             await this.refreshVulnerabilityDrafts()
         },
 
@@ -604,15 +661,28 @@ export default {
             this.$router.push({name: 'audits', query: {findingTitle: title}});
         },
 
-        runVulnerabilityQa: function(row) {
-            Dialog.create({
-                component: VulnerabilityQaDialog,
-                componentProps: {
-                    locale: this.dtLanguage,
-                    vulnerabilityId: row._id,
-                    title: this.getDtTitle(row)
-                }
-            })
+        prepareSidePanelForModal: function(except) {
+            if (except !== 'qa')
+                this.vulnQaOpen = false
+            if (except !== 'ai') {
+                const aiStore = useAiGenerationStore()
+                if (aiStore.isActive)
+                    aiStore.cancelSession({ force: true })
+            }
+        },
+
+        toggleVulnerabilityQaView: function() {
+            if (this.vulnQaOpen) {
+                this.vulnQaOpen = false
+                return
+            }
+
+            this.prepareSidePanelForModal('qa')
+            this.vulnQaOpen = true
+        },
+
+        closeVulnQa: function() {
+            this.vulnQaOpen = false
         },
 
         confirmRunAllVulnerabilityQa: function() {
@@ -667,6 +737,191 @@ export default {
 
         dblClick: function(row) {
             this.openVulnerability(row)
+        },
+
+        loadAiEnabledFieldKeys: function() {
+            if (!this.aiEnabled) {
+                this.aiPromptFieldKeys = []
+                this.aiFieldPrompts = []
+                return
+            }
+
+            AiService.getEnabledFields('finding')
+            .then((data) => {
+                const fields = data.data.datas?.fields || []
+                this.aiFieldPrompts = fields
+                this.aiPromptFieldKeys = fields
+                    .map((field) => String(field.fieldKey || ''))
+                    .filter((fieldKey) => fieldKey !== 'poc')
+            })
+            .catch(() => {
+                this.aiPromptFieldKeys = []
+                this.aiFieldPrompts = []
+            })
+        },
+
+        getCustomFieldAiKey: function(customFieldId) {
+            return `custom-field:${customFieldId}`
+        },
+
+        canGenerateAi: function(fieldKey) {
+            return this.canUseAiInModal && this.aiPromptFieldKeys.includes(fieldKey)
+        },
+
+        buildAiLockKey: function(fieldKey) {
+            const vulnKey = this.vulnerabilityId || `new:${this.currentCategory?.name || 'none'}`
+            return `vulnerability:${vulnKey}:${this.currentLanguage}:${fieldKey}`
+        },
+
+        isAiFieldLoading: function(fieldKey) {
+            return useAiGenerationStore().isFieldGenerating(this.buildAiLockKey(fieldKey))
+        },
+
+        isAiFieldLocked: function(fieldKey) {
+            return useAiGenerationStore().isFieldLocked(this.buildAiLockKey(fieldKey))
+        },
+
+        isFieldEditable: function(fieldKey) {
+            return this.canUseAiInModal && !this.isAiFieldLocked(fieldKey)
+        },
+
+        getCurrentDetail: function() {
+            return this.currentVulnerability.details[this.currentDetailsIndex] || {}
+        },
+
+        getAiSelectionTarget: function(field, customField = null) {
+            if (customField)
+                return this.$refs.customfields?.getAiSelectionTarget?.(customField) || null
+
+            if (field === 'references')
+                return this.$refs.referencesField || null
+
+            return this.$refs[`basiceditor_${field}`] || null
+        },
+
+        generateCustomFieldDraftAI: function(customField) {
+            return this.generateFieldDraftAI(null, customField)
+        },
+
+        generateFieldDraftAI: async function(field, customField = null) {
+            const fieldKey = customField ? this.getCustomFieldAiKey(customField?.customField?._id) : field
+            if (!fieldKey || !this.canGenerateAi(fieldKey))
+                return
+
+            if (!this.canUseAiInModal || this.isAiFieldLoading(fieldKey))
+                return
+
+            this.prepareSidePanelForModal('ai')
+
+            const lockKey = this.buildAiLockKey(fieldKey)
+            const aiStore = useAiGenerationStore()
+            if (aiStore.drawerOpen && aiStore.isActive && aiStore.lockKey !== lockKey) {
+                Notify.create({
+                    message: $t('aiChat.activeSession'),
+                    color: 'warning',
+                    textColor: 'dark',
+                    position: 'top-right'
+                })
+                return
+            }
+
+            Utils.syncEditors(this.$refs)
+
+            const detail = this.getCurrentDetail()
+            const selectionTarget = this.getAiSelectionTarget(field, customField)
+            const selection = selectionTarget?.getTextSelection?.()
+            const outputType = AiFieldHelper.getOutputType(field, customField)
+            const fieldLabel = AiFieldHelper.getFieldLabel(field, customField, fieldKey)
+            const baseContext = AiFieldHelper.buildVulnerabilityAiContext(this.currentVulnerability, detail, customField)
+            const requestParams = {
+                entityType: 'finding',
+                field: fieldKey,
+                locale: this.currentLanguage,
+                outputType,
+                context: baseContext
+            }
+
+            try {
+                if (selection?.text) {
+                    const draft = await AiFieldHelper.runSelectionAiChat({
+                        title: `AI - ${fieldLabel}`,
+                        selectedText: selection.text,
+                        outputType,
+                        lockKey,
+                        requestParams: {
+                            ...requestParams,
+                            context: {
+                                ...baseContext,
+                                selectedText: selection.text,
+                                selectedHtml: selection.html || selection.text
+                            }
+                        }
+                    })
+
+                    if (!draft)
+                        return
+
+                    AiFieldHelper.applySelectionDraft({
+                        selectionTarget,
+                        selection,
+                        draft,
+                        outputType
+                    })
+
+                    Notify.create({
+                        message: AiFieldHelper.appliedMessage(),
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                    return
+                }
+
+                const defaultPrompt = AiFieldHelper.getDefaultPrompt(
+                    this.aiFieldPrompts,
+                    fieldKey,
+                    baseContext
+                )
+
+                const draft = await AiFieldHelper.runFieldAiChat({
+                    title: `AI - ${fieldLabel}`,
+                    defaultPrompt,
+                    outputType,
+                    lockKey,
+                    requestParams
+                })
+
+                if (!draft)
+                    return
+
+                AiFieldHelper.applyFieldDraft({
+                    draft,
+                    outputType,
+                    setValue: (value) => {
+                        if (customField)
+                            customField.text = value
+                        else
+                            detail[field] = value
+                    }
+                })
+
+                Notify.create({
+                    message: AiFieldHelper.appliedFieldMessage(),
+                    color: 'positive',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            } catch (err) {
+                if (err?.message === 'cancelled')
+                    return
+
+                Notify.create({
+                    message: err.response?.data?.datas || err.message || 'Unable to generate AI draft',
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            }
         }
     }
 }

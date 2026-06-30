@@ -36,6 +36,36 @@ const resolveIssueLocation = (location = '', findings = []) => {
     return `finding:${title}${match[2] || ''}`;
 };
 
+const normalizeAiIssueLocation = (location = '', options = {}) => {
+    const value = String(location || '').trim() || 'report';
+    const { entityPrefix = 'finding', defaultTitle = '' } = options;
+
+    const fieldPathMatch = value.match(/^field path:\s*(.+)$/i);
+    if (!fieldPathMatch)
+        return value;
+
+    const path = fieldPathMatch[1].trim();
+    const findingFieldMatch = path.match(/^finding\.([a-zA-Z0-9_]+)/i);
+    if (findingFieldMatch) {
+        const field = findingFieldMatch[1];
+        const title = String(defaultTitle || '').trim();
+        if (title)
+            return `${entityPrefix}:${title}/${field}`;
+        return `field:${field}`;
+    }
+
+    const sectionMatch = path.match(/^section[.:](.+)$/i);
+    if (sectionMatch) {
+        const name = sectionMatch[1].trim();
+        return name ? `section:${name}` : 'report';
+    }
+
+    if (['general', 'network', 'report'].includes(path.toLowerCase()))
+        return path.toLowerCase();
+
+    return `general/${path}`;
+};
+
 const normalizeIssueLocations = (issues = [], findings = []) => {
     return issues.map((issue) => ({
         ...issue,
@@ -47,5 +77,6 @@ module.exports = {
     formatFindingLocation,
     buildFindingTitleByIdentifier,
     resolveIssueLocation,
+    normalizeAiIssueLocation,
     normalizeIssueLocations
 };

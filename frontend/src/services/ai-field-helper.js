@@ -272,6 +272,29 @@ export default {
     }
   },
 
+  buildVulnerabilityAiContext(vulnerability, detail, customField) {
+    const customFieldContext = {}
+    if (detail?.customFields && detail.customFields.length > 0) {
+      detail.customFields.forEach((entry) => {
+        if (entry?.customField?.label)
+          customFieldContext[entry.customField.label] = entry.text
+      })
+    }
+
+    return {
+      title: detail?.title || '',
+      vulnType: detail?.vulnType || '',
+      category: vulnerability?.category || '',
+      observation: detail?.observation || '',
+      description: detail?.description || '',
+      remediation: detail?.remediation || '',
+      references: detail?.references || [],
+      customFieldLabel: customField?.customField?.label || '',
+      customFieldValue: customField?.text || '',
+      customFields: customFieldContext
+    }
+  },
+
   appliedMessage() {
     return $t('aiChat.applied')
   },

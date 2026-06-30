@@ -54,6 +54,7 @@ Common actions:
 | `vulnerabilities:delete-all` | Delete every vulnerability from the vulnerability database |
 | `vulnerability-updates:create` | Submit a new vulnerability or update request from an audit finding |
 | `vulnerabilities:ai-qa` | Run AI quality checks on vulnerabilities |
+| `vulnerabilities:ai-generate` | Use AI-assisted drafting on vulnerability templates |
 
 ### Users And Roles
 
@@ -201,7 +202,7 @@ The `user` role has the following permissions:
 - audits:comments:create, audits:comments:update, audits:comments:delete
 - audits:ai-generate, audits:ai-qa
 - images:create, images:read
-- vulnerabilities:read, vulnerability-updates:create, vulnerabilities:ai-qa
+- vulnerabilities:read, vulnerability-updates:create, vulnerabilities:ai-qa, vulnerabilities:ai-generate
 - users:read, roles:read
 - clients:create, clients:read, clients:update, clients:delete
 - companies:create, companies:read, companies:update, companies:delete

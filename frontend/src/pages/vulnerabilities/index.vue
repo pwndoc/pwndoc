@@ -149,16 +149,6 @@
                             <q-btn size="sm" flat color="secondary" icon="fa fa-fingerprint" @click="goToAudits(props.row)">
                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.findAudits')}}</q-tooltip>
                             </q-btn>
-                            <q-btn
-                            v-if="aiQaEnabled"
-                            size="sm"
-                            flat
-                            color="secondary"
-                            icon="fact_check"
-                            @click="runVulnerabilityQa(props.row)"
-                            >
-                                <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.vulnerabilityQa')}}</q-tooltip>
-                            </q-btn>
                             <q-btn v-if="userStore.isAllowed('vulnerabilities:delete')" data-testid="delete-vulnerability-button" size="sm" flat color="negative" icon="fa fa-trash" @click="confirmDeleteVulnerability(props.row)">
                                 <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">{{$t('tooltip.delete')}}</q-tooltip>
                             </q-btn>
@@ -189,9 +179,9 @@
         </div>
     </div>
 
-    <q-dialog v-if="languages.length > 0" ref="createModal" maximized position="right" persistent @hide="cleanupCurrentVulnerability()">
-        <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
-            <q-bar class="bg-fixed-primary text-white">
+    <q-dialog v-if="languages.length > 0 && activeModal === 'create'" ref="createModal" persistent @hide="cleanupCurrentVulnerability()">
+        <q-card class="vuln-modal-card column no-wrap" :style="vulnModalCardStyle">
+            <q-bar class="bg-fixed-primary text-white vuln-modal-bar">
                 <div class="q-toolbar-title">
                     <span v-if="currentCategory">{{$t('addVulnerability')}} ({{currentCategory.name}})</span>
                     <span v-else>{{$t('addVulnerability')}} ({{$t('noCategory')}})</span>
@@ -201,6 +191,8 @@
                 <q-btn dense flat icon="close" data-testid="create-vulnerability-close" @click="$refs.createModal.hide()" />
             </q-bar>
 
+            <div class="row col vuln-modal-content items-stretch no-wrap">
+                <div class="vuln-modal-form" :class="sidePanelOpen ? 'col-8' : 'col-12'">
             <q-card-section>
                 <div class="q-col-gutter-md row">
                     <q-input
@@ -246,14 +238,30 @@
             <q-card-section>
                 <q-field borderless :label="$t('description')" stack-label>
                     <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                        <basic-editor
+                        ref="basiceditor_description"
+                        noAffix
+                        v-model="currentVulnerability.details[currentDetailsIndex].description"
+                        :showAiButton="canGenerateAi('description') && isFieldEditable('description')"
+                        :aiLoading="isAiFieldLoading('description')"
+                        :aiLocked="isAiFieldLocked('description')"
+                        @ai-click="generateFieldDraftAI('description')"
+                        />
                     </template>
                 </q-field>
             </q-card-section>
             <q-card-section>
                 <q-field borderless :label="$t('observation')" stack-label>
                     <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                        <basic-editor
+                        ref="basiceditor_observation"
+                        noAffix
+                        v-model="currentVulnerability.details[currentDetailsIndex].observation"
+                        :showAiButton="canGenerateAi('observation') && isFieldEditable('observation')"
+                        :aiLoading="isAiFieldLoading('observation')"
+                        :aiLocked="isAiFieldLocked('observation')"
+                        @ai-click="generateFieldDraftAI('observation')"
+                        />
                     </template>
                 </q-field>
             </q-card-section>
@@ -276,7 +284,15 @@
             <q-card-section>
                 <q-field borderless :label="$t('remediation')" stack-label>
                     <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                        <basic-editor
+                        ref="basiceditor_remediation"
+                        noAffix
+                        v-model="currentVulnerability.details[currentDetailsIndex].remediation"
+                        :showAiButton="canGenerateAi('remediation') && isFieldEditable('remediation')"
+                        :aiLoading="isAiFieldLoading('remediation')"
+                        :aiLocked="isAiFieldLocked('remediation')"
+                        @ai-click="generateFieldDraftAI('remediation')"
+                        />
                     </template>
                 </q-field>
             </q-card-section>
@@ -307,7 +323,14 @@
                 </div>
             </q-card-section>
             <q-card-section>
-                <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
+                <textarea-array
+                ref="referencesField"
+                :label="$t('references')"
+                v-model="currentVulnerability.details[currentDetailsIndex].references"
+                :showAiButton="canGenerateAi('references') && isFieldEditable('references')"
+                :aiLoading="isAiFieldLoading('references')"
+                @ai-click="generateFieldDraftAI('references')"
+                />
             </q-card-section>
 
             <q-expansion-item 
@@ -323,8 +346,19 @@
                 custom-element="QCardSection"
                 display="vuln"
                 :locale="currentLanguage"
+                :aiEnabled="aiEnabled"
+                :canGenerateAiForField="canGenerateAi"
+                :isAiGeneratingField="isAiFieldLoading"
+                :isAiFieldLocked="isAiFieldLocked"
+                :generateAiForField="generateCustomFieldDraftAI"
                 />
             </q-expansion-item>
+                </div>
+
+                <div v-if="aiDrawerOpen" class="col-4 vuln-modal-ai">
+                    <ai-chat-drawer />
+                </div>
+            </div>
 
             <q-separator />
 
@@ -335,9 +369,9 @@
         </q-card>
     </q-dialog>
 
-    <q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="userStore.isAllowed('vulnerabilities:update')" @hide="cleanupCurrentVulnerability()">
-        <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
-            <q-bar class="bg-fixed-primary text-white">
+    <q-dialog v-if="languages.length > 0 && activeModal === 'edit'" ref="editModal" :persistent="userStore.isAllowed('vulnerabilities:update')" @hide="cleanupCurrentVulnerability()">
+        <q-card class="vuln-modal-card column no-wrap" :style="vulnModalCardStyle">
+            <q-bar class="bg-fixed-primary text-white vuln-modal-bar">
                 <div class="q-toolbar-title">
                     <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
                     <span v-else>{{$t('editVulnerability')}} ({{$t('noCategory')}})</span>
@@ -371,9 +405,24 @@
                     </span>
                 </div>
                 <q-space />
+                <q-btn
+                v-if="aiQaEnabled && vulnerabilityId"
+                flat
+                dense
+                icon="auto_awesome"
+                :class="vulnQaOpen ? 'bg-white text-primary' : ''"
+                :color="vulnQaOpen ? 'grey-1' : 'white'"
+                @click="toggleVulnerabilityQaView()"
+                >
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+                        {{ $t('tooltip.vulnerabilityQa') }}
+                    </q-tooltip>
+                </q-btn>
                 <q-btn dense flat icon="close" data-testid="edit-vulnerability-close" @click="$refs.editModal.hide()" />
             </q-bar>
 
+            <div class="row col vuln-modal-content items-stretch no-wrap">
+                <div class="vuln-modal-form" :class="sidePanelOpen ? 'col-8' : 'col-12'">
             <q-card-section>
                 <div class="q-col-gutter-md row">
                     <q-input
@@ -419,14 +468,30 @@
             <q-card-section>
                 <q-field borderless :label="$t('description')" stack-label class="basic-editor">
                     <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                        <basic-editor
+                        ref="basiceditor_description"
+                        noAffix
+                        v-model="currentVulnerability.details[currentDetailsIndex].description"
+                        :showAiButton="canGenerateAi('description') && isFieldEditable('description')"
+                        :aiLoading="isAiFieldLoading('description')"
+                        :aiLocked="isAiFieldLocked('description')"
+                        @ai-click="generateFieldDraftAI('description')"
+                        />
                     </template>
                 </q-field>
             </q-card-section>
             <q-card-section>
                 <q-field borderless :label="$t('observation')" stack-label class="basic-editor">
                     <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                        <basic-editor
+                        ref="basiceditor_observation"
+                        noAffix
+                        v-model="currentVulnerability.details[currentDetailsIndex].observation"
+                        :showAiButton="canGenerateAi('observation') && isFieldEditable('observation')"
+                        :aiLoading="isAiFieldLoading('observation')"
+                        :aiLocked="isAiFieldLocked('observation')"
+                        @ai-click="generateFieldDraftAI('observation')"
+                        />
                     </template>
                 </q-field>
             </q-card-section>
@@ -449,7 +514,15 @@
             <q-card-section>
                 <q-field borderless :label="$t('remediation')" stack-label class="basic-editor">
                     <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                        <basic-editor
+                        ref="basiceditor_remediation"
+                        noAffix
+                        v-model="currentVulnerability.details[currentDetailsIndex].remediation"
+                        :showAiButton="canGenerateAi('remediation') && isFieldEditable('remediation')"
+                        :aiLoading="isAiFieldLoading('remediation')"
+                        :aiLocked="isAiFieldLocked('remediation')"
+                        @ai-click="generateFieldDraftAI('remediation')"
+                        />
                     </template>
                 </q-field>
             </q-card-section>
@@ -480,7 +553,14 @@
                 </div>
             </q-card-section>
             <q-card-section>
-                <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
+                <textarea-array
+                ref="referencesField"
+                :label="$t('references')"
+                v-model="currentVulnerability.details[currentDetailsIndex].references"
+                :showAiButton="canGenerateAi('references') && isFieldEditable('references')"
+                :aiLoading="isAiFieldLoading('references')"
+                @ai-click="generateFieldDraftAI('references')"
+                />
             </q-card-section>
 
             <q-expansion-item 
@@ -493,8 +573,29 @@
                 v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
                 custom-element="QCardSection"
                 :locale="currentLanguage"
+                :aiEnabled="aiEnabled"
+                :canGenerateAiForField="canGenerateAi"
+                :isAiGeneratingField="isAiFieldLoading"
+                :isAiFieldLocked="isAiFieldLocked"
+                :generateAiForField="generateCustomFieldDraftAI"
                 />
             </q-expansion-item>
+                </div>
+
+                <div v-if="vulnQaOpen" class="col-4 vuln-modal-ai">
+                    <vulnerability-qa-panel
+                    :key="`${vulnerabilityId}:${currentLanguage}`"
+                    :locale="currentLanguage"
+                    :vulnerability-id="vulnerabilityId"
+                    :title="currentVulnerability.details[currentDetailsIndex].title"
+                    @close="closeVulnQa"
+                    />
+                </div>
+
+                <div v-else-if="aiDrawerOpen" class="col-4 vuln-modal-ai">
+                    <ai-chat-drawer />
+                </div>
+            </div>
 
             <q-separator />
 
@@ -506,10 +607,10 @@
         </q-card>
     </q-dialog>
 
-    <q-dialog v-if="languages.length > 0" ref="updatesModal" full-width full-height persistent @hide="cleanupCurrentVulnerability()">
+    <q-dialog v-if="languages.length > 0 && activeModal === 'updates'" ref="updatesModal" full-width full-height persistent @hide="cleanupCurrentVulnerability()">
         <q-layout view="lHh lpr lFf" container>
             <q-header elevated>    
-                    <q-bar class="bg-fixed-primary text-white">
+                    <q-bar class="bg-fixed-primary text-white vuln-modal-bar">
                     <div class="q-toolbar-title">
                         {{$t('updateVulnerability')}}
                     </div>
@@ -931,5 +1032,48 @@
 <style scoped>
 .card-section-merge { 
     height: calc(60vh - 173px);
+}
+
+.vuln-modal-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.vuln-modal-bar {
+    padding: 10px 16px;
+    min-height: 48px;
+}
+
+.vuln-modal-content {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.vuln-modal-content > .vuln-modal-form,
+.vuln-modal-content > .vuln-modal-ai {
+    align-self: stretch;
+    max-height: 100%;
+}
+
+.vuln-modal-form {
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.vuln-modal-ai {
+    border-left: 1px solid #e0e0e0;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.vuln-modal-ai :deep(.ai-chat-drawer__panel),
+.vuln-modal-ai :deep(.qa-results-panel) {
+    flex: 1 1 0;
+    min-height: 0;
 }
 </style>

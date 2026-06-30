@@ -22,13 +22,38 @@ export const QA_FIELD_HIGHLIGHT_MAP = {
   retestDescription: 'retestDescriptionField'
 }
 
+const FINDING_FIELD_KEYS = new Set([
+  'description',
+  'observation',
+  'remediation',
+  'references',
+  'poc',
+  'affected',
+  'cvssv3',
+  'cvssv4',
+  'retestDescription',
+  'category',
+  'vulnType',
+  'title'
+])
+
 export const isGeneralInformationLocation = (location = '') => {
   const value = String(location || '').trim().toLowerCase()
   if (value === 'general')
     return true
-  return value.startsWith('general/')
-    || value.startsWith('field:')
-    || value.startsWith('field path:')
+  if (value.startsWith('general/'))
+    return true
+
+  if (value.startsWith('field:')) {
+    const field = value.slice('field:'.length)
+    return !FINDING_FIELD_KEYS.has(field)
+  }
+
+  const fieldPathMatch = value.match(/^field path:\s*(.+)$/)
+  if (!fieldPathMatch)
+    return false
+
+  return !/^finding\./.test(fieldPathMatch[1].trim())
 }
 
 export const parseIssueLocation = (location = '') => {

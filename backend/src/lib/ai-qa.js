@@ -7,7 +7,8 @@ const {
 const { runQaWithProvider } = require('./ai-client');
 const {
     formatFindingLocation,
-    normalizeIssueLocations
+    normalizeIssueLocations,
+    normalizeAiIssueLocation
 } = require('./ai-qa-location');
 const {
     resolveRedactionGuidelinesForRequest,
@@ -259,7 +260,12 @@ const runAuditQa = async ({ audit, settings, provider }) => {
     }
 
     const aiIssues = filterAiIssuesByEnabledChecks(
-        (aiResult?.issues || []).map((issue) => normalizeIssue(issue, 'ai')),
+        (aiResult?.issues || []).map((issue) => normalizeIssue({
+            ...issue,
+            location: normalizeAiIssueLocation(issue.location, {
+                entityPrefix: 'finding'
+            })
+        }, 'ai')),
         qaChecks
     );
     const issues = sortIssues(dedupeIssues([

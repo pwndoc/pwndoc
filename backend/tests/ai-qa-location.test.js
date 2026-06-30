@@ -1,6 +1,7 @@
 const {
     formatFindingLocation,
     resolveIssueLocation,
+    normalizeAiIssueLocation,
     normalizeIssueLocations
 } = require('../src/lib/ai-qa-location');
 
@@ -31,6 +32,26 @@ module.exports = function() {
             ], findings);
 
             expect(issues[0].location).toBe('finding:SQL Injection');
+        });
+
+        it('should normalize AI field path locations to canonical finding locations', () => {
+            expect(normalizeAiIssueLocation('field path: finding.references', {
+                entityPrefix: 'finding',
+                defaultTitle: 'SQL Injection'
+            })).toBe('finding:SQL Injection/references');
+        });
+
+        it('should normalize AI field path locations for vulnerability QA', () => {
+            expect(normalizeAiIssueLocation('field path: finding.cvssv3', {
+                entityPrefix: 'vulnerability',
+                defaultTitle: 'Missing HSTS'
+            })).toBe('vulnerability:Missing HSTS/cvssv3');
+        });
+
+        it('should keep field-only locations when no title is available', () => {
+            expect(normalizeAiIssueLocation('field path: finding.category', {
+                entityPrefix: 'finding'
+            })).toBe('field:category');
         });
     });
 };

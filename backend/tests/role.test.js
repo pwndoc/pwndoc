@@ -54,7 +54,8 @@ module.exports = function(request, app) {
           expect.objectContaining({
             key: 'vulnerabilities',
             permissions: expect.arrayContaining([
-              expect.objectContaining({scope: 'vulnerabilities:ai-qa', core: true})
+              expect.objectContaining({scope: 'vulnerabilities:ai-qa', core: true}),
+              expect.objectContaining({scope: 'vulnerabilities:ai-generate', core: true})
             ])
           }),
           expect.objectContaining({

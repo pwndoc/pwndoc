@@ -22,6 +22,7 @@ const {
 const { AI_DEFAULT_PROVIDER } = require('./ai-prompts');
 const { runReferenceLinkChecks } = require('./ai-qa-link-checker');
 const { runImageCaptionChecks } = require('./ai-qa-image-captions');
+const { normalizeAiIssueLocation } = require('./ai-qa-location');
 
 const pushIssue = (issues, issue, source = 'structural') => {
     const normalized = normalizeIssue(issue, source);
@@ -465,7 +466,10 @@ const runSingleVulnerabilityQa = async ({
     const aiIssues = filterAiIssuesByEnabledChecks(
         (aiResult?.issues || []).map((issue) => normalizeIssue({
             ...issue,
-            location: String(issue.location || '').replace(/^finding:/, 'vulnerability:')
+            location: normalizeAiIssueLocation(issue.location, {
+                entityPrefix: 'vulnerability',
+                defaultTitle: detail.title
+            })
         }, 'ai')),
         qaChecks
     );
