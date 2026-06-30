@@ -178,6 +178,22 @@ module.exports = function () {
         expect(ooxml).toEqual(expected)
       })
 
+      it('Mark without inline style', () => {
+        var html = `<p><mark data-color="#ffff25">test</mark></p>`
+        var expected =
+        `<w:p>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:highlight w:val="yellow"/>`+
+              `<w:highlightCs w:val="yellow"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">test</w:t>`+
+          `</w:r>`+
+        `</w:p>`
+        var ooxml = html2ooxml(html)
+        expect(ooxml).toEqual(expected)
+      })
+
       it('Heading 1', () => {
         var html = "<h1>Heading</h1>"
         var expected =
@@ -544,6 +560,18 @@ module.exports = function () {
             `</w:rPr>`+
             `<w:t xml:space="preserve">Code Block</w:t>`+
           `</w:r>`+
+        `</w:p>`
+        var ooxml = html2ooxml(html)
+        expect(ooxml).toEqual(expected)
+      })
+
+      it('Empty CodeBlock', () => {
+        var html = `<pre><code class="language-plaintext"></code></pre>`
+        var expected =
+        `<w:p>`+
+          `<w:pPr>`+
+            `<w:pStyle w:val="Code"/>`+
+          `</w:pPr>`+
         `</w:p>`
         var ooxml = html2ooxml(html)
         expect(ooxml).toEqual(expected)
@@ -1011,18 +1039,18 @@ module.exports = function () {
           Cvss3P1: jest.fn().mockImplementation((vector) => ({
             createJsonSchema: () => ({
               vectorString: vector || '',
-              baseScore: 8.8,
+              baseScore: 6,
               baseSeverity: vector && vector.includes('SEVNONE') ? '' : (vector && vector.includes('SEVLOW') ? 'LOW' : (vector && vector.includes('SEVMED') ? 'MEDIUM' : (vector && vector.includes('SEVHIGH') ? 'HIGH' : 'CRITICAL'))),
               temporalScore: 6.1,
               temporalSeverity: vector && vector.includes('TEMPNONE') ? '' : (vector && vector.includes('TEMPLOW') ? 'LOW' : (vector && vector.includes('TEMPHIGH') ? 'HIGH' : 'MEDIUM')),
-              environmentalScore: 3.4,
+              environmentalScore: 4,
               environmentalSeverity: vector && vector.includes('ENVNONE') ? '' : (vector && vector.includes('ENVCRIT') ? 'CRITICAL' : 'LOW')
             })
           })),
           Cvss4P0: jest.fn().mockImplementation((vector) => ({
             createJsonSchema: () => ({
               vectorString: vector || '',
-              baseScore: 9.1,
+              baseScore: 9,
               baseSeverity: vector && vector.includes('SEVNONE') ? '' : (vector && vector.includes('SEVLOW') ? 'LOW' : (vector && vector.includes('SEVMED') ? 'MEDIUM' : (vector && vector.includes('SEVCRIT') ? 'CRITICAL' : 'HIGH'))),
               threatScore: 8.4
             })
@@ -1057,6 +1085,10 @@ module.exports = function () {
         expect(rendered.findings[0].identifier).toBe('IDX-001')
         expect(rendered.findings[0].cvss.baseSeverity).toBe('Critical')
         expect(rendered.findings[0].cvss4.baseSeverity).toBe('High')
+        expect(rendered.findings[0].cvss.baseMetricScore).toBe('6.0')
+        expect(rendered.findings[0].cvss.temporalMetricScore).toBe('6.1')
+        expect(rendered.findings[0].cvss.environmentalMetricScore).toBe('4.0')
+        expect(rendered.findings[0].cvss4.baseScore).toBe('9.0')
         expect(rendered.findings[0].cvssObj.AV).toBe('Network')
         expect(rendered.findings[1].cvssObj.AV).toBe('Physical')
         var descriptionImages = rendered.findings[0].description.flatMap(block => block.images || [])

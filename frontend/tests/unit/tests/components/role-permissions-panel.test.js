@@ -17,6 +17,13 @@ const catalog = [
     permissions: [
       { scope: 'users:read', core: true }
     ]
+  },
+  {
+    key: 'backups',
+    label: 'Backups',
+    permissions: [
+      { scope: 'backups:update' }
+    ]
   }
 ]
 
@@ -26,7 +33,8 @@ const stubs = {
     props: ['modelValue'],
     template: '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />'
   },
-  'q-icon': { props: ['name'], template: '<span class="q-icon">{{name}}</span>' },
+  'q-icon': { props: ['name'], template: '<span class="q-icon">{{name}}<slot /></span>' },
+  'q-tooltip': { template: '<span class="q-tooltip"><slot /></span>' },
   'q-chip': { props: ['label'], template: '<span class="q-chip">{{label}}</span>' },
   'q-btn': { props: ['label'], template: '<button @click="$emit(\'click\')">{{label}}</button>' },
   'q-expansion-item': { template: '<div class="permission-group"><slot name="header" /><slot /></div>' },
@@ -34,7 +42,8 @@ const stubs = {
   'q-badge': { props: ['label'], template: '<span class="q-badge">{{label}}</span>' },
   'q-checkbox': { props: ['label', 'disable'], template: '<label class="q-checkbox" :data-disable="disable">{{label}}</label>' },
   'q-item': { template: '<div class="q-item"><slot /></div>' },
-  'q-item-label': { template: '<span><slot /></span>' }
+  'q-item-label': { template: '<span><slot /></span>' },
+  'q-banner': { template: '<div class="q-banner"><slot name="avatar" /><slot /></div>' }
 }
 
 const createWrapper = (props = {}) => {
@@ -43,7 +52,7 @@ const createWrapper = (props = {}) => {
       permissionsCatalog: catalog,
       allows: ['roles:read'],
       search: '',
-      expandedPermissionGroups: { roles: true, users: true },
+      expandedPermissionGroups: { roles: true, users: true, backups: true },
       ...props
     },
     global: {
@@ -67,8 +76,8 @@ describe('RolePermissionsPanel', () => {
   it('treats all permissions as selected when allPermissions is true', () => {
     const wrapper = createWrapper({ allows: [], allPermissions: true })
 
-    expect(wrapper.vm.selectedPermissionsCount).toBe(3)
-    expect(wrapper.text()).toContain('3 / 3 assigned')
+    expect(wrapper.vm.selectedPermissionsCount).toBe(4)
+    expect(wrapper.text()).toContain('4 / 4 assigned')
   })
 
   it('filters permissions by search text', async () => {
@@ -78,5 +87,23 @@ describe('RolePermissionsPanel', () => {
 
     expect(wrapper.text()).toContain('users:read')
     expect(wrapper.text()).not.toContain('roles:read')
+  })
+
+  it('shows a sensitive-permission warning icon only for backups:update', () => {
+    const wrapper = createWrapper()
+
+    const sensitiveCheckbox = wrapper.find('[data-testid="role-permission-backups:update-checkbox"]')
+    expect(sensitiveCheckbox.element.parentElement.querySelector('.q-icon')).not.toBeNull()
+
+    const plainCheckbox = wrapper.find('[data-testid="role-permission-roles:read-checkbox"]')
+    expect(plainCheckbox.element.parentElement.querySelector('.q-icon')).toBeNull()
+  })
+
+  it('flags the backups group with a critical badge and a high-impact banner', () => {
+    const wrapper = createWrapper()
+
+    expect(wrapper.text()).toContain('criticalPermissionBadge')
+    expect(wrapper.text()).toContain('highImpactPermissionTitle')
+    expect(wrapper.find('.critical-permission-banner').exists()).toBe(true)
   })
 })

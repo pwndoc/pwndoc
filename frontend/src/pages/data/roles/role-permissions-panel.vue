@@ -26,27 +26,44 @@
                 @update:model-value="setGroupExpanded(group.key, $event)"
                 expand-separator
                 dense
-                header-class="bg-blue-grey-1"
+                :class="{ 'permission-group--critical': groupHasSensitivePermission(group) }"
+                :header-class="groupHasSensitivePermission(group) ? 'bg-red-1' : 'bg-blue-grey-1'"
                 >
                     <template v-slot:header>
                         <q-item-section>
-                            <div class="text-weight-bold">{{group.label}}</div>
+                            <div class="row items-center q-gutter-x-sm">
+                                <div class="text-weight-bold" :class="{ 'text-negative': groupHasSensitivePermission(group) }">{{group.label}}</div>
+                                <q-chip v-if="groupHasSensitivePermission(group)" dense square outline color="negative" :label="$t('criticalPermissionBadge')" class="text-weight-bold" />
+                            </div>
                         </q-item-section>
                         <q-item-section side>
-                            <q-badge rounded color="grey-7" :label="groupCheckedCount(group) + ' / ' + group.permissions.length" />
+                            <q-badge rounded :color="groupHasSensitivePermission(group) ? 'negative' : 'grey-7'" :label="groupCheckedCount(group) + ' / ' + group.permissions.length" />
                         </q-item-section>
                     </template>
                     <div class="row q-col-gutter-sm q-pa-sm">
                         <div v-for="permission in group.permissions" :key="permission.scope" class="col-md-6 col-12">
-                            <q-checkbox
-                            dense
-                            :data-testid="`role-permission-${permission.scope}-checkbox`"
-                            :model-value="isPermissionChecked(permission.scope)"
-                            @update:model-value="togglePermission(permission.scope)"
-                            :label="permission.scope"
-                            :color="permission.core ? 'secondary' : 'primary'"
-                            :disable="!editable"
-                            />
+                            <div class="row items-center no-wrap permission-row" :class="{ 'permission-row--critical bg-red-1': isSensitivePermission(permission.scope) }">
+                                <q-checkbox
+                                dense
+                                :data-testid="`role-permission-${permission.scope}-checkbox`"
+                                :model-value="isPermissionChecked(permission.scope)"
+                                @update:model-value="togglePermission(permission.scope)"
+                                :label="permission.scope"
+                                :color="permission.core ? 'secondary' : 'primary'"
+                                :disable="!editable"
+                                class="col-grow"
+                                />
+                                <q-icon v-if="isSensitivePermission(permission.scope)" name="warning" color="negative" size="18px" class="q-mr-sm" />
+                            </div>
+                        </div>
+                        <div v-if="groupHasSensitivePermission(group)" class="col-12">
+                            <q-banner dense rounded class="critical-permission-banner bg-red-1">
+                                <template v-slot:avatar>
+                                    <q-icon name="warning" color="negative" size="20px" />
+                                </template>
+                                <div class="text-negative text-weight-bold">{{$t('highImpactPermissionTitle')}}</div>
+                                <div class="text-negative">{{$t('sensitivePermissionTooltip')}}</div>
+                            </q-banner>
                         </div>
                     </div>
                 </q-expansion-item>
@@ -57,6 +74,8 @@
 </template>
 
 <script>
+const SENSITIVE_PERMISSIONS = new Set(['backups:update'])
+
 export default {
     name: 'RolePermissionsPanel',
     props: {
@@ -112,6 +131,12 @@ export default {
         isPermissionChecked: function(scope) {
             return this.allPermissions || this.allows.includes(scope)
         },
+        isSensitivePermission: function(scope) {
+            return SENSITIVE_PERMISSIONS.has(scope)
+        },
+        groupHasSensitivePermission: function(group) {
+            return group.permissions.some(permission => this.isSensitivePermission(permission.scope))
+        },
         permissionMatchesSearch: function(permission, group) {
             const needle = this.search.trim().toLowerCase()
             if (!needle)
@@ -149,3 +174,25 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.permission-group--critical {
+    border: 1px solid var(--q-negative);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.permission-row {
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+}
+
+.permission-row--critical {
+    border-color: var(--q-negative);
+}
+
+.critical-permission-banner {
+    border-left: 4px solid var(--q-negative);
+}
+</style>

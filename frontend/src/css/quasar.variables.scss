@@ -23,6 +23,8 @@ $typography-font-family: Helvetica, Arial, sans-serif;
 $diffBackground : #ffebee; // red-1
 $diffBackgroundDark : #f4433626; // red-6 + opacity
 
+$negativeDark : #DB282826; // negative + opacity
+
 $diffTextNegative : #fdb8c0;
 
 $cDark: #1d1d1d; // dark
@@ -142,7 +144,11 @@ $text-comment-focused: black;
     .bg-blue-grey-1 {
       background: #616161 !important; // grey-8
     }
-  
+
+    .bg-red-1 {
+      background: $negativeDark !important;
+    }
+
     .bg-light-blue-2 {
       background: #03a9f436 !important; // light-blue-6
     }
