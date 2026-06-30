@@ -29,8 +29,6 @@
 <script>
 import AuditStateIcon from 'components/audit-state-icon';
 import DraftRecoveryStatus from 'components/draft-recovery-status.vue';
-import { useAiGenerationStore } from '@/stores/ai-generation';
-import { mapState } from 'pinia';
 
 export default {
     name: 'breadcrumb',
@@ -50,13 +48,10 @@ export default {
     },
 
     computed: {
-        ...mapState(useAiGenerationStore, ['layoutRightInset']),
-
         breadcrumbStyle() {
             const hasDesktopDrawer = this.auditDrawerOpen && this.$q.screen.gt.sm
             return {
-                left: hasDesktopDrawer ? '400px' : '0px',
-                right: this.layoutRightInset ? `${this.layoutRightInset}px` : '0px'
+                left: hasDesktopDrawer ? '400px' : '0px'
             }
         },
 

@@ -86,14 +86,6 @@
 								</q-btn>
 							</q-item-section>
 						</template>
-						<q-item-section side class="topButtonSection" v-if="aiQaEnabled">
-							<q-btn class="audit-qa-btn" flat :color="qaDrawerOpen ? 'primary' : 'secondary'" @click="runAuditQa">
-								<q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
-									{{ $t('tooltip.auditQa') }}
-								</q-tooltip>
-								<q-icon name="fact_check" size="md" />
-							</q-btn>
-						</q-item-section>
 						<q-item-section side class="topButtonSection">
 							<q-btn class="audit-download-btn" flat color="info" @click="generateReport">
 								<q-badge
@@ -374,19 +366,13 @@
 			
 		</q-splitter>
 	</q-drawer>
-	<audit-qa-sidebar
-		:audit-id="auditId"
-		:findings="audit.findings || []"
-		:sections="audit.sections || []"
-		@highlight-field="highlightQaField"
-	/>
 	<router-view :key="$route.fullPath"/>
 </template>
 
 <script>
 import { Dialog, Notify, QSpinnerGears, LocalStorage } from 'quasar';
 import { useAuditQaStore } from '@/stores/audit-qa'
-import AuditQaSidebar from '@/components/audit-qa-sidebar.vue'
+import { useAiGenerationStore } from '@/stores/ai-generation'
 import { computed, ref } from 'vue';
 import draggable from 'vuedraggable'
 import CommentsList from 'components/comments-list'
@@ -471,8 +457,7 @@ export default {
 
 	components: {
 		draggable,
-		CommentsList,
-		AuditQaSidebar
+		CommentsList
 	},
 
 	created: function() {
@@ -486,6 +471,11 @@ export default {
 	},
 
 	unmounted: function() {
+		useAuditQaStore().close()
+		const aiStore = useAiGenerationStore()
+		if (aiStore.isActive)
+			aiStore.cancelSession({ force: true })
+
 		if (!this.loading) {
 			this.$socket.emit('leave', {username: userStore.username, room: this.auditId});
 			this.$socket.off()
@@ -560,14 +550,19 @@ export default {
 		},
 		draftRecoveryRevision: function() {
 			this.refreshAuditDrafts()
+		},
+		'$route.path': function(path) {
+			const onReportPage = /\/audits\/[^/]+\/(findings\/[^/]+|sections\/[^/]+)/.test(path)
+			if (!onReportPage) {
+				useAuditQaStore().close()
+				const aiStore = useAiGenerationStore()
+				if (aiStore.isActive)
+					aiStore.cancelSession({ force: true })
+			}
 		}
 	},
 
 	computed: {
-		qaDrawerOpen: function() {
-			return useAuditQaStore().drawerOpen
-		},
-
 		isDesktop: function() {
 			return this.$q.screen.gt.sm
 		},
@@ -641,11 +636,6 @@ export default {
 
 		hasAnyAuditDraft: function() {
 			return this.auditDrafts.length > 0
-		},
-
-		aiQaEnabled: function() {
-			return this.$settings?.ai?.public?.enabled !== false &&
-				userStore.isAllowed('audits:ai-qa')
 		}
 	},
 
@@ -940,14 +930,6 @@ export default {
 
 				fileReader.readAsText(data)
 			})
-		},
-
-		runAuditQa: function() {
-			useAuditQaStore().open(this.auditId)
-		},
-
-		highlightQaField: function(fieldName) {
-			this.fieldHighlighted = fieldName
 		},
 
 		generateReport: function() {

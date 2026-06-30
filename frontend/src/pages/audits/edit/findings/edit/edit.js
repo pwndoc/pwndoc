@@ -7,6 +7,8 @@ import Cvss4Calculator from 'components/cvss4calculator'
 import TextareaArray from 'components/textarea-array'
 import CustomFields from 'components/custom-fields'
 import CommentsList from 'components/comments-list'
+import AuditQaSidebar from '@/components/audit-qa-sidebar.vue'
+import AiChatDrawer from '@/components/ai-chat-drawer.vue'
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
@@ -15,6 +17,7 @@ import { useUserStore } from 'src/stores/user'
 import VulnService from '@/services/vulnerability';
 import AiFieldHelper from '@/services/ai-field-helper';
 import { useAiGenerationStore } from '@/stores/ai-generation';
+import { useAuditQaStore } from '@/stores/audit-qa';
 import { runAfterAiGenerationCheck } from '@/composables/confirmLeaveIfAiGenerating';
 import Utils from '@/services/utils';
 import { createDraftRecovery } from '@/composables/useDraftRecovery';
@@ -79,7 +82,9 @@ export default {
         Cvss4Calculator,
         TextareaArray,
         CustomFields,
-        CommentsList
+        CommentsList,
+        AuditQaSidebar,
+        AiChatDrawer
     },
 
     mounted: async function() {
@@ -205,12 +210,27 @@ export default {
             return `${$t('btn.save')} (ctrl+s)`
         },
 
+        qaDrawerOpen: function() {
+            return useAuditQaStore().drawerOpen
+        },
+
+        aiDrawerOpen: function() {
+            return useAiGenerationStore().drawerOpen
+        },
+
+        sidePanelOpen: function() {
+            return this.commentMode || this.qaDrawerOpen || this.aiDrawerOpen
+        },
+
+        aiQaEnabled: function() {
+            return this.$settings?.ai?.public?.enabled !== false &&
+                userStore.isAllowed('audits:ai-qa')
+        },
+
         findingTabsBarStyle: function() {
-            const inset = useAiGenerationStore().layoutRightInset
             const hasDesktopDrawer = this.auditDrawerOpen && this.$q.screen.gt.sm
             return {
-                left: hasDesktopDrawer ? '400px' : '0px',
-                right: inset ? `${inset}px` : '0px'
+                left: hasDesktopDrawer ? '400px' : '0px'
             }
         },
     },
@@ -575,6 +595,8 @@ export default {
             if (this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT || this.isAiFieldLoading(fieldKey))
                 return
 
+            this.prepareSidePanel('ai')
+
             const lockKey = this.buildAiLockKey(fieldKey)
             const aiStore = useAiGenerationStore()
             if (aiStore.drawerOpen && aiStore.isActive && aiStore.lockKey !== lockKey) {
@@ -717,8 +739,26 @@ export default {
 
         // *** Comments Handling ***
 
+        prepareSidePanel: function(except) {
+            if (except !== 'comments' && this.commentMode) {
+                this.commentMode = false
+                this.focusedComment = ''
+                this.fieldHighlighted = null
+            }
+            if (except !== 'qa')
+                useAuditQaStore().close()
+            if (except !== 'ai') {
+                const aiStore = useAiGenerationStore()
+                if (aiStore.isActive)
+                    aiStore.cancelSession({ force: true })
+            }
+        },
+
         toggleCommentView: function() {
             Utils.syncEditors(this.$refs)
+            if (!this.commentMode)
+                this.prepareSidePanel('comments')
+
             this.commentMode = !this.commentMode
             if (!this.commentMode) {
                 this.focusedComment = ""
@@ -726,6 +766,21 @@ export default {
             }
             if (this.commentMode && this.retestSplitView)
                 this.toggleSplitView()
+        },
+
+        toggleQaView: function() {
+            const qaStore = useAuditQaStore()
+            if (qaStore.drawerOpen) {
+                qaStore.close()
+                return
+            }
+
+            this.prepareSidePanel('qa')
+            qaStore.open(this.auditParent._id)
+        },
+
+        highlightQaField: function(fieldName) {
+            this.fieldHighlighted = fieldName
         },
 
         focusComment: function(comment) {

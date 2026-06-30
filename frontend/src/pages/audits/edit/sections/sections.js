@@ -4,12 +4,15 @@ import BasicEditor from 'components/editor/Editor.vue';
 import Breadcrumb from 'components/breadcrumb';
 import CustomFields from 'components/custom-fields';
 import CommentsList from 'components/comments-list';
+import AuditQaSidebar from '@/components/audit-qa-sidebar.vue';
+import AiChatDrawer from '@/components/ai-chat-drawer.vue';
 
 import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import AiService from '@/services/ai';
 import AiFieldHelper from '@/services/ai-field-helper';
 import { useAiGenerationStore } from '@/stores/ai-generation';
+import { useAuditQaStore } from '@/stores/audit-qa';
 import { runAfterAiGenerationCheck } from '@/composables/confirmLeaveIfAiGenerating';
 import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils';
@@ -69,7 +72,9 @@ export default {
         BasicEditor,
         Breadcrumb,
         CustomFields,
-        CommentsList
+        CommentsList,
+        AuditQaSidebar,
+        AiChatDrawer
     },
 
     mounted: async function() {
@@ -184,6 +189,23 @@ export default {
             if (this.saveButtonState === 'saved')
                 return $t('btn.saved')
             return `${$t('btn.save')} (ctrl+s)`
+        },
+
+        qaDrawerOpen: function() {
+            return useAuditQaStore().drawerOpen
+        },
+
+        aiDrawerOpen: function() {
+            return useAiGenerationStore().drawerOpen
+        },
+
+        sidePanelOpen: function() {
+            return this.commentMode || this.qaDrawerOpen || this.aiDrawerOpen
+        },
+
+        aiQaEnabled: function() {
+            return this.$settings?.ai?.public?.enabled !== false &&
+                userStore.isAllowed('audits:ai-qa')
         }
     },
 
@@ -337,6 +359,8 @@ export default {
 
             if (this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT || this.isAiFieldLoading(fieldKey))
                 return
+
+            this.prepareSidePanel('ai')
 
             const lockKey = this.buildAiLockKey(fieldKey)
             const aiStore = useAiGenerationStore()
@@ -534,13 +558,46 @@ export default {
 
         // *** Comments Handling ***
 
+        prepareSidePanel: function(except) {
+            if (except !== 'comments' && this.commentMode) {
+                this.commentMode = false
+                this.focusedComment = ''
+                this.fieldHighlighted = null
+            }
+            if (except !== 'qa')
+                useAuditQaStore().close()
+            if (except !== 'ai') {
+                const aiStore = useAiGenerationStore()
+                if (aiStore.isActive)
+                    aiStore.cancelSession({ force: true })
+            }
+        },
+
         toggleCommentView: function() {
             Utils.syncEditors(this.$refs)
+            if (!this.commentMode)
+                this.prepareSidePanel('comments')
+
             this.commentMode = !this.commentMode
             if (!this.commentMode) {
                 this.focusedComment = ""
                 this.fieldHighlighted = null
             }
+        },
+
+        toggleQaView: function() {
+            const qaStore = useAuditQaStore()
+            if (qaStore.drawerOpen) {
+                qaStore.close()
+                return
+            }
+
+            this.prepareSidePanel('qa')
+            qaStore.open(this.auditId)
+        },
+
+        highlightQaField: function(fieldName) {
+            this.fieldHighlighted = fieldName
         },
 
         focusComment: function(comment) {

@@ -21,6 +21,20 @@
                         {{(commentMode) ? $t('tooltip.hideComments') : $t('tooltip.showComments')}}
                     </q-tooltip> 
                 </q-btn>
+                <q-btn
+                v-if="aiQaEnabled"
+                color="primary"
+                :flat="!qaDrawerOpen"
+                :outline="qaDrawerOpen"
+                :class="{'bg-grey-3': qaDrawerOpen}"
+                icon="auto_awesome"
+                :ripple="false"
+                @click="toggleQaView()"
+                class="q-mr-sm">
+                    <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+                        {{ $t('tooltip.auditQa') }}
+                    </q-tooltip>
+                </q-btn>
                 <q-separator vertical inset class="q-mr-sm" />
             <q-btn
             v-if="auditParent.type === 'default'"
@@ -101,7 +115,7 @@
         </q-tabs>
 
         <div class="row full-width content">
-            <q-tab-panels v-model="selectedTab" animated class="bg-transparent q-mt-md" :class="(commentMode)?'col-8':'col-xl-8 offset-xl-2 col-12'" @before-transition="syncEditors" @transition="updateOrig" >            
+            <q-tab-panels v-model="selectedTab" animated class="bg-transparent q-mt-md" :class="(sidePanelOpen)?'col-8':'col-xl-8 offset-xl-2 col-12'" @before-transition="syncEditors" @transition="updateOrig" >            
                 <q-tab-panel name="definition">
                     <q-card>
                         <q-card-section class="row q-col-gutter-md">
@@ -480,13 +494,28 @@
                     </comments-list>
                 </q-scroll-area>
             </q-card>
+
+            <q-card v-else-if="qaDrawerOpen" class="col-3 bg-grey-11 sidebar-comments">
+                <q-scroll-area class="scrollarea-comments">
+                    <audit-qa-sidebar
+                    :audit-id="auditParent._id"
+                    :findings="auditParent.findings || []"
+                    :sections="auditParent.sections || []"
+                    @highlight-field="highlightQaField"
+                    />
+                </q-scroll-area>
+            </q-card>
+
+            <q-card v-else-if="aiDrawerOpen" class="col-3 bg-grey-11 sidebar-comments sidebar-ai">
+                <ai-chat-drawer />
+            </q-card>
         </div>
     </div>
 
     <!-- RETEST VIEW -->
 
     <div class="row content-retest" v-if="auditParent.type === 'retest'">
-        <div class="row q-pa-md" :class="(commentMode) ? 'col-8' : (retestSplitView) ? 'col-12' : 'col-xl-8 col-12 offset-xl-2'">
+        <div class="row q-pa-md" :class="(sidePanelOpen) ? 'col-8' : (retestSplitView) ? 'col-12' : 'col-xl-8 col-12 offset-xl-2'">
             <q-splitter
             v-model="retestSplitRatio" 
             :limits="retestSplitLimits" 
@@ -738,6 +767,21 @@
                 </comments-list>
             </q-scroll-area>
         </q-card>
+
+        <q-card v-else-if="qaDrawerOpen" class="col-3 bg-grey-11 sidebar-comments">
+            <q-scroll-area class="scrollarea-comments-retest">
+                <audit-qa-sidebar
+                :audit-id="auditParent._id"
+                :findings="auditParent.findings || []"
+                :sections="auditParent.sections || []"
+                @highlight-field="highlightQaField"
+                />
+            </q-scroll-area>
+        </q-card>
+
+        <q-card v-else-if="aiDrawerOpen" class="col-3 bg-grey-11 sidebar-comments sidebar-ai-retest">
+            <ai-chat-drawer />
+        </q-card>
     </div>
 </template>
 
@@ -772,6 +816,14 @@
 
 .scrollarea-comments-retest {
     height: calc(100vh - 104px)!important;
+}
+
+.sidebar-ai {
+    height: calc(100vh - 152px);
+}
+
+.sidebar-ai-retest {
+    height: calc(100vh - 104px);
 }
 
 .content {

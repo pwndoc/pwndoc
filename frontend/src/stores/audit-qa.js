@@ -3,8 +3,6 @@ import AiService from '@/services/ai'
 import { useAiGenerationStore } from '@/stores/ai-generation'
 import { $t } from '@/boot/i18n'
 
-export const QA_DRAWER_WIDTH = 420
-
 export const useAuditQaStore = defineStore('auditQa', {
   state: () => ({
     drawerOpen: false,
@@ -34,13 +32,6 @@ export const useAuditQaStore = defineStore('auditQa', {
   },
 
   actions: {
-    syncLayoutInset(width = QA_DRAWER_WIDTH) {
-      const aiStore = useAiGenerationStore()
-      const inset = this.drawerOpen ? (Number(width) || QA_DRAWER_WIDTH) : 0
-      if (inset > 0 || !aiStore.drawerOpen)
-        aiStore.setLayoutRightInset(inset)
-    },
-
     open(auditId) {
       const aiStore = useAiGenerationStore()
       if (aiStore.drawerOpen)
@@ -50,7 +41,6 @@ export const useAuditQaStore = defineStore('auditQa', {
       this.auditId = auditId
       this.drawerOpen = true
       this.severityFilter = 'all'
-      this.syncLayoutInset()
 
       if (!sameAudit)
         this.runQa(auditId)
@@ -58,9 +48,6 @@ export const useAuditQaStore = defineStore('auditQa', {
 
     close() {
       this.drawerOpen = false
-      const aiStore = useAiGenerationStore()
-      if (!aiStore.drawerOpen)
-        aiStore.setLayoutRightInset(0)
     },
 
     runQa(auditId) {

@@ -55,12 +55,10 @@
     <q-page-container>
         <router-view :key="$route.params.auditId"/> 
     </q-page-container>
-    <ai-chat-drawer />
   </q-layout>
 </template>
 
 <script>
-import AiChatDrawer from '@/components/ai-chat-drawer.vue'
 import { useUserStore } from '@/stores/user';
 import UserService from '@/services/user';
 
@@ -68,9 +66,6 @@ const userStore = useUserStore();
 
 export default {
   name: 'LayoutHome',
-  components: {
-    AiChatDrawer
-  },
   data () {
     return {
       userStore: userStore
@@ -88,10 +83,5 @@ export default {
 <style scoped>
 .home-background {
     background-color: #e6ecf0;
-}
-
-:deep(.q-header) {
-    /* Quasar sets inline right from ai-chat drawer width (480px); override with active drawer inset */
-    right: var(--layout-right-inset, 0px) !important;
 }
 </style>

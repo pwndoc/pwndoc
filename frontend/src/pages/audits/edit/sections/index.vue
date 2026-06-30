@@ -20,6 +20,20 @@
                 {{(commentMode) ? $t('tooltip.hideComments') : $t('tooltip.showComments')}}
             </q-tooltip> 
         </q-btn>
+        <q-btn
+        v-if="aiQaEnabled"
+        color="primary"
+        :flat="!qaDrawerOpen"
+        :outline="qaDrawerOpen"
+        :class="{'bg-grey-3': qaDrawerOpen}"
+        icon="auto_awesome"
+        :ripple="false"
+        @click="toggleQaView()"
+        class="q-mr-sm">
+            <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
+                {{ $t('tooltip.auditQa') }}
+            </q-tooltip>
+        </q-btn>
         <q-separator v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" vertical inset class="q-mr-sm" />
         <q-btn
         v-if="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
@@ -44,7 +58,7 @@
 </breadcrumb>
 
 <div class="row content q-ma-md">
-    <q-card class="q-mt-md" :class="(commentMode)?'col-8':'col-xl-8 offset-xl-2 col-12'">
+    <q-card class="q-mt-md" :class="(sidePanelOpen)?'col-8':'col-xl-8 offset-xl-2 col-12'">
         <!-- For retrocompatibility, test if section.text exists -->
         <q-card-section v-if="section.text"> 
             <basic-editor ref="basiceditor_section" noSync v-model="section.text" :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT" />
@@ -87,6 +101,19 @@
             </comments-list>
         </q-scroll-area>
     </q-card>
+    <q-card v-else-if="qaDrawerOpen" class="col-3 bg-grey-11 sidebar-comments" style="margin-top:2px">
+        <q-scroll-area class="scrollarea-comments">
+            <audit-qa-sidebar
+            :audit-id="auditId"
+            :findings="auditParent.findings || []"
+            :sections="auditParent.sections || []"
+            @highlight-field="highlightQaField"
+            />
+        </q-scroll-area>
+    </q-card>
+    <q-card v-else-if="aiDrawerOpen" class="col-3 bg-grey-11 sidebar-comments sidebar-ai" style="margin-top:2px">
+        <ai-chat-drawer />
+    </q-card>
 </div>
 </template>
 
@@ -95,6 +122,10 @@
 <style scoped>
 .scrollarea-comments {
     height: calc(100vh - 104px)!important;
+}
+
+.sidebar-ai {
+    height: calc(100vh - 104px);
 }
 
 .content {

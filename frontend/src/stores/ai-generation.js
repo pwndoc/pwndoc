@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useAuditQaStore } from '@/stores/audit-qa'
 
 const emptyConversation = () => ({
   messages: [],
@@ -15,7 +16,6 @@ export const useAiGenerationStore = defineStore('aiGeneration', {
     sessionConfig: null,
     sessionId: 0,
     conversation: emptyConversation(),
-    layoutRightInset: 0,
     _resolve: null,
     _reject: null
   }),
@@ -96,18 +96,13 @@ export const useAiGenerationStore = defineStore('aiGeneration', {
           this.conversation.userInput = String(config.defaultPrompt || '')
 
         this.sessionId += 1
+        useAuditQaStore().close()
         this.drawerOpen = true
       })
     },
 
     setLoading(loading) {
       this.loading = Boolean(loading)
-    },
-
-    setLayoutRightInset(px) {
-      const inset = Number(px) || 0
-      this.layoutRightInset = inset > 0 ? inset : 0
-      document.documentElement.style.setProperty('--layout-right-inset', `${this.layoutRightInset}px`)
     },
 
     completeSession(draft) {
@@ -134,7 +129,6 @@ export const useAiGenerationStore = defineStore('aiGeneration', {
       this.clearConversation()
       this._resolve = null
       this._reject = null
-      this.setLayoutRightInset(0)
     }
   }
 })
