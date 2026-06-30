@@ -10,6 +10,8 @@ const BASE_URL = process.env.BASE_URL || 'https://localhost:8443';
 const OUTPUT_DIR = process.env.DEMO_OUTPUT_DIR || path.resolve(process.cwd(), 'demos');
 const TEMPLATE_PATH = process.env.DEMO_TEMPLATE_PATH || '/app/report-templates/Default Template.docx';
 const FFMPEG_PATH = process.env.FFMPEG_PATH || 'ffmpeg';
+const GIF_FPS = process.env.DEMO_GIF_FPS || '10';
+const GIF_WIDTH = process.env.DEMO_GIF_WIDTH || '960';
 const VIEWPORT = { width: 1440, height: 900 };
 const HALF_VIEWPORT = { width: 1024, height: 900 };
 const ADMIN = { username: 'admin', password: 'Admin123', firstname: 'Pwn', lastname: 'Doc' };
@@ -17,11 +19,11 @@ const REVIEWER = { username: 'rchen', password: 'ReviewerP@ss123', firstname: 'R
 const COLLABORATOR = { username: 'apatel', password: 'CollaboratorP@ss123', firstname: 'Avery', lastname: 'Patel' };
 
 const demos = [
-  ['audit_authoring.webm', recordAuditAuthoring],
-  ['vulnerability_workflow.webm', recordVulnerabilityWorkflow],
-  ['collaboration_review.webm', recordCollaborationReview],
-  ['retest_draft_recovery.webm', recordRetestDraftRecovery],
-  ['customization_operations.webm', recordCustomizationOperations],
+  ['audit_authoring.gif', recordAuditAuthoring],
+  ['vulnerability_workflow.gif', recordVulnerabilityWorkflow],
+  ['collaboration_review.gif', recordCollaborationReview],
+  ['retest_draft_recovery.gif', recordRetestDraftRecovery],
+  ['customization_operations.gif', recordCustomizationOperations],
 ];
 
 function sleep(ms) {
@@ -86,7 +88,7 @@ async function initAdmin() {
 }
 
 async function createBrowserContext(browser, storageState, name) {
-  const videoDir = path.join('/tmp', 'pwndoc-demo-videos', name.replace(/\.webm$/, ''));
+  const videoDir = path.join('/tmp', 'pwndoc-demo-videos', path.parse(name).name);
   fs.mkdirSync(videoDir, { recursive: true });
   return browser.newContext({
     baseURL: BASE_URL,
@@ -160,12 +162,37 @@ async function goto(page, url, landmark) {
   await sleep(800);
 }
 
-async function copyVideo(page, context, filename) {
+async function runFfmpeg(args) {
+  await execFileAsync(FFMPEG_PATH, ['-y', ...args], { maxBuffer: 1024 * 1024 * 64 });
+}
+
+async function convertVideoToGif(inputPath, outputPath) {
+  const palettePath = path.join('/tmp', `pwndoc-demo-${path.parse(outputPath).name}-palette.png`);
+  const scaleFilter = `fps=${GIF_FPS},scale=${GIF_WIDTH}:-1:flags=lanczos`;
+
+  await runFfmpeg([
+    '-i', inputPath,
+    '-vf', `${scaleFilter},palettegen=stats_mode=diff`,
+    palettePath,
+  ]);
+  await runFfmpeg([
+    '-i', inputPath,
+    '-i', palettePath,
+    '-lavfi', `${scaleFilter}[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
+    '-loop', '0',
+    outputPath,
+  ]);
+  fs.rmSync(palettePath, { force: true });
+}
+
+async function saveDemoAssets(page, context, filename) {
   const video = page.video();
   await context.close();
   if (!video) throw new Error(`No video produced for ${filename}`);
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  fs.copyFileSync(await video.path(), path.join(OUTPUT_DIR, filename));
+  const videoPath = path.join(OUTPUT_DIR, `${path.parse(filename).name}.webm`);
+  fs.copyFileSync(await video.path(), videoPath);
+  await convertVideoToGif(videoPath, path.join(OUTPUT_DIR, filename));
 }
 
 async function record(browser, storageState, filename, fn) {
@@ -175,12 +202,8 @@ async function record(browser, storageState, filename, fn) {
     await fn(page);
     await sleep(1000);
   } finally {
-    await copyVideo(page, context, filename);
+    await saveDemoAssets(page, context, filename);
   }
-}
-
-async function runFfmpeg(args) {
-  await execFileAsync(FFMPEG_PATH, ['-y', ...args], { maxBuffer: 1024 * 1024 * 64 });
 }
 
 async function hstackVideos(leftPath, rightPath, outPath) {
@@ -537,7 +560,9 @@ async function recordCollaborationReview(browser, data, adminState, collaborator
   await hstackVideos(phase2.leftPath, phase2.rightPath, phase2Combined);
 
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  await concatVideos([phase1Combined, phase2Combined], path.join(OUTPUT_DIR, 'collaboration_review.webm'));
+  const finalVideo = path.join(OUTPUT_DIR, 'collaboration_review.webm');
+  await concatVideos([phase1Combined, phase2Combined], finalVideo);
+  await convertVideoToGif(finalVideo, path.join(OUTPUT_DIR, 'collaboration_review.gif'));
 }
 
 async function putDraft(page, userId, scope, refKey, data) {
@@ -738,11 +763,11 @@ async function main() {
     for (const [filename, fn] of demos) {
       console.log(`Recording ${filename}`);
       const currentAdminState = await loginApi(ADMIN.username, ADMIN.password);
-      if (filename === 'collaboration_review.webm') {
+      if (filename === 'collaboration_review.gif') {
         await fn(browser, data, currentAdminState, collaboratorState, reviewerState);
       } else {
         await record(browser, currentAdminState, filename, async (page) => {
-          if (filename === 'retest_draft_recovery.webm')
+          if (filename === 'retest_draft_recovery.gif')
             await fn(page, data, currentAdminState);
           else
             await fn(page, data);
