@@ -310,7 +310,7 @@ export default {
                 if (this.draftRecovery)
                     this.draftRecovery.clearDraft()
                 this.getVulnerabilities();
-                this.$refs.createModal.hide();
+                this.$refs.createModal?.hide();
                 Notify.create({
                     message: $t('msg.vulnerabilityCreatedOk'),
                     color: 'positive',
@@ -342,8 +342,8 @@ export default {
                 if (this.draftRecovery)
                     this.draftRecovery.clearDraft()
                 this.getVulnerabilities();
-                this.$refs.editModal.hide();
-                this.$refs.updatesModal.hide();
+                this.$refs.editModal?.hide();
+                this.$refs.updatesModal?.hide();
                 Notify.create({
                     message: $t('msg.vulnerabilityUpdatedOk'),
                     color: 'positive',
