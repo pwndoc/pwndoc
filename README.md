@@ -39,23 +39,23 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 
 #### Audit workflow
 
-<video src="demos/audit_authoring.webm" controls muted loop playsinline width="100%"></video>
+![Audit workflow demo](demos/audit_authoring.gif)
 
 #### Vulnerability workflow
 
-<video src="demos/vulnerability_workflow.webm" controls muted loop playsinline width="100%"></video>
+![Vulnerability workflow demo](demos/vulnerability_workflow.gif)
 
 #### Collaboration and review
 
-<video src="demos/collaboration_review.webm" controls muted loop playsinline width="100%"></video>
+![Collaboration and review demo](demos/collaboration_review.gif)
 
 #### Retest and draft recovery
 
-<video src="demos/retest_draft_recovery.webm" controls muted loop playsinline width="100%"></video>
+![Retest and draft recovery demo](demos/retest_draft_recovery.gif)
 
 #### Customization and settings
 
-<video src="demos/customization_operations.webm" controls muted loop playsinline width="100%"></video>
+![Customization and settings demo](demos/customization_operations.gif)
 
 # Donate
 

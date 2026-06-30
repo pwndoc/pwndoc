@@ -390,7 +390,7 @@ Commands:
   ps|status                   Show container status
   lt-apikey                   Print the LanguageTool API key
   test                        Run tests
-  demo-record                 Record README demo .webm files into demos/
+  demo-record                 Record README demo .gif and .webm files into demos/
   help                        Show this help message
 
 Environment options (default: prod):
