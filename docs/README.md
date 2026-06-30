@@ -39,20 +39,20 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 
 #### Audit workflow
 
-<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/audit_authoring.webm" controls muted loop playsinline width="100%"></video>
+<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/audit_authoring.webm" controls muted loop playsinline style="width: 80%; max-width: 960px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff;"></video>
 
 #### Vulnerability workflow
 
-<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/vulnerability_workflow.webm" controls muted loop playsinline width="100%"></video>
+<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/vulnerability_workflow.webm" controls muted loop playsinline style="width: 80%; max-width: 960px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff;"></video>
 
 #### Collaboration and review
 
-<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/collaboration_review.webm" controls muted loop playsinline width="100%"></video>
+<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/collaboration_review.webm" controls muted loop playsinline style="width: 80%; max-width: 960px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff;"></video>
 
 #### Retest and draft recovery
 
-<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/retest_draft_recovery.webm" controls muted loop playsinline width="100%"></video>
+<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/retest_draft_recovery.webm" controls muted loop playsinline style="width: 80%; max-width: 960px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff;"></video>
 
 #### Customization and settings
 
-<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/customization_operations.webm" controls muted loop playsinline width="100%"></video>
+<video src="https://raw.githubusercontent.com/pwndoc/pwndoc/main/demos/customization_operations.webm" controls muted loop playsinline style="width: 80%; max-width: 960px; border: 1px solid #d0d7de; border-radius: 6px; background: #fff;"></video>
