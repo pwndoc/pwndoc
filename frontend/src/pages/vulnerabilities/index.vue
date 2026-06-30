@@ -410,8 +410,8 @@
                 flat
                 dense
                 icon="auto_awesome"
-                :class="vulnQaOpen ? 'bg-white text-primary' : ''"
-                :color="vulnQaOpen ? 'grey-1' : 'white'"
+                :color="vulnQaOpen ? 'primary' : 'white'"
+                :class="{ 'bg-white': vulnQaOpen }"
                 @click="toggleVulnerabilityQaView()"
                 >
                     <q-tooltip anchor="bottom middle" self="center left" :delay="500" class="text-bold">
@@ -945,6 +945,17 @@
         </q-layout>
     </q-dialog>
 
+    <q-dialog persistent ref="runAllQaModal" @hide="runAllQaOpen = false">
+        <q-card class="vulnerability-qa-dialog">
+            <vulnerability-qa-panel
+            v-if="runAllQaOpen"
+            :key="runAllQaKey"
+            :locale="dtLanguage"
+            @close="closeRunAllQaModal()"
+            />
+        </q-card>
+    </q-dialog>
+
     <q-dialog persistent ref="mergeModal">
         <q-card style="width: 1000px; max-width: 1000px; height: 60vh">
             <q-bar class="bg-fixed-primary text-white">
@@ -1073,6 +1084,20 @@
 
 .vuln-modal-ai :deep(.ai-chat-drawer__panel),
 .vuln-modal-ai :deep(.qa-results-panel) {
+    flex: 1 1 0;
+    min-height: 0;
+}
+
+.vulnerability-qa-dialog {
+    width: min(1100px, 95vw);
+    max-width: 95vw;
+    height: 90vh;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.vulnerability-qa-dialog :deep(.qa-results-panel) {
     flex: 1 1 0;
     min-height: 0;
 }

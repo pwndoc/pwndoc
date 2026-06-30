@@ -18,6 +18,14 @@ const {
     formatQaReportResponse
 } = require('../lib/ai-qa-cache');
 const {
+    computeVulnerabilityQaFingerprint,
+    computeAllVulnerabilitiesQaFingerprint,
+    getCachedVulnerabilityQaReport,
+    getCachedAllVulnerabilitiesQaReport,
+    buildVulnerabilityQaReportCache,
+    formatVulnerabilityQaReportResponse
+} = require('../lib/ai-vuln-qa-cache');
+const {
     AI_PROVIDERS,
     AI_DEFAULT_PROVIDER,
     normalizePromptValue,
@@ -262,9 +270,13 @@ const handleVulnerabilityQa = async function(req, res) {
 
         const allVulnerabilities = await Vulnerability.getAll();
         const vulnerabilityId = String(req.body.vulnerabilityId || '').trim();
+        const vulnerabilityObjects = allVulnerabilities.map((entry) => {
+            return typeof entry.toObject === 'function' ? entry.toObject() : entry;
+        });
+        const settingsObject = typeof settings.toObject === 'function' ? settings.toObject() : settings;
 
         if (vulnerabilityId) {
-            const vulnerability = allVulnerabilities.find((entry) => {
+            const vulnerability = vulnerabilityObjects.find((entry) => {
                 return String(entry._id) === vulnerabilityId;
             });
 
@@ -273,32 +285,65 @@ const handleVulnerabilityQa = async function(req, res) {
                 return;
             }
 
+            const cachedReport = getCachedVulnerabilityQaReport(vulnerability, locale);
+            if (cachedReport) {
+                Response.Ok(res, cachedReport);
+                return;
+            }
+
             const result = await runVulnerabilityQa({
-                vulnerability: typeof vulnerability.toObject === 'function' ?
-                    vulnerability.toObject() :
-                    vulnerability,
+                vulnerability: vulnerability,
                 locale: locale,
                 settings: settings,
                 provider: provider,
-                allVulnerabilities: allVulnerabilities.map((entry) => {
-                    return typeof entry.toObject === 'function' ? entry.toObject() : entry;
-                })
+                allVulnerabilities: vulnerabilityObjects
             });
 
-            Response.Ok(res, result);
+            const fingerprint = computeVulnerabilityQaFingerprint(vulnerability, locale);
+            const qaReport = buildVulnerabilityQaReportCache(fingerprint, result, {
+                locale: locale,
+                mode: 'single',
+                vulnerabilityId: result.vulnerabilityId,
+                title: result.title
+            });
+            await Vulnerability.saveQaReportForLocale(vulnerabilityId, locale, qaReport);
+
+            Response.Ok(res, formatVulnerabilityQaReportResponse(qaReport, {
+                cached: false,
+                outdated: false
+            }));
+            return;
+        }
+
+        const cachedReport = getCachedAllVulnerabilitiesQaReport(
+            settingsObject,
+            vulnerabilityObjects,
+            locale
+        );
+        if (cachedReport) {
+            Response.Ok(res, cachedReport);
             return;
         }
 
         const result = await runAllVulnerabilitiesQa({
-            vulnerabilities: allVulnerabilities.map((entry) => {
-                return typeof entry.toObject === 'function' ? entry.toObject() : entry;
-            }),
+            vulnerabilities: vulnerabilityObjects,
             locale: locale,
             settings: settings,
             provider: provider
         });
 
-        Response.Ok(res, result);
+        const fingerprint = computeAllVulnerabilitiesQaFingerprint(vulnerabilityObjects, locale);
+        const qaReport = buildVulnerabilityQaReportCache(fingerprint, result, {
+            locale: locale,
+            mode: 'all',
+            vulnerabilityCount: result.vulnerabilityCount || 0
+        });
+        await Settings.saveVulnerabilityQaReportForLocale(locale, qaReport);
+
+        Response.Ok(res, formatVulnerabilityQaReportResponse(qaReport, {
+            cached: false,
+            outdated: false
+        }));
     } catch (err) {
         Response.Internal(res, err);
     }

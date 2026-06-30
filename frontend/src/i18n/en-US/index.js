@@ -985,6 +985,9 @@ export default {
         allWarningTitle: 'Run QA on all vulnerabilities?',
         allWarningMessage: 'This will run QA on {count} vulnerabilities for the current language. AI-enabled checks, including AI duplicate detection, may consume a large number of tokens.',
         reviewedCount: 'Reviewed {count} vulnerabilities for the selected language.',
+        cachedResultSingle: 'Showing the previous QA review. Edit the vulnerability to run QA again.',
+        cachedResultAll: 'Showing the previous QA review. Edit vulnerabilities to run QA again.',
+        cachedResultAt: 'Showing the previous QA review from {date}. Edit content to run QA again.',
         location: {
             database: 'Vulnerability database'
         }

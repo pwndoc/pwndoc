@@ -17,7 +17,6 @@ import { useUserStore } from 'src/stores/user'
 import Utils from '@/services/utils'
 import { createDraftRecovery } from '@/composables/useDraftRecovery'
 import DraftRecoveryService from '@/services/draft-recovery'
-import VulnerabilityQaDialog from '@/components/vulnerability-qa-dialog.vue'
 import VulnerabilityQaPanel from '@/components/vulnerability-qa-panel.vue'
 import AiChatDrawer from '@/components/ai-chat-drawer.vue'
 
@@ -94,7 +93,9 @@ export default {
             aiPromptFieldKeys: [],
             aiFieldPrompts: [],
             activeModal: null,
-            vulnQaOpen: false
+            vulnQaOpen: false,
+            runAllQaOpen: false,
+            runAllQaKey: 0
         }
     },
 
@@ -685,6 +686,19 @@ export default {
             this.vulnQaOpen = false
         },
 
+        closeRunAllQaModal: function() {
+            this.runAllQaOpen = false
+            this.$refs.runAllQaModal?.hide()
+        },
+
+        openRunAllQaModal: function() {
+            this.runAllQaKey += 1
+            this.runAllQaOpen = true
+            this.$nextTick(() => {
+                this.$refs.runAllQaModal?.show()
+            })
+        },
+
         confirmRunAllVulnerabilityQa: function() {
             const count = this.vulnerabilityQaCount
             if (!count)
@@ -698,12 +712,7 @@ export default {
                 focus: 'cancel'
             })
             .onOk(() => {
-                Dialog.create({
-                    component: VulnerabilityQaDialog,
-                    componentProps: {
-                        locale: this.dtLanguage
-                    }
-                })
+                this.openRunAllQaModal()
             })
         },
 
