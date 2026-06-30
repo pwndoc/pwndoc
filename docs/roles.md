@@ -29,6 +29,8 @@ Common actions:
 | `audits:review` | Approve or unapprove audits where the user is a reviewer, but not the creator or a collaborator |
 | `audits:review-all` | Approve or unapprove any audit, except audits where the user is creator or collaborator |
 | `audits:users-connected` | Show connected users in the audits list |
+| `audits:ai-generate` | Generate AI content for finding and section fields |
+| `audits:ai-qa` | Run AI quality checks on audits |
 
 ### Audit Comments
 
@@ -51,6 +53,7 @@ Common actions:
 | `vulnerabilities:delete` | Delete one vulnerability from the vulnerability database |
 | `vulnerabilities:delete-all` | Delete every vulnerability from the vulnerability database |
 | `vulnerability-updates:create` | Submit a new vulnerability or update request from an audit finding |
+| `vulnerabilities:ai-qa` | Run AI quality checks on vulnerabilities |
 
 ### Users And Roles
 
@@ -157,6 +160,17 @@ Common actions:
 | `proofing-rules:update` | Reload stored rules into LanguageTool or restart the LanguageTool process |
 | `proofing-rules:delete` | Delete custom LanguageTool rules and update LanguageTool |
 
+### AI
+
+| Permission | Description |
+|------------|-------------|
+| `ai:prompts:read` | View field generation prompts for findings and sections |
+| `ai:prompts:update` | Edit field generation prompts for findings and sections |
+| `ai:redaction-guidelines:read` | View organization-wide redaction guidelines |
+| `ai:redaction-guidelines:update` | Edit organization-wide redaction guidelines |
+| `ai:qa-instructions:read` | View QA instructions and automated QA check toggles |
+| `ai:qa-instructions:update` | Edit QA instructions and automated QA check toggles |
+
 ### Settings And Backups
 
 | Permission | Description |
@@ -164,6 +178,8 @@ Common actions:
 | `settings:read` | View all settings, including private settings, and export them as JSON |
 | `settings:read-public` | View public settings used by the frontend |
 | `settings:update` | Edit settings, restore default settings, and test a LanguageTool connection |
+| `ai-settings:read` | View AI provider configuration and the global AI enable toggle |
+| `ai-settings:update` | Edit AI provider configuration and the global AI enable toggle |
 | `backups:create` | Create partial or full backups and upload backup archives |
 | `backups:read` | List backups, view backup or restore status, and download backup archives |
 | `backups:update` | Restore backup archives, including password-protected and partial restores |
@@ -174,7 +190,7 @@ Common actions:
 
 | Role | Access |
 |------|--------|
-| `user` | Assignable core access. Can create, manage, and comment on assigned audits, upload and read images, read vulnerabilities, view users and roles, manage clients and companies, read templates and custom data, use spellcheck, and view public settings |
+| `user` | Assignable core access. Can create, manage, and comment on assigned audits, upload and read images, read vulnerabilities, view users and roles, manage clients and companies, read templates and custom data, use spellcheck and AI features, and view public settings |
 | `admin` | Full access to all permissions |
 
 ### user
@@ -183,8 +199,9 @@ The `user` role has the following permissions:
 
 - audits:create, audits:read, audits:update, audits:delete
 - audits:comments:create, audits:comments:update, audits:comments:delete
+- audits:ai-generate, audits:ai-qa
 - images:create, images:read
-- vulnerabilities:read, vulnerability-updates:create
+- vulnerabilities:read, vulnerability-updates:create, vulnerabilities:ai-qa
 - users:read, roles:read
 - clients:create, clients:read, clients:update, clients:delete
 - companies:create, companies:read, companies:update, companies:delete

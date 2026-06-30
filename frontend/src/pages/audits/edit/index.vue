@@ -645,7 +645,7 @@ export default {
 
 		aiQaEnabled: function() {
 			return this.$settings?.ai?.public?.enabled !== false &&
-				userStore.isAllowed('ai:qa')
+				userStore.isAllowed('audits:ai-qa')
 		}
 	},
 

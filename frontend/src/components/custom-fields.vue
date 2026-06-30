@@ -78,7 +78,7 @@
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
-                            <q-icon name="smart_toy" />
+                            <q-icon name="auto_awesome" />
                         </q-btn>
                     </template>
                     <template v-slot:label>
@@ -117,7 +117,7 @@
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
-                            <q-icon name="smart_toy" />
+                            <q-icon name="auto_awesome" />
                         </q-btn>
                         <q-icon name="event" class="cursor-pointer">
                         <q-popup-proxy ref="qDateProxyField" transition-show="scale" transition-hide="scale">
@@ -168,7 +168,7 @@
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
-                            <q-icon name="smart_toy" />
+                            <q-icon name="auto_awesome" />
                         </q-btn>
                     </template>
                      <template v-slot:label>
@@ -216,7 +216,7 @@
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
-                            <q-icon name="smart_toy" />
+                            <q-icon name="auto_awesome" />
                         </q-btn>
                     </template>
                      <template v-slot:label>
@@ -268,7 +268,7 @@
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
-                            <q-icon name="smart_toy" />
+                            <q-icon name="auto_awesome" />
                         </q-btn>
                     </template>
                     <template v-slot:control>
@@ -317,7 +317,7 @@
                         @click.stop="triggerGenerateAi(field)"
                         >
                             <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
-                            <q-icon name="smart_toy" />
+                            <q-icon name="auto_awesome" />
                         </q-btn>
                     </template>
                     <template v-slot:control>

@@ -31,69 +31,9 @@ exports.jwtRefreshSecret = jwtRefreshSecret
     inherits: inherits other users "allows"
 */
 
-var builtInRoles = {
-    user: {
-        allows: [
-            // Audits
-            'audits:create',
-            'audits:read',
-            'audits:update',
-            'audits:delete',
-            // Images
-            'images:create',
-            'images:read',
-            // Clients
-            'clients:create',
-            'clients:read',
-            'clients:update',
-            'clients:delete',
-            // Companies
-            'companies:create',
-            'companies:read',
-            'companies:update',
-            'companies:delete',
-            // Languages
-            'languages:read',
-            // Audit Types
-            'audit-types:read',
-            // Vulnerability Types
-            'vulnerability-types:read',
-            // Vulnerability Categories
-            'vulnerability-categories:read',
-            // Sections Data
-            'sections:read',
-            // Templates
-            'templates:read',
-            // Users
-            'users:read',
-            // Roles
-            'roles:read',
-            // Vulnerabilities
-            'vulnerabilities:read',
-            'vulnerability-updates:create',
-            // Custom Fields
-            'custom-fields:read',
-            // Settings
-            'settings:read-public',
-            // Spellcheck
-            'spellcheck:read',
-            'spellcheck:create',
-            // AI
-            'ai:generate',
-            'ai:qa'
-        ]
-    },
-    admin: {
-        allows: "*"
-    }
-}
-
-try {
-    var customRoles = require('../config/roles.json')}
-catch(error) {
-    var customRoles = []
-}
-var roles = {...customRoles, ...builtInRoles}
+const CORE_PERMISSIONS = permissionsCatalog.core()
+exports.CORE_PERMISSIONS = CORE_PERMISSIONS
+const SYSTEM_ROLES = ['admin', 'user']
 
 class ACL {
     constructor(roles) {
@@ -111,6 +51,8 @@ class ACL {
             user: {allows: CORE_PERMISSIONS}
         }
         dbRoles.forEach(role => {
+            if (SYSTEM_ROLES.includes(role.name))
+                return
             roles[role.name] = {allows: role.allows || []}
         })
         this.roles = roles
@@ -134,8 +76,21 @@ class ACL {
         return role.allows === '*' || role.allows.indexOf(permission) !== -1 || role.allows.indexOf(`${permission}-all`) !== -1
     }
 
+    isAllowedPermissions(permissions, permission) {
+        if (permissions === '*')
+            return true
+        if (!Array.isArray(permissions))
+            return false
+        return permissions.includes(permission) || permissions.includes(`${permission}-all`)
+    }
+
     isAllowed(roleNames, permission) {
         return this.normalizeRoleNames(roleNames).some(roleName => this.roleAllows(roleName, permission))
+    }
+
+    isAllowedToken(decoded, permission) {
+        return this.isAllowedPermissions(decoded.permissions, permission) ||
+            this.isAllowed(decoded.roles, permission)
     }
 
     hasPermission (permission) {
@@ -173,7 +128,7 @@ class ACL {
                     return
                 }
 
-                if ( permission === "validtoken" || this.isAllowed(decoded.roles, permission)) {
+                if ( permission === "validtoken" || this.isAllowedToken(decoded, permission)) {
                     req.decodedToken = decoded
                     return next()
                 }
@@ -201,11 +156,7 @@ class ACL {
     }
 }
 
-<<<<<<< HEAD
-exports.acl = new ACL(roles)
-=======
 exports.acl = new ACL({
     admin: {allows: '*'},
     user: {allows: CORE_PERMISSIONS}
 })
->>>>>>> 2050abcfa44a63ae8ed41b205046518e67535215

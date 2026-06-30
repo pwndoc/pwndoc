@@ -192,7 +192,7 @@
                     @click="$emit('ai-click')"
                     >
                         <q-tooltip :delay="500" class="text-bold">{{$t('aiChat.tooltip')}}</q-tooltip>
-                        <q-icon name="smart_toy" />
+                        <q-icon name="auto_awesome" />
                     </q-btn>
                     <q-separator vertical class="q-mx-sm" />
                 </template>

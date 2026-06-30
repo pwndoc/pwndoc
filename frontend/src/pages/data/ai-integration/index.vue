@@ -19,7 +19,14 @@
                 </template>
 
                 <template v-else>
+                    <q-card-section v-if="visibleTabs.length === 0">
+                        <q-banner dense class="bg-orange-1 text-orange-10">
+                            You do not have permission to view AI integration settings.
+                        </q-banner>
+                    </q-card-section>
+
                     <q-tabs
+                    v-if="visibleTabs.length > 0"
                     v-model="selectedTab"
                     dense
                     class="text-grey-8"
@@ -27,15 +34,15 @@
                     indicator-color="primary"
                     align="left"
                     >
-                        <q-tab name="prompts" label="Prompts" />
-                        <q-tab name="guidelines" label="Redaction guidelines" />
-                        <q-tab name="qa" label="QA" />
+                        <q-tab v-if="canReadPrompts" name="prompts" label="Prompts" />
+                        <q-tab v-if="canReadGuidelines" name="guidelines" label="Redaction guidelines" />
+                        <q-tab v-if="canReadQa" name="qa" label="QA" />
                     </q-tabs>
 
-                    <q-separator />
+                    <q-separator v-if="visibleTabs.length > 0" />
 
-                    <q-tab-panels v-model="selectedTab" animated>
-                        <q-tab-panel name="prompts" class="q-pa-none">
+                    <q-tab-panels v-if="visibleTabs.length > 0" v-model="selectedTab" animated>
+                        <q-tab-panel v-if="canReadPrompts" name="prompts" class="q-pa-none">
                             <q-card-section>
                                 <div class="text-grey-8">
                                     Configure generation prompts mapped to report fields.
@@ -44,8 +51,8 @@
                                     <code>{description}</code>, <code>{observation}</code>, <code>{remediation}</code>,
                                     <code>{references}</code>, <code>{poc}</code>, <code>{customFieldLabel}</code>, <code>{customFieldValue}</code>.
                                 </div>
-                                <div v-if="!canEdit" class="text-orange q-mt-sm">
-                                    Read-only: only admins can update prompts.
+                                <div v-if="!canEditPrompts" class="text-orange q-mt-sm">
+                                    Read-only: you do not have permission to update prompts.
                                 </div>
                             </q-card-section>
 
@@ -70,7 +77,7 @@
                                             <q-toggle
                                             v-model="mapping.enabled"
                                             label="Enable AI"
-                                            :disable="!canEdit"
+                                            :disable="!canEditPrompts"
                                             />
                                         </div>
                                     </div>
@@ -80,7 +87,7 @@
                                     autogrow
                                     :label="`${mapping.fieldLabel} Prompt`"
                                     v-model="mapping.prompt"
-                                    :readonly="!canEdit"
+                                    :readonly="!canEditPrompts"
                                     :disable="!mapping.enabled"
                                     />
                                 </q-card>
@@ -92,21 +99,21 @@
                                 unelevated
                                 no-caps
                                 label="Save Prompts"
-                                :disable="!canEdit || !hasPromptChanges"
+                                :disable="!canEditPrompts || !hasPromptChanges"
                                 :loading="savingPrompts"
                                 @click="savePrompts()"
                                 />
                             </q-card-actions>
                         </q-tab-panel>
 
-                        <q-tab-panel name="guidelines" class="q-pa-none">
+                        <q-tab-panel v-if="canReadGuidelines" name="guidelines" class="q-pa-none">
                             <q-card-section>
                                 <div class="text-grey-8">
                                     Organization-wide redaction and writing rules provided to every AI request as additional context.
                                     Use plain text or Markdown (similar to a <code>CLAUDE.md</code> project guide).
                                 </div>
-                                <div v-if="!canEdit" class="text-orange q-mt-sm">
-                                    Read-only: only admins can update redaction guidelines.
+                                <div v-if="!canEditGuidelines" class="text-orange q-mt-sm">
+                                    Read-only: you do not have permission to update redaction guidelines.
                                 </div>
                             </q-card-section>
 
@@ -120,7 +127,7 @@
                                 :input-style="{ fontFamily: 'monospace', minHeight: '360px' }"
                                 label="Redaction guidelines"
                                 v-model="redactionGuidelines.content"
-                                :readonly="!canEdit || redactionGuidelines.delivery !== 'inline'"
+                                :readonly="!canEditGuidelines || redactionGuidelines.delivery !== 'inline'"
                                 hint="Examples: tone, terminology, data redaction rules, forbidden disclosures, report structure conventions."
                                 />
                                 <q-banner
@@ -142,20 +149,20 @@
                                 unelevated
                                 no-caps
                                 label="Save guidelines"
-                                :disable="!canEdit || !hasGuidelineChanges || redactionGuidelines.delivery !== 'inline'"
+                                :disable="!canEditGuidelines || !hasGuidelineChanges || redactionGuidelines.delivery !== 'inline'"
                                 :loading="savingGuidelines"
                                 @click="saveRedactionGuidelines()"
                                 />
                             </q-card-actions>
                         </q-tab-panel>
 
-                        <q-tab-panel name="qa" class="q-pa-none">
+                        <q-tab-panel v-if="canReadQa" name="qa" class="q-pa-none">
                             <q-card-section>
                                 <div class="text-grey-8">
                                     Configure which automated checks run when validating an audit report before generation.
                                 </div>
-                                <div v-if="!canEdit" class="text-orange q-mt-sm">
-                                    Read-only: only admins can update QA settings.
+                                <div v-if="!canEditQa" class="text-orange q-mt-sm">
+                                    Read-only: you do not have permission to update QA settings.
                                 </div>
                             </q-card-section>
 
@@ -178,7 +185,7 @@
                                             <q-toggle
                                             v-model="qaChecks[check.key]"
                                             label="Enabled"
-                                            :disable="!canEdit"
+                                            :disable="!canEditQa"
                                             />
                                         </div>
                                     </div>
@@ -203,7 +210,7 @@
                                 :input-style="{ fontFamily: 'monospace', minHeight: '360px' }"
                                 label="QA instructions"
                                 v-model="qaInstructions.content"
-                                :readonly="!canEdit || qaInstructions.delivery !== 'inline'"
+                                :readonly="!canEditQa || qaInstructions.delivery !== 'inline'"
                                 hint="Examples: require executive summary and scope sections, mandate remediation text, verify customer naming, retest wording."
                                 />
                                 <q-banner
@@ -225,7 +232,7 @@
                                 unelevated
                                 no-caps
                                 label="Save QA settings"
-                                :disable="!canEdit || !hasQaChanges || (hasQaInstructionChanges && qaInstructions.delivery !== 'inline')"
+                                :disable="!canEditQa || !hasQaChanges || (hasQaInstructionChanges && qaInstructions.delivery !== 'inline')"
                                 :loading="savingQaSettings"
                                 @click="saveQaSettings()"
                                 />

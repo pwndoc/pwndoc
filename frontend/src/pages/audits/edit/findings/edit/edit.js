@@ -174,7 +174,7 @@ export default {
         },
 
         aiEnabled: function() {
-            return this.$settings?.ai?.public?.enabled !== false
+            return this.$settings?.ai?.public?.enabled !== false && userStore.isAllowed('audits:ai-generate')
         },
 
         saveButtonState: function() {

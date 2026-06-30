@@ -17,14 +17,14 @@
         <q-btn icon="close" flat round dense @click="requestClose" />
       </q-toolbar>
 
-      <q-card-section v-if="!isFieldMode" class="q-pt-sm col-auto">
-        <div class="text-caption text-grey-7 q-mb-xs">{{ $t('aiChat.selectedText') }}</div>
-        <div class="ai-chat-context text-body2">{{ sessionConfig.selectedText }}</div>
-      </q-card-section>
-
       <q-separator v-if="!isFieldMode" />
 
-      <q-card-section ref="messagesContainer" class="ai-chat-messages q-pa-sm col">
+      <div ref="messagesContainer" class="ai-chat-conversation col q-pa-sm">
+        <q-card-section v-if="!isFieldMode" class="q-pa-none q-pb-sm">
+          <div class="text-caption text-grey-7 q-mb-xs">{{ $t('aiChat.selectedText') }}</div>
+          <div class="ai-chat-context text-body2">{{ sessionConfig.selectedText }}</div>
+        </q-card-section>
+
         <div v-if="!conversation.messages.length" class="text-grey-6 text-center q-pa-md">
           {{ isFieldMode ? $t('aiChat.reviewDefaultPrompt') : $t('aiChat.startPrompt') }}
         </div>
@@ -51,7 +51,7 @@
           <q-spinner-dots color="primary" size="2em" />
           <div class="text-caption text-grey-7 q-mt-sm">{{ $t('aiChat.generating') }}</div>
         </div>
-      </q-card-section>
+      </div>
 
       <q-separator />
 
@@ -169,7 +169,7 @@ export default {
 
     scrollMessagesToBottom() {
       this.$nextTick(() => {
-        const container = this.$refs.messagesContainer?.$el || this.$refs.messagesContainer
+        const container = this.$refs.messagesContainer
         if (container)
           container.scrollTop = container.scrollHeight
       })
@@ -324,8 +324,6 @@ export default {
 }
 
 .ai-chat-context {
-  max-height: 120px;
-  overflow: auto;
   border: 1px solid #d7d7d7;
   border-radius: 4px;
   padding: 8px;
@@ -333,13 +331,12 @@ export default {
   background: #fafafa;
 }
 
-.ai-chat-messages {
+.ai-chat-conversation {
   min-height: 0;
   overflow-y: auto;
 }
 
 .ai-chat-draft-preview {
-  max-height: 120px;
-  overflow: auto;
+  word-break: break-word;
 }
 </style>

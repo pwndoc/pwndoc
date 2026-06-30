@@ -122,6 +122,22 @@ module.exports = function(request, app) {
         expect(response.body.datas.scope[0]).toBe('Scope Item 1');
         expect(response.body.datas.scope[1]).toBe('Scope Item 2');
       })
+
+      it('Generate report as standard user without forbidden response', async () => {
+        var response = await request(app).post('/api/users/token').send({
+          username: 'user2',
+          password: 'User1234'
+        })
+        expect(response.status).toBe(200)
+
+        var standardUserToken = response.body.datas.token
+        response = await request(app).get(`/api/audits/${audit1Id}/generate`)
+          .set('Cookie', [
+            `token=JWT ${standardUserToken}`
+          ])
+
+        expect(response.status).not.toBe(403)
+      })
     })
   })
 }

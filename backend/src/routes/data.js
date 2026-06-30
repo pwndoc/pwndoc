@@ -35,23 +35,58 @@ module.exports = function(app) {
 
     var _ = require('lodash')
 
-    const getAiIntegrationAdminPayload = async (settings) => {
-        const customFields = await CustomField.getAll();
-        const fieldCatalog = buildAiFieldCatalog(customFields);
-        const promptRows = await AiPrompt.find({}).select('entityType fieldKey fieldLabel outputType enabled prompt customFieldId').lean();
-        const promptMappings = buildPromptMappings(fieldCatalog, promptRows);
+    const getAiIntegrationAccess = (roles) => ({
+        readPrompts: acl.isAllowed(roles, 'ai:prompts:read'),
+        readGuidelines: acl.isAllowed(roles, 'ai:redaction-guidelines:read'),
+        readQa: acl.isAllowed(roles, 'ai:qa-instructions:read'),
+        updatePrompts: acl.isAllowed(roles, 'ai:prompts:update'),
+        updateGuidelines: acl.isAllowed(roles, 'ai:redaction-guidelines:update'),
+        updateQa: acl.isAllowed(roles, 'ai:qa-instructions:update')
+    })
 
-        return {
-            aiEnabled: settings?.ai?.public?.enabled !== false,
-            promptMappings: promptMappings,
-            redactionGuidelines: normalizeRedactionGuidelines(settings?.ai?.public?.redactionGuidelines || {}),
-            qaInstructions: normalizeQaInstructions(settings?.ai?.public?.qaInstructions || {}),
-            qaChecks: normalizeQaChecks(settings?.ai?.public?.qaChecks || {})
-        };
+    const canReadAiIntegration = (access) =>
+        access.readPrompts || access.readGuidelines || access.readQa
+
+    const getAiIntegrationAdminPayload = async (settings, access = null) => {
+        const payload = {
+            aiEnabled: settings?.ai?.public?.enabled !== false
+        }
+
+        if (!access || access.readPrompts) {
+            const customFields = await CustomField.getAll();
+            const fieldCatalog = buildAiFieldCatalog(customFields);
+            const promptRows = await AiPrompt.find({}).select('entityType fieldKey fieldLabel outputType enabled prompt customFieldId').lean();
+            payload.promptMappings = buildPromptMappings(fieldCatalog, promptRows);
+        }
+
+        if (!access || access.readGuidelines)
+            payload.redactionGuidelines = normalizeRedactionGuidelines(settings?.ai?.public?.redactionGuidelines || {})
+
+        if (!access || access.readQa) {
+            payload.qaInstructions = normalizeQaInstructions(settings?.ai?.public?.qaInstructions || {})
+            payload.qaChecks = normalizeQaChecks(settings?.ai?.public?.qaChecks || {})
+        }
+
+        return payload;
     };
+
+    const handleGetAiIntegration = async (req, res) => {
+        try {
+            const access = getAiIntegrationAccess(req.decodedToken.roles)
+            if (!canReadAiIntegration(access))
+                return Response.Forbidden(res, 'Insufficient privileges')
+
+            const settings = await Settings.getAll();
+            const payload = await getAiIntegrationAdminPayload(settings, access);
+            Response.Ok(res, payload);
+        } catch (err) {
+            Response.Internal(res, err);
+        }
+    }
 
     const updateAiIntegration = async (req, res) => {
         try {
+            const access = getAiIntegrationAccess(req.decodedToken.roles)
             const hasPromptMappings = Array.isArray(req.body.promptMappings);
             const hasRedactionGuidelines = req.body.redactionGuidelines !== undefined;
             const hasQaInstructions = req.body.qaInstructions !== undefined;
@@ -61,6 +96,13 @@ module.exports = function(app) {
                 Response.BadParameters(res, 'Missing promptMappings, redactionGuidelines, qaInstructions, or qaChecks payload');
                 return;
             }
+
+            if (hasPromptMappings && !access.updatePrompts)
+                return Response.Forbidden(res, 'Insufficient privileges')
+            if (hasRedactionGuidelines && !access.updateGuidelines)
+                return Response.Forbidden(res, 'Insufficient privileges')
+            if ((hasQaInstructions || hasQaChecks) && !access.updateQa)
+                return Response.Forbidden(res, 'Insufficient privileges')
 
             let currentSettings = await Settings.getAll() || {};
 
@@ -182,7 +224,7 @@ module.exports = function(app) {
             if (!currentSettings)
                 currentSettings = await Settings.getAll() || {};
 
-            const payload = await getAiIntegrationAdminPayload(currentSettings);
+            const payload = await getAiIntegrationAdminPayload(currentSettings, access);
             Response.Ok(res, payload);
         } catch (err) {
             Response.Internal(res, err);
@@ -205,32 +247,16 @@ module.exports = function(app) {
 /* ===== AI INTEGRATION ===== */
 
     // Get AI integration configuration (admin only)
-    app.get("/api/data/ai-integration", acl.hasPermission('settings:update'), async function(req, res) {
-        try {
-            const settings = await Settings.getAll();
-            const payload = await getAiIntegrationAdminPayload(settings);
-            Response.Ok(res, payload);
-        } catch (err) {
-            Response.Internal(res, err);
-        }
-    });
+    app.get("/api/data/ai-integration", acl.hasPermission('validtoken'), handleGetAiIntegration);
 
     // Backward-compatible alias
-    app.get("/api/data/ai-prompts", acl.hasPermission('settings:update'), async function(req, res) {
-        try {
-            const settings = await Settings.getAll();
-            const payload = await getAiIntegrationAdminPayload(settings);
-            Response.Ok(res, payload);
-        } catch (err) {
-            Response.Internal(res, err);
-        }
-    });
+    app.get("/api/data/ai-prompts", acl.hasPermission('validtoken'), handleGetAiIntegration);
 
     // Update AI integration configuration (admin only)
-    app.put("/api/data/ai-integration", acl.hasPermission('settings:update'), updateAiIntegration);
+    app.put("/api/data/ai-integration", acl.hasPermission('validtoken'), updateAiIntegration);
 
     // Backward-compatible alias
-    app.put("/api/data/ai-prompts", acl.hasPermission('settings:update'), updateAiIntegration);
+    app.put("/api/data/ai-prompts", acl.hasPermission('validtoken'), updateAiIntegration);
 
 /* ===== LANGUAGES ===== */
 

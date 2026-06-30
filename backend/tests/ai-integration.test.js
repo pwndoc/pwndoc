@@ -12,8 +12,8 @@ module.exports = function(request, app) {
             adminToken = response.body.datas.token;
 
             response = await request(app).post('/api/users/token').send({
-                username: 'user',
-                password: 'Password1'
+                username: 'user2',
+                password: 'User1234'
             });
             userToken = response.body.datas.token;
 

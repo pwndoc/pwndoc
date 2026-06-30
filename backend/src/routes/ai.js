@@ -184,7 +184,7 @@ const handleAiQa = async function(req, res) {
         }
 
         const audit = await Audit.getAudit(
-            acl.isAllowed(req.decodedToken.role, 'audits:read-all'),
+            acl.isAllowed(req.decodedToken.roles, 'audits:read-all'),
             auditId,
             req.decodedToken.id
         );
@@ -330,8 +330,8 @@ const handleAiEnabledFields = async (req, res) => {
 };
 
 module.exports = function(app) {
-    app.get('/api/ai/enabled-fields', acl.hasPermission('ai:generate'), handleAiEnabledFields);
-    app.post('/api/ai/generate', acl.hasPermission('ai:generate'), handleAiGenerate);
-    app.post('/api/ai/qa', acl.hasPermission('ai:qa'), handleAiQa);
-    app.post('/api/ai/vulnerabilities/qa', acl.hasPermission('ai:qa'), handleVulnerabilityQa);
+    app.get('/api/ai/enabled-fields', acl.hasPermission('audits:ai-generate'), handleAiEnabledFields);
+    app.post('/api/ai/generate', acl.hasPermission('audits:ai-generate'), handleAiGenerate);
+    app.post('/api/ai/qa', acl.hasPermission('audits:ai-qa'), handleAiQa);
+    app.post('/api/ai/vulnerabilities/qa', acl.hasPermission('vulnerabilities:ai-qa'), handleVulnerabilityQa);
 };

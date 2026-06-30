@@ -106,7 +106,12 @@ export default {
             savingGuidelines: false,
             savingQaSettings: false,
             selectedTab: 'prompts',
-            canEdit: userStore.isAllowed('settings:update'),
+            canEditPrompts: userStore.isAllowed('ai:prompts:update'),
+            canEditGuidelines: userStore.isAllowed('ai:redaction-guidelines:update'),
+            canEditQa: userStore.isAllowed('ai:qa-instructions:update'),
+            canReadPrompts: userStore.isAllowed('ai:prompts:read'),
+            canReadGuidelines: userStore.isAllowed('ai:redaction-guidelines:read'),
+            canReadQa: userStore.isAllowed('ai:qa-instructions:read'),
             aiEnabled: true,
             promptMappings: [],
             redactionGuidelines: defaultMarkdownInstructions(),
@@ -123,10 +128,22 @@ export default {
     },
 
     mounted: function() {
+        this.selectDefaultTab()
         this.getAiIntegration()
     },
 
     computed: {
+        visibleTabs: function() {
+            const tabs = []
+            if (this.canReadPrompts)
+                tabs.push('prompts')
+            if (this.canReadGuidelines)
+                tabs.push('guidelines')
+            if (this.canReadQa)
+                tabs.push('qa')
+            return tabs
+        },
+
         hasPromptChanges: function() {
             return JSON.stringify({
                 promptMappings: serializePromptMappings(this.promptMappings)
@@ -159,52 +176,66 @@ export default {
     },
 
     methods: {
+        selectDefaultTab: function() {
+            const tab = this.visibleTabs[0]
+            if (tab)
+                this.selectedTab = tab
+        },
+
         applyPayload: function(payload) {
             this.aiEnabled = payload.aiEnabled !== false
-            this.promptMappings = (payload.promptMappings || []).map((mapping) => ({
-                ...mapping,
-                entityType: String(mapping.entityType || ''),
-                enabled: mapping.enabled !== false,
-                prompt: String(mapping.prompt || '')
-            }))
 
-            const guidelines = payload.redactionGuidelines || {}
-            this.redactionGuidelines = {
-                delivery: guidelines.delivery || 'inline',
-                content: String(guidelines.content || ''),
-                bedrockPromptCache: {
-                    cacheReference: String(guidelines.bedrockPromptCache?.cacheReference || ''),
-                    region: String(guidelines.bedrockPromptCache?.region || '')
+            if (Array.isArray(payload.promptMappings)) {
+                this.promptMappings = payload.promptMappings.map((mapping) => ({
+                    ...mapping,
+                    entityType: String(mapping.entityType || ''),
+                    enabled: mapping.enabled !== false,
+                    prompt: String(mapping.prompt || '')
+                }))
+                this.orig.promptMappings = serializePromptMappings(this.promptMappings)
+            }
+
+            if (payload.redactionGuidelines) {
+                const guidelines = payload.redactionGuidelines
+                this.redactionGuidelines = {
+                    delivery: guidelines.delivery || 'inline',
+                    content: String(guidelines.content || ''),
+                    bedrockPromptCache: {
+                        cacheReference: String(guidelines.bedrockPromptCache?.cacheReference || ''),
+                        region: String(guidelines.bedrockPromptCache?.region || '')
+                    }
                 }
+                this.orig.redactionGuidelines = serializeMarkdownInstructions(this.redactionGuidelines)
             }
 
-            const qaInstructions = payload.qaInstructions || {}
-            this.qaInstructions = {
-                delivery: qaInstructions.delivery || 'inline',
-                content: String(qaInstructions.content || ''),
-                bedrockPromptCache: {
-                    cacheReference: String(qaInstructions.bedrockPromptCache?.cacheReference || ''),
-                    region: String(qaInstructions.bedrockPromptCache?.region || '')
+            if (payload.qaInstructions || payload.qaChecks) {
+                if (payload.qaInstructions) {
+                    const qaInstructions = payload.qaInstructions
+                    this.qaInstructions = {
+                        delivery: qaInstructions.delivery || 'inline',
+                        content: String(qaInstructions.content || ''),
+                        bedrockPromptCache: {
+                            cacheReference: String(qaInstructions.bedrockPromptCache?.cacheReference || ''),
+                            region: String(qaInstructions.bedrockPromptCache?.region || '')
+                        }
+                    }
+                    this.orig.qaInstructions = serializeMarkdownInstructions(this.qaInstructions)
                 }
-            }
 
-            const qaChecks = payload.qaChecks || {}
-            this.qaChecks = {
-                completeness: qaChecks.completeness !== false,
-                references: qaChecks.references !== false,
-                imageCaptions: qaChecks.imageCaptions !== false,
-                duplicates: qaChecks.duplicates !== false,
-                aiDuplicates: qaChecks.aiDuplicates !== false,
-                redaction: qaChecks.redaction !== false,
-                customer: qaChecks.customer !== false,
-                instructions: qaChecks.instructions !== false
-            }
-
-            this.orig = {
-                promptMappings: serializePromptMappings(this.promptMappings),
-                redactionGuidelines: serializeMarkdownInstructions(this.redactionGuidelines),
-                qaInstructions: serializeMarkdownInstructions(this.qaInstructions),
-                qaChecks: serializeQaChecks(this.qaChecks)
+                if (payload.qaChecks) {
+                    const qaChecks = payload.qaChecks
+                    this.qaChecks = {
+                        completeness: qaChecks.completeness !== false,
+                        references: qaChecks.references !== false,
+                        imageCaptions: qaChecks.imageCaptions !== false,
+                        duplicates: qaChecks.duplicates !== false,
+                        aiDuplicates: qaChecks.aiDuplicates !== false,
+                        redaction: qaChecks.redaction !== false,
+                        customer: qaChecks.customer !== false,
+                        instructions: qaChecks.instructions !== false
+                    }
+                    this.orig.qaChecks = serializeQaChecks(this.qaChecks)
+                }
             }
         },
 
@@ -228,7 +259,7 @@ export default {
         },
 
         savePrompts: function() {
-            if (!this.canEdit || this.savingPrompts)
+            if (!this.canEditPrompts || this.savingPrompts)
                 return
 
             this.savingPrompts = true
@@ -263,7 +294,7 @@ export default {
         },
 
         saveRedactionGuidelines: function() {
-            if (!this.canEdit || this.savingGuidelines)
+            if (!this.canEditGuidelines || this.savingGuidelines)
                 return
 
             this.savingGuidelines = true
@@ -293,7 +324,7 @@ export default {
         },
 
         saveQaSettings: function() {
-            if (!this.canEdit || this.savingQaSettings || !this.hasQaChanges)
+            if (!this.canEditQa || this.savingQaSettings || !this.hasQaChanges)
                 return
 
             this.savingQaSettings = true
