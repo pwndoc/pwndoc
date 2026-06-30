@@ -65,7 +65,7 @@ function html2ooxml(html, style = '') {
                 cRunProperties.highlight = getHighlightColor(bgColor)
 
                 // Use text color if set (to handle white or black text depending on background color)
-                var color = attribs.style.match(/.+color:.(.+)/)
+                var color = attribs.style && attribs.style.match(/.+color:.(.+)/)
                 if (color && color[1]) cRunProperties.color = getTextColor(color[1])
             }
             else if (tag === "br") {
@@ -181,7 +181,8 @@ function html2ooxml(html, style = '') {
     for (let codeIndex = 0; codeIndex < codeObjects.length; codeIndex++) {
         let codeClass = codeObjects[codeIndex].attribs.class
         let codeLanguage = (codeClass && codeClass.split('-')[1]) || 'plaintext'
-        codeObjects[codeIndex].children[0] = htmlparser.parseDocument(hljs.highlight(codeObjects[codeIndex].children[0].data, {language: codeLanguage}).value);
+        let codeText = codeObjects[codeIndex].children[0] ? codeObjects[codeIndex].children[0].data : ''
+        codeObjects[codeIndex].children[0] = htmlparser.parseDocument(hljs.highlight(codeText, {language: codeLanguage}).value);
     }
 
     // For multiline code blocks

@@ -178,6 +178,22 @@ module.exports = function () {
         expect(ooxml).toEqual(expected)
       })
 
+      it('Mark without inline style', () => {
+        var html = `<p><mark data-color="#ffff25">test</mark></p>`
+        var expected =
+        `<w:p>`+
+          `<w:r>`+
+            `<w:rPr>`+
+              `<w:highlight w:val="yellow"/>`+
+              `<w:highlightCs w:val="yellow"/>`+
+            `</w:rPr>`+
+            `<w:t xml:space="preserve">test</w:t>`+
+          `</w:r>`+
+        `</w:p>`
+        var ooxml = html2ooxml(html)
+        expect(ooxml).toEqual(expected)
+      })
+
       it('Heading 1', () => {
         var html = "<h1>Heading</h1>"
         var expected =
@@ -544,6 +560,18 @@ module.exports = function () {
             `</w:rPr>`+
             `<w:t xml:space="preserve">Code Block</w:t>`+
           `</w:r>`+
+        `</w:p>`
+        var ooxml = html2ooxml(html)
+        expect(ooxml).toEqual(expected)
+      })
+
+      it('Empty CodeBlock', () => {
+        var html = `<pre><code class="language-plaintext"></code></pre>`
+        var expected =
+        `<w:p>`+
+          `<w:pPr>`+
+            `<w:pStyle w:val="Code"/>`+
+          `</w:pPr>`+
         `</w:p>`
         var ooxml = html2ooxml(html)
         expect(ooxml).toEqual(expected)
