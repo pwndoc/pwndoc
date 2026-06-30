@@ -396,15 +396,7 @@
                     </q-item>
                 </q-list>
                 </q-btn-dropdown>
-                <q-separator v-if="currentVulnerability.creator" vertical color="white" class="q-ml-md q-mr-sm" />
-                <div v-if="currentVulnerability.creator" class="q-toolbar-title" style="height:80%">
-                    <span>
-                        <q-badge color="grey" style="height:100%">
-                            Creator: {{currentVulnerability.creator.username}}
-                        </q-badge>
-                    </span>
-                </div>
-                <q-space />
+                <q-separator v-if="aiQaEnabled && vulnerabilityId" vertical color="white" class="q-mx-md" />
                 <q-btn
                 v-if="aiQaEnabled && vulnerabilityId"
                 flat
@@ -418,6 +410,15 @@
                         {{ $t('tooltip.vulnerabilityQa') }}
                     </q-tooltip>
                 </q-btn>
+                <q-separator v-if="currentVulnerability.creator" vertical color="white" class="q-ml-md q-mr-sm" />
+                <div v-if="currentVulnerability.creator" class="q-toolbar-title" style="height:80%">
+                    <span>
+                        <q-badge color="grey" style="height:100%">
+                            Creator: {{currentVulnerability.creator.username}}
+                        </q-badge>
+                    </span>
+                </div>
+                <q-space />
                 <q-btn dense flat icon="close" data-testid="edit-vulnerability-close" @click="$refs.editModal.hide()" />
             </q-bar>
 
