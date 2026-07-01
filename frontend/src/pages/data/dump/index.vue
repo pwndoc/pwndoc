@@ -74,9 +74,68 @@
                     <div class="text-h6">{{$t('nav.audits')}}</div>
                 </q-card-section>
                 <q-separator />
-                <q-card-section>
-                    TODO
-                </q-card-section>
+                <div v-if="userStore.isAllowed('data:stats')">
+                    <q-card-section>
+                        <div class="text-bold">{{$t('findingStatistics')}}</div>
+                    </q-card-section>
+                    <q-card-section>
+                        <div class="text-grey-8" v-html="$t('findingStatisticsInfo')"></div>
+                    </q-card-section>
+                    <q-card-section>
+                        <div class="row q-gutter-md items-end">
+                            <q-select
+                                v-model="statsFormat"
+                                :options="formatOptions"
+                                :label="$t('exportFormat')"
+                                emit-value
+                                map-options
+                                dense
+                                outlined
+                                style="min-width: 120px"
+                            />
+                            <q-select
+                                v-model="selectedCompany"
+                                :options="companies"
+                                :label="$t('company')"
+                                option-label="name"
+                                option-value="_id"
+                                clearable
+                                dense
+                                outlined
+                                style="min-width: 200px"
+                            />
+                            <q-input
+                                v-model="dateFrom"
+                                :label="$t('dateFrom')"
+                                type="date"
+                                dense
+                                outlined
+                                style="min-width: 150px"
+                            />
+                            <q-input
+                                v-model="dateTo"
+                                :label="$t('dateTo')"
+                                type="date"
+                                dense
+                                outlined
+                                style="min-width: 150px"
+                            />
+                            <q-btn
+                                :label="$t('downloadStatistics')"
+                                color="secondary"
+                                flat
+                                class="bg-secondary text-white"
+                                @click="downloadFindingStats"
+                                :loading="loadingStats"
+                            />
+                        </div>
+                    </q-card-section>
+                </div>
+                <div v-else>
+                    <q-card-section>
+                        <div class="text-grey-6">{{$t('noStatsPermission')}}</div>
+                    </q-card-section>
+                </div>
             </q-card>
         </div>
     </div>
