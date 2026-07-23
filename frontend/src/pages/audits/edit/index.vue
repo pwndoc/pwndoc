@@ -657,7 +657,7 @@ export default {
 		},
 
 		getFindingSeverity: function(finding) {
-			let severity = "None"
+			let severity = null
 			let cvss = null
 
 			try {
@@ -684,6 +684,7 @@ export default {
 						severity = cvss.temporalSeverity
 				}
 			}
+			severity = severity || "None";
 			return severity.charAt(0).toUpperCase() + severity.slice(1).toLowerCase();
 		},
 
