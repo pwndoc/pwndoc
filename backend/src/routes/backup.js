@@ -513,76 +513,95 @@ module.exports = function(app) {
             const extract = tar.extract()
             let filesExtracted = []
             const directories = files.filter(e => e.endsWith('/'))
+            let rejected = false
+
+            function doReject(error) {
+                if (!rejected) {
+                    rejected = true
+                    readStream.destroy()
+                    extract.destroy()
+                    reject(error)
+                }
+            }
 
             extract.on('entry', (header, stream, next) => {
                 console.log('entry: ', header.name)
-                if (
-                    files.includes(header.name) || 
-                    (utils.isSafePath(header.name) && directories.some(e => path.normalize(header.name).startsWith(e)))
-                ) {
+                const isRequestedFile = files.includes(header.name)
+                const isInRequestedDirectory = utils.isSafePath(header.name) && directories.some(e => path.normalize(header.name).startsWith(e))
+
+                if (isRequestedFile || isInRequestedDirectory) {
                     if (header.type === "directory") {
                         try {
                             console.log(`Creating directory ${destPath}/${header.name}`)
-                            fs.mkdirSync(`${destPath}/${header.name}`)
+                            fs.mkdirSync(`${destPath}/${header.name}`, {recursive: true})
                             filesExtracted.push(header.name)
-                            next()
                         } catch (error) {
-                            reject(error)
+                            if (error.code !== 'EEXIST') {
+                                doReject(error)
+                                return
+                            }
+                            // Directory already exists from a previous tar entry, that's fine
+                            console.log(`Directory already exists, skipping: ${header.name}`)
                         }
-                        
+                        stream.on('end', () => next())
+                        stream.resume()
+                        return
                     }
-                    else {
-                        console.log('extracting')
-                        const writeStream = fs.createWriteStream(`${destPath}/${header.name}`)
 
-                        stream.on('data', (chunk) => {
-                            writeStream.write(chunk)
-                        })
+                    console.log('extracting')
+                    const writeStream = fs.createWriteStream(`${destPath}/${header.name}`)
 
-                        stream.on('end', () => {
-                            writeStream.end()
-                            filesExtracted.push(header.name)
-                            next()
-                        })
+                    stream.on('data', (chunk) => {
+                        writeStream.write(chunk)
+                    })
 
-                        stream.on('error', (error) => {
-                            console.log('stream error')
-                            reject(error)
-                        })
-                    }
+                    stream.on('end', () => {
+                        writeStream.end()
+                        filesExtracted.push(header.name)
+                        next()
+                    })
+
+                    stream.on('error', (error) => {
+                        console.log('stream error')
+                        doReject(error)
+                    })
+
                     stream.resume()
+                    return
                 }
-                stream.on('error', error => reject(error))
+
+                // Skip entries that are not requested
                 stream.on('end', () => next())
                 stream.resume()
             })
 
             extract.on('error', error => {
                 console.log(error)
-                reject(error)
+                doReject(error)
             })
 
             extract.on('finish', () => {
                 console.log('finish')
                 readStream.close()
+                if (rejected) return
                 const missingFiles = files.filter(x => !filesExtracted.includes(x))
                 if (filesExtracted.length === 0 )
-                    reject(new Error('No files were extracted from the Archive'))
+                    doReject(new Error('No files were extracted from the Archive'))
                 else if (missingFiles.length > 0)
-                    reject(new Error(`Missing files in the archive: ${missingFiles.toString()}`))
+                    doReject(new Error(`Missing files in the archive: ${missingFiles.toString()}`))
                 else
                     resolve()
             })
 
             readStream.on('error', err => {
-                reject(err)
+                doReject(err)
             })
 
             readStream
             .pipe(zlib.createGunzip())
-            .on('error', err => reject(err))
+            .on('error', err => doReject(err))
             .pipe(extract)
-            .on('error', err => reject(err))
+            .on('error', err => doReject(err))
         })
     }
 
@@ -641,7 +660,7 @@ module.exports = function(app) {
             }
             resolve(results);
         })
-        
+
     }
 
     // Restore Backup
