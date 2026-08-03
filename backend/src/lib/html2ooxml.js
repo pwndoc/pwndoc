@@ -92,7 +92,11 @@ function html2ooxml(html, style = '') {
                     cParagraphProperties.bullet = {level: 0}
             }
             else if (tag === "code") {
-                cRunProperties.style = "CodeChar"
+                // Only apply the CodeChar character style to standalone inline
+                // <code>. Nested <code> inside <pre> keeps just the Code
+                // paragraph style so it doesn't override the code block styling.
+                if (!inCodeBlock)
+                    cRunProperties.style = "CodeChar"
             }
             else if (tag === "legend" && attribs && attribs.alt !== "undefined") {
                 var label = attribs.label || "Figure"
@@ -161,7 +165,8 @@ function html2ooxml(html, style = '') {
                     cParagraphProperties = {}
             }
             else if (tag === "code") {
-                delete cRunProperties.style
+                if (!inCodeBlock)
+                    delete cRunProperties.style
             } else if (tag === "span" && inCodeBlock) {
                 delete cRunProperties.color
                 delete cRunProperties.italics
