@@ -139,6 +139,9 @@ export default {
             SettingsService.getSettings()
             .then((data) => {
                 this.settings = data.data.datas;
+                if (!this.settings.ai) this.settings.ai = {public: {enabled: true}, private: {}}
+                if (!this.settings.ai.public) this.settings.ai.public = {enabled: true}
+                if (typeof this.settings.ai.public.enabled !== 'boolean') this.settings.ai.public.enabled = true
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
                 this.loading = false
             })

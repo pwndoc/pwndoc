@@ -44,6 +44,10 @@
         :fieldHighlighted="fieldHighlighted"
         :createComment="createComment"
         :canCreateComment="canCreateComment"
+        :aiEnabled="aiEnabled"
+        :canGenerateAiForField="canGenerateAi"
+        :isAiGeneratingField="isAiFieldLoading"
+        :generateAiForField="generateCustomFieldDraftAI"
         />
     </q-card>
     <q-card v-if="commentMode" class="col-3 bg-grey-11 sidebar-comments" style="margin-top:2px">

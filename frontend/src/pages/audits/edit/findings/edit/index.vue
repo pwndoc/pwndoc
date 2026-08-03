@@ -120,23 +120,37 @@
                             for="descriptionField"
                             class="col-md-12 basic-editor q-pt-none"
                             :class="{'highlighted-border': fieldHighlighted == 'descriptionField' && commentMode}"
-                            label-slot
                             borderless
+                            label-slot
                             stack-label
-                            :rules="($settings.report.public.requiredFields.findingDescription) ? [val => !!finding.description || $t('fieldIsRequired')] : ['']"
-                            lazy-rules="ondemand"
-                            >
+                                :rules="($settings.report.public.requiredFields.findingDescription) ? [val => !!finding.description || $t('fieldIsRequired')] : ['']"
+                                lazy-rules="ondemand"
+                                >
                                 <template v-slot="control">
-                                    <basic-editor
-                                    ref="basiceditor_description"
-                                    noSync
-                                    v-model="finding.description"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
-                                    fieldName="descriptionField"
-                                    :commentMode="commentMode && canCreateComment"
-                                    :focusedComment="focusedComment"
-                                    :commentIdList="commentIdList"
-                                    />
+                                    <div class="finding-editor-wrap">
+                                        <q-btn
+                                        v-if="canGenerateAi('description')"
+                                        class="finding-ai-btn all-pointer-events"
+                                        size="sm"
+                                        unelevated
+                                        no-caps
+                                        color="secondary"
+                                        :loading="isAiFieldLoading('description')"
+                                        :disable="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT || isAiFieldLoading('description')"
+                                        label="AI"
+                                        @click.stop="generateFieldDraftAI('description')"
+                                        />
+                                        <basic-editor
+                                        ref="basiceditor_description"
+                                        noSync
+                                        v-model="finding.description"
+                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        fieldName="descriptionField"
+                                        :commentMode="commentMode && canCreateComment"
+                                        :focusedComment="focusedComment"
+                                        :commentIdList="commentIdList"
+                                        />
+                                    </div>
                                 </template>
                                 <template v-slot:label>
                                     <div id="descriptionField">
@@ -156,16 +170,30 @@
                             lazy-rules="ondemand"
                             >
                                 <template v-slot="control">
-                                    <basic-editor
-                                    ref="basiceditor_observation"
-                                    noSync
-                                    v-model="finding.observation"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
-                                    fieldName="observationField"
-                                    :commentMode="commentMode && canCreateComment"
-                                    :focusedComment="focusedComment"
-                                    :commentIdList="commentIdList"
-                                    />
+                                    <div class="finding-editor-wrap">
+                                        <q-btn
+                                        v-if="canGenerateAi('observation')"
+                                        class="finding-ai-btn all-pointer-events"
+                                        size="sm"
+                                        unelevated
+                                        no-caps
+                                        color="secondary"
+                                        :loading="isAiFieldLoading('observation')"
+                                        :disable="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT || isAiFieldLoading('observation')"
+                                        label="AI"
+                                        @click.stop="generateFieldDraftAI('observation')"
+                                        />
+                                        <basic-editor
+                                        ref="basiceditor_observation"
+                                        noSync
+                                        v-model="finding.observation"
+                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        fieldName="observationField"
+                                        :commentMode="commentMode && canCreateComment"
+                                        :focusedComment="focusedComment"
+                                        :commentIdList="commentIdList"
+                                        />
+                                    </div>
                                 </template>
                                 <template v-slot:label>
                                     <div id="observationField">
@@ -179,14 +207,28 @@
                             borderless 
                             :class="{'highlighted-border': fieldHighlighted == 'referencesField' && commentMode}"
                             >
-                                <textarea-array
-                                ref="referencesField"
-                                id="referencesField"
-                                class="col-12 q-pt-none"
-                                :label="$t('references')+' '+$t('one_per_line')"
-                                v-model="finding.references"
-                                :rules="($settings.report.public.requiredFields.findingReferences) ? [val => !!val || $t('fieldIsRequired')] : ['']"
-                                :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT" />
+                                <div class="finding-editor-wrap">
+                                    <q-btn
+                                    v-if="canGenerateAi('references')"
+                                    class="finding-ai-btn all-pointer-events"
+                                    size="sm"
+                                    unelevated
+                                    no-caps
+                                    color="secondary"
+                                    :loading="isAiFieldLoading('references')"
+                                    :disable="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT || isAiFieldLoading('references')"
+                                    label="AI"
+                                    @click.stop="generateFieldDraftAI('references')"
+                                    />
+                                    <textarea-array
+                                    ref="referencesField"
+                                    id="referencesField"
+                                    class="col-12 q-pt-none"
+                                    :label="$t('references')+' '+$t('one_per_line')"
+                                    v-model="finding.references"
+                                    :rules="($settings.report.public.requiredFields.findingReferences) ? [val => !!val || $t('fieldIsRequired')] : ['']"
+                                    :readonly="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT" />
+                                </div>
                                 <q-badge v-if="commentMode && canCreateComment" color="deep-purple" floating class="cursor-pointer" @click="createComment('referencesField')">
                                     <q-icon name="add_comment" size="xs" />
                                 </q-badge>
@@ -211,6 +253,10 @@
                             :fieldHighlighted="fieldHighlighted"
                             :createComment="createComment"
                             :canCreateComment="canCreateComment"
+                            :aiEnabled="aiEnabled"
+                            :canGenerateAiForField="canGenerateAi"
+                            :isAiGeneratingField="isAiFieldLoading"
+                            :generateAiForField="generateCustomFieldDraftAI"
                             />
                         </q-expansion-item>
                     </q-card>
@@ -230,16 +276,30 @@
                             lazy-rules="ondemand"
                             >
                                 <template v-slot="control">
-                                    <basic-editor
-                                    ref="basiceditor_poc"
-                                    noSync
-                                    v-model="finding.poc"
-                                    :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
-                                    fieldName="pocField"
-                                    :commentMode="commentMode && canCreateComment"
-                                    :focusedComment="focusedComment"
-                                    :commentIdList="commentIdList"
-                                    />
+                                    <div class="finding-editor-wrap">
+                                        <q-btn
+                                        v-if="canGenerateAi('poc')"
+                                        class="finding-ai-btn all-pointer-events"
+                                        size="sm"
+                                        unelevated
+                                        no-caps
+                                        color="secondary"
+                                        :loading="isAiFieldLoading('poc')"
+                                        :disable="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT || isAiFieldLoading('poc')"
+                                        label="AI"
+                                        @click.stop="generateFieldDraftAI('poc')"
+                                        />
+                                        <basic-editor
+                                        ref="basiceditor_poc"
+                                        noSync
+                                        v-model="finding.poc"
+                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                        fieldName="pocField"
+                                        :commentMode="commentMode && canCreateComment"
+                                        :focusedComment="focusedComment"
+                                        :commentIdList="commentIdList"
+                                        />
+                                    </div>
                                 </template>
                                 <template v-slot:label>
                                     <div id="pocField">
@@ -378,19 +438,35 @@
                                 lazy-rules="ondemand"
                                 >
                                     <template v-slot="control">
-                                        <basic-editor
-                                        ref="basiceditor_remediation"
-                                        noSync
-                                        v-model="finding.remediation"
-                                        :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
-                                        fieldName="remediationField"
-                                        :commentMode="commentMode && canCreateComment"
-                                        :focusedComment="focusedComment"
-                                        :commentIdList="commentIdList"
-                                        />
+                                        <div class="finding-editor-wrap">
+                                            <q-btn
+                                            v-if="canGenerateAi('remediation')"
+                                            class="finding-ai-btn all-pointer-events"
+                                            size="sm"
+                                            unelevated
+                                            no-caps
+                                            color="secondary"
+                                            :loading="isAiFieldLoading('remediation')"
+                                            :disable="frontEndAuditState !== AUDIT_VIEW_STATE.EDIT || isAiFieldLoading('remediation')"
+                                            label="AI"
+                                            @click.stop="generateFieldDraftAI('remediation')"
+                                            />
+                                            <basic-editor
+                                            ref="basiceditor_remediation"
+                                            noSync
+                                            v-model="finding.remediation"
+                                            :editable="frontEndAuditState === AUDIT_VIEW_STATE.EDIT"
+                                            fieldName="remediationField"
+                                            :commentMode="commentMode && canCreateComment"
+                                            :focusedComment="focusedComment"
+                                            :commentIdList="commentIdList"
+                                            />
+                                        </div>
                                     </template>
                                     <template v-slot:label>
-                                        {{$t('remediation')}} <span v-if="$settings.report.public.requiredFields.findingRemediation" class="text-red">*</span>
+                                        <div id="remediationField">
+                                            {{$t('remediation')}} <span v-if="$settings.report.public.requiredFields.findingRemediation" class="text-red">*</span>
+                                        </div>
                                     </template>
                                 </q-field>
                             </q-card-section>
@@ -709,5 +785,17 @@
 
 .content-retest {
     margin-top: 50px;
+}
+
+.finding-editor-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.finding-ai-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
 }
 </style>

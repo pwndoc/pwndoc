@@ -2,6 +2,7 @@ var mongoose = require('mongoose');//.set('debug', true);
 var Schema = mongoose.Schema;
 var _ = require('lodash');
 var Utils = require('../lib/utils.js');
+const { AI_PROVIDERS, AI_DEFAULT_PROVIDER } = require('../lib/ai-prompts');
 
 // https://stackoverflow.com/questions/25822289/what-is-the-best-way-to-store-color-hex-values-in-mongodb-mongoose
 const colorValidator = (v) => (/^#([0-9a-f]{3}){1,2}$/i).test(v);
@@ -60,6 +61,27 @@ const SettingSchema = new Schema({
         private: {
             removeApprovalsUponUpdate: { type: Boolean, default: false }
         }
+    },
+    ai: {
+        public: {
+            enabled: {type: Boolean, default: true},
+            defaultProvider: {type: String, enum: AI_PROVIDERS, default: AI_DEFAULT_PROVIDER}
+        },
+        private: {
+            openaiApiKey: {type: String, default: ''},
+            openaiBaseUrl: {type: String, default: 'https://api.openai.com/v1'},
+            openaiModel: {type: String, default: 'gpt-4.1-mini'},
+            anthropicApiKey: {type: String, default: ''},
+            anthropicBaseUrl: {type: String, default: 'https://api.anthropic.com/v1'},
+            anthropicModel: {type: String, default: 'claude-3-5-sonnet-latest'},
+            anthropicVersion: {type: String, default: '2023-06-01'},
+            deepseekApiKey: {type: String, default: ''},
+            deepseekBaseUrl: {type: String, default: 'https://api.deepseek.com/v1'},
+            deepseekModel: {type: String, default: 'deepseek-chat'},
+            ollamaApiKey: {type: String, default: ''},
+            ollamaBaseUrl: {type: String, default: 'http://localhost:11434/v1'},
+            ollamaModel: {type: String, default: 'llama3.1'}
+        }
     }
 }, {strict: true});
 
@@ -80,7 +102,7 @@ SettingSchema.statics.getAll = () => {
 SettingSchema.statics.getPublic = () => {
     return new Promise((resolve, reject) => {
         const query = Settings.findOne({});
-        query.select('-_id report.enabled report.public reviews.enabled reviews.public');
+        query.select('-_id report.enabled report.public reviews.enabled reviews.public ai.public');
         query.exec()
             .then(settings => resolve(settings))
             .catch(err => reject(err));
@@ -227,6 +249,15 @@ Settings.findOne()
             _.set(liveSettings, path, undefined)
         }
     })
+
+    if (!AI_PROVIDERS.includes(liveSettings?.ai?.public?.defaultProvider)) {
+        needUpdate = true
+        _.set(liveSettings, 'ai.public.defaultProvider', AI_DEFAULT_PROVIDER)
+    }
+    if (typeof liveSettings?.ai?.public?.enabled !== 'boolean') {
+        needUpdate = true
+        _.set(liveSettings, 'ai.public.enabled', true)
+    }
 
     if (needUpdate) {
         console.log("Removing unused fields from Settings")

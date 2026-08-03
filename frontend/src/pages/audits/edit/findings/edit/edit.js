@@ -12,6 +12,7 @@ import AuditService from '@/services/audit';
 import DataService from '@/services/data';
 import { useUserStore } from 'src/stores/user'
 import VulnService from '@/services/vulnerability';
+import AiService from '@/services/ai';
 import Utils from '@/services/utils';
 
 import { $t } from '@/boot/i18n'
@@ -30,6 +31,9 @@ export default {
             AUDIT_VIEW_STATE: Utils.AUDIT_VIEW_STATE,
             overrideLeaveCheck: false,
             transitionEnd: true,
+            aiEnabled: false,
+            aiPromptFieldKeys: [],
+            aiGeneratingFields: {},
             // Comments
             commentTemp: null,
             replyTemp: null,
@@ -75,6 +79,7 @@ export default {
         this.findingId = this.$route.params.findingId;
         this.getFinding();
         this.getVulnTypes();
+        this.getAiPromptsConfig();
 
         this.$socket.emit('menu', {menu: 'editFinding', finding: this.findingId, room: this.auditId});
 
@@ -207,6 +212,21 @@ export default {
             })
             .catch((err) => {
                 console.log(err)
+            })
+        },
+
+        getAiPromptsConfig: function() {
+            DataService.getAiPrompts()
+            .then((data) => {
+                const payload = data.data.datas || {}
+                this.aiEnabled = payload.aiEnabled !== false
+                this.aiPromptFieldKeys = (payload.promptMappings || [])
+                .filter((mapping) => String(mapping.entityType || '') === 'finding' && mapping.enabled !== false)
+                .map((mapping) => String(mapping.fieldKey || ''))
+            })
+            .catch(() => {
+                this.aiEnabled = false
+                this.aiPromptFieldKeys = []
             })
         },
 
@@ -345,6 +365,158 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        getCustomFieldAiKey: function(customFieldId) {
+            return `custom-field:${customFieldId}`
+        },
+
+        canGenerateAi: function(fieldKey) {
+            return this.aiEnabled && this.aiPromptFieldKeys.includes(fieldKey)
+        },
+
+        isAiFieldLoading: function(fieldKey) {
+            return !!this.aiGeneratingFields[fieldKey]
+        },
+
+        generateDescriptionDraftAI: function() {
+            return this.generateFieldDraftAI('description')
+        },
+
+        generateCustomFieldDraftAI: function(customField) {
+            return this.generateFieldDraftAI(null, customField)
+        },
+
+        generateFieldDraftAI: async function(field, customField = null) {
+            const fieldKey = customField ? this.getCustomFieldAiKey(customField?.customField?._id) : field
+            if (!fieldKey || !this.canGenerateAi(fieldKey))
+                return
+
+            if (this.frontEndAuditState !== this.AUDIT_VIEW_STATE.EDIT || this.isAiFieldLoading(fieldKey))
+                return
+
+            Utils.syncEditors(this.$refs)
+            this.aiGeneratingFields[fieldKey] = true
+
+            try {
+                const customFieldContext = {}
+                if (this.finding.customFields && this.finding.customFields.length > 0) {
+                    this.finding.customFields.forEach((entry) => {
+                        if (entry?.customField?.label)
+                            customFieldContext[entry.customField.label] = entry.text
+                    })
+                }
+
+                const response = await AiService.generateFieldDraft({
+                    entityType: 'finding',
+                    field: fieldKey,
+                    locale: this.auditParent.language,
+                    context: {
+                        title: this.finding.title || '',
+                        vulnType: this.finding.vulnType || '',
+                        observation: this.finding.observation || '',
+                        description: this.finding.description || '',
+                        remediation: this.finding.remediation || '',
+                        references: this.finding.references || [],
+                        poc: this.finding.poc || '',
+                        scope: this.finding.scope || '',
+                        customFieldLabel: customField?.customField?.label || '',
+                        customFieldValue: customField?.text || '',
+                        customFields: customFieldContext
+                    }
+                })
+
+                const rawDraft = response.data?.datas?.draft || ''
+                const outputType = response.data?.datas?.outputType || ((field === 'references') ? 'array' : 'html')
+                const providerUsed = response.data?.datas?.provider || 'default provider'
+                let normalizedDraft = null
+
+                if (outputType === 'array') {
+                    const references = Array.isArray(rawDraft)
+                        ? rawDraft
+                        : String(rawDraft).split('\n')
+
+                    normalizedDraft = references
+                    .map(e => String(e || '').trim())
+                    .filter(Boolean)
+
+                    if (normalizedDraft.length === 0)
+                        throw new Error('AI draft is empty')
+                } else {
+                    normalizedDraft = String(rawDraft || '').trim()
+                    if (!normalizedDraft)
+                        throw new Error('AI draft is empty')
+                }
+
+                const fieldLabel = customField?.customField?.label || ({
+                    description: 'Description',
+                    observation: 'Observation',
+                    remediation: 'Remediation',
+                    references: 'References',
+                    poc: 'Proofs'
+                }[field] || fieldKey)
+
+                if (outputType === 'array') {
+                    const preview = normalizedDraft
+                    .map(line => line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+                    .join('<br/>')
+
+                    Dialog.create({
+                        title: `AI Draft - ${fieldLabel} (${providerUsed})`,
+                        html: true,
+                        message: `<div style="max-height:40vh;overflow:auto;border:1px solid #d7d7d7;padding:8px;">${preview}</div><p class="q-mt-md">Apply this draft to the ${fieldLabel} field?</p>`,
+                        ok: {label: 'Apply', color: 'primary'},
+                        cancel: {label: $t('btn.cancel'), color: 'white'}
+                    })
+                    .onOk(() => {
+                        if (customField)
+                            customField.text = normalizedDraft
+                        else
+                            this.finding[field] = normalizedDraft
+                        Notify.create({
+                            message: `AI draft applied from ${providerUsed} (not saved yet)`,
+                            color: 'positive',
+                            textColor: 'white',
+                            position: 'top-right'
+                        })
+                    })
+                    return
+                }
+
+                const preview = (outputType === 'html') ?
+                    Utils.htmlEncode(normalizedDraft) :
+                    normalizedDraft.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+                Dialog.create({
+                    title: `AI Draft - ${fieldLabel} (${providerUsed})`,
+                    html: true,
+                    message: `<div style="max-height:40vh;overflow:auto;border:1px solid #d7d7d7;padding:8px;">${preview}</div><p class="q-mt-md">Apply this draft to the ${fieldLabel} field?</p>`,
+                    ok: {label: 'Apply', color: 'primary'},
+                    cancel: {label: $t('btn.cancel'), color: 'white'}
+                })
+                .onOk(() => {
+                    const appliedDraft = (outputType === 'html') ? Utils.htmlEncode(normalizedDraft) : normalizedDraft
+                    if (customField)
+                        customField.text = appliedDraft
+                    else
+                        this.finding[field] = appliedDraft
+                    Notify.create({
+                        message: `AI draft applied from ${providerUsed} (not saved yet)`,
+                        color: 'positive',
+                        textColor: 'white',
+                        position: 'top-right'
+                    })
+                })
+            } catch (err) {
+                Notify.create({
+                    message: err.response?.data?.datas || err.message || 'Unable to generate AI draft',
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+            } finally {
+                this.aiGeneratingFields[fieldKey] = false
+            }
         },
 
         syncEditors: function() {
