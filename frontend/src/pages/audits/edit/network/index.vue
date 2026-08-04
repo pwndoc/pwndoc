@@ -69,10 +69,12 @@
 
     <div class="row content q-pa-md">
         <div class="col-md-6 q-pr-sm">
-            <q-card>
-                <q-card-section>{{$t('hostsAssociateScopes')}}</q-card-section>
-                <q-separator />
-                <q-card-section v-for="scope of audit.scope" :key="scope.name">
+            <div class="network-form-section">
+                <div class="network-form-section__header">
+                    <q-icon name="fa fa-sitemap" />
+                    <span>{{$t('hostsAssociateScopes')}}</span>
+                </div>
+                <div v-for="scope of audit.scope" :key="scope.name" class="network-form-scope">
                     <span class="text-h6">{{scope.name}}</span>
                     <div class="q-col-gutter-md row">
                         <q-select
@@ -90,7 +92,7 @@
                             </template>
                         </q-select>
                         <div v-for="(host, index) of scope.hosts">
-                            <q-chip 
+                            <q-chip
                             :key="host.ip"
                             color="blue-grey-7"
                             text-color="white"
@@ -106,8 +108,8 @@
                             </q-chip>
                         </div>
                     </div>
-                </q-card-section>
-            </q-card>
+                </div>
+            </div>
         </div>
         <div v-if="currentHost !== null" class="col-md-6 q-pl-sm">
             <q-table
@@ -126,5 +128,52 @@
 <style scoped>
 .content {
     margin-top: 50px;
+    background: #F5F6FA;
+}
+
+.body--dark .content {
+    background: #121212;
+}
+
+.network-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .network-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.network-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+
+.network-form-scope {
+    padding-top: 16px;
+    margin-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.body--dark .network-form-scope {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.network-form-scope:first-of-type {
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
 }
 </style>

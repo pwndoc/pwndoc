@@ -127,28 +127,38 @@
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
-            <q-card-section>
-                <q-input data-testid="create-role-display-name-input" dense :label="$t('roleDisplayName')+' *'" :model-value="currentRole.displayName" @update:model-value="updateDisplayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
-            </q-card-section>
-            <q-card-section>
-                <q-input data-testid="create-role-name-input" dense :label="$t('roleName')+' *'" :model-value="currentRole.name" @update:model-value="updateRoleName" :error="!!errors.name" :error-message="errors.name" :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
-            </q-card-section>
-            <q-card-section>
-                <q-input data-testid="create-role-description-input" dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
-            </q-card-section>
-            <q-card-section>
-                <q-select dense :label="$t('cloneFrom')" v-model="cloneFrom" :options="roleOptions()" emit-value map-options clearable outlined @update:model-value="applyClone" />
-            </q-card-section>
-            <role-permissions-panel
-            :permissions-catalog="permissionsCatalog"
-            :allows="roleAllowsList(currentRole)"
-            :all-permissions="roleAllowsAll(currentRole)"
-            :editable="true"
-            v-model:search="permissionSearch"
-            v-model:expanded-permission-groups="expandedPermissionGroups"
-            @toggle="togglePermission"
-            @clear="clearPermissions"
-            />
+
+            <div class="role-form-body">
+                <div class="role-form-section">
+                    <div class="role-form-section__header">
+                        <q-icon name="fa fa-id-badge" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input class="col-md-6 col-12" data-testid="create-role-display-name-input" dense :label="$t('roleDisplayName')+' *'" :model-value="currentRole.displayName" @update:model-value="updateDisplayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
+                        <q-input class="col-md-6 col-12" data-testid="create-role-name-input" dense :label="$t('roleName')+' *'" :model-value="currentRole.name" @update:model-value="updateRoleName" :error="!!errors.name" :error-message="errors.name" :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
+                        <q-input class="col-md-12" data-testid="create-role-description-input" dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
+                        <q-select class="col-md-12" dense :label="$t('cloneFrom')" v-model="cloneFrom" :options="roleOptions()" emit-value map-options clearable outlined @update:model-value="applyClone" />
+                    </div>
+                </div>
+                <div class="role-form-section role-form-section--permissions">
+                    <div class="role-form-section__header">
+                        <q-icon name="fa fa-user-shield" />
+                        <span>{{$t('permissions')}}</span>
+                    </div>
+                    <role-permissions-panel
+                    :permissions-catalog="permissionsCatalog"
+                    :allows="roleAllowsList(currentRole)"
+                    :all-permissions="roleAllowsAll(currentRole)"
+                    :editable="true"
+                    v-model:search="permissionSearch"
+                    v-model:expanded-permission-groups="expandedPermissionGroups"
+                    @toggle="togglePermission"
+                    @clear="clearPermissions"
+                    />
+                </div>
+            </div>
+
             <q-card-actions class="role-modal-actions bg-white" align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
                 <q-btn data-testid="create-role-submit-button" color="secondary" unelevated @click="createRole()">{{$t('btn.create')}}</q-btn>
@@ -163,25 +173,37 @@
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
             </q-bar>
-            <q-card-section>
-                <q-input data-testid="edit-role-display-name-input" dense :label="$t('roleDisplayName')+' *'" v-model="currentRole.displayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
-            </q-card-section>
-            <q-card-section>
-                <q-input data-testid="edit-role-name-input" dense :label="$t('roleName')+' *'" v-model="currentRole.name" disable :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
-            </q-card-section>
-            <q-card-section>
-                <q-input data-testid="edit-role-description-input" dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
-            </q-card-section>
-            <role-permissions-panel
-            :permissions-catalog="permissionsCatalog"
-            :allows="roleAllowsList(currentRole)"
-            :all-permissions="roleAllowsAll(currentRole)"
-            :editable="true"
-            v-model:search="permissionSearch"
-            v-model:expanded-permission-groups="expandedPermissionGroups"
-            @toggle="togglePermission"
-            @clear="clearPermissions"
-            />
+
+            <div class="role-form-body">
+                <div class="role-form-section">
+                    <div class="role-form-section__header">
+                        <q-icon name="fa fa-id-badge" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input class="col-md-6 col-12" data-testid="edit-role-display-name-input" dense :label="$t('roleDisplayName')+' *'" v-model="currentRole.displayName" :error="!!errors.displayName" :error-message="errors.displayName" hide-bottom-space outlined />
+                        <q-input class="col-md-6 col-12" data-testid="edit-role-name-input" dense :label="$t('roleName')+' *'" v-model="currentRole.name" disable :hint="$t('roleNameImmutableHint')" hide-bottom-space outlined />
+                        <q-input class="col-md-12" data-testid="edit-role-description-input" dense :label="$t('description')" v-model="currentRole.description" outlined type="textarea" autogrow />
+                    </div>
+                </div>
+                <div class="role-form-section role-form-section--permissions">
+                    <div class="role-form-section__header">
+                        <q-icon name="fa fa-user-shield" />
+                        <span>{{$t('permissions')}}</span>
+                    </div>
+                    <role-permissions-panel
+                    :permissions-catalog="permissionsCatalog"
+                    :allows="roleAllowsList(currentRole)"
+                    :all-permissions="roleAllowsAll(currentRole)"
+                    :editable="true"
+                    v-model:search="permissionSearch"
+                    v-model:expanded-permission-groups="expandedPermissionGroups"
+                    @toggle="togglePermission"
+                    @clear="clearPermissions"
+                    />
+                </div>
+            </div>
+
             <q-card-actions class="role-modal-actions bg-white" align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
                 <q-btn data-testid="edit-role-submit-button" color="secondary" unelevated @click="updateRole()">{{$t('btn.update')}}</q-btn>
@@ -196,34 +218,48 @@
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.viewModal.hide()" />
             </q-bar>
-            <q-card-section>
-                <div class="row q-col-gutter-md">
-                    <div class="col-md-6 col-12">
-                        <div class="text-caption text-grey-7">{{$t('roleDisplayName')}}</div>
-                        <div class="text-body1 text-weight-bold">{{roleDisplayName(currentRole)}}</div>
+
+            <div class="role-form-body">
+                <div class="role-form-section">
+                    <div class="role-form-section__header">
+                        <q-icon name="fa fa-id-badge" />
+                        <span>{{$t('details')}}</span>
                     </div>
-                    <div class="col-md-6 col-12">
-                        <div class="text-caption text-grey-7">{{$t('roleName')}}</div>
-                        <div class="text-body1">{{currentRole.name}}</div>
-                    </div>
-                    <div class="col-md-6 col-12">
-                        <div class="text-caption text-grey-7">{{$t('roleType')}}</div>
-                        <q-chip dense square :color="isSystem(currentRole) ? 'grey-7' : 'blue-grey'" text-color="white" class="q-ma-none" :label="typeLabel(currentRole)" />
-                    </div>
-                    <div class="col-12">
-                        <div class="text-caption text-grey-7">{{$t('description')}}</div>
-                        <div class="text-body1">{{roleDescription(currentRole)}}</div>
+                    <div class="row q-col-gutter-md">
+                        <div class="col-md-6 col-12">
+                            <div class="text-caption text-grey-7">{{$t('roleDisplayName')}}</div>
+                            <div class="text-body1 text-weight-bold">{{roleDisplayName(currentRole)}}</div>
+                        </div>
+                        <div class="col-md-6 col-12">
+                            <div class="text-caption text-grey-7">{{$t('roleName')}}</div>
+                            <div class="text-body1">{{currentRole.name}}</div>
+                        </div>
+                        <div class="col-md-6 col-12">
+                            <div class="text-caption text-grey-7">{{$t('roleType')}}</div>
+                            <q-chip dense square :color="isSystem(currentRole) ? 'grey-7' : 'blue-grey'" text-color="white" class="q-ma-none" :label="typeLabel(currentRole)" />
+                        </div>
+                        <div class="col-12">
+                            <div class="text-caption text-grey-7">{{$t('description')}}</div>
+                            <div class="text-body1">{{roleDescription(currentRole)}}</div>
+                        </div>
                     </div>
                 </div>
-            </q-card-section>
-            <role-permissions-panel
-            :permissions-catalog="permissionsCatalog"
-            :allows="roleAllowsList(currentRole)"
-            :all-permissions="roleAllowsAll(currentRole)"
-            :editable="false"
-            v-model:search="permissionSearch"
-            v-model:expanded-permission-groups="expandedPermissionGroups"
-            />
+                <div class="role-form-section role-form-section--permissions">
+                    <div class="role-form-section__header">
+                        <q-icon name="fa fa-user-shield" />
+                        <span>{{$t('permissions')}}</span>
+                    </div>
+                    <role-permissions-panel
+                    :permissions-catalog="permissionsCatalog"
+                    :allows="roleAllowsList(currentRole)"
+                    :all-permissions="roleAllowsAll(currentRole)"
+                    :editable="false"
+                    v-model:search="permissionSearch"
+                    v-model:expanded-permission-groups="expandedPermissionGroups"
+                    />
+                </div>
+            </div>
+
             <q-card-actions class="role-modal-actions bg-white" align="right">
                 <q-btn data-testid="view-role-close-button" color="primary" unelevated @click="$refs.viewModal.hide()">{{$t('btn.close')}}</q-btn>
             </q-card-actions>
@@ -280,5 +316,50 @@
     bottom: 0;
     z-index: 1;
     border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.role-form-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .role-form-body {
+    background: #121212;
+}
+
+.role-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .role-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.role-form-section--permissions {
+    padding: 20px 20px 4px;
+}
+
+.role-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
 }
 </style>

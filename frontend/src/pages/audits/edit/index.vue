@@ -1161,7 +1161,7 @@ export default {
 	position: fixed;
 	top: 50px;
 	right: 0;
-	left: 300px;
+	left: calc(300px + #{$rail-width});
 	z-index: 1;
 }
 

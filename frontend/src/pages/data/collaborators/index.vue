@@ -178,7 +178,7 @@
     </div>
     
     <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px">
+        <q-card style="width:800px" class="collab-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('addCollaborator')}}
@@ -186,111 +186,115 @@
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
-            
-            <q-card-section>
-                <q-input
-                data-testid="create-collaborator-username-input"
-                :label="$t('username')+' *'"
-                autofocus
-                class="col-md-12"
-                :error="!!errors.username"
-                :error-message="errors.username"
-                hide-bottom-space
-                @keyup.enter="createCollab()"
-                v-model="currentCollab.username"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-collaborator-firstname-input"
-                :label="$t('firstname')+' *'"
-                class="col-md-12"
-                :error="!!errors.firstname"
-                :error-message="errors.firstname"
-                hide-bottom-space
-                @keyup.enter="createCollab()"
-                v-model="currentCollab.firstname"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-collaborator-lastname-input"
-                :label="$t('lastname')+' *'"
-                class="col-md-12"
-                :error="!!errors.lastname"
-                :error-message="errors.lastname"
-                hide-bottom-space
-                @keyup.enter="createCollab()"
-                v-model="currentCollab.lastname"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-collaborator-email-input"
-                :label="$t('email')"
-                class="col-md-12"
-                hide-bottom-space
-                @keyup.enter="createCollab()"
-                v-model="currentCollab.email"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-collaborator-phone-input"
-                :label="$t('phone')"
-                class="col-md-12"
-                hide-bottom-space
-                @keyup.enter="createCollab()"
-                v-model="currentCollab.phone"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-collaborator-jobtitle-input"
-                :label="$t('jobTitle')"
-                class="col-md-12"
-                hide-bottom-space
-                @keyup.enter="createCollab()"
-                v-model="currentCollab.jobTitle"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-select
-                data-testid="create-collaborator-role-select"
-                :label="$t('role')+' *'"
-                class="col-md-12"
-                v-model="currentCollab.roles"
-                :options="roleOptions()"
-                emit-value
-                map-options
-                multiple
-                use-chips
-                @keyup.enter="createCollab()"
-                options-sanitize
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-collaborator-password-input"
-                ref="pwdCreateRef"
-                v-model="currentCollab.password"
-                :label="$t('password')+' *'"
-                type="password"
-                :error="!!errors.password"
-                :error-message="errors.password"
-                hide-bottom-space
-                @keyup.enter="createCollab()"
-                outlined
-                :rules="(currentCollab.password) ? strongPassword : ['']"
-                />
-            </q-card-section>
+
+            <div class="collab-form-body">
+                <div class="collab-form-section">
+                    <div class="collab-form-section__header">
+                        <q-icon name="fa fa-address-card" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                        data-testid="create-collaborator-username-input"
+                        :label="$t('username')+' *'"
+                        autofocus
+                        class="col-md-6 col-12"
+                        :error="!!errors.username"
+                        :error-message="errors.username"
+                        hide-bottom-space
+                        @keyup.enter="createCollab()"
+                        v-model="currentCollab.username"
+                        outlined
+                        />
+                        <div class="col-md-6 col-12"></div>
+                        <q-input
+                        data-testid="create-collaborator-firstname-input"
+                        :label="$t('firstname')+' *'"
+                        class="col-md-6 col-12"
+                        :error="!!errors.firstname"
+                        :error-message="errors.firstname"
+                        hide-bottom-space
+                        @keyup.enter="createCollab()"
+                        v-model="currentCollab.firstname"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-collaborator-lastname-input"
+                        :label="$t('lastname')+' *'"
+                        class="col-md-6 col-12"
+                        :error="!!errors.lastname"
+                        :error-message="errors.lastname"
+                        hide-bottom-space
+                        @keyup.enter="createCollab()"
+                        v-model="currentCollab.lastname"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-collaborator-email-input"
+                        :label="$t('email')"
+                        class="col-md-6 col-12"
+                        hide-bottom-space
+                        @keyup.enter="createCollab()"
+                        v-model="currentCollab.email"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-collaborator-phone-input"
+                        :label="$t('phone')"
+                        class="col-md-6 col-12"
+                        hide-bottom-space
+                        @keyup.enter="createCollab()"
+                        v-model="currentCollab.phone"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-collaborator-jobtitle-input"
+                        :label="$t('jobTitle')"
+                        class="col-md-6 col-12"
+                        hide-bottom-space
+                        @keyup.enter="createCollab()"
+                        v-model="currentCollab.jobTitle"
+                        outlined
+                        />
+                    </div>
+                </div>
+                <div class="collab-form-section">
+                    <div class="collab-form-section__header">
+                        <q-icon name="fa fa-user-shield" />
+                        <span>{{$t('roles')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-select
+                        data-testid="create-collaborator-role-select"
+                        :label="$t('role')+' *'"
+                        class="col-md-12"
+                        v-model="currentCollab.roles"
+                        :options="roleOptions()"
+                        emit-value
+                        map-options
+                        multiple
+                        use-chips
+                        @keyup.enter="createCollab()"
+                        options-sanitize
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-collaborator-password-input"
+                        ref="pwdCreateRef"
+                        class="col-md-12"
+                        v-model="currentCollab.password"
+                        :label="$t('password')+' *'"
+                        type="password"
+                        :error="!!errors.password"
+                        :error-message="errors.password"
+                        hide-bottom-space
+                        @keyup.enter="createCollab()"
+                        outlined
+                        :rules="(currentCollab.password) ? strongPassword : ['']"
+                        />
+                    </div>
+                </div>
+            </div>
 
             <q-separator />
 
@@ -300,9 +304,9 @@
             </q-card-actions>
         </q-card>
     </q-dialog>
-    
+
     <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px">
+        <q-card style="width:800px" class="collab-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('editCollaborator')}}
@@ -310,120 +314,122 @@
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
             </q-bar>
-            
-            <q-card-section>
-                <q-input
-                data-testid="edit-collaborator-username-input"
-                :label="$t('username')+' *'"
-                autofocus
-                class="col-md-12"
-                :error="!!errors.username"
-                :error-message="errors.username"
-                hide-bottom-space
-                @keyup.enter="updateCollab()"
-                v-model="currentCollab.username"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="edit-collaborator-firstname-input"
-                :label="$t('firstname')+' *'"
-                class="col-md-12"
-                :error="!!errors.firstname"
-                :error-message="errors.firstname"
-                hide-bottom-space
-                @keyup.enter="updateCollab()"
-                v-model="currentCollab.firstname"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="edit-collaborator-lastname-input"
-                :label="$t('lastname')+' *'"
-                class="col-md-12"
-                :error="!!errors.lastname"
-                :error-message="errors.lastname"
-                hide-bottom-space
-                @keyup.enter="updateCollab()"
-                v-model="currentCollab.lastname"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="edit-collaborator-email-input"
-                :label="$t('email')"
-                class="col-md-12"
-                hide-bottom-space
-                @keyup.enter="updateCollab()"
-                v-model="currentCollab.email"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="edit-collaborator-phone-input"
-                :label="$t('phone')"
-                class="col-md-12"
-                hide-bottom-space
-                @keyup.enter="updateCollab()"
-                v-model="currentCollab.phone"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="edit-collaborator-jobtitle-input"
-                :label="$t('jobTitle')"
-                class="col-md-12"
-                hide-bottom-space
-                @keyup.enter="updateCollab()"
-                v-model="currentCollab.jobTitle"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-select
-                data-testid="edit-collaborator-role-select"
-                :label="$t('role')+' *'"
-                class="col-md-12"
-                v-model="currentCollab.roles"
-                :options="roleOptions()"
-                emit-value
-                map-options
-                multiple
-                use-chips
-                @keyup.enter="updateCollab()"
-                options-sanitize
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="edit-collaborator-password-input"
-                ref="pwdUpdateRef"
-                v-model="currentCollab.password"
-                :label="$t('password')"
-                type="password"
-                @keyup.enter="updateCollab()"
-                outlined
-                :rules="(currentCollab.password) ? strongPassword : ['']"
-                />
-            </q-card-section>
-            <q-card-section>
-                <div class="q-pl-sm">
-                    <p v-if="currentCollab.totpEnabled">{{$t('twoFactorAuthentication')}} <b>{{$t('enabled')}}</b> {{$t('forThisUser')}}</p>
-                    <p v-else>{{$t('twoFactorAuthentication')}} <b>{{$t('disabled')}}</b> {{$t('forThisUser')}}</p>
-                </div>
 
-                <q-toggle
-                data-testid="edit-collaborator-enabled-toggle"
-                v-model="currentCollab.enabled"
-                :label="currentCollab.enabled ? $t('btn.accountEnabled') : $t('btn.accountDisabled')"
-                />
-            </q-card-section>
+            <div class="collab-form-body">
+                <div class="collab-form-section">
+                    <div class="collab-form-section__header">
+                        <q-icon name="fa fa-address-card" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                        data-testid="edit-collaborator-username-input"
+                        :label="$t('username')+' *'"
+                        autofocus
+                        class="col-md-6 col-12"
+                        :error="!!errors.username"
+                        :error-message="errors.username"
+                        hide-bottom-space
+                        @keyup.enter="updateCollab()"
+                        v-model="currentCollab.username"
+                        outlined
+                        />
+                        <div class="col-md-6 col-12"></div>
+                        <q-input
+                        data-testid="edit-collaborator-firstname-input"
+                        :label="$t('firstname')+' *'"
+                        class="col-md-6 col-12"
+                        :error="!!errors.firstname"
+                        :error-message="errors.firstname"
+                        hide-bottom-space
+                        @keyup.enter="updateCollab()"
+                        v-model="currentCollab.firstname"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-collaborator-lastname-input"
+                        :label="$t('lastname')+' *'"
+                        class="col-md-6 col-12"
+                        :error="!!errors.lastname"
+                        :error-message="errors.lastname"
+                        hide-bottom-space
+                        @keyup.enter="updateCollab()"
+                        v-model="currentCollab.lastname"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-collaborator-email-input"
+                        :label="$t('email')"
+                        class="col-md-6 col-12"
+                        hide-bottom-space
+                        @keyup.enter="updateCollab()"
+                        v-model="currentCollab.email"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-collaborator-phone-input"
+                        :label="$t('phone')"
+                        class="col-md-6 col-12"
+                        hide-bottom-space
+                        @keyup.enter="updateCollab()"
+                        v-model="currentCollab.phone"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-collaborator-jobtitle-input"
+                        :label="$t('jobTitle')"
+                        class="col-md-6 col-12"
+                        hide-bottom-space
+                        @keyup.enter="updateCollab()"
+                        v-model="currentCollab.jobTitle"
+                        outlined
+                        />
+                    </div>
+                </div>
+                <div class="collab-form-section">
+                    <div class="collab-form-section__header">
+                        <q-icon name="fa fa-user-shield" />
+                        <span>{{$t('roles')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-select
+                        data-testid="edit-collaborator-role-select"
+                        :label="$t('role')+' *'"
+                        class="col-md-12"
+                        v-model="currentCollab.roles"
+                        :options="roleOptions()"
+                        emit-value
+                        map-options
+                        multiple
+                        use-chips
+                        @keyup.enter="updateCollab()"
+                        options-sanitize
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-collaborator-password-input"
+                        ref="pwdUpdateRef"
+                        class="col-md-12"
+                        v-model="currentCollab.password"
+                        :label="$t('password')"
+                        type="password"
+                        @keyup.enter="updateCollab()"
+                        outlined
+                        :rules="(currentCollab.password) ? strongPassword : ['']"
+                        />
+                        <div class="col-md-12">
+                            <p class="q-mb-sm" v-if="currentCollab.totpEnabled">{{$t('twoFactorAuthentication')}} <b>{{$t('enabled')}}</b> {{$t('forThisUser')}}</p>
+                            <p class="q-mb-sm" v-else>{{$t('twoFactorAuthentication')}} <b>{{$t('disabled')}}</b> {{$t('forThisUser')}}</p>
+
+                            <q-toggle
+                            data-testid="edit-collaborator-enabled-toggle"
+                            v-model="currentCollab.enabled"
+                            :label="currentCollab.enabled ? $t('btn.accountEnabled') : $t('btn.accountDisabled')"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <q-separator />
 
@@ -484,3 +490,48 @@
 </template>
 
 <script src='./collaborators.js'></script>
+
+<style scoped>
+.collab-form-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.collab-form-body {
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .collab-form-body {
+    background: #121212;
+}
+
+.collab-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .collab-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.collab-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+</style>

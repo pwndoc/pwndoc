@@ -121,7 +121,7 @@
     </div>
 
     <q-dialog ref="viewModal">
-        <q-card style="width:900px; max-width:90vw">
+        <q-card style="width:900px; max-width:90vw" class="rule-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('viewRule')}} - {{selectedRule?.name}}
@@ -130,41 +130,47 @@
                 <q-btn dense flat icon="close" @click="$refs.viewModal.hide()" />
             </q-bar>
 
-            <q-card-section v-if="selectedRule">
-                <div class="row q-col-gutter-md">
-                    <q-input
-                        :label="$t('id')"
-                        class="col-md-6"
-                        v-model="selectedRule.id" 
-                        outlined
-                        readonly
-                        />
-                    <q-input
-                        :label="$t('name')"
-                        class="col-md-6"
-                        v-model="selectedRule.name" 
-                        outlined
-                        readonly
-                        />
-                    <q-input
-                        :label="$t('language')"
-                        class="col-md-12"
-                        v-model="selectedRule.language" 
-                        outlined
-                        readonly
-                        />
-                    <q-input
-                        :label="$t('ruleXml')"
-                        class="col-md-12"
-                        v-model="selectedRule.ruleXml"
-                        type="textarea"
-                        rows="20"
-                        outlined
-                        readonly
-                        stack-label
-                        />
+            <div class="rule-form-body" v-if="selectedRule">
+                <div class="rule-form-section">
+                    <div class="rule-form-section__header">
+                        <q-icon name="fa fa-file-code" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                            :label="$t('id')"
+                            class="col-md-6"
+                            v-model="selectedRule.id"
+                            outlined
+                            readonly
+                            />
+                        <q-input
+                            :label="$t('name')"
+                            class="col-md-6"
+                            v-model="selectedRule.name"
+                            outlined
+                            readonly
+                            />
+                        <q-input
+                            :label="$t('language')"
+                            class="col-md-12"
+                            v-model="selectedRule.language"
+                            outlined
+                            readonly
+                            />
+                        <q-input
+                            :label="$t('ruleXml')"
+                            class="col-md-12"
+                            v-model="selectedRule.ruleXml"
+                            type="textarea"
+                            rows="20"
+                            outlined
+                            readonly
+                            stack-label
+                            />
+                    </div>
                 </div>
-            </q-card-section>
+            </div>
 
             <q-card-actions align="right">
                 <q-btn data-testid="view-rule-close-button" color="primary" unelevated @click="$refs.viewModal.hide()">{{$t('btn.close')}}</q-btn>
@@ -173,7 +179,7 @@
     </q-dialog>
 
     <q-dialog ref="createModal" persistent @hide="cleanCreateForm()">
-        <q-card style="width:900px; max-width:90vw">
+        <q-card style="width:900px; max-width:90vw" class="rule-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('createRule')}}
@@ -182,33 +188,38 @@
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <div class="row q-col-gutter-md">
-                    <q-select
-                        data-testid="create-rule-language-select"
-                        :label="$t('language') + ' *'"
-                        class="col-md-12"
-                        v-model="newRule.language"
-                        :options="languages"
-                        :loading="loadingLanguages"
-                        :error="!!errors.language"
-                        :error-message="errors.language"
-                        outlined
-                        emit-value
-                        map-options
-                        />
-                    <q-input
-                        data-testid="create-rule-xml-input"
-                        :label="$t('ruleXml') + ' *'"
-                        class="col-md-12"
-                        v-model="newRule.ruleXml"
-                        type="textarea"
-                        rows="20"
-                        outlined
-                        :error="!!errors.ruleXml"
-                        :error-message="errors.ruleXml"
-                        stack-label
-                        placeholder='<?xml version="1.0" encoding="UTF-8"?>
+            <div class="rule-form-body">
+                <div class="rule-form-section">
+                    <div class="rule-form-section__header">
+                        <q-icon name="fa fa-file-code" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-select
+                            data-testid="create-rule-language-select"
+                            :label="$t('language') + ' *'"
+                            class="col-md-12"
+                            v-model="newRule.language"
+                            :options="languages"
+                            :loading="loadingLanguages"
+                            :error="!!errors.language"
+                            :error-message="errors.language"
+                            outlined
+                            emit-value
+                            map-options
+                            />
+                        <q-input
+                            data-testid="create-rule-xml-input"
+                            :label="$t('ruleXml') + ' *'"
+                            class="col-md-12"
+                            v-model="newRule.ruleXml"
+                            type="textarea"
+                            rows="20"
+                            outlined
+                            :error="!!errors.ruleXml"
+                            :error-message="errors.ruleXml"
+                            stack-label
+                            placeholder='<?xml version="1.0" encoding="UTF-8"?>
 <rules lang="en">
   <rule id="MY_RULE_ID" name="My Rule Name">
     <pattern>
@@ -217,15 +228,16 @@
     <message>This is an example rule</message>
   </rule>
 </rules>'
-                        />
-                    <q-banner v-if="newRule.language" class="bg-info text-white q-mt-sm col-md-12" dense>
-                        <template v-slot:avatar>
-                            <q-icon name="info" />
-                        </template>
-                        {{$t('ruleXmlHint')}}
-                    </q-banner>
+                            />
+                        <q-banner v-if="newRule.language" class="bg-info text-white q-mt-sm col-md-12" dense>
+                            <template v-slot:avatar>
+                                <q-icon name="info" />
+                            </template>
+                            {{$t('ruleXmlHint')}}
+                        </q-banner>
+                    </div>
                 </div>
-            </q-card-section>
+            </div>
 
             <q-separator />
 
@@ -239,4 +251,47 @@
 
 <script src='./languagetool-rules.js'></script>
 
-<style></style>
+<style scoped>
+.rule-form-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.rule-form-body {
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .rule-form-body {
+    background: #121212;
+}
+
+.rule-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .rule-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.rule-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+</style>

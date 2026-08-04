@@ -86,7 +86,7 @@
     </div>
 
     <q-dialog ref="createModal" persistent @hide="cleanCurrentTemplate()">
-        <q-card style="width:800px">
+        <q-card style="width:800px" class="template-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('createTemplate')}}
@@ -95,36 +95,42 @@
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <div class="row">
-                    <q-input
-                    data-testid="create-template-name-input"
-                    :label="$t('name')+' *'"
-                    autofocus
-                    class="col-md-12 col-12"
-                    stack-label
-                    :error="!!errors.name"
-                    :error-message="errors.name"
-                    @keyup.enter="createTemplate()"
-                    v-model="currentTemplate.name"
-                    outlined
-                    />
+            <div class="template-form-body">
+                <div class="template-form-section">
+                    <div class="template-form-section__header">
+                        <q-icon name="fa fa-file-word" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                        data-testid="create-template-name-input"
+                        :label="$t('name')+' *'"
+                        autofocus
+                        class="col-md-12 col-12"
+                        stack-label
+                        :error="!!errors.name"
+                        :error-message="errors.name"
+                        @keyup.enter="createTemplate()"
+                        v-model="currentTemplate.name"
+                        outlined
+                        />
 
-                    <q-field class="col-md-12 col-12" no-error-icon borderless :error="!!errors.file" :error-message="errors.file">
-                        <template v-slot:control>
-                            <q-uploader
-                            data-testid="create-template-file-uploader"
-                            class="col-md-12 col-12"
-                            :label="$t('file')+' *'"
-                            accept='.doc,.docx,.docm,.ppt,.pptx'
-                            hide-upload-btn
-                            @added="handleFile"
-                            color="fixed-primary"
-                            />
-                        </template>
-                    </q-field>
+                        <q-field class="col-md-12 col-12" no-error-icon borderless :error="!!errors.file" :error-message="errors.file">
+                            <template v-slot:control>
+                                <q-uploader
+                                data-testid="create-template-file-uploader"
+                                class="col-md-12 col-12"
+                                :label="$t('file')+' *'"
+                                accept='.doc,.docx,.docm,.ppt,.pptx'
+                                hide-upload-btn
+                                @added="handleFile"
+                                color="fixed-primary"
+                                />
+                            </template>
+                        </q-field>
+                    </div>
                 </div>
-            </q-card-section>
+            </div>
 
             <q-separator />
 
@@ -136,7 +142,7 @@
     </q-dialog>
 
     <q-dialog ref="editModal" persistent @hide="cleanCurrentTemplate()">
-        <q-card style="width:800px">
+        <q-card style="width:800px" class="template-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('editTemplate')}}
@@ -145,36 +151,42 @@
                 <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <div class="row">
-                    <q-input
-                    data-testid="edit-template-name-input"
-                    :label="$t('name')+' *'"
-                    autofocus
-                    class="col-md-12 col-12"
-                    stack-label
-                    :error="!!errors.name"
-                    :error-message="errors.name"
-                    @keyup.enter="updateTemplate()"
-                    v-model="currentTemplate.name"
-                    outlined
-                    />
+            <div class="template-form-body">
+                <div class="template-form-section">
+                    <div class="template-form-section__header">
+                        <q-icon name="fa fa-file-word" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                        data-testid="edit-template-name-input"
+                        :label="$t('name')+' *'"
+                        autofocus
+                        class="col-md-12 col-12"
+                        stack-label
+                        :error="!!errors.name"
+                        :error-message="errors.name"
+                        @keyup.enter="updateTemplate()"
+                        v-model="currentTemplate.name"
+                        outlined
+                        />
 
-                    <q-field class="col-md-12 col-12" no-error-icon borderless :error="!!errors.file" :error-message="errors.file">
-                        <template v-slot:control>
-                            <q-uploader
-                            data-testid="edit-template-file-uploader"
-                            class="col-md-12"
-                            :label="$t('file')+' *'"
-                            accept='.doc,.docx,.docm,.ppt,.pptx'
-                            hide-upload-btn
-                            @added="handleFile"
-                            color="fixed-primary"
-                            />
-                        </template>
-                    </q-field>
+                        <q-field class="col-md-12 col-12" no-error-icon borderless :error="!!errors.file" :error-message="errors.file">
+                            <template v-slot:control>
+                                <q-uploader
+                                data-testid="edit-template-file-uploader"
+                                class="col-md-12"
+                                :label="$t('file')+' *'"
+                                accept='.doc,.docx,.docm,.ppt,.pptx'
+                                hide-upload-btn
+                                @added="handleFile"
+                                color="fixed-primary"
+                                />
+                            </template>
+                        </q-field>
+                    </div>
                 </div>
-            </q-card-section>
+            </div>
 
             <q-separator />
 
@@ -188,4 +200,47 @@
 
 <script src='./templates.js'></script>
 
-<style></style>
+<style scoped>
+.template-form-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.template-form-body {
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .template-form-body {
+    background: #121212;
+}
+
+.template-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .template-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.template-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+</style>

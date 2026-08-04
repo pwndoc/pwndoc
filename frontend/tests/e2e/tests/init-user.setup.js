@@ -30,11 +30,12 @@ test.describe('Init First User', () => {
       await page.getByRole('button', { name: 'Register First User' }).click();
       
       await expect(page).toHaveURL('/audits');
-      // Check toolbar items (list items)
-      await expect(page.getByRole('listitem').filter({ hasText: 'Audits' })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: 'Vulnerabilities' })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: 'Data' })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: 'Settings' })).toBeVisible();
+      // Check nav rail items (icon-only, matched by accessible name)
+      const navRail = page.getByTestId('main-nav');
+      await expect(navRail.getByRole('listitem', { name: 'Audits' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Vulnerabilities' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Data' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Settings' })).toBeVisible();
 
       // Check for expand button
       await expect(page.getByRole('button', { name: 'Expand "admin"' })).toBeVisible();

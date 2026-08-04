@@ -70,7 +70,7 @@
     </div>
 
     <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px">
+        <q-card style="width:800px" class="spellcheck-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('createWord')}}
@@ -79,22 +79,28 @@
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <div class="row q-col-gutter-md">
-                    <q-input
-                        data-testid="create-spellcheck-word-input"
-                        :label="$t('word')+' *'"
-                        autofocus
-                        class="col-md-12"
-                        :error="!!errors.name"
-                        :error-message="errors.name"
-                        @keyup.enter="createWord()"
-                        v-model="currentWord.word"
-                        outlined
-                        hide-bottom-space
-                        />
+            <div class="spellcheck-form-body">
+                <div class="spellcheck-form-section">
+                    <div class="spellcheck-form-section__header">
+                        <q-icon name="fa fa-spell-check" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                            data-testid="create-spellcheck-word-input"
+                            :label="$t('word')+' *'"
+                            autofocus
+                            class="col-md-12"
+                            :error="!!errors.name"
+                            :error-message="errors.name"
+                            @keyup.enter="createWord()"
+                            v-model="currentWord.word"
+                            outlined
+                            hide-bottom-space
+                            />
+                    </div>
                 </div>
-            </q-card-section>
+            </div>
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
@@ -106,4 +112,47 @@
 
 <script src='./spellcheck.js'></script>
 
-<style></style>
+<style scoped>
+.spellcheck-form-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.spellcheck-form-body {
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .spellcheck-form-body {
+    background: #121212;
+}
+
+.spellcheck-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .spellcheck-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.spellcheck-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+</style>

@@ -1,8 +1,8 @@
 @use "quasar/src/css/variables" as q;
 @use "sass:map";
 
-$primary   : #3c4759;
-$secondary : #26A69A;
+$primary   : #4F46E5;
+$secondary : #6B7280;
 $tertiary  : #555;
 
 $neutral   : #E0E1E2;
@@ -13,7 +13,25 @@ $warning   : #F2C037;
 
 $item-font-size: 14px;
 $input-font-size: 14px;
-$typography-font-family: Helvetica, Arial, sans-serif;
+$typography-font-family: 'Roboto', Helvetica, Arial, sans-serif;
+
+// Design tokens
+$card-radius: 10px;
+$card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+$card-shadow-dark: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+$sidebar-width: 240px;
+$rail-width: 72px;
+
+$generic-border-radius: 8px;
+
+// Light mode surfaces
+$page-bg-light: #F5F6FA;
+$sidebar-bg-light: #FFFFFF;
+
+// Dark mode surfaces
+$page-bg-dark: #121212;
+$sidebar-bg-dark: #1a1a1a;
+$surface-dark: #1e1e1e;
 
 .q-input-target {
     font-size: 14px!important;
@@ -90,14 +108,16 @@ $text-comment-focused: black;
   
     .q-card:not(.editor):not(.cvsscalculator),
     .q-table__container {
-      background: #fafafa; // grey-1
+      background: #ffffff;
+      border-radius: $card-radius;
+      box-shadow: $card-shadow;
     }
-  
+
     .q-table__container thead tr {
       background: #fafafa; // grey-1
     }
-  
-    // Hack for white text on white bg in q-btn elements 
+
+    // Hack for white text on white bg in q-btn elements
     .q-btn.bg-white.text-white {
       color: #000000 !important;
     }
@@ -130,9 +150,9 @@ $text-comment-focused: black;
     }
   
     .bg-white {
-      background: $cDark !important;
+      background: $surface-dark !important;
     }
-  
+
     .bg-blue-grey-5,
     .bg-blue-grey-2,
     .bg-grey-4,
@@ -140,9 +160,16 @@ $text-comment-focused: black;
     .bg-grey-11 {
       background: $darkGrey !important;
     }
-  
+
     .bg-blue-grey-1 {
       background: #616161 !important; // grey-8
+    }
+
+    .q-card:not(.editor):not(.cvsscalculator),
+    .q-table__container {
+      background: $surface-dark;
+      border-radius: $card-radius;
+      box-shadow: $card-shadow-dark;
     }
 
     .bg-red-1 {
@@ -252,6 +279,7 @@ $text-comment-focused: black;
 .body--dark {
     @include common-colors();
     @include dark-mode-colors();
+    background: $page-bg-dark;
 }
 
 // Dark mode (Quasar global dark mode)

@@ -1,5 +1,5 @@
 <template>
-    <q-card class="cvss3calculator">
+    <q-card class="cvss3calculator" flat borderless>
         <q-card-section class="row">
             <div class="col-md-3" style="align-self:center">
             <span>
@@ -15,7 +15,7 @@
                     <span class="baseMetricScore">{{cvss.baseScore.toFixed(1)}}</span>
                     <span class="baseSeverity">({{cvss.baseSeverity}})</span>
                 </div>
-                <span class="baseSeverity" v-else>{{$t('cvss.infoWhenNoScore')}}</span>
+                <span class="baseSeverity infoWhenNoScore" v-else>{{$t('cvss.infoWhenNoScore')}}</span>
             </div>
         </q-card-section>
         <q-separator />
@@ -1078,6 +1078,16 @@ export default {
         display: block;
     }
 
+    /* The "no score yet" fallback message is a full sentence crammed into
+       .scoreRating's 100px width meant for a short score label, forcing
+       the pill to wrap across many lines and balloon in height. Give it
+       its own smaller style so it reads as a compact hint. */
+    .scoreRating .baseSeverity.infoWhenNoScore {
+        font-size: 13px;
+        line-height: 130%;
+        margin-bottom: 0;
+    }
+
     .baseMetricScore {
         display: block;
         font-size: 32px;
@@ -1098,6 +1108,13 @@ export default {
         text-align: center;
         height: fit-content!important;
         position: absolute;
+    }
+
+    /* Wider box just for the "no score yet" text state — the default
+       100px is sized for a short score value, not a full sentence. */
+    .scoreRating:has(.infoWhenNoScore) {
+        width: 210px;
+        padding: 6px 10px;
     }
 
     .scoreRating.NONE {

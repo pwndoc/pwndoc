@@ -142,7 +142,7 @@ async function getApiJson(request, url) {
 
 async function seedDrafts(page, drafts) {
   await page.goto('/audits');
-  await expect(page.getByRole('listitem').filter({ hasText: 'Audits' })).toBeVisible();
+  await expect(page.getByTestId('main-nav').getByRole('listitem', { name: 'Audits' })).toBeVisible();
   await putDrafts(page, drafts);
 }
 

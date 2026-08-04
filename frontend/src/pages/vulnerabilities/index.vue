@@ -170,7 +170,7 @@
     </div>
 
     <q-dialog v-if="languages.length > 0" ref="createModal" maximized position="right" persistent @hide="cleanupCurrentVulnerability()">
-        <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
+        <q-card class="vuln-form-card" :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     <span v-if="currentCategory">{{$t('addVulnerability')}} ({{currentCategory.name}})</span>
@@ -181,130 +181,150 @@
                 <q-btn dense flat icon="close" data-testid="create-vulnerability-close" @click="$refs.createModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <div class="q-col-gutter-md row">
-                    <q-input
-                    :label="$t('title')+' *'"
-                    stack-label
-                    class="col-md-8"
-                    autofocus
-                    data-testid="create-vulnerability-title"
-                    :error="!!errors.title"
-                    :error-message="errors.title"
-                    hide-bottom-space
-                    @keyup.enter="createVulnerability()"
-                    v-model="currentVulnerability.details[currentDetailsIndex].title"
-                    outlined
-                    />
-                    <q-select 
-                    class="col-md-2"
-                    :label="$t('type')"
-                    v-model="currentVulnerability.details[currentDetailsIndex].vulnType" 
-                    :options="vulnTypesLang" 
-                    option-value="name" 
-                    option-label="name" 
-                    emit-value 
-                    map-options
-                    options-sanitize
-                    outlined
-                    />
-                    <q-select
-                    :label="$t('language')"
-                    stack-label
-                    class="col-md-2"
-                    v-model="currentLanguage"
-                    :options="languages"
-                    option-value="locale"
-                    option-label="language"
-                    map-options
-                    emit-value
-                    options-sanitize
-                    outlined
-                    />
+            <div class="vuln-form-body">
+                <div class="vuln-form-section">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-file-alt" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="q-col-gutter-md row">
+                        <q-input
+                        :label="$t('title')+' *'"
+                        stack-label
+                        class="col-md-8"
+                        autofocus
+                        data-testid="create-vulnerability-title"
+                        :error="!!errors.title"
+                        :error-message="errors.title"
+                        hide-bottom-space
+                        @keyup.enter="createVulnerability()"
+                        v-model="currentVulnerability.details[currentDetailsIndex].title"
+                        outlined
+                        />
+                        <q-select
+                        class="col-md-2"
+                        :label="$t('type')"
+                        v-model="currentVulnerability.details[currentDetailsIndex].vulnType"
+                        :options="vulnTypesLang"
+                        option-value="name"
+                        option-label="name"
+                        emit-value
+                        map-options
+                        options-sanitize
+                        outlined
+                        />
+                        <q-select
+                        :label="$t('language')"
+                        stack-label
+                        class="col-md-2"
+                        v-model="currentLanguage"
+                        :options="languages"
+                        option-value="locale"
+                        option-label="language"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        />
+                    </div>
                 </div>
-            </q-card-section>
-            <q-card-section>
-                <q-field borderless :label="$t('description')" stack-label>
-                    <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
-                    </template>
-                </q-field>
-            </q-card-section>
-            <q-card-section>
-                <q-field borderless :label="$t('observation')" stack-label>
-                    <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
-                    </template>
-                </q-field>
-            </q-card-section>
-            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
-                <div class="col-md-12">
-                    <cvss3-calculator
-                    v-model="currentVulnerability.cvssv3"
-                    @cvssScoreChange="currentVulnerability.cvssScore = $event"
-                    />
-                </div>
-            </q-card-section>
-            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
-                <div class="col-md-12">
-                    <cvss4-calculator
-                    v-model="currentVulnerability.cvssv4"
-                    @cvssScoreChange="currentVulnerability.cvssScore = $event"
-                    />
-                </div>
-            </q-card-section>
-            <q-card-section>
-                <q-field borderless :label="$t('remediation')" stack-label>
-                    <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
-                    </template>
-                </q-field>
-            </q-card-section>
-            <q-card-section>
-                <div class="q-col-gutter-md row">
-                    <q-select
-                    :label="$t('remediationComplexity')"
-                    stack-label
-                    class="col-md-6"
-                    v-model="currentVulnerability.remediationComplexity"
-                    :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
-                    map-options
-                    emit-value
-                    options-sanitize
-                    outlined
-                    />
-                    <q-select
-                    :label="$t('remediationPriority')"
-                    stack-label
-                    class="col-md-6"
-                    v-model="currentVulnerability.priority"
-                    :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
-                    map-options
-                    emit-value
-                    options-sanitize
-                    outlined
-                    />
-                </div>
-            </q-card-section>
-            <q-card-section>
-                <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
-            </q-card-section>
 
-            <q-expansion-item 
-            :label="$t('customFields')"
-            default-opened
-            header-class="bg-blue-grey-5 text-white" 
-            expand-icon-class="text-white"
-            >
-                <custom-fields 
-                ref="customfields" 
-                v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
-                :category="currentVulnerability.category" 
-                custom-element="QCardSection"
-                display="vuln"
-                :locale="currentLanguage"
-                />
-            </q-expansion-item>
+                <div class="vuln-form-section">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-align-left" />
+                        <span>{{$t('description')}}</span>
+                    </div>
+                    <q-field borderless :label="$t('description')" stack-label>
+                        <template v-slot="control">
+                            <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                        </template>
+                    </q-field>
+                    <q-field borderless :label="$t('observation')" stack-label class="q-mt-md">
+                        <template v-slot="control">
+                            <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                        </template>
+                    </q-field>
+                </div>
+
+                <div class="vuln-form-section" v-if="$settings.report.public.scoringMethods.CVSS3 || $settings.report.public.scoringMethods.CVSS4">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-shield-alt" />
+                        <span>{{$t('cvssScore')}}</span>
+                    </div>
+                    <div class="col-md-12" v-if="$settings.report.public.scoringMethods.CVSS3">
+                        <cvss3-calculator
+                        v-model="currentVulnerability.cvssv3"
+                        @cvssScoreChange="currentVulnerability.cvssScore = $event"
+                        />
+                    </div>
+                    <div class="col-md-12 q-mt-md" v-if="$settings.report.public.scoringMethods.CVSS4">
+                        <cvss4-calculator
+                        v-model="currentVulnerability.cvssv4"
+                        @cvssScoreChange="currentVulnerability.cvssScore = $event"
+                        />
+                    </div>
+                </div>
+
+                <div class="vuln-form-section">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-wrench" />
+                        <span>{{$t('remediation')}}</span>
+                    </div>
+                    <q-field borderless :label="$t('remediation')" stack-label>
+                        <template v-slot="control">
+                            <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                        </template>
+                    </q-field>
+                    <div class="q-col-gutter-md row q-mt-sm">
+                        <q-select
+                        :label="$t('remediationComplexity')"
+                        stack-label
+                        class="col-md-6"
+                        v-model="currentVulnerability.remediationComplexity"
+                        :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        />
+                        <q-select
+                        :label="$t('remediationPriority')"
+                        stack-label
+                        class="col-md-6"
+                        v-model="currentVulnerability.priority"
+                        :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        />
+                    </div>
+                </div>
+
+                <div class="vuln-form-section">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-link" />
+                        <span>{{$t('references')}}</span>
+                    </div>
+                    <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
+                </div>
+
+                <q-expansion-item
+                class="vuln-form-section vuln-form-section--expansion"
+                :label="$t('customFields')"
+                default-opened
+                header-class="vuln-form-section__header vuln-form-section__header--expansion"
+                >
+                    <custom-fields
+                    ref="customfields"
+                    v-model="currentVulnerability.details[currentDetailsIndex].customFields"
+                    :category="currentVulnerability.category"
+                    custom-element="QCardSection"
+                    display="vuln"
+                    :locale="currentLanguage"
+                    />
+                </q-expansion-item>
+            </div>
 
             <q-separator />
 
@@ -316,7 +336,7 @@
     </q-dialog>
 
     <q-dialog v-if="languages.length > 0" ref="editModal" maximized position="right" :persistent="userStore.isAllowed('vulnerabilities:update')" @hide="cleanupCurrentVulnerability()">
-        <q-card :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
+        <q-card class="vuln-form-card" :style="($q.screen.gt.lg)?'width: 50vw':'width:1000px'">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     <span v-if="currentVulnerability.category">{{$t('editVulnerability')}} ({{currentVulnerability.category}})</span>
@@ -354,127 +374,147 @@
                 <q-btn dense flat icon="close" data-testid="edit-vulnerability-close" @click="$refs.editModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <div class="q-col-gutter-md row">
-                    <q-input
-                    :label="$t('title')+' *'"
-                    stack-label
-                    class="col-md-8"
-                    autofocus
-                    data-testid="edit-vulnerability-title"
-                    :error="!!errors.title"
-                    :error-message="errors.title"
-                    hide-bottom-space
-                    @keyup.enter="updateVulnerability()"
-                    v-model="currentVulnerability.details[currentDetailsIndex].title"
-                    outlined
-                    />
-                    <q-select 
-                    class="col-md-2"
-                    :label="$t('type')"
-                    v-model="currentVulnerability.details[currentDetailsIndex].vulnType" 
-                    :options="vulnTypesLang" 
-                    option-value="name" 
-                    option-label="name" 
-                    emit-value 
-                    map-options
-                    options-sanitize
-                    outlined
-                    />
-                    <q-select
-                    :label="$t('language')"
-                    stack-label
-                    class="col-md-2"
-                    v-model="currentLanguage"
-                    :options="languages"
-                    option-value="locale"
-                    option-label="language"
-                    map-options
-                    emit-value
-                    options-sanitize
-                    outlined
-                    />
+            <div class="vuln-form-body">
+                <div class="vuln-form-section">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-file-alt" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="q-col-gutter-md row">
+                        <q-input
+                        :label="$t('title')+' *'"
+                        stack-label
+                        class="col-md-8"
+                        autofocus
+                        data-testid="edit-vulnerability-title"
+                        :error="!!errors.title"
+                        :error-message="errors.title"
+                        hide-bottom-space
+                        @keyup.enter="updateVulnerability()"
+                        v-model="currentVulnerability.details[currentDetailsIndex].title"
+                        outlined
+                        />
+                        <q-select
+                        class="col-md-2"
+                        :label="$t('type')"
+                        v-model="currentVulnerability.details[currentDetailsIndex].vulnType"
+                        :options="vulnTypesLang"
+                        option-value="name"
+                        option-label="name"
+                        emit-value
+                        map-options
+                        options-sanitize
+                        outlined
+                        />
+                        <q-select
+                        :label="$t('language')"
+                        stack-label
+                        class="col-md-2"
+                        v-model="currentLanguage"
+                        :options="languages"
+                        option-value="locale"
+                        option-label="language"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        />
+                    </div>
                 </div>
-            </q-card-section>
-            <q-card-section>
-                <q-field borderless :label="$t('description')" stack-label class="basic-editor">
-                    <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
-                    </template>
-                </q-field>
-            </q-card-section>
-            <q-card-section>
-                <q-field borderless :label="$t('observation')" stack-label class="basic-editor">
-                    <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
-                    </template>
-                </q-field>
-            </q-card-section>
-            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS3">
-                <div class="col-md-12">
-                    <cvss3-calculator
-                    v-model="currentVulnerability.cvssv3"
-                    @cvssScoreChange="currentVulnerability.cvssScore = $event"
-                    />
-                </div>
-            </q-card-section>
-            <q-card-section v-if="$settings.report.public.scoringMethods.CVSS4">
-                <div class="col-md-12">
-                    <cvss4-calculator
-                    v-model="currentVulnerability.cvssv4"
-                    @cvssScoreChange="currentVulnerability.cvssScore = $event"
-                    />
-                </div>
-            </q-card-section>
-            <q-card-section>
-                <q-field borderless :label="$t('remediation')" stack-label class="basic-editor">
-                    <template v-slot="control">
-                        <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
-                    </template>
-                </q-field>
-            </q-card-section>
-            <q-card-section>
-                <div class="q-col-gutter-md row">
-                    <q-select
-                    :label="$t('remediationComplexity')"
-                    stack-label
-                    class="col-md-6"
-                    v-model="currentVulnerability.remediationComplexity"
-                    :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
-                    map-options
-                    emit-value
-                    options-sanitize
-                    outlined
-                    />
-                    <q-select
-                    :label="$t('remediationPriority')"
-                    stack-label
-                    class="col-md-6"
-                    v-model="currentVulnerability.priority"
-                    :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
-                    map-options
-                    emit-value
-                    options-sanitize
-                    outlined
-                    />
-                </div>
-            </q-card-section>
-            <q-card-section>
-                <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
-            </q-card-section>
 
-            <q-expansion-item 
-            :label="$t('customFields')"
-            default-opened
-            header-class="bg-blue-grey-5 text-white" 
-            expand-icon-class="text-white">
-                <custom-fields 
-                ref="customfields" 
-                v-model="currentVulnerability.details[currentDetailsIndex].customFields" 
-                custom-element="QCardSection"
-                :locale="currentLanguage"
-                />
-            </q-expansion-item>
+                <div class="vuln-form-section">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-align-left" />
+                        <span>{{$t('description')}}</span>
+                    </div>
+                    <q-field borderless :label="$t('description')" stack-label class="basic-editor">
+                        <template v-slot="control">
+                            <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].description" />
+                        </template>
+                    </q-field>
+                    <q-field borderless :label="$t('observation')" stack-label class="basic-editor q-mt-md">
+                        <template v-slot="control">
+                            <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].observation" />
+                        </template>
+                    </q-field>
+                </div>
+
+                <div class="vuln-form-section" v-if="$settings.report.public.scoringMethods.CVSS3 || $settings.report.public.scoringMethods.CVSS4">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-shield-alt" />
+                        <span>{{$t('cvssScore')}}</span>
+                    </div>
+                    <div class="col-md-12" v-if="$settings.report.public.scoringMethods.CVSS3">
+                        <cvss3-calculator
+                        v-model="currentVulnerability.cvssv3"
+                        @cvssScoreChange="currentVulnerability.cvssScore = $event"
+                        />
+                    </div>
+                    <div class="col-md-12 q-mt-md" v-if="$settings.report.public.scoringMethods.CVSS4">
+                        <cvss4-calculator
+                        v-model="currentVulnerability.cvssv4"
+                        @cvssScoreChange="currentVulnerability.cvssScore = $event"
+                        />
+                    </div>
+                </div>
+
+                <div class="vuln-form-section">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-wrench" />
+                        <span>{{$t('remediation')}}</span>
+                    </div>
+                    <q-field borderless :label="$t('remediation')" stack-label class="basic-editor">
+                        <template v-slot="control">
+                            <basic-editor noAffix v-model="currentVulnerability.details[currentDetailsIndex].remediation" />
+                        </template>
+                    </q-field>
+                    <div class="q-col-gutter-md row q-mt-sm">
+                        <q-select
+                        :label="$t('remediationComplexity')"
+                        stack-label
+                        class="col-md-6"
+                        v-model="currentVulnerability.remediationComplexity"
+                        :options="[{label: $t('easy'), value: 1},{label: $t('medium'), value: 2},{label: $t('complex'), value: 3}]"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        />
+                        <q-select
+                        :label="$t('remediationPriority')"
+                        stack-label
+                        class="col-md-6"
+                        v-model="currentVulnerability.priority"
+                        :options="[{label: $t('low'), value: 1},{label: $t('medium'), value: 2},{label: $t('high'), value: 3},{label: $t('urgent'), value: 4}]"
+                        map-options
+                        emit-value
+                        options-sanitize
+                        outlined
+                        />
+                    </div>
+                </div>
+
+                <div class="vuln-form-section">
+                    <div class="vuln-form-section__header">
+                        <q-icon name="fa fa-link" />
+                        <span>{{$t('references')}}</span>
+                    </div>
+                    <textarea-array :label="$t('references')" v-model="currentVulnerability.details[currentDetailsIndex].references" />
+                </div>
+
+                <q-expansion-item
+                class="vuln-form-section vuln-form-section--expansion"
+                :label="$t('customFields')"
+                default-opened
+                header-class="vuln-form-section__header vuln-form-section__header--expansion">
+                    <custom-fields
+                    ref="customfields"
+                    v-model="currentVulnerability.details[currentDetailsIndex].customFields"
+                    custom-element="QCardSection"
+                    :locale="currentLanguage"
+                    />
+                </q-expansion-item>
+            </div>
 
             <q-separator />
 
@@ -909,7 +949,65 @@
 <script src='./vulnerabilities.js'></script>
 
 <style scoped>
-.card-section-merge { 
+.card-section-merge {
     height: calc(60vh - 173px);
+}
+
+.vuln-form-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.vuln-form-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .vuln-form-body {
+    background: #121212;
+}
+
+.vuln-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+    flex-shrink: 0;
+}
+
+.body--dark .vuln-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.vuln-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+
+.vuln-form-section--expansion {
+    padding: 0;
+    border-radius: 10px;
+}
+
+.vuln-form-section__header--expansion {
+    margin-bottom: 0;
+    padding: 20px;
+    text-transform: uppercase;
+    color: #6B7280;
 }
 </style>
