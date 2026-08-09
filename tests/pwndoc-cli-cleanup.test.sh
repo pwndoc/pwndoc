@@ -49,6 +49,7 @@ set +e
 PATH="$TEST_TMP:$PATH" \
     FAKE_DOCKER_LOG="$failure_log" \
     FAKE_DOCKER_RUN_EXIT=23 \
+    FAKE_DOCKER_DOWN_EXIT=41 \
     "$REPO_ROOT/pwndoc-cli" test --backend
 failure_status=$?
 set -e
