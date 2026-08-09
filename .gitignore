@@ -53,3 +53,4 @@ coverage
 .claude/plan.md
 .playwright-mcp
 .playwright-cli
+.worktrees/
