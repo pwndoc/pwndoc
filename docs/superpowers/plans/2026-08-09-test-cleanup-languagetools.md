@@ -254,4 +254,3 @@ git log --oneline origin/main..HEAD
 ```
 
 Expected: no whitespace errors; only the intentionally untracked security scan directory remains outside the PR; branch history contains the design, regression test, and implementation commits.
-

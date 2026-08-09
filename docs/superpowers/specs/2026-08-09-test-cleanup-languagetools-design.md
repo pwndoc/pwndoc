@@ -74,4 +74,3 @@ environment makes results unreliable.
 - The regression test fails against the current implementation and passes with
   the shared cleanup helper.
 - Existing backend, frontend unit, and Chromium E2E suites continue to pass.
-

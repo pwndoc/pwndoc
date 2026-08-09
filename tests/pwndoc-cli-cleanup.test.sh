@@ -44,6 +44,25 @@ e2e_log="$TEST_TMP/frontend-e2e.log"
 run_cli "$e2e_log" test --frontend-e2e --chromium
 assert_cleanup_command "$e2e_log"
 
+pre_e2e_failure_log="$TEST_TMP/frontend-e2e-pre-cleanup-failure.log"
+set +e
+PATH="$TEST_TMP:$PATH" \
+    FAKE_DOCKER_LOG="$pre_e2e_failure_log" \
+    FAKE_DOCKER_DOWN_EXIT=41 \
+    "$REPO_ROOT/pwndoc-cli" test --frontend-e2e --chromium
+pre_e2e_failure_status=$?
+set -e
+
+if [[ $pre_e2e_failure_status -ne 41 ]]; then
+    echo "Expected pre-E2E cleanup exit 41, got $pre_e2e_failure_status" >&2
+    exit 1
+fi
+assert_cleanup_command "$pre_e2e_failure_log"
+if grep -E -- ' (build|up|run) ' "$pre_e2e_failure_log" >/dev/null; then
+    echo "Pre-E2E cleanup failure unexpectedly started the E2E suite" >&2
+    exit 1
+fi
+
 failure_log="$TEST_TMP/backend-failure.log"
 set +e
 PATH="$TEST_TMP:$PATH" \
