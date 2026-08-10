@@ -143,97 +143,103 @@
                     </q-card-section>
                     <q-card-section v-if="languages.length > 0" class="row">
                         <div class="col-md-6 col-12" v-if="userStore.isAllowed('audit-types:create')">
-                            <q-item>
-                                <q-item-section>
-                                    <span class="text-grey-7 text-italic">{{$t('auditPhase')}}</span>
-                                    <div class="row">
-                                        <q-radio class="col-2" v-model="newAuditType.stage" val="default" :label="$t('default')" />
-                                        <q-radio class="col-2" v-model="newAuditType.stage" val="retest" :label="$t('retest')" />
-                                        <q-radio class="col-2" v-model="newAuditType.stage" val="multi" :label="$t('multi')" />
-                                    </div>
-                                </q-item-section>
-                            </q-item>
-                            <q-item>
-                                <q-item-section>
-                                    <q-input
-                                    ref="validate-auditType-name"
-                                    :label="$t('name')"
-                                    label-slot
-                                    v-model="newAuditType.name"
-                                    clearable
-                                    :rules="[val => !!val || 'Name is required']"
-                                    lazy-rules="ondemand"
-                                    @keyup.enter="createAuditType"
-                                    outlined
-                                    >
-                                        <template v-slot:label>
-                                            {{$t('name')}} <span class="text-red">*</span>
-                                        </template>
-                                    </q-input>
-                                </q-item-section>
-                            </q-item>
-                            <q-item>
-                                <q-item-section>
-                                    <div v-for="(language,idx) of languages">
-                                        <q-select 
-                                        ref="validate-auditType-template"
-                                        v-model="newAuditType.templates[idx]" 
+                            <div class="custom-form-card">
+                                <div class="custom-form-section__header">
+                                    <q-icon name="fa fa-file-alt" />
+                                    <span>{{$t('details')}}</span>
+                                </div>
+                                <q-item>
+                                    <q-item-section>
+                                        <span class="text-grey-7 text-italic">{{$t('auditPhase')}}</span>
+                                        <div class="row">
+                                            <q-radio class="col-2" v-model="newAuditType.stage" val="default" :label="$t('default')" />
+                                            <q-radio class="col-2" v-model="newAuditType.stage" val="retest" :label="$t('retest')" />
+                                            <q-radio class="col-2" v-model="newAuditType.stage" val="multi" :label="$t('multi')" />
+                                        </div>
+                                    </q-item-section>
+                                </q-item>
+                                <q-item>
+                                    <q-item-section>
+                                        <q-input
+                                        ref="validate-auditType-name"
+                                        :label="$t('name')"
                                         label-slot
-                                        :options="getTemplateOptionsLanguage(language.locale)" 
-                                        option-value="template"
-                                        option-label="name" 
-                                        options-sanitize
-                                        map-options
-                                        outlined
-                                        :rules="[val => !!val || 'Field is required']"
+                                        v-model="newAuditType.name"
+                                        clearable
+                                        :rules="[val => !!val || 'Name is required']"
                                         lazy-rules="ondemand"
+                                        @keyup.enter="createAuditType"
+                                        outlined
                                         >
                                             <template v-slot:label>
-                                                {{language.language}} {{$t('template')}} <span class="text-red">*</span>
+                                                {{$t('name')}} <span class="text-red">*</span>
+                                            </template>
+                                        </q-input>
+                                    </q-item-section>
+                                </q-item>
+                                <q-item>
+                                    <q-item-section>
+                                        <div v-for="(language,idx) of languages">
+                                            <q-select
+                                            ref="validate-auditType-template"
+                                            v-model="newAuditType.templates[idx]"
+                                            label-slot
+                                            :options="getTemplateOptionsLanguage(language.locale)"
+                                            option-value="template"
+                                            option-label="name"
+                                            options-sanitize
+                                            map-options
+                                            outlined
+                                            :rules="[val => !!val || 'Field is required']"
+                                            lazy-rules="ondemand"
+                                            >
+                                                <template v-slot:label>
+                                                    {{language.language}} {{$t('template')}} <span class="text-red">*</span>
+                                                </template>
+                                            </q-select>
+                                        </div>
+                                    </q-item-section>
+                                </q-item>
+                                <q-item>
+                                    <q-item-section>
+                                        <q-select
+                                        v-model="newAuditType.sections"
+                                        :label="$t('addSections')"
+                                        multiple
+                                        use-chips
+                                        :options="sections"
+                                        option-value="field"
+                                        option-label="name"
+                                        emit-value
+                                        map-options
+                                        options-sanitize
+                                        outlined
+                                        >
+                                            <template v-slot:selected-item="scope">
+                                                <q-chip
+                                                dense
+                                                removable
+                                                @remove="scope.removeAtIndex(scope.index)"
+                                                :tabindex="scope.tabindex"
+                                                color="blue-grey-5"
+                                                text-color="white"
+                                                >
+                                                    {{scope.opt.name}}
+                                                </q-chip>
                                             </template>
                                         </q-select>
-                                    </div>
-                                </q-item-section>
-                            </q-item>
-                            <q-item>
-                                <q-item-section>
-                                    <q-select 
-                                    v-model="newAuditType.sections" 
-                                    :label="$t('addSections')"
-                                    multiple
-                                    use-chips
-                                    :options="sections" 
-                                    option-value="field"
-                                    option-label="name"
-                                    emit-value
-                                    map-options 
-                                    options-sanitize
-                                    outlined
-                                    >
-                                        <template v-slot:selected-item="scope">
-                                            <q-chip
-                                            dense
-                                            removable
-                                            @remove="scope.removeAtIndex(scope.index)"
-                                            :tabindex="scope.tabindex"
-                                            color="blue-grey-5"
-                                            text-color="white"
-                                            >
-                                                {{scope.opt.name}}
-                                            </q-chip>
-                                        </template>
-                                    </q-select>
-                                </q-item-section>
-                            </q-item>
-                            <q-item v-if="newAuditType.stage === 'default'">
-                                <q-item-section>
-                                    <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
-                                    <q-checkbox v-model="newAuditType.hidden" val="network" :label="$t('networkScan')" />
-                                    <q-checkbox v-model="newAuditType.hidden" val="findings" :label="$t('findings')" />
-                                </q-item-section>
-                            </q-item>
-                            <q-separator inset class="q-mb-sm" />
-                            <q-btn class="q-ml-md" color="secondary" unelevated :label="$t('btn.create')" size="md" no-caps @click="createAuditType" />
+                                    </q-item-section>
+                                </q-item>
+                                <q-item v-if="newAuditType.stage === 'default'">
+                                    <q-item-section>
+                                        <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
+                                        <q-checkbox v-model="newAuditType.hidden" val="network" :label="$t('networkScan')" />
+                                        <q-checkbox v-model="newAuditType.hidden" val="findings" :label="$t('findings')" />
+                                    </q-item-section>
+                                </q-item>
+                                <q-separator inset class="q-mb-sm" />
+                                <q-btn class="q-ml-md" color="secondary" unelevated :label="$t('btn.create')" size="md" no-caps @click="createAuditType" />
+                            </div>
                         </div>
 
                         <div v-if="!editAuditType" class="col-md-6 col-12">
@@ -746,10 +752,11 @@
 
             <!-- CUSTOM FIELDS -->
             <q-tab-panel name="custom-fields">
-                <q-card>
+                <q-card class="custom-form-section">
                     <q-card-section>
-                        <div class="row items-center">
-                            <div class="text-grey-8">{{$t('createAndManageCustomFields')}}</div>
+                        <div class="row items-center custom-form-section__header">
+                            <q-icon name="fa fa-list-alt" />
+                            <span>{{$t('createAndManageCustomFields')}}</span>
                             <q-space />
                             <draft-recovery-status />
                         </div>
@@ -989,16 +996,23 @@
                 </q-card>
 
                 <!-- Preview -->
-                <q-card class="q-mt-md" v-if="canDisplayCustomFields()">
+                <q-card class="q-mt-md custom-form-section" v-if="canDisplayCustomFields()">
+                    <q-card-section>
+                        <div class="custom-form-section__header">
+                            <q-icon name="fa fa-eye" />
+                            <span>{{$t('preview')}}</span>
+                        </div>
+                    </q-card-section>
+                    <q-separator />
                     <q-card-section class="row">
-                        <q-select 
+                        <q-select
                         v-model="cfLocale"
                         :label="$t('languageForDefaultText')"
-                        :options="languages" 
+                        :options="languages"
                         option-value="locale"
                         option-label="language"
                         emit-value
-                        map-options 
+                        map-options
                         options-sanitize
                         outlined
                         class="col-md-2 col-12"
@@ -1435,4 +1449,42 @@
 
 <script src='./custom.js'></script>
 
-<style></style>
+<style scoped>
+.custom-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.body--dark .custom-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.custom-form-card {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .custom-form-card {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.custom-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+</style>

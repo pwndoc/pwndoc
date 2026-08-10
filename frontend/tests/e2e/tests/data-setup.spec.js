@@ -648,12 +648,12 @@ test.describe('Custom Data Setup Page', () => {
 
   test.describe('Page Layout', () => {
     test('should display navigation and tab elements', async ({ page }) => {
-      // Verify top nav items scoped to the top toolbar to avoid sidebar collisions.
-      const toolbarNavItems = page.getByRole('toolbar').getByRole('listitem');
-      await expect(toolbarNavItems.filter({ hasText: 'Audits' })).toBeVisible();
-      await expect(toolbarNavItems.filter({ hasText: 'Vulnerabilities' })).toBeVisible();
-      await expect(toolbarNavItems.filter({ hasText: 'Data' })).toBeVisible();
-      await expect(toolbarNavItems.filter({ hasText: 'Settings' })).toBeVisible();
+      // Verify nav rail items (icon-only, matched by accessible name) scoped to avoid unrelated collisions.
+      const navRail = page.getByTestId('main-nav');
+      await expect(navRail.getByRole('listitem', { name: 'Audits' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Vulnerabilities' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Data' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Settings' })).toBeVisible();
 
       // Verify tabs are visible
       await expect(page.getByRole('tab', { name: 'Languages' })).toBeVisible();

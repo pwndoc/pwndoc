@@ -177,11 +177,12 @@ test.describe('Vulnerabilities Page', () => {
 
   test.describe('Page Layout', () => {
     test('should display navigation and page elements', async ({ page }) => {
-      // Verify nav items
-      await expect(page.getByRole('listitem').filter({ hasText: 'Audits' })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: 'Vulnerabilities' })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: 'Data' })).toBeVisible();
-      await expect(page.getByRole('listitem').filter({ hasText: 'Settings' })).toBeVisible();
+      // Verify nav rail items (icon-only, matched by accessible name)
+      const navRail = page.getByTestId('main-nav');
+      await expect(navRail.getByRole('listitem', { name: 'Audits' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Vulnerabilities' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Data' })).toBeVisible();
+      await expect(navRail.getByRole('listitem', { name: 'Settings' })).toBeVisible();
 
       // Verify language selector is present
       await expect(page.getByLabel('Language')).toBeVisible();

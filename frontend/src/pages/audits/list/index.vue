@@ -185,7 +185,7 @@
     </div>
 
     <q-dialog ref="createModal" persistent @hide="cleanCurrentAudit()">
-        <q-card style="width:800px">
+        <q-card style="width:800px" class="audit-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('createAudit')}}
@@ -193,49 +193,61 @@
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
-            <q-card-section>
-                <div>
-                    <q-radio v-model="currentAudit.type" val="default" :label="$t('default')" />
-                    <q-radio v-model="currentAudit.type" val="multi" :label="$t('multi')" />
+
+            <div class="audit-form-body">
+                <div class="audit-form-section">
+                    <div class="audit-form-section__header">
+                        <q-icon name="fa fa-file-alt" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <div class="col-md-12">
+                            <q-radio v-model="currentAudit.type" val="default" :label="$t('default')" />
+                            <q-radio v-model="currentAudit.type" val="multi" :label="$t('multi')" />
+                        </div>
+                        <q-input
+                        class="col-md-12"
+                        :label="$t('name')+' *'"
+                        :error="!!errors.name"
+                        :error-message="errors.name"
+                        autofocus
+                        @keyup.enter="createAudit()"
+                        v-model="currentAudit.name"
+                        outlined
+                        />
+                        <q-select
+                        class="col-md-12"
+                        :label="(modalAuditTypes && modalAuditTypes.length > 0) ? $t('selectAssessment')+' *' : $t('msg.noAuditTypeForThisStage')"
+                        :error="!!errors.auditType"
+                        :error-message="errors.auditType"
+                        v-model="currentAudit.auditType"
+                        :options="modalAuditTypes"
+                        option-value="name"
+                        option-label="name"
+                        emit-value
+                        map-options
+                        options-sanitize
+                        outlined
+                        :readonly="!(modalAuditTypes && modalAuditTypes.length > 0)"
+                        />
+                        <q-select
+                        v-if="!shouldHideLanguageField"
+                        class="col-md-12"
+                        :label="$t('selectLanguage')+' *'"
+                        :error="!!errors.language"
+                        :error-message="errors.language"
+                        v-model="currentAudit.language"
+                        :options="languages"
+                        option-value="locale"
+                        option-label="language"
+                        emit-value
+                        map-options
+                        options-sanitize
+                        outlined
+                        />
+                    </div>
                 </div>
-                <q-input
-                :label="$t('name')+' *'"
-                :error="!!errors.name"
-                :error-message="errors.name"
-                autofocus
-                @keyup.enter="createAudit()"
-                v-model="currentAudit.name"
-                outlined
-                />
-                <q-select
-                :label="(modalAuditTypes && modalAuditTypes.length > 0) ? $t('selectAssessment')+' *' : $t('msg.noAuditTypeForThisStage')"
-                :error="!!errors.auditType"
-                :error-message="errors.auditType"
-                v-model="currentAudit.auditType"
-                :options="modalAuditTypes"
-                option-value="name"
-                option-label="name"
-                emit-value
-                map-options
-                options-sanitize
-                outlined
-                :readonly="!(modalAuditTypes && modalAuditTypes.length > 0)"
-                />
-                <q-select 
-                v-if="!shouldHideLanguageField"
-                :label="$t('selectLanguage')+' *'"
-                :error="!!errors.language"
-                :error-message="errors.language"
-                v-model="currentAudit.language" 
-                :options="languages" 
-                option-value="locale" 
-                option-label="language" 
-                emit-value 
-                map-options
-                options-sanitize
-                outlined
-                />
-            </q-card-section>
+            </div>
 
             <q-separator />
 
@@ -253,5 +265,50 @@
 .icon-next-to-button {
     padding: 0 12px;
     font-size: 1.5em!important;
+}
+</style>
+
+<style scoped>
+.audit-form-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.audit-form-body {
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .audit-form-body {
+    background: #121212;
+}
+
+.audit-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .audit-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.audit-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
 }
 </style>

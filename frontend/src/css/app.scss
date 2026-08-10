@@ -1,31 +1,361 @@
 // app global css
 
-/* Hack colors */
-
-/* Home Drawer style */
-/*.home-drawer>.q-list>.q-link:hover:after,
-.home-drawer>.q-router-link--active:after,
-.home-drawer>.q-item--active:after {
-    --color: #77C84E;
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 5px;
-    height: 100%;
-    background: var(--color);
-}*/
+body {
+    font-family: $typography-font-family;
+}
 
 .drag-ghost {
     opacity: 0.5;
     background: $grey-4;
 }
 
-.home-drawer .q-router-link--active {
-    background-color: $primary;
-    opacity: 0.9;
-    color: white!important;
+// Sidebar navigation item styling (page-level drawers, e.g. audits/edit, data)
+.home-drawer {
+    .q-item {
+        border-radius: $generic-border-radius;
+        margin: 2px 8px;
+        width: calc(100% - 16px);
+    }
+
+    .q-router-link--active {
+        background-color: $primary;
+        color: white !important;
+
+        .q-icon {
+            color: white !important;
+        }
+    }
+}
+
+// Global icon-rail navigation (see layouts/home.vue)
+.main-nav-rail {
+    .q-item {
+        border-radius: $generic-border-radius;
+        margin: 4px 12px;
+        width: calc(100% - 24px);
+        min-height: 44px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .q-item__section--avatar {
+        min-width: 0;
+        padding: 0;
+        margin: 0 auto;
+    }
+
+    .q-router-link--active {
+        background-color: $primary;
+        color: white !important;
+
+        .q-icon {
+            color: white !important;
+        }
+    }
+}
+
+.main-header {
+    box-shadow: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.body--dark .main-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+// Give page content consistent breathing room instead of sitting flush
+// against the header/sidebar (most pages render straight into router-view
+// with no q-page wrapper, so this targets the container Quasar always renders).
+// Most pages also skip <q-page> entirely (just a raw div.row), which has none
+// of q-page's built-in min-height, so the page background collapses to the
+// content's height instead of filling the viewport — force it to stretch.
+.q-page-container {
+    min-height: 100vh;
+
+    // Pages that render a <breadcrumb> (components/breadcrumb.vue) put its
+    // fixed-position q-bar as a sibling of the real content row — and q-bar
+    // also carries a "row" utility class, so div.row below would otherwise
+    // match it too and stretch it to min-height: calc(100vh - 51px), turning
+    // its normally-50px-tall bar into one that covers the whole page and
+    // hides/intercepts clicks on everything underneath. Exclude it.
+    // q-tabs (e.g. data/custom/index.vue's top-level tab bar) has the same
+    // problem — QTabs also carries "row" as an internal implementation
+    // class, so a q-tabs rendered directly under q-page-container matches
+    // too and gets stretched to full page height, turning the tab bar into
+    // a tall vertical strip. Exclude it as well.
+    > .q-page,
+    > div.row:not(.q-bar):not(.q-tabs),
+    // Some pages (e.g. audits/index.vue) add an extra unclassed wrapper div
+    // between q-page-container and the actual content row, so also match
+    // one level deeper — otherwise those pages silently lose this padding.
+    > div:not([class]) > .q-page,
+    > div:not([class]) > div.row:not(.q-bar):not(.q-tabs) {
+        padding: 24px;
+        min-height: calc(100vh - 51px);
+        box-sizing: border-box;
+    }
+}
+
+// Most list/table pages wrap their content in a centered
+// col-xl-8/offset-xl-2 or col-md-10/offset-md-1 column — a leftover from the
+// old top-toolbar layout where content spanned the full viewport width and
+// needed centering. With the new nav rail already trimming usable width,
+// that centering just wastes space and makes tables look cramped. Widen it.
+// Some pages (e.g. audits/index.vue) add an extra unclassed wrapper div
+// between q-page-container and this column, so match by class anywhere
+// inside the container rather than assuming a fixed nesting depth.
+// The col-md-10/offset-md-1 variant (audits/list, data/*) uses q-mt-md
+// instead of q-pa-md, so its table sits flush against the page edges
+// instead of getting the same inset "card" look as col-xl-8 pages
+// (settings, profile, vulnerabilities) — pad it the same way for consistency.
+.q-page-container .col-xl-8.offset-xl-2,
+.q-page-container .col-md-10.offset-md-1 {
+    width: 100%;
+    margin-left: 0;
+}
+
+.q-page-container .col-md-10.offset-md-1 {
+    padding: 16px;
+    // Its q-mt-md class adds a 16px top margin on top of that — redundant
+    // now that the page itself already provides top padding, and it's what
+    // was making this variant sit lower than the col-xl-8/q-pa-md pages.
+    margin-top: 0;
+}
+
+// Page-level drawers (e.g. audits/edit, data) render inside q-page-container,
+// alongside the global nav rail from layouts/home.vue. Quasar's q-layout only
+// tracks one "left" drawer instance at a time (see QDrawer.js $layout.instances),
+// so with two independent side="left" drawers registered on the same layout,
+// q-page-container's auto-computed padding-left reflects only whichever drawer
+// last (un)registered — including 0 once a page-level drawer unmounts and the
+// rail never re-triggers its own registration. Never trust Quasar's inline
+// padding-left for this: always force it ourselves, rail-only as the default
+// and rail+page-drawer on the pages that have one (widths match each drawer).
+.q-page-container {
+    .q-drawer--left.fixed {
+        left: $rail-width !important;
+    }
+
+    .q-drawer__backdrop {
+        left: $rail-width;
+    }
+}
+
+body .q-page-container {
+    padding-left: $rail-width !important;
+}
+
+// audits/edit/index.vue: q-drawer :width="400"
+body:has(.audit-drawer-close) .q-page-container {
+    padding-left: calc(400px + #{$rail-width}) !important;
+}
+
+body:has(.data-drawer-close) .q-page-container {
+    padding-left: calc(300px + #{$rail-width}) !important;
+}
+
+// components/breadcrumb.vue sets its own fixed "left" inline style (400px when
+// the audit drawer is open, 0 otherwise) computed before the rail nav existed,
+// so it never accounts for the rail's width — leaving the bar's left edge
+// overlapping the last $rail-width of the audit drawer (and, when the drawer
+// is closed, the rail itself). Its inline style still wins over a plain
+// class rule, so override with the same !important pattern used above.
+.card-breadcrumb {
+    left: $rail-width !important;
+}
+
+body:has(.audit-drawer-close) .card-breadcrumb {
+    left: calc(400px + #{$rail-width}) !important;
+}
+
+// Modern table look: calmer header, subtler borders, clear row hover/selection
+.q-table__container {
+    .q-table thead tr th {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: $secondary;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .q-table tbody tr td {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .q-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .q-table tbody tr:hover {
+        background: rgba(0, 0, 0, 0.03);
+    }
+
+    .q-table tbody tr.selected {
+        background: rgba($primary, 0.08);
+    }
+}
+
+.body--dark .q-table__container {
+    .q-table thead tr th {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .q-table tbody tr td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .q-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .q-table tbody tr.selected {
+        background: rgba($primary, 0.16);
+    }
+}
+
+// Modern card / dialog look
+.q-dialog .q-card {
+    border-radius: $card-radius;
+}
+
+.q-btn {
+    border-radius: $generic-border-radius;
+}
+
+.q-btn.q-btn--round {
+    border-radius: 50%;
+}
+
+// Modern form look: softer bordered inputs, calmer dialog headers, and a
+// cleaner rich-text editor chrome instead of the flat/heavy Quasar defaults.
+.q-field--outlined {
+    .q-field__control {
+        border-radius: $generic-border-radius;
+    }
+
+    .q-field__control:before {
+        border-color: rgba(0, 0, 0, 0.16);
+    }
+
+    &:hover .q-field__control:before {
+        border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    &.q-field--focused .q-field__control:before {
+        border-width: 2px;
+    }
+}
+
+.body--dark .q-field--outlined {
+    .q-field__control:before {
+        border-color: rgba(255, 255, 255, 0.24);
+    }
+
+    &:hover .q-field__control:before {
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+}
+
+// Dialog headers (q-bar.bg-fixed-primary) — a solid, edge-to-edge accent
+// block reads heavier than the rest of the app, which uses the accent
+// sparingly. Keep the color as a clear section marker but calm it down.
+.q-dialog .q-bar.bg-fixed-primary {
+    height: 48px;
+    padding: 0 16px;
+    font-weight: 500;
+}
+
+// Maximized form dialogs (vulnerability create/edit, finding add/edit, etc.):
+// a tall stack of q-card-section blocks with no visual separation reads as
+// one dense wall of fields. Give each section its own breathing room and a
+// hairline seam so groups (title/type, description, CVSS, remediation...)
+// read as distinct steps instead of a single unbroken form.
+.q-dialog--maximized .q-card > .q-card__section {
+    padding: 20px 24px;
+}
+
+.q-dialog--maximized .q-card > .q-card__section + .q-card__section {
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.body--dark .q-dialog--maximized .q-card > .q-card__section + .q-card__section {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+// q-field labels inside these sections (Description/Observation/Remediation
+// editors, stack-label selects) sit flush against the field below with no
+// gap, which is what makes the dialog feel cramped — Quasar's stack-label
+// spacing assumes a shorter label than these full-width section headings.
+.q-dialog--maximized .q-field--borderless.q-field--labeled .q-field__label {
+    font-weight: 600;
+    font-size: 13px;
+    color: $secondary;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+// CVSS calculator card: excluded from the generic .q-card background rule
+// (see quasar.variables.scss) since it already sets its own background, but
+// it still rendered as a flat, borderless slab flush against the dialog
+// background. Give it the same card treatment (border + radius) used
+// elsewhere so it reads as a distinct widget instead of bare content.
+.cvss3calculator,
+.cvsscalculator {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: $card-radius;
+}
+
+.body--dark .cvss3calculator,
+.body--dark .cvsscalculator {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+// Rich-text editor fields: round the whole control and give the
+// toolbar/body seam a single consistent border instead of the flat
+// grey slab (bg-grey-4) glued directly on top of a bordered card.
+.editor {
+    border-radius: $generic-border-radius;
+    overflow: hidden;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.editor .editor-toolbar {
+    background: #f8f9fb;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.body--dark .editor {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.body--dark .editor .editor-toolbar {
+    background: #2a2a2a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+// CVSS calculator (cvss3calculator.vue / cvss4calculator.vue): the metric
+// toggle-button rows use flat, heavy-bordered buttons and the collapsible
+// "Temporal and Environmental Scores" section uses a flat slate-blue slab
+// (header-class="bg-blue-grey-5") — both read as dated next to the softer
+// palette used everywhere else, so recolor them to match.
+.group-btn .q-btn {
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    border-radius: $generic-border-radius;
+}
+
+.group-btn .q-btn.bg-grey-5 {
+    background: $primary !important;
+    color: white !important;
+}
+
+.body--dark .group-btn .q-btn {
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+.q-expansion-item .q-item.bg-blue-grey-5 {
+    background: $secondary !important;
+    border-radius: $generic-border-radius;
 }
 
 .chip-center .q-chip-main {

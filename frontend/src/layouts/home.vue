@@ -1,38 +1,11 @@
 <template>
-  <q-layout ref="layout" view="hHr LpR lFf" :class="$q.dark.isActive ? '' : 'home-background'">
-    <q-header>
-        <q-toolbar class="bg-fixed-primary">
-            <img src="/pwndoc-logo-white.png" style="max-height:50px;" />
-            
-            <q-item to='/audits' active-class="text-green">
-            <q-item-section avatar style="min-width:0" class="q-pr-sm">
-                <q-icon name="fa fa-fingerprint" />
-            </q-item-section>
-            <q-item-section>{{$t('nav.audits')}}</q-item-section>
-            </q-item>
-
-            <q-item to='/vulnerabilities' active-class="text-green">
-            <q-item-section avatar style="min-width:0" class="q-pr-sm">
-                <q-icon name="fa fa-shield-alt" />
-            </q-item-section>
-            <q-item-section>{{$t('nav.vulnerabilities')}}</q-item-section>
-            </q-item>
-
-            <q-item to='/data' active-class="text-green">
-            <q-item-section avatar style="min-width:0" class="q-pr-sm">
-                <q-icon name="fa fa-database" />
-            </q-item-section>
-            <q-item-section>{{$t('nav.data')}}</q-item-section>
-            </q-item>
+  <q-layout ref="layout" view="hHh LpR fff">
+    <q-header class="main-header" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white text-dark'">
+        <q-toolbar>
+            <img :src="$q.dark.isActive ? '/pwndoc-logo-white.png' : '/pwndoc-logo.png'" style="max-height:36px;" />
 
             <q-space />
 
-              <q-item to='/settings' active-class="text-green">
-              <q-item-section avatar style="min-width:0" class="q-pr-sm">
-                  <q-icon name="fa fa-cog" />
-              </q-item-section>
-              <q-item-section>{{$t('settings')}}</q-item-section>
-              </q-item>
             <q-btn-dropdown auto-close flat icon="fa fa-user-circle" no-caps :label="userStore.username">
                 <q-list>
                   <q-item clickable @click="$toggleDarkMode()">
@@ -50,10 +23,45 @@
                   </q-item>
                 </q-list>
             </q-btn-dropdown>
-        </q-toolbar>      
+        </q-toolbar>
     </q-header>
-    <q-page-container>
-        <router-view :key="$route.params.auditId"/> 
+
+    <q-drawer show-if-above bordered :width="72" class="main-nav-rail" :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'">
+        <q-list class="q-pt-md" data-testid="main-nav">
+            <q-item to='/audits' v-ripple :aria-label="$t('nav.audits')">
+                <q-tooltip anchor="center right" self="center left">{{$t('nav.audits')}}</q-tooltip>
+                <q-item-section avatar class="justify-center">
+                    <q-icon name="fa fa-fingerprint" />
+                </q-item-section>
+            </q-item>
+
+            <q-item to='/vulnerabilities' v-ripple :aria-label="$t('nav.vulnerabilities')">
+                <q-tooltip anchor="center right" self="center left">{{$t('nav.vulnerabilities')}}</q-tooltip>
+                <q-item-section avatar class="justify-center">
+                    <q-icon name="fa fa-shield-alt" />
+                </q-item-section>
+            </q-item>
+
+            <q-item to='/data' v-ripple :aria-label="$t('nav.data')">
+                <q-tooltip anchor="center right" self="center left">{{$t('nav.data')}}</q-tooltip>
+                <q-item-section avatar class="justify-center">
+                    <q-icon name="fa fa-database" />
+                </q-item-section>
+            </q-item>
+
+            <q-separator class="q-my-sm" />
+
+            <q-item to='/settings' v-ripple :aria-label="$t('settings')">
+                <q-tooltip anchor="center right" self="center left">{{$t('settings')}}</q-tooltip>
+                <q-item-section avatar class="justify-center">
+                    <q-icon name="fa fa-cog" />
+                </q-item-section>
+            </q-item>
+        </q-list>
+    </q-drawer>
+
+    <q-page-container :class="$q.dark.isActive ? '' : 'bg-page-light'">
+        <router-view :key="$route.params.auditId"/>
     </q-page-container>
   </q-layout>
 </template>
@@ -81,7 +89,7 @@ export default {
 </script>
 
 <style scoped>
-.home-background {
-    background-color: #e6ecf0;
+.bg-page-light {
+    background-color: #F5F6FA;
 }
 </style>

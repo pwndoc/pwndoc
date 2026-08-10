@@ -80,7 +80,7 @@
     </div>
 
     <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px">
+        <q-card style="width:800px" class="company-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('addCompany')}}
@@ -89,43 +89,49 @@
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <div class="row q-col-gutter-md">
-                    <q-input
-                        data-testid="create-company-name-input"
-                        :label="$t('name')+' *'"
-                        autofocus
-                        class="col-md-12"
-                        :error="!!errors.name"
-                        :error-message="errors.name"
-                        @keyup.enter="createCompany()"
-                        v-model="currentCompany.name"
-                        outlined
-                        hide-bottom-space
-                        />
-                    <q-input
-                        data-testid="create-company-shortname-input"
-                        :label="$t('shortName')"
-                        class="col-md-12"
-                        @keyup.enter="createCompany()"
-                        v-model="currentCompany.shortName"
-                        outlined
-                        />
-                    <div class="col-md-12">
-                        <q-uploader
-                            data-testid="create-company-logo-uploader"
-                            ref="addUploader"
-                            class="full-width"
-                            url=""
-                            :label="$t('logo')"
-                            accept='.gif,.jpg,.jpeg,.png'
-                            hide-upload-btn
-                            @added="handleImage"
-                            color="fixed-primary"
-                        />
+            <div class="company-form-body">
+                <div class="company-form-section">
+                    <div class="company-form-section__header">
+                        <q-icon name="fa fa-building" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                            data-testid="create-company-name-input"
+                            :label="$t('name')+' *'"
+                            autofocus
+                            class="col-md-12"
+                            :error="!!errors.name"
+                            :error-message="errors.name"
+                            @keyup.enter="createCompany()"
+                            v-model="currentCompany.name"
+                            outlined
+                            hide-bottom-space
+                            />
+                        <q-input
+                            data-testid="create-company-shortname-input"
+                            :label="$t('shortName')"
+                            class="col-md-12"
+                            @keyup.enter="createCompany()"
+                            v-model="currentCompany.shortName"
+                            outlined
+                            />
+                        <div class="col-md-12">
+                            <q-uploader
+                                data-testid="create-company-logo-uploader"
+                                ref="addUploader"
+                                class="full-width"
+                                url=""
+                                :label="$t('logo')"
+                                accept='.gif,.jpg,.jpeg,.png'
+                                hide-upload-btn
+                                @added="handleImage"
+                                color="fixed-primary"
+                            />
+                        </div>
                     </div>
                 </div>
-            </q-card-section>
+            </div>
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.createModal.hide()">{{$t('btn.cancel')}}</q-btn>
@@ -135,7 +141,7 @@
     </q-dialog>
 
     <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-        <q-card style="width:800px">
+        <q-card style="width:800px" class="company-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <div class="q-toolbar-title">
                     {{$t('editCompany')}}
@@ -144,42 +150,48 @@
                 <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <div class="row q-col-gutter-md">
-                    <q-input
-                        :label="$t('name')+' *'"
-                        autofocus
-                        class="col-md-12"
-                        :error="!!errors.name"
-                        :error-message="errors.name"
-                        @keyup.enter="updateCompany()"
-                        v-model="currentCompany.name"
-                        outlined
-                        hide-bottom-space
-                        />
-                    <q-input
-                        data-testid="edit-company-shortname-input"
-                        :label="$t('shortName')"
-                        class="col-md-12"
-                        @keyup.enter="updateCompany()"
-                        v-model="currentCompany.shortName"
-                        outlined
-                        />
-                    <div class="col-md-12">
-                        <q-uploader
-                            data-testid="edit-company-logo-uploader"
-                            ref="addUploader"
-                            class="full-width"
-                            url=""
-                            :label="$t('logo')"
-                            accept='.gif,.jpg,.jpeg,.png'
-                            hide-upload-btn
-                            @added="handleImage"
-                            color="fixed-primary"
-                        />
+            <div class="company-form-body">
+                <div class="company-form-section">
+                    <div class="company-form-section__header">
+                        <q-icon name="fa fa-building" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                            :label="$t('name')+' *'"
+                            autofocus
+                            class="col-md-12"
+                            :error="!!errors.name"
+                            :error-message="errors.name"
+                            @keyup.enter="updateCompany()"
+                            v-model="currentCompany.name"
+                            outlined
+                            hide-bottom-space
+                            />
+                        <q-input
+                            data-testid="edit-company-shortname-input"
+                            :label="$t('shortName')"
+                            class="col-md-12"
+                            @keyup.enter="updateCompany()"
+                            v-model="currentCompany.shortName"
+                            outlined
+                            />
+                        <div class="col-md-12">
+                            <q-uploader
+                                data-testid="edit-company-logo-uploader"
+                                ref="addUploader"
+                                class="full-width"
+                                url=""
+                                :label="$t('logo')"
+                                accept='.gif,.jpg,.jpeg,.png'
+                                hide-upload-btn
+                                @added="handleImage"
+                                color="fixed-primary"
+                            />
+                        </div>
                     </div>
                 </div>
-            </q-card-section>
+            </div>
 
             <q-card-actions align="right">
                 <q-btn color="primary" outline @click="$refs.editModal.hide()">{{$t('btn.cancel')}}</q-btn>
@@ -191,4 +203,47 @@
 
 <script src='./companies.js'></script>
 
-<style></style>
+<style scoped>
+.company-form-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.company-form-body {
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .company-form-body {
+    background: #121212;
+}
+
+.company-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .company-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.company-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+</style>

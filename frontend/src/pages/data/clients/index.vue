@@ -107,91 +107,99 @@
     </div>
 
     <q-dialog ref="createModal" persistent @hide="cleanErrors()">
-        <q-card persistent style="width:800px">
+        <q-card persistent style="width:800px" class="client-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <span>{{$t('addClient')}}</span>
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.createModal.hide()" />
             </q-bar>
 
-            <q-card-section>
-                <q-select
-                data-testid="create-client-company-select"
-                :label="$t('company')"
-                stack-label
-                clearable
-                v-model="currentClient.company"
-                :options="companies"
-                option-value="name"
-                option-label="name"
-                options-sanitize
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-client-firstname-input"
-                autofocus
-                :label="$t('firstname')+' *'"
-                :error="!!errors.firstname"
-                :error-message="errors.firstname"
-                hide-bottom-space
-                @keyup.enter="createClient()"
-                v-model="currentClient.firstname" 
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-client-lastname-input"
-                :label="$t('lastname')+' *'"
-                :error="!!errors.lastname"
-                :error-message="errors.lastname"
-                hide-bottom-space
-                @keyup.enter="createClient()"
-                v-model="currentClient.lastname"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-client-email-input"
-                :label="$t('email')+' *'"
-                :error="!!errors.email"
-                :error-message="errors.email"
-                hide-bottom-space
-                @keyup.enter="createClient()"
-                v-model="currentClient.email" 
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-client-title-input"
-                :label="$t('function')"
-                @keyup.enter="createClient()"
-                v-model="currentClient.title"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-client-phone-input"
-                :label="$t('phone')"
-                @keyup.enter="createClient()"
-                v-model="currentClient.phone"
-                outlined
-                />
-            </q-card-section>
-            <q-card-section>
-                <q-input
-                data-testid="create-client-cell-input"
-                :label="$t('cell')"
-                @keyup.enter="createClient()"
-                v-model="currentClient.cell"
-                outlined
-                />
-            </q-card-section>
+            <div class="client-form-body">
+                <div class="client-form-section">
+                    <div class="client-form-section__header">
+                        <q-icon name="fa fa-building" />
+                        <span>{{$t('company')}}</span>
+                    </div>
+                    <q-select
+                    data-testid="create-client-company-select"
+                    :label="$t('company')"
+                    stack-label
+                    clearable
+                    v-model="currentClient.company"
+                    :options="companies"
+                    option-value="name"
+                    option-label="name"
+                    options-sanitize
+                    outlined
+                    />
+                </div>
+                <div class="client-form-section">
+                    <div class="client-form-section__header">
+                        <q-icon name="fa fa-address-card" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                        data-testid="create-client-firstname-input"
+                        class="col-md-6 col-12"
+                        autofocus
+                        :label="$t('firstname')+' *'"
+                        :error="!!errors.firstname"
+                        :error-message="errors.firstname"
+                        hide-bottom-space
+                        @keyup.enter="createClient()"
+                        v-model="currentClient.firstname"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-client-lastname-input"
+                        class="col-md-6 col-12"
+                        :label="$t('lastname')+' *'"
+                        :error="!!errors.lastname"
+                        :error-message="errors.lastname"
+                        hide-bottom-space
+                        @keyup.enter="createClient()"
+                        v-model="currentClient.lastname"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-client-email-input"
+                        class="col-md-6 col-12"
+                        :label="$t('email')+' *'"
+                        :error="!!errors.email"
+                        :error-message="errors.email"
+                        hide-bottom-space
+                        @keyup.enter="createClient()"
+                        v-model="currentClient.email"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-client-title-input"
+                        class="col-md-6 col-12"
+                        :label="$t('function')"
+                        @keyup.enter="createClient()"
+                        v-model="currentClient.title"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-client-phone-input"
+                        class="col-md-6 col-12"
+                        :label="$t('phone')"
+                        @keyup.enter="createClient()"
+                        v-model="currentClient.phone"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="create-client-cell-input"
+                        class="col-md-6 col-12"
+                        :label="$t('cell')"
+                        @keyup.enter="createClient()"
+                        v-model="currentClient.cell"
+                        outlined
+                        />
+                    </div>
+                </div>
+            </div>
 
             <q-separator />
 
@@ -203,14 +211,19 @@
     </q-dialog>
 
     <q-dialog ref="editModal" persistent @hide="cleanErrors()">
-        <q-card persistent style="width:800px">
+        <q-card persistent style="width:800px" class="client-form-card">
             <q-bar class="bg-fixed-primary text-white">
                 <span>{{$t('editClient')}}</span>
                 <q-space />
                 <q-btn dense flat icon="close" @click="$refs.editModal.hide()" />
             </q-bar>
 
-            <q-card-section>
+            <div class="client-form-body">
+                <div class="client-form-section">
+                    <div class="client-form-section__header">
+                        <q-icon name="fa fa-building" />
+                        <span>{{$t('company')}}</span>
+                    </div>
                     <q-select
                     data-testid="edit-client-company-select"
                     :label="$t('company')"
@@ -223,71 +236,74 @@
                     options-sanitize
                     outlined
                     />
-                </q-card-section>
-                <q-card-section>
-                    <q-input
-                    data-testid="edit-client-firstname-input"
-                    :label="$t('firstname')+' *'"
-                    :error="!!errors.firstname"
-                    :error-message="errors.firstname"
-                    hide-bottom-space
-                    @keyup.enter="updateClient()"
-                    v-model="currentClient.firstname" 
-                    outlined
-                    />
-                </q-card-section>
-                <q-card-section>
-                    <q-input
-                    data-testid="edit-client-lastname-input"
-                    :label="$t('lastname')+' *'"
-                    :error="!!errors.lastname"
-                    :error-message="errors.lastname"
-                    hide-bottom-space
-                    ref="lastnameInput"
-                    @keyup.enter="updateClient()"
-                    v-model="currentClient.lastname"
-                    outlined
-                    />
-                </q-card-section>
-                <q-card-section>
-                    <q-input
-                    data-testid="edit-client-email-input"
-                    :label="$t('email')+' *'"
-                    :error="!!errors.email"
-                    :error-message="errors.email"
-                    hide-bottom-space
-                    @keyup.enter="updateClient()"
-                    v-model="currentClient.email" 
-                    outlined
-                    />
-                </q-card-section>
-                <q-card-section>
-                    <q-input
-                    data-testid="edit-client-title-input"
-                    :label="$t('function')"
-                    @keyup.enter="updateClient()"
-                    v-model="currentClient.title"
-                    outlined
-                    />
-                </q-card-section>
-                <q-card-section>
-                    <q-input
-                    data-testid="edit-client-phone-input"
-                    :label="$t('phone')"
-                    @keyup.enter="updateClient()"
-                    v-model="currentClient.phone"
-                    outlined
-                    />
-                </q-card-section>
-                <q-card-section>
-                    <q-input
-                    data-testid="edit-client-cell-input"
-                    :label="$t('cell')"
-                    @keyup.enter="updateClient()"
-                    v-model="currentClient.cell"
-                    outlined
-                    />
-                </q-card-section>
+                </div>
+                <div class="client-form-section">
+                    <div class="client-form-section__header">
+                        <q-icon name="fa fa-address-card" />
+                        <span>{{$t('details')}}</span>
+                    </div>
+                    <div class="row q-col-gutter-md">
+                        <q-input
+                        data-testid="edit-client-firstname-input"
+                        class="col-md-6 col-12"
+                        :label="$t('firstname')+' *'"
+                        :error="!!errors.firstname"
+                        :error-message="errors.firstname"
+                        hide-bottom-space
+                        @keyup.enter="updateClient()"
+                        v-model="currentClient.firstname"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-client-lastname-input"
+                        class="col-md-6 col-12"
+                        :label="$t('lastname')+' *'"
+                        :error="!!errors.lastname"
+                        :error-message="errors.lastname"
+                        hide-bottom-space
+                        ref="lastnameInput"
+                        @keyup.enter="updateClient()"
+                        v-model="currentClient.lastname"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-client-email-input"
+                        class="col-md-6 col-12"
+                        :label="$t('email')+' *'"
+                        :error="!!errors.email"
+                        :error-message="errors.email"
+                        hide-bottom-space
+                        @keyup.enter="updateClient()"
+                        v-model="currentClient.email"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-client-title-input"
+                        class="col-md-6 col-12"
+                        :label="$t('function')"
+                        @keyup.enter="updateClient()"
+                        v-model="currentClient.title"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-client-phone-input"
+                        class="col-md-6 col-12"
+                        :label="$t('phone')"
+                        @keyup.enter="updateClient()"
+                        v-model="currentClient.phone"
+                        outlined
+                        />
+                        <q-input
+                        data-testid="edit-client-cell-input"
+                        class="col-md-6 col-12"
+                        :label="$t('cell')"
+                        @keyup.enter="updateClient()"
+                        v-model="currentClient.cell"
+                        outlined
+                        />
+                    </div>
+                </div>
+            </div>
 
             <q-separator />
 
@@ -301,4 +317,47 @@
 
 <script src='./clients.js'></script>
 
-<style></style>
+<style scoped>
+.client-form-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.client-form-body {
+    padding: 20px 24px;
+    background: #F5F6FA;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.body--dark .client-form-body {
+    background: #121212;
+}
+
+.client-form-section {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.body--dark .client-form-section {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.client-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 16px;
+}
+</style>

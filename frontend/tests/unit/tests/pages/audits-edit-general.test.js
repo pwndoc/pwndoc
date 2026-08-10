@@ -595,7 +595,19 @@ describe('Audit Edit General Page', () => {
 
       AuditService.updateAuditGeneral.mockResolvedValue({})
 
+      setRefs(wrapper, {
+        customfields: null,
+        nameField: { validate: vi.fn(), hasError: false },
+        companyField: { validate: vi.fn(), hasError: false },
+        clientField: { validate: vi.fn(), hasError: false },
+        dateStartField: { validate: vi.fn(), hasError: false },
+        dateEndField: { validate: vi.fn(), hasError: false },
+        dateReportField: { validate: vi.fn(), hasError: false },
+        scopeField: { validate: vi.fn(), hasError: false }
+      })
+
       wrapper.vm.updateAuditGeneral()
+      await wrapper.vm.$nextTick()
       await wrapper.vm.$nextTick()
 
       expect(Utils.syncEditors).toHaveBeenCalled()

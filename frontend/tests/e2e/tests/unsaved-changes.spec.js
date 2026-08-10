@@ -39,7 +39,7 @@ test.describe('Unsaved Changes Warning', () => {
     await page.getByLabel(/Name/).first().type(' dirty');
 
     // Attempt to navigate away via sidebar
-    await page.getByRole('listitem').filter({ hasText: 'Vulnerabilities' }).click();
+    await page.getByTestId('main-nav').getByRole('listitem', { name: 'Vulnerabilities' }).click();
 
     // Unsaved changes dialog should appear
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
@@ -56,7 +56,7 @@ test.describe('Unsaved Changes Warning', () => {
 
     await page.getByLabel(/Name/).first().type(' dirty');
 
-    await page.getByRole('listitem').filter({ hasText: 'Vulnerabilities' }).click();
+    await page.getByTestId('main-nav').getByRole('listitem', { name: 'Vulnerabilities' }).click();
 
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
     await page.getByRole('button', { name: 'Confirm' }).click();
@@ -119,7 +119,7 @@ test.describe('Unsaved Changes Warning', () => {
     await toggle.click();
 
     // Navigate away via sidebar
-    await page.getByRole('listitem').filter({ hasText: 'Audits' }).click();
+    await page.getByTestId('main-nav').getByRole('listitem', { name: 'Audits' }).click();
 
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
     await expect(page.getByText('There are unsaved changes !')).toBeVisible();
