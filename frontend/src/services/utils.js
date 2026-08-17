@@ -26,6 +26,14 @@ export default {
       'ul',
       'ol',
       'li',
+      'table',
+      'tbody',
+      'thead',
+      'tr',
+      'th',
+      'td',
+      'colgroup',
+      'col',
       'code',
       'pre',
       'img',
@@ -62,6 +70,14 @@ export default {
       // Filter authorized attributes for <mark> tags (<mark data-color="..." style="...">)
       else if (node.tagName === 'MARK') {
         if (data.attrName === 'data-color' || data.attrName === 'style')
+          data.forceKeepAttr = true;
+      }
+      else if (node.tagName === 'TH' || node.tagName === 'TD') {
+        if (['colspan', 'rowspan', 'data-colwidth'].includes(data.attrName))
+          data.forceKeepAttr = true;
+      }
+      else if (node.tagName === 'COL') {
+        if (data.attrName === 'style' || data.attrName === 'width')
           data.forceKeepAttr = true;
       }
       // Filter authorized attributes for <code> tags (<code class="...")
