@@ -22,12 +22,23 @@ exports.jwtSecret = jwtSecret
 var jwtRefreshSecret = config[env].jwtRefreshSecret
 exports.jwtRefreshSecret = jwtRefreshSecret
 
-// Create a PwnDoc session once an authentication method has identified a user.
-function createSessionForUser(user, userAgent) {
-    var refreshToken = jwt.sign({sessionId: null, userId: user._id}, jwtRefreshSecret)
+// Create a PwnDoc session once an authentication provider has identified a user.
+// Keeping session issuance separate from credential verification allows other
+// providers to reuse the existing JWT and refresh-token lifecycle.
+function createSessionForUser(user, userAgent, options = {}) {
+    var refreshPayload = {sessionId: null, userId: user._id}
+    if (options.externalAuthExpiresAt)
+        refreshPayload.externalAuthExpiresAt = options.externalAuthExpiresAt
+    var refreshToken = jwt.sign(refreshPayload, jwtRefreshSecret)
     return user.constructor.updateRefreshToken(refreshToken, userAgent)
 }
 exports.createSessionForUser = createSessionForUser
+
+function setSessionCookies(res, session) {
+    res.cookie('token', `JWT ${session.token}`, {sameSite: 'strict', secure: true, httpOnly: true})
+    res.cookie('refreshToken', session.refreshToken, {sameSite: 'strict', secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+}
+exports.setSessionCookies = setSessionCookies
 
 /*  ROLES LOGIC
 

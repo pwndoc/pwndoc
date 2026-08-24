@@ -1,0 +1,66 @@
+services:
+  pwndoc-keycloak-tls:
+    image: quay.io/keycloak/keycloak:26.7.1
+    user: "0:0"
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        if [ ! -f /tls/server.p12 ]; then
+          keytool -genkeypair -alias pwndoc-keycloak -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=pwndoc-keycloak" -ext "SAN=dns:pwndoc-keycloak" -storetype PKCS12 -keystore /tls/server.p12 -storepass changeit -keypass changeit -noprompt
+          keytool -exportcert -rfc -alias pwndoc-keycloak -keystore /tls/server.p12 -storepass changeit -file /tls/server.crt
+        fi
+        chmod 644 /tls/server.p12 /tls/server.crt
+    restart: "no"
+    volumes:
+      - keycloak-oidc-tls:/tls
+
+  pwndoc-keycloak:
+    image: quay.io/keycloak/keycloak:26.7.1
+    command: start-dev --import-realm --hostname=https://pwndoc-keycloak:8443 --http-enabled=false --https-port=8443 --https-key-store-file=/tls/server.p12 --https-key-store-password=changeit
+    restart: "no"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./backend/tests/fixtures/keycloak/pwndoc-realm.json:/opt/keycloak/data/import/pwndoc-realm.json:ro
+      - keycloak-oidc-tls:/tls:ro
+    ports:
+      - 127.0.0.1:8443:8443
+    networks:
+      - backend-internal
+      - frontend-internal
+    depends_on:
+      pwndoc-keycloak-tls:
+        condition: service_completed_successfully
+
+  pwndoc-backend:
+    environment:
+      OIDC_ENABLED: "true"
+      OIDC_ISSUER: https://pwndoc-keycloak:8443/realms/pwndoc
+      OIDC_CLIENT_ID: pwndoc
+      OIDC_CLIENT_SECRET: pwndoc-dev-secret
+      OIDC_REDIRECT_URI: https://localhost:18443/api/auth/oidc/callback
+      OIDC_SUCCESS_REDIRECT: /
+      OIDC_DISPLAY_NAME: Sign in with Keycloak
+      OIDC_SCOPE: openid profile email
+      OIDC_IDENTITY_CLAIM: sub
+      OIDC_JIT_ENABLED: "false"
+      OIDC_ROLE_CLAIM: "roles"
+      OIDC_ROLE_MAPPINGS: ""
+      OIDC_ADMIN_ROLE: "admin"
+      OIDC_USER_ROLE: "user"
+      OIDC_GROUP_CLAIM: "groups"
+      OIDC_GROUP_MAPPINGS: ""
+      OIDC_ADMIN_GROUP: ""
+      OIDC_USER_GROUP: ""
+      OIDC_REAUTH_INTERVAL_MINUTES: "480"
+      NODE_EXTRA_CA_CERTS: /etc/pwndoc-oidc-tls/server.crt
+    volumes:
+      - keycloak-oidc-tls:/etc/pwndoc-oidc-tls:ro
+    depends_on:
+      pwndoc-keycloak:
+        condition: service_started
+
+volumes:
+  keycloak-oidc-tls:
