@@ -520,8 +520,7 @@ UserSchema.methods.getToken = function (userAgent) {
                     checkTotpToken(user.totpToken, row.totpSecret)
                 else if (row.totpEnabled)
                     throw({fn: 'BadParameters', message: 'Missing TOTP token'})
-                var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
-                return User.updateRefreshToken(refreshToken, userAgent)
+                return auth.createSessionForUser(row, userAgent)
             }
             else {
                 if (!row) {
