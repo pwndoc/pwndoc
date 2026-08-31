@@ -1,6 +1,6 @@
 <template>
 <div>
-    <q-drawer v-model="drawerModel" side="left" :behavior="isDesktop ? 'desktop' : 'mobile'" bordered>
+    <q-drawer v-model="drawerOpen" side="left" :behavior="$q.screen.gt.sm ? 'desktop' : 'mobile'" show-if-above bordered>
         <q-btn flat round dense icon="close" aria-label="Close navigation menu" class="data-drawer-close" @click="closeDrawer" />
         <q-list class="home-drawer">
             <q-item-label header>{{$t('handleCustomData')}}</q-item-label>
@@ -78,10 +78,10 @@
             </q-item>
         </q-list>
     </q-drawer>
-    <q-page-sticky v-if="!drawerModel" position="top-left" :offset="[16, 16]" class="data-drawer-toggle">
+    <router-view />
+    <q-page-sticky v-if="!drawerOpen" position="top-left" :offset="[16, 16]" class="data-drawer-toggle">
         <q-btn round color="primary" icon="menu" aria-label="Open navigation menu" @click="openDrawer" />
     </q-page-sticky>
-    <router-view />     
 </div>
 </template>
 
@@ -94,8 +94,7 @@ export default {
     data() {
         return {
             userStore: userStore,
-            desktopDrawerOpen: true,
-            mobileDrawerOpen: false
+            drawerOpen: false
         }
     },
 
@@ -112,46 +111,31 @@ export default {
             // integration is disabled, so admins still need to reach this page to
             // configure them. The AI-only checks show a "disabled" banner in-page.
             return userStore.isAllowed('ai:qa-instructions:read')
-        },
-
-        isDesktop() {
-            return this.$q.screen.gt.sm
-        },
-
-        drawerModel: {
-            get() {
-                return this.isDesktop ? this.desktopDrawerOpen : this.mobileDrawerOpen
-            },
-
-            set(value) {
-                if (this.isDesktop)
-                    this.desktopDrawerOpen = value
-                else
-                    this.mobileDrawerOpen = value
-            }
         }
     },
 
     watch: {
-        '$q.screen.gt.sm': function(isWide, wasWide) {
-            if (isWide && !wasWide) {
-                this.desktopDrawerOpen = true
-                this.mobileDrawerOpen = false
-                return
-            }
+        '$q.screen.gt.sm': {
+            flush: 'sync',
+            async handler(isWide, wasWide) {
+                if (!isWide || wasWide || !this.drawerOpen)
+                    return
 
-            if (!isWide && wasWide)
-                this.mobileDrawerOpen = false
+                // Release QDrawer's mobile body scroll lock before reopening on desktop.
+                this.drawerOpen = false
+                await this.$nextTick()
+                this.drawerOpen = true
+            }
         }
     },
 
     methods: {
         openDrawer() {
-            this.drawerModel = true
+            this.drawerOpen = true
         },
 
         closeDrawer() {
-            this.drawerModel = false
+            this.drawerOpen = false
         }
     }
 }
