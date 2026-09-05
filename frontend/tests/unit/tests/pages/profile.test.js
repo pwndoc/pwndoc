@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
 import ProfilePage from '@/pages/profile/index.vue'
 import UserService from '@/services/user'
+import ApiKeyService from '@/services/api-key'
 import Utils from '@/services/utils'
 
 // Mock dependencies
@@ -25,13 +26,26 @@ vi.mock('@/services/utils', () => ({
   }
 }))
 
+vi.mock('@/services/api-key', () => ({
+  default: {
+    getApiKeys: vi.fn(() => Promise.resolve({ data: { datas: [] } })),
+    createApiKey: vi.fn(),
+    deleteApiKey: vi.fn(),
+    toggleApiKey: vi.fn()
+  }
+}))
+
 vi.mock('quasar', async () => {
   const actual = await vi.importActual('quasar')
   return {
     ...actual,
     Notify: {
       create: vi.fn()
-    }
+    },
+    Dialog: {
+      create: vi.fn(() => ({ onOk: vi.fn(cb => { cb(); return { onOk: vi.fn() } }) }))
+    },
+    copyToClipboard: vi.fn(() => Promise.resolve())
   }
 })
 
@@ -695,4 +709,89 @@ describe('Profile Page', () => {
       )
     })
   })
+
+  describe('API Keys Management', () => {
+    it('fetches API keys on mount', async () => {
+      ApiKeyService.getApiKeys.mockResolvedValue({
+        data: {
+          datas: [
+            { _id: 'key1', name: 'Test Key', prefix: 'pwn_abc...123', enabled: true, createdAt: new Date() }
+          ]
+        }
+      })
+      wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      await wrapper.vm.$nextTick()
+
+      expect(ApiKeyService.getApiKeys).toHaveBeenCalled()
+      expect(wrapper.vm.apiKeys.length).toBe(1)
+      expect(wrapper.vm.apiKeys[0].name).toBe('Test Key')
+    })
+
+    it('validates name required when creating API key', async () => {
+      wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+
+      wrapper.vm.newApiKey = { name: '', expirationDays: 90 }
+      wrapper.vm.createApiKey()
+
+      expect(wrapper.vm.apiKeyErrors.name).toBe('apiKeys.nameRequired')
+      expect(ApiKeyService.createApiKey).not.toHaveBeenCalled()
+    })
+
+    it('creates API key successfully and shows display modal', async () => {
+      ApiKeyService.createApiKey.mockResolvedValue({
+        data: {
+          datas: {
+            _id: 'new_key_id',
+            apiKey: 'pwn_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+            name: 'CI Pipeline',
+            prefix: 'pwn_0123...cdef'
+          }
+        }
+      })
+
+      wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+
+      wrapper.vm.newApiKey = { name: 'CI Pipeline', expirationDays: 30 }
+      await wrapper.vm.createApiKey()
+      await wrapper.vm.$nextTick()
+
+      expect(ApiKeyService.createApiKey).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'CI Pipeline',
+          expiresAt: expect.any(String)
+        })
+      )
+      expect(wrapper.vm.createdApiKey).toBe('pwn_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+      expect(wrapper.vm.showKeyDisplayModal).toBe(true)
+      expect(wrapper.vm.showCreateApiKeyModal).toBe(false)
+    })
+
+    it('toggles API key enabled state', async () => {
+      ApiKeyService.toggleApiKey.mockResolvedValue({ data: { datas: { enabled: false } } })
+
+      wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+
+      const row = { _id: 'key1', enabled: true }
+      await wrapper.vm.toggleApiKey(row)
+
+      expect(ApiKeyService.toggleApiKey).toHaveBeenCalledWith('key1')
+    })
+
+    it('confirms and revokes API key', async () => {
+      ApiKeyService.deleteApiKey.mockResolvedValue({ data: { datas: 'API Key revoked successfully' } })
+
+      wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+
+      const row = { _id: 'key1', name: 'Test Key' }
+      await wrapper.vm.confirmRevokeApiKey(row)
+
+      expect(ApiKeyService.deleteApiKey).toHaveBeenCalledWith('key1')
+    })
+  })
 })
+
