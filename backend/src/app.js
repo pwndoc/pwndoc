@@ -167,6 +167,7 @@ app.use(function(req, res, next) {
 app.use(cookieParser())
 
 // Routes import
+require('./routes/auth')(app);
 require('./routes/user')(app);
 require('./routes/role')(app);
 require('./routes/audit')(app, io);

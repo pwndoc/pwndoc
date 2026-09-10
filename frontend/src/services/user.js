@@ -6,6 +6,10 @@ import { routerInstance } from 'boot/router-instance';
 const userStore = useUserStore()
 
 export default {
+    getAuthConfig() {
+        return api.get('auth/config')
+    },
+
     getToken(username, password, totpToken) {
         return new Promise((resolve, reject) => {
             var params = {username: username, password: password, totpToken: totpToken};
@@ -23,7 +27,7 @@ export default {
 
     refreshToken() {
         return new Promise((resolve, reject) => {
-            api.get('users/refreshtoken')
+            api.get('users/refreshtoken', {headers: {'Cache-Control': 'no-cache'}})
             .then((response) => {
                 var token = response.data.datas.token;
                 userStore.setUser(jwtDecode(token));

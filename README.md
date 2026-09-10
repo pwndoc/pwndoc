@@ -35,6 +35,7 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 - Quality assurance review of audits and vulnerability templates (built-in and AI checks)
 - Backup and restore with encryption and selective restore
 - Two-factor authentication (TOTP)
+- OpenID Connect single sign-on
 - Custom roles and granular permissions
 
 # Demos

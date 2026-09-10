@@ -1,4 +1,5 @@
 - [Installation](installation.md)
+- [Single sign-on](sso.md)
 - [Data](data.md)
 - [Roles](roles.md)
 - [Vulnerabilities](vulnerabilities.md)

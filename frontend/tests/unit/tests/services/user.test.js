@@ -60,6 +60,23 @@ describe('UserService', () => {
     vi.clearAllMocks()
   })
 
+  describe('getAuthConfig', () => {
+    it('should fetch the public authentication configuration', async () => {
+      const response = {
+        data: {
+          datas: {
+            localLoginEnabled: true,
+            oidc: { enabled: true, buttonLabel: 'Corporate login' }
+          }
+        }
+      }
+      api.get.mockResolvedValue(response)
+
+      await expect(UserService.getAuthConfig()).resolves.toBe(response)
+      expect(api.get).toHaveBeenCalledWith('auth/config')
+    })
+  })
+
   describe('getToken', () => {
     it('should successfully login and set user data', async () => {
       const mockToken = 'mock.jwt.token'
@@ -157,7 +174,9 @@ describe('UserService', () => {
 
       await UserService.refreshToken()
 
-      expect(api.get).toHaveBeenCalledWith('users/refreshtoken')
+      expect(api.get).toHaveBeenCalledWith('users/refreshtoken', {
+        headers: {'Cache-Control': 'no-cache'}
+      })
       expect(jwtDecode).toHaveBeenCalledWith(mockToken)
       expect(userStore.username).toBe('testuser')
       expect(userStore.isLoggedIn).toBe(true)

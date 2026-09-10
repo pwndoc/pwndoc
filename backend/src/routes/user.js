@@ -9,6 +9,7 @@ module.exports = function(app) {
     var _ = require('lodash')
     var passwordpolicy = require('../lib/passwordpolicy')
     var mongoose = require('mongoose')
+    var authenticationConfig = require('../lib/oidc-config').getOidcConfig()
 
     async function validateAssignableRoles(roles) {
         if (!Array.isArray(roles))
@@ -52,6 +53,7 @@ module.exports = function(app) {
 
     // Refresh token
     app.get("/api/users/refreshtoken", function(req, res) {
+        res.set('Cache-Control', 'no-store')
         var userAgent = req.headers['user-agent']
         var token = req.cookies['refreshToken']
         
@@ -96,6 +98,11 @@ module.exports = function(app) {
 
     // Authenticate user -> return JWT token
     app.post("/api/users/token", function(req, res) {
+        if (!authenticationConfig.localLoginEnabled) {
+            Response.Forbidden(res, 'Local authentication is disabled');
+            return;
+        }
+
         if (!req.body.password || !req.body.username) {
             Response.BadParameters(res, 'Required parameters: username, password');
             return;
@@ -239,6 +246,11 @@ module.exports = function(app) {
 
     // Create First User
     app.post("/api/users/init", function(req, res) {
+        if (!authenticationConfig.localLoginEnabled) {
+            Response.Forbidden(res, 'Local authentication is disabled');
+            return;
+        }
+
         if (!req.body.username || !req.body.password || !req.body.firstname || !req.body.lastname) {
             Response.BadParameters(res, 'Missing some required parameters');
             return;

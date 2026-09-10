@@ -10,6 +10,14 @@ import Utils from '@/services/utils'
 // Mock dependencies
 vi.mock('@/services/user', () => ({
   default: {
+    getAuthConfig: vi.fn().mockResolvedValue({
+      data: {
+        datas: {
+          localLoginEnabled: true,
+          oidc: { enabled: false, buttonLabel: 'Sign in with SSO' }
+        }
+      }
+    }),
     getToken: vi.fn(),
     initUser: vi.fn(),
     isInit: vi.fn()

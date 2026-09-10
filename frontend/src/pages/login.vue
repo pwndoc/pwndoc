@@ -13,7 +13,7 @@
                 </q-banner>
             </q-card-section>
 
-            <div v-if="init">
+            <div v-if="init && authConfig.localLoginEnabled">
                 <q-card-section>
                     <q-input
                     :label="$t('username')"
@@ -74,7 +74,7 @@
                 </q-card-section>
             </div>
             
-            <div v-else>
+            <div v-else-if="!init && authConfig.localLoginEnabled">
                 <q-card-section v-show="step === 0">
                     <q-input
                     :label="$t('username')"
@@ -147,6 +147,24 @@
                     <q-btn :loading="loginLoading" color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
                 </q-card-section>
             </div>
+
+            <q-separator v-if="authConfig.oidc.enabled && authConfig.localLoginEnabled" />
+            <q-card-section v-if="authConfig.oidc.enabled" align="center">
+                <q-btn
+                    color="primary"
+                    class="full-width"
+                    icon="login"
+                    unelevated
+                    no-caps
+                    @click="startOidc()"
+                >{{authConfig.oidc.buttonLabel}}</q-btn>
+            </q-card-section>
+
+            <q-card-section v-if="!authConfig.localLoginEnabled && !authConfig.oidc.enabled">
+                <q-banner rounded class="bg-red-4 text-white">
+                    {{$t('noAuthenticationMethod')}}
+                </q-banner>
+            </q-card-section>
         </q-card>
     </div>
 </div>
@@ -172,7 +190,11 @@ export default {
             step: 0,
             errors: {alert: "", username: "", password: "", firstname: "", lastname: ""},
             loginLoading: false,
-            strongPassword: [Utils.strongPassword]
+            strongPassword: [Utils.strongPassword],
+            authConfig: {
+                localLoginEnabled: true,
+                oidc: {enabled: false, buttonLabel: 'Sign in with SSO'}
+            }
         }
     },
 
@@ -180,10 +202,27 @@ export default {
         if (this.$route.query.tokenError)
             if (this.$route.query.tokenError === "2") this.errors.alert = $t('err.expiredToken');
             else this.errors.alert = $t('err.invalidToken');
+        if (this.$route.query.oidcError)
+            this.errors.alert = this.$route.query.oidcError === 'access_denied' ? $t('ssoAccessDenied') : $t('ssoLoginFailed');
+        this.loadAuthConfig();
         this.checkInit();
     },
 
     methods: {
+
+        loadAuthConfig() {
+            UserService.getAuthConfig()
+            .then(response => {
+                this.authConfig = response.data.datas;
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        },
+
+        startOidc() {
+            window.location.assign('/api/auth/oidc');
+        },
 
         cleanErrors() {
             this.errors.alert = "";

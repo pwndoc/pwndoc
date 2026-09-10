@@ -19,11 +19,24 @@ var UserSchema = new Schema({
     phone:          {type: String, required: false},
     jobTitle:       {type: String, required: false},
     roles:          {type: [String], default: ['user']},
+    oidcIssuer:     {type: String, required: false},
+    oidcSubject:    {type: String, required: false},
     totpEnabled:    {type: Boolean, default: false},
     totpSecret:     {type: String, default: ''},
     enabled:        {type: Boolean, default: true},
     refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
+
+UserSchema.index(
+    {oidcIssuer: 1, oidcSubject: 1},
+    {
+        unique: true,
+        partialFilterExpression: {
+            oidcIssuer: {$type: 'string'},
+            oidcSubject: {$type: 'string'}
+        }
+    }
+);
 
 var totpConfig = {
     issuer: 'PwnDoc',
@@ -193,6 +206,7 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
             var userId = decoded.userId
             var sessionId = decoded.sessionId
             var expiration = decoded.exp
+            var authMethod = decoded.authMethod || 'local'
         }
         catch (err) {
             if (err.name === 'TokenExpiredError')
@@ -222,6 +236,7 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                 payload.phone = row.phone
                 payload.jobTitle = row.jobTitle
                 payload.permissions = auth.acl.getRoles(payload.roles)
+                payload.authMethod = authMethod
 
                 token = jwt.sign(payload, auth.jwtSecret, {expiresIn: '15 minutes'})
 
@@ -239,11 +254,11 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                 var foundIndex = row.refreshTokens.findIndex(e => e.sessionId === sessionId)
                 if (foundIndex === -1) { // Not found
                     sessionId = generateUUID()
-                    newRefreshToken = jwt.sign({sessionId: sessionId, userId: userId}, auth.jwtRefreshSecret, {expiresIn: '7 days'})
+                    newRefreshToken = jwt.sign({sessionId: sessionId, userId: userId, authMethod: authMethod}, auth.jwtRefreshSecret, {expiresIn: '7 days'})
                     row.refreshTokens.push({sessionId: sessionId, userAgent: userAgent, token:newRefreshToken})
                  }
                 else {
-                    newRefreshToken = jwt.sign({sessionId: sessionId, userId: userId, exp: expiration}, auth.jwtRefreshSecret)
+                    newRefreshToken = jwt.sign({sessionId: sessionId, userId: userId, authMethod: authMethod, exp: expiration}, auth.jwtRefreshSecret)
                     row.refreshTokens[foundIndex].token = newRefreshToken
                 }
                 return row.save()
@@ -264,6 +279,16 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                 reject(err)
         })
     })
+}
+
+// Create a PwnDoc session for a user authenticated by any supported method.
+UserSchema.statics.createSession = function (userId, userAgent, authMethod = 'local') {
+    var refreshToken = jwt.sign({
+        sessionId: null,
+        userId: userId,
+        authMethod: authMethod
+    }, auth.jwtRefreshSecret)
+    return this.updateRefreshToken(refreshToken, userAgent)
 }
 
 // Remove session
@@ -520,8 +545,7 @@ UserSchema.methods.getToken = function (userAgent) {
                     checkTotpToken(user.totpToken, row.totpSecret)
                 else if (row.totpEnabled)
                     throw({fn: 'BadParameters', message: 'Missing TOTP token'})
-                var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
-                return User.updateRefreshToken(refreshToken, userAgent)
+                return User.createSession(row._id, userAgent, 'local')
             }
             else {
                 if (!row) {
