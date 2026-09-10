@@ -88,6 +88,26 @@ describe('Utils Service', () => {
       expect(result).toContain('<p>')
       expect(result).not.toContain('\x00')
     })
+
+    it('should not stack sanitize hooks across repeated calls', () => {
+      const html = '<img src="507f1f77bcf86cd799439011" alt="caption">'
+      for (let i = 0; i < 50; i++)
+        Utils.htmlEncode(html)
+
+      const result = Utils.htmlEncode(html)
+      expect(result).toContain('src="507f1f77bcf86cd799439011"')
+      expect(result).toContain('alt="caption"')
+    })
+
+    it('htmlEncodeDiff keeps diff marker spans and strips XSS', () => {
+      const dirty = '<p onclick="alert(1)">Safe</p><span class="diffadd">added</span><script>alert(1)</script>'
+      const result = Utils.htmlEncodeDiff(dirty)
+      expect(result).toContain('Safe')
+      expect(result).toContain('class="diffadd"')
+      expect(result).toContain('added')
+      expect(result).not.toContain('onclick')
+      expect(result).not.toContain('<script')
+    })
   })
 
   describe('normalizeString', () => {
