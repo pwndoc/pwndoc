@@ -13,6 +13,10 @@ const {
     buildAuditUpdateEvents,
     emitAuditUpdateWebhooks
 } = require('../src/lib/audit-webhooks');
+const {
+    buildFindingUpdateEvent,
+    emitFindingUpdateWebhook
+} = require('../src/lib/finding-webhooks');
 
 describe('Generic webhooks', () => {
     const enabledConfig = {
@@ -53,11 +57,11 @@ describe('Generic webhooks', () => {
             const config = getWebhookConfig({
                 PWNDOC_WEBHOOK_URL: 'https://integrations.example.test/pwndoc',
                 PWNDOC_WEBHOOK_SECRET: 'secret',
-                PWNDOC_WEBHOOK_EVENTS: 'audit.updated, audit.state.changed',
+                PWNDOC_WEBHOOK_EVENTS: 'audit.updated, finding.updated',
                 PWNDOC_WEBHOOK_TIMEOUT_MS: '2500'
             });
 
-            expect(config.events).toEqual(new Set(['audit.updated', 'audit.state.changed']));
+            expect(config.events).toEqual(new Set(['audit.updated', 'finding.updated']));
             expect(config.timeoutMs).toBe(2500);
         });
 
@@ -217,6 +221,43 @@ describe('Generic webhooks', () => {
             expect(events).toHaveLength(1);
             expect(emitter).toHaveBeenCalledTimes(1);
             expect(emitter).toHaveBeenCalledWith('audit.updated', expect.any(Object));
+        });
+    });
+
+    describe('finding events', () => {
+        it('reports a saved finding without exposing field values', () => {
+            const event = buildFindingUpdateEvent({
+                auditId: 'audit-1',
+                findingId: 'finding-1',
+                actorId: 'user-1',
+                changedFields: ['title', 'description'],
+                title: 'Confidential finding title'
+            });
+
+            expect(event).toEqual({
+                type: 'finding.updated',
+                data: {
+                    auditId: 'audit-1',
+                    findingId: 'finding-1',
+                    actorId: 'user-1',
+                    changedFields: ['description', 'title']
+                }
+            });
+            expect(JSON.stringify(event)).not.toContain('Confidential finding title');
+        });
+
+        it('emits updated finding metadata with unique sorted fields', () => {
+            const emitter = jest.fn();
+
+            const event = emitFindingUpdateWebhook({
+                auditId: 'audit-1',
+                findingId: 'finding-1',
+                actorId: 'user-1',
+                changedFields: ['status', 'title', 'status']
+            }, emitter);
+
+            expect(event.data.changedFields).toEqual(['status', 'title']);
+            expect(emitter).toHaveBeenCalledWith('finding.updated', event.data);
         });
     });
 });

@@ -10,7 +10,7 @@ Set these variables in the root `.env` file before starting PwnDoc:
 |---|---|---|
 | `PWNDOC_WEBHOOK_URL` | HTTP(S) endpoint that receives events. An empty value disables webhooks. | empty |
 | `PWNDOC_WEBHOOK_SECRET` | Shared secret used to sign every request. Required when a URL is configured. | empty |
-| `PWNDOC_WEBHOOK_EVENTS` | Comma-separated event allowlist. Use `*` for every supported event. | `audit.updated,audit.state.changed` |
+| `PWNDOC_WEBHOOK_EVENTS` | Comma-separated event allowlist. Use `*` for every supported event. | `audit.updated,audit.state.changed,finding.updated` |
 | `PWNDOC_WEBHOOK_TIMEOUT_MS` | Delivery timeout in milliseconds, from 1 to 60000. | `5000` |
 
 Use HTTPS and generate a dedicated high-entropy secret in production. The URL must be reachable from the PwnDoc backend container; `localhost` refers to that container, not to the Docker host.
@@ -52,6 +52,25 @@ Sent in addition to `audit.updated` when the review state changes between `EDIT`
     "actorId": "68c16cce90c9ae7552dd9153",
     "previousState": "REVIEW",
     "state": "APPROVED"
+  }
+}
+```
+
+### `finding.updated`
+
+Sent after an existing finding is successfully saved. It contains enough information for the receiver to fetch the current audit or finding through the authenticated PwnDoc API, without exposing finding contents in the webhook.
+
+```json
+{
+  "version": 1,
+  "id": "8b2e3600-143d-4216-8bb8-b094adb860e7",
+  "type": "finding.updated",
+  "createdAt": "2026-09-10T12:10:00.000Z",
+  "data": {
+    "auditId": "68c16d4fd5fc72bb1b7d70c6",
+    "findingId": "68c16e07fd5fc72bb1b7d70d2",
+    "actorId": "68c16cce90c9ae7552dd9153",
+    "changedFields": ["customFields", "status"]
   }
 }
 ```

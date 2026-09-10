@@ -21,7 +21,7 @@ services:
       - DB_NAME=pwndoc
       - PWNDOC_WEBHOOK_URL=${PWNDOC_WEBHOOK_URL:-}
       - PWNDOC_WEBHOOK_SECRET=${PWNDOC_WEBHOOK_SECRET:-}
-      - PWNDOC_WEBHOOK_EVENTS=${PWNDOC_WEBHOOK_EVENTS:-audit.updated,audit.state.changed}
+      - PWNDOC_WEBHOOK_EVENTS=${PWNDOC_WEBHOOK_EVENTS:-audit.updated,audit.state.changed,finding.updated}
       - PWNDOC_WEBHOOK_TIMEOUT_MS=${PWNDOC_WEBHOOK_TIMEOUT_MS:-5000}
     depends_on:
       - mongodb
