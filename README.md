@@ -9,6 +9,7 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 - [Roles](https://pwndoc.github.io/pwndoc/#/roles)
 - [Vulnerabilities](https://pwndoc.github.io/pwndoc/#/vulnerabilities)
 - [Audits](https://pwndoc.github.io/pwndoc/#/audits)
+- [Webhooks](https://pwndoc.github.io/pwndoc/#/webhooks)
 - [Templating](https://pwndoc.github.io/pwndoc/#/docxtemplate)
 - [Settings](https://pwndoc.github.io/pwndoc/#/settings)
 - [Profile](https://pwndoc.github.io/pwndoc/#/profile)
@@ -27,6 +28,7 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 - Retest and multi-audit workflows
 - Automatic recovery for unsaved work
 - Audit review and approval workflow
+- Signed outgoing webhooks for audit updates
 - Audit comments with threaded replies
 - Docx Report Generation
 - Docx Template customization

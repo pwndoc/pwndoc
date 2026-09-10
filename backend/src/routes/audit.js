@@ -7,6 +7,16 @@ module.exports = function(app, io) {
     var _ = require('lodash');
     var utils = require('../lib/utils');
     var Settings = require('mongoose').model('Settings');
+    var emitAuditUpdateWebhooks = require('../lib/audit-webhooks').emitAuditUpdateWebhooks;
+
+    function emitAuditUpdateWebhook(req, previousState, update) {
+        emitAuditUpdateWebhooks({
+            auditId: req.params.auditId,
+            actorId: req.decodedToken.id,
+            previousState: previousState,
+            update: update
+        });
+    }
 
     /* ### AUDITS LIST ### */
 
@@ -239,6 +249,7 @@ module.exports = function(app, io) {
         Audit.updateGeneral(acl.isAllowed(req.decodedToken.roles, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
+            emitAuditUpdateWebhook(req, audit.state, update);
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err))
@@ -535,6 +546,10 @@ module.exports = function(app, io) {
             Audit.updateApprovals(acl.isAllowed(req.decodedToken.roles, 'audits:review-all'), req.params.auditId, req.decodedToken.id, update)
             .then(() => {
                 io.to(req.params.auditId).emit('updateAudit');
+                emitAuditUpdateWebhook(req, audit.state, {
+                    approvals: newApprovalsArray,
+                    state: newApprovalsArray.length >= settings.reviews.public.minReviewers ? "APPROVED" : "REVIEW"
+                });
                 Response.Ok(res, "Approval updated successfully.")
             })
             .catch((err) => {
@@ -580,6 +595,7 @@ module.exports = function(app, io) {
         Audit.updateGeneral(acl.isAllowed(req.decodedToken.roles, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
+            emitAuditUpdateWebhook(req, audit.state, update);
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err));
