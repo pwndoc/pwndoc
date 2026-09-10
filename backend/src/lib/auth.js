@@ -96,8 +96,65 @@ class ACL {
     hasPermission (permission) {
         var Response = require('./httpResponse')
         var jwt = require('jsonwebtoken')
+        var mongoose = require('mongoose')
 
-        return (req, res, next) => {
+        return async (req, res, next) => {
+            // Check for API Key first (X-API-Key header or Authorization: ApiKey <key> or Bearer pwn_...)
+            let apiKeyRaw = req.headers['x-api-key']
+            if (!apiKeyRaw && req.headers['authorization']) {
+                const parts = req.headers['authorization'].split(' ')
+                if (parts.length === 2) {
+                    if (parts[0] === 'ApiKey' || (parts[0] === 'Bearer' && parts[1].startsWith('pwn_'))) {
+                        apiKeyRaw = parts[1]
+                    }
+                }
+            }
+
+            if (apiKeyRaw) {
+                try {
+                    const ApiKey = mongoose.model('ApiKey')
+                    const result = await ApiKey.validateKey(apiKeyRaw)
+                    if (!result || result.error) {
+                        Response.Unauthorized(res, result ? result.error : 'Invalid API Key')
+                        return
+                    }
+
+                    const { apiKey, user } = result
+                    const userRoles = Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : ['user']
+                    const effectiveRoles = Array.isArray(apiKey.roles) && apiKey.roles.length > 0 ? apiKey.roles : userRoles
+                    
+                    let effectivePermissions = this.getRoles(effectiveRoles)
+                    if (Array.isArray(apiKey.permissions) && apiKey.permissions.length > 0) {
+                        effectivePermissions = apiKey.permissions
+                    }
+
+                    const decoded = {
+                        id: user._id.toString(),
+                        username: user.username,
+                        firstname: user.firstname,
+                        lastname: user.lastname,
+                        roles: effectiveRoles,
+                        permissions: effectivePermissions,
+                        apiKey: {
+                            _id: apiKey._id,
+                            name: apiKey.name
+                        }
+                    }
+
+                    if (permission === "validtoken" || this.isAllowedToken(decoded, permission)) {
+                        req.decodedToken = decoded
+                        req.apiKey = apiKey
+                        return next()
+                    } else {
+                        Response.Forbidden(res, 'Insufficient privileges')
+                        return
+                    }
+                } catch (err) {
+                    Response.Internal(res, err)
+                    return
+                }
+            }
+
             if (!req.cookies['token']) {
                 Response.Unauthorized(res, 'No token provided')
                 return;
