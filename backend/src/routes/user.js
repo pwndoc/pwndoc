@@ -3,12 +3,16 @@ module.exports = function(app) {
     var Response = require('../lib/httpResponse.js');
     var User = require('mongoose').model('User');
     var Role = require('mongoose').model('Role');
-    var acl = require('../lib/auth').acl;
+    var auth = require('../lib/auth')
+    var acl = auth.acl;
+    var setSessionCookies = auth.setSessionCookies;
+    var oidc = require('../lib/oidc')
     var jwtRefreshSecret = require('../lib/auth').jwtRefreshSecret
     var jwt = require('jsonwebtoken')
     var _ = require('lodash')
     var passwordpolicy = require('../lib/passwordpolicy')
     var mongoose = require('mongoose')
+    var crypto = require('crypto')
 
     async function validateAssignableRoles(roles) {
         if (!Array.isArray(roles))
@@ -44,6 +48,93 @@ module.exports = function(app) {
         if (remainingEnabledAdmins === 0)
             throw({fn: 'BadParameters', message: 'Cannot disable the last remaining enabled admin'})
     }
+
+    app.get('/api/auth/oidc/login', async function(req, res) {
+        try {
+            const request = await oidc.createAuthorizationRequest()
+            res.cookie('oidcTransaction', request.transaction, {
+                sameSite: 'lax', secure: true, httpOnly: true,
+                path: '/api/auth/oidc/callback'
+            })
+            res.redirect(request.url)
+        }
+        catch (err) {
+            Response.Internal(res, err)
+        }
+    })
+
+    app.get('/api/auth/oidc/config', function(req, res) {
+        try {
+            const config = oidc.getConfig()
+            Response.Ok(res, {enabled: config.enabled, displayName: config.displayName || 'SSO'})
+        }
+        catch (err) {
+            Response.Ok(res, {enabled: false})
+        }
+    })
+
+    app.get('/api/auth/oidc/callback', async function(req, res) {
+        const transaction = req.cookies.oidcTransaction
+        res.clearCookie('oidcTransaction', {path: '/api/auth/oidc/callback'})
+        if (!transaction || req.query.error || typeof req.query.code !== 'string') {
+            Response.Unauthorized(res, 'OIDC authentication failed')
+            return
+        }
+
+        try {
+            const callbackUrl = new URL(req.originalUrl, oidc.getConfig().redirectUri)
+            const identity = await oidc.completeAuthorization(callbackUrl, transaction)
+            if (identity.jitEnabled) {
+                try {
+                    await validateAssignableRoles([identity.role])
+                }
+                catch (_) {
+                    throw({
+                        fn: 'BadParameters',
+                        message: `OIDC mapping targets unknown PwnDoc role: ${identity.role}`
+                    })
+                }
+            }
+            let user = await User.findOne({'oidc.issuer': identity.issuer, 'oidc.subject': identity.subject})
+            if (!user && identity.jitEnabled) {
+                try {
+                    await User.create({
+                        username: identity.profile.username,
+                        password: crypto.randomBytes(48).toString('base64url'),
+                        firstname: identity.profile.firstname,
+                        lastname: identity.profile.lastname,
+                        email: identity.profile.email,
+                        roles: [identity.role || 'user'],
+                        enabled: true,
+                        oidc: {issuer: identity.issuer, subject: identity.subject, roleManaged: true}
+                    })
+                    user = await User.findOne({'oidc.issuer': identity.issuer, 'oidc.subject': identity.subject})
+                }
+                catch (err) {
+                    if (err && err.message === 'Username already exists')
+                        throw({fn: 'Unauthorized', message: 'OIDC username conflicts with an existing PwnDoc user'})
+                    throw err
+                }
+            }
+            if (!user) {
+                Response.Unauthorized(res, 'OIDC identity is not linked to a PwnDoc user')
+                return
+            }
+            if (identity.jitEnabled && identity.role && user.oidc && user.oidc.roleManaged &&
+                (user.roles.length !== 1 || user.roles[0] !== identity.role)) {
+                user.roles = [identity.role]
+                await user.save()
+            }
+            const session = await auth.createSessionForUser(user, req.headers['user-agent'], {
+                externalAuthExpiresAt: identity.externalAuthExpiresAt
+            })
+            setSessionCookies(res, session)
+            res.redirect(identity.successRedirect)
+        }
+        catch (err) {
+            Response.Internal(res, err)
+        }
+    })
 	
     // Check token validity
     app.get("/api/users/checktoken", acl.hasPermission('validtoken'), function(req, res) {
@@ -57,8 +148,7 @@ module.exports = function(app) {
         
         User.updateRefreshToken(token, userAgent)
         .then(msg => {
-            res.cookie('token', `JWT ${msg.token}`, {sameSite: 'strict', secure: true, httpOnly: true})
-            res.cookie('refreshToken', msg.refreshToken, {sameSite: 'strict', secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+            setSessionCookies(res, msg)
             Response.Ok(res, msg)
         })
         .catch(err => {
@@ -119,8 +209,7 @@ module.exports = function(app) {
 
         user.getToken(req.headers['user-agent'])
         .then(msg => {
-            res.cookie('token', `JWT ${msg.token}`, {sameSite: 'strict', secure: true, httpOnly: true})
-            res.cookie('refreshToken', msg.refreshToken, {sameSite: 'strict', secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+            setSessionCookies(res, msg)
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err))
@@ -135,7 +224,7 @@ module.exports = function(app) {
 
     // Get all users
     app.get("/api/users", acl.hasPermission('users:read'), function(req, res) {
-        User.getAll()
+        User.getAll(acl.isAllowedToken(req.decodedToken, 'users:update'))
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
@@ -195,7 +284,7 @@ module.exports = function(app) {
 
     // Get user by username
     app.get("/api/users/:username", acl.hasPermission('users:read'), function(req, res) {
-        User.getByUsername(req.params.username)
+        User.getByUsername(req.params.username, acl.isAllowedToken(req.decodedToken, 'users:update'))
         .then(msg => Response.Ok(res, msg))
         .catch(err => Response.Internal(res, err))
     });
@@ -267,8 +356,7 @@ module.exports = function(app) {
 
                     newUser.getToken(req.headers['user-agent'])
                     .then(msg => {
-                        res.cookie('token', `JWT ${msg.token}`, {sameSite: 'strict', secure: true, httpOnly: true})
-                        res.cookie('refreshToken', msg.refreshToken, {sameSite: 'strict', secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+                        setSessionCookies(res, msg)
                         Response.Created(res, msg)
                     })
                     .catch(err => Response.Internal(res, err))
@@ -386,6 +474,28 @@ module.exports = function(app) {
         if (!_.isNil(req.body.jobTitle)) user.jobTitle = req.body.jobTitle;
         if (typeof(req.body.totpEnabled) === 'boolean') user.totpEnabled = req.body.totpEnabled;
         if (typeof(req.body.enabled) === 'boolean') user.enabled = req.body.enabled;
+        if (Object.prototype.hasOwnProperty.call(req.body, 'oidc') && req.body.oidc === null) {
+            user.oidc = null
+        }
+        else if (!_.isNil(req.body.oidc)) {
+            if (typeof req.body.oidc !== 'object' ||
+                typeof req.body.oidc.issuer !== 'string' || !req.body.oidc.issuer ||
+                typeof req.body.oidc.subject !== 'string' || !req.body.oidc.subject) {
+                Response.BadParameters(res, 'oidc must contain issuer and subject strings')
+                return
+            }
+            try {
+                user.oidc = {
+                    issuer: new URL(req.body.oidc.issuer.trim()).href,
+                    subject: req.body.oidc.subject.trim()
+                }
+                if (!user.oidc.subject) throw new Error('empty subject')
+            }
+            catch (_) {
+                Response.BadParameters(res, 'oidc must contain a valid issuer URL and a non-empty subject')
+                return
+            }
+        }
 
         try {
             if (Array.isArray(req.body.roles)) {
