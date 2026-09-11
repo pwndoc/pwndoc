@@ -131,6 +131,50 @@
                         <q-icon name="format_list_numbered" />
                     </q-btn>
                 </div>
+		<div v-if="toolbar.indexOf('table') !== -1">
+
+    <q-btn flat size="sm" dense
+        @click="editor.chain().focus().insertTable({
+            rows: 3,
+            cols: 3,
+            withHeaderRow: true
+        }).run()">
+        <q-tooltip>Ajouter un tableau</q-tooltip>
+        <q-icon name="table_chart" />
+    </q-btn>
+
+    <q-btn flat size="sm" dense
+        @click="editor.chain().focus().addColumnAfter().run()">
+        <q-tooltip>Ajouter une colonne</q-tooltip>
+        <q-icon name="view_column" />
+    </q-btn>
+
+    <q-btn flat size="sm" dense
+        @click="editor.chain().focus().deleteColumn().run()">
+        <q-tooltip>Supprimer une colonne</q-tooltip>
+        <q-icon name="delete_forever" />
+    </q-btn>
+
+    <q-btn flat size="sm" dense
+        @click="editor.chain().focus().addRowAfter().run()">
+        <q-tooltip>Ajouter une ligne</q-tooltip>
+        <q-icon name="view_stream" />
+    </q-btn>
+
+    <q-btn flat size="sm" dense
+        @click="editor.chain().focus().deleteRow().run()">
+        <q-tooltip>Supprimer une ligne</q-tooltip>
+        <q-icon name="delete_sweep" />
+    </q-btn>
+
+    <q-btn flat size="sm" dense
+        @click="editor.chain().focus().deleteTable().run()">
+        <q-tooltip>Supprimer le tableau</q-tooltip>
+        <q-icon name="table_rows" />
+    </q-btn>
+
+	</div>
+
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('list') !== -1" />
 
                 <div v-if="toolbar.indexOf('code') !== -1">
@@ -320,6 +364,11 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Code from '@tiptap/extension-code'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
+
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
 import Comment from './editor-comment'
@@ -356,7 +405,7 @@ export default {
         toolbar: {
             type: Array,
             default: function() {
-                return ['format', 'marks', 'list', 'code', 'image', 'caption']
+                return ['format', 'marks', 'list', 'code', 'image', 'caption', 'table']
             }
         },
         noAffix: {
@@ -428,6 +477,14 @@ export default {
                         code: false
                     }),
                     Underline,
+		    Table.configure({
+			   resizable: true,
+			}),
+
+		    TableRow,
+		    TableHeader,
+		    TableCell,
+
                     CustomImage,
                     Caption,
                     Comment,
@@ -609,10 +666,8 @@ export default {
                 HtmlDiff.tokenize = function(value) {
                     return value.replace(/<code[^>]*>/g, "<code>").split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
                 }
-                // Sanitize before diffing so broken tags cannot smuggle attributes into v-html.
-                var value = Utils.htmlEncode(this.modelValue || "")
-                var previous = Utils.htmlEncode(this.diff || "")
-                var diff = HtmlDiff.diff(previous, value)
+                var value = this.modelValue || ""
+                var diff = HtmlDiff.diff(this.diff, value)
                 diff.forEach(part => {
                     const diffclass = part.added ? 'diffadd' : part.removed ? 'diffrem' : 'diffeq'
                     var value = part.value.replace(/<p><\/p>/g, '<p><br></p>')
