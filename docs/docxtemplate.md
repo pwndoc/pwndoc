@@ -103,7 +103,7 @@ Image: {%company.logo} // NOT OK
 >```
 
 ### client
-Object containing:
+Object containing the first client (for backwards compatibility):
 * **client.email**
 * **client.firstname**
 * **client.lastname**
@@ -115,6 +115,27 @@ Object containing:
 >```
 Email: {client.email}
 Name: {client.firstname} {client.lastname}
+>```
+
+> **Note:** This object contains only the first client. For multiple clients, use the `clients` array below.
+
+### clients
+Array of Objects containing all clients:
+* **clients[i].email**
+* **clients[i].firstname**
+* **clients[i].lastname**
+* **clients[i].phone**
+* **clients[i].cell**
+* **clients[i].title**
+
+> Use in template document
+>```
+List of clients:
+{#clients}
+Name: {firstname} {lastname}
+Email: {email}
+Phone: {phone}
+{/clients}
 >```
 
 ### collaborators
