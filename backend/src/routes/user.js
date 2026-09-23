@@ -93,14 +93,14 @@ module.exports = function(app) {
     })
 
     app.get(oidcCallbackPaths, async function(req, res) {
-        const transaction = req.cookies.oidcTransaction
-        res.clearCookie('oidcTransaction', {path: getOidcCallbackPath()})
-        if (!transaction || req.query.error || typeof req.query.code !== 'string') {
-            Response.Unauthorized(res, 'OIDC authentication failed')
-            return
-        }
-
         try {
+            const transaction = req.cookies.oidcTransaction
+            res.clearCookie('oidcTransaction', {path: getOidcCallbackPath()})
+            if (!transaction || req.query.error || typeof req.query.code !== 'string') {
+                Response.Unauthorized(res, 'OIDC authentication failed')
+                return
+            }
+
             const callbackUrl = new URL(req.originalUrl, oidc.getConfig().redirectUri)
             const identity = await oidc.completeAuthorization(callbackUrl, transaction)
             if (identity.jitEnabled) {

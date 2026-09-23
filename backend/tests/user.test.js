@@ -620,6 +620,30 @@ module.exports = function(request, app) {
           response = await request(oidcApp).get('/api/sso?code=test')
           expect(response.status).toBe(401)
           expect(response.body.datas).toBe('OIDC authentication failed')
+          expect(response.headers['set-cookie']).toEqual(expect.arrayContaining([
+            expect.stringMatching(/oidcTransaction=; Path=\/api\/sso;/)
+          ]))
+
+          const callbackSpy = jest.spyOn(oidc, 'completeAuthorization').mockResolvedValue({
+            issuer: 'https://issuer.example/', subject: 'custom-callback-subject',
+            successRedirect: '/'
+          })
+          const sessionSpy = jest.spyOn(require('../src/lib/auth'), 'createSessionForUser')
+            .mockResolvedValue({token: 'access', refreshToken: 'refresh'})
+          const userSpy = jest.spyOn(User, 'findOne').mockResolvedValue({_id: 'linked-user'})
+          try {
+            response = await request(oidcApp).get('/api/sso?code=test&state=state')
+              .set('Cookie', ['oidcTransaction=signed-transaction'])
+            expect(response.status).toBe(302)
+            expect(response.headers.location).toBe('/')
+            expect(callbackSpy).toHaveBeenCalledWith(
+              new URL('https://pwndoc.example/api/sso?code=test&state=state'), 'signed-transaction')
+            expect(sessionSpy).toHaveBeenCalled()
+          } finally {
+            callbackSpy.mockRestore()
+            sessionSpy.mockRestore()
+            userSpy.mockRestore()
+          }
         }
         finally {
           requestSpy.mockRestore()
