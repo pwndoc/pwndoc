@@ -2,6 +2,7 @@ import { Notify, Dialog, copyToClipboard } from 'quasar'
 import UserService from '@/services/user'
 import ApiKeyService from '@/services/api-key'
 import Utils from '@/services/utils'
+import { useUserStore } from '@/stores/user'
 
 import { $t } from 'boot/i18n'
 
@@ -18,33 +19,39 @@ export default {
             // API Keys
             apiKeys: [],
             loadingApiKeys: false,
+            creatingApiKey: false,
+            updatingApiKeys: [],
             showCreateApiKeyModal: false,
             showKeyDisplayModal: false,
             createdApiKey: '',
             newApiKey: { name: '', expirationDays: 90 },
             apiKeyErrors: { name: '' },
             expirationOptions: [
-                { label: '30 days', value: 30 },
-                { label: '60 days', value: 60 },
-                { label: '90 days', value: 90 },
-                { label: '1 year', value: 365 },
-                { label: 'Never', value: 0 }
+                { label: $t('apiKeys.days30'), value: 30 },
+                { label: $t('apiKeys.days60'), value: 60 },
+                { label: $t('apiKeys.days90'), value: 90 },
+                { label: $t('apiKeys.year'), value: 365 },
+                { label: $t('apiKeys.never'), value: 0 }
             ],
             apiKeyColumns: [
-                { name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true },
-                { name: 'prefix', label: 'Key', field: 'prefix', align: 'left' },
-                { name: 'createdAt', label: 'Created', field: row => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '', align: 'left', sortable: true },
-                { name: 'lastUsed', label: 'Last Used', field: row => row.lastUsed ? new Date(row.lastUsed).toLocaleDateString() : 'Never', align: 'left', sortable: true },
-                { name: 'expiresAt', label: 'Expires', field: row => row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : 'Never', align: 'left', sortable: true },
-                { name: 'enabled', label: 'Status', field: 'enabled', align: 'center' },
-                { name: 'actions', label: 'Actions', field: 'actions', align: 'center' }
+                { name: 'name', label: $t('apiKeys.name'), field: 'name', align: 'left', sortable: true },
+                { name: 'prefix', label: $t('apiKeys.key'), field: 'prefix', align: 'left' },
+                { name: 'createdAt', label: $t('apiKeys.created'), field: row => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '', align: 'left', sortable: true },
+                { name: 'lastUsed', label: $t('apiKeys.lastUsed'), field: row => row.lastUsed ? new Date(row.lastUsed).toLocaleDateString() : $t('apiKeys.never'), align: 'left', sortable: true },
+                { name: 'expiresAt', label: $t('apiKeys.expires'), field: row => row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : $t('apiKeys.never'), align: 'left', sortable: true },
+                { name: 'enabled', label: $t('apiKeys.status'), field: 'enabled', align: 'center' },
+                { name: 'actions', label: $t('apiKeys.actions'), field: 'actions', align: 'center' }
             ]
         }
     },
 
+    computed: {
+        userStore: () => useUserStore()
+    },
+
     mounted: function() {
         this.getProfile();
-        this.getApiKeys();
+        if (this.userStore.isAllowed('apikeys:read')) this.getApiKeys();
     },
 
     methods: {
@@ -173,20 +180,27 @@ export default {
         },
 
         // API Keys Management Methods
+        openCreateApiKey: function() {
+            this.apiKeyErrors.name = '';
+            this.newApiKey = { name: '', expirationDays: 90 };
+            this.showCreateApiKeyModal = true;
+        },
+
         getApiKeys: function() {
             this.loadingApiKeys = true;
-            ApiKeyService.getApiKeys()
+            return ApiKeyService.getApiKeys()
             .then((res) => {
                 this.apiKeys = res.data.datas || [];
                 this.loadingApiKeys = false;
             })
             .catch((err) => {
                 this.loadingApiKeys = false;
-                console.error(err);
+                Notify.create({ message: $t('apiKeys.loadFailed'), color: 'negative', position: 'top-right' });
             });
         },
 
         createApiKey: function() {
+            if (this.creatingApiKey) return;
             this.apiKeyErrors.name = '';
             if (!this.newApiKey.name || !this.newApiKey.name.trim()) {
                 this.apiKeyErrors.name = $t('apiKeys.nameRequired');
@@ -198,7 +212,8 @@ export default {
                 expiresAt = new Date(Date.now() + this.newApiKey.expirationDays * 86400000).toISOString();
             }
 
-            ApiKeyService.createApiKey({
+            this.creatingApiKey = true;
+            return ApiKeyService.createApiKey({
                 name: this.newApiKey.name.trim(),
                 expiresAt: expiresAt
             })
@@ -217,16 +232,16 @@ export default {
             })
             .catch((err) => {
                 Notify.create({
-                    message: err.response && err.response.data && err.response.data.datas ? err.response.data.datas : 'Failed to create API key',
+                    message: err.response && err.response.data && err.response.data.datas ? err.response.data.datas : $t('apiKeys.createFailed'),
                     color: 'negative',
                     textColor: 'white',
                     position: 'top-right'
                 });
-            });
+            }).finally(() => { this.creatingApiKey = false; });
         },
 
         copyApiKey: function() {
-            copyToClipboard(this.createdApiKey)
+            return copyToClipboard(this.createdApiKey)
             .then(() => {
                 Notify.create({
                     message: $t('apiKeys.copied'),
@@ -236,15 +251,16 @@ export default {
                 });
             })
             .catch(() => {
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(this.createdApiKey);
-                }
+                Notify.create({ message: $t('apiKeys.copyFailed'), color: 'negative', position: 'top-right' });
             });
         },
 
         toggleApiKey: function(row) {
-            ApiKeyService.toggleApiKey(row._id)
-            .then(() => {
+            if (this.updatingApiKeys.includes(row._id)) return;
+            this.updatingApiKeys.push(row._id);
+            return ApiKeyService.toggleApiKey(row._id)
+            .then((res) => {
+                row.enabled = res.data.datas.enabled;
                 Notify.create({
                     message: $t('apiKeys.statusUpdatedOk'),
                     color: 'positive',
@@ -253,14 +269,13 @@ export default {
                 });
             })
             .catch(() => {
-                row.enabled = !row.enabled;
                 Notify.create({
-                    message: 'Failed to update API key status',
+                    message: $t('apiKeys.updateFailed'),
                     color: 'negative',
                     textColor: 'white',
                     position: 'top-right'
                 });
-            });
+            }).finally(() => { this.updatingApiKeys = this.updatingApiKeys.filter(id => id !== row._id); });
         },
 
         confirmRevokeApiKey: function(row) {
@@ -283,7 +298,7 @@ export default {
                 })
                 .catch(() => {
                     Notify.create({
-                        message: 'Failed to revoke API key',
+                        message: $t('apiKeys.revokeFailed'),
                         color: 'negative',
                         textColor: 'white',
                         position: 'top-right'

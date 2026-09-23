@@ -85,6 +85,8 @@ class ACL {
     }
 
     isAllowed(roleNames, permission) {
+        if (Array.isArray(roleNames) && roleNames.length === 0)
+            return false
         return this.normalizeRoleNames(roleNames).some(roleName => this.roleAllows(roleName, permission))
     }
 
@@ -110,7 +112,8 @@ class ACL {
                 }
             }
 
-            if (apiKeyRaw) {
+            let authenticated
+            if (apiKeyRaw !== undefined) {
                 try {
                     const ApiKey = mongoose.model('ApiKey')
                     const result = await ApiKey.validateKey(apiKeyRaw)
@@ -120,13 +123,12 @@ class ACL {
                     }
 
                     const { apiKey, user } = result
-                    const userRoles = Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : ['user']
-                    const effectiveRoles = Array.isArray(apiKey.roles) && apiKey.roles.length > 0 ? apiKey.roles : userRoles
-                    
-                    let effectivePermissions = this.getRoles(effectiveRoles)
-                    if (Array.isArray(apiKey.permissions) && apiKey.permissions.length > 0) {
-                        effectivePermissions = apiKey.permissions
-                    }
+                    const userRoles = Array.isArray(user.roles) ? user.roles : []
+                    const effectiveRoles = (apiKey.roles || []).filter(role =>
+                        userRoles.includes(role) && Object.hasOwn(this.roles, role))
+                    if (effectiveRoles.length === 0)
+                        return Response.Unauthorized(res, 'API Key has no active roles')
+                    const effectivePermissions = this.getRoles(effectiveRoles)
 
                     const decoded = {
                         id: user._id.toString(),
@@ -141,59 +143,38 @@ class ACL {
                         }
                     }
 
-                    if (permission === "validtoken" || this.isAllowedToken(decoded, permission)) {
-                        req.decodedToken = decoded
-                        req.apiKey = apiKey
-                        return next()
-                    } else {
-                        Response.Forbidden(res, 'Insufficient privileges')
-                        return
-                    }
+                    authenticated = decoded
                 } catch (err) {
                     Response.Internal(res, err)
                     return
                 }
-            }
-
-            if (!req.cookies['token']) {
-                Response.Unauthorized(res, 'No token provided')
-                return;
-            }
-    
-            var cookie = req.cookies['token'].split(' ')
-            if (cookie.length !== 2 || cookie[0] !== 'JWT') {
-                Response.Unauthorized(res, 'Bad token type')
-                return
-            }
-    
-            var token = cookie[1]
-            jwt.verify(token, jwtSecret, (err, decoded) => {
-                if (err) {
-                    if (err.name === 'TokenExpiredError')
-                        Response.Unauthorized(res, 'Expired token')
-                    else
-                        Response.Unauthorized(res, 'Invalid token')
+            } else {
+                if (!req.cookies['token']) {
+                    Response.Unauthorized(res, 'No token provided')
                     return
                 }
-
-                // Tokens issued before the roles/permissions payload migration lack `permissions`
-                // and have `roles` populated with permission strings instead of role names.
-                // Reject them so the client immediately refreshes instead of running with
-                // permissions silently resolved from those stale, mismatched roles.
-                if (decoded.permissions === undefined) {
-                    Response.Unauthorized(res, 'Invalid token')
+                const cookie = req.cookies['token'].split(' ')
+                if (cookie.length !== 2 || cookie[0] !== 'JWT') {
+                    Response.Unauthorized(res, 'Bad token type')
                     return
                 }
-
-                if ( permission === "validtoken" || this.isAllowedToken(decoded, permission)) {
-                    req.decodedToken = decoded
-                    return next()
+                try {
+                    const decoded = jwt.verify(cookie[1], jwtSecret)
+                    // Reject legacy tokens whose roles contain permissions rather than role names.
+                    if (decoded.permissions === undefined)
+                        return Response.Unauthorized(res, 'Invalid token')
+                    authenticated = decoded
+                } catch (err) {
+                    return Response.Unauthorized(res, err.name === 'TokenExpiredError' ? 'Expired token' : 'Invalid token')
                 }
-                else {
-                    Response.Forbidden(res, 'Insufficient privileges')
-                    return
-                }
-            })
+            }
+            // Both authentication methods must pass the same authorization gate.
+            if (!authenticated)
+                return Response.Unauthorized(res, 'Invalid credentials')
+            if (permission !== 'validtoken' && !this.isAllowedToken(authenticated, permission))
+                return Response.Forbidden(res, 'Insufficient privileges')
+            req.decodedToken = authenticated
+            return next()
         }
     }
 

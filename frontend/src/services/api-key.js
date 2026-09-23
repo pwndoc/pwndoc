@@ -1,8 +1,8 @@
 import { api } from 'boot/axios';
 
 export default {
-    getApiKeys: function(all = false) {
-        return api.get('apikeys' + (all ? '?all=true' : ''));
+    getApiKeys: function() {
+        return api.get('apikeys');
     },
 
     createApiKey: function(data) {

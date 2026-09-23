@@ -212,7 +212,7 @@
             </q-card>
 
             <!-- API Keys Section -->
-            <q-card class="q-mt-md">
+            <q-card class="q-mt-md" v-if="userStore.isAllowed('apikeys:read') || userStore.isAllowed('apikeys:create')">
                 <q-card-section class="q-py-xs bg-blue-grey-5 text-white row items-center justify-between">
                     <div class="text-h6">{{$t('apiKeys.title')}}</div>
                     <q-btn 
@@ -220,7 +220,8 @@
                         color="secondary" 
                         unelevated 
                         icon="add"
-                        @click="showCreateApiKeyModal = true" 
+                        v-if="userStore.isAllowed('apikeys:create')"
+                        @click="openCreateApiKey"
                     />
                 </q-card-section>
                 <q-separator />
@@ -239,7 +240,8 @@
                         <template v-slot:body-cell-enabled="props">
                             <q-td :props="props">
                                 <q-toggle
-                                    v-model="props.row.enabled"
+                                    :model-value="props.row.enabled"
+                                    :disable="!userStore.isAllowed('apikeys:update') || updatingApiKeys.includes(props.row._id)"
                                     @update:model-value="toggleApiKey(props.row)"
                                     color="secondary"
                                 />
@@ -253,6 +255,7 @@
                                     dense
                                     color="negative"
                                     icon="delete"
+                                    v-if="userStore.isAllowed('apikeys:delete')"
                                     @click="confirmRevokeApiKey(props.row)"
                                 >
                                     <q-tooltip>{{$t('btn.delete')}}</q-tooltip>
@@ -289,14 +292,14 @@
                         />
                     </q-card-section>
                     <q-card-actions align="right">
-                        <q-btn flat :label="$t('btn.cancel')" color="grey-7" v-close-popup />
-                        <q-btn unelevated :label="$t('btn.create')" color="secondary" @click="createApiKey" />
+                        <q-btn flat :label="$t('btn.cancel')" color="grey-7" :disable="creatingApiKey" v-close-popup />
+                        <q-btn unelevated :label="$t('btn.create')" color="secondary" :loading="creatingApiKey" :disable="creatingApiKey" @click="createApiKey" />
                     </q-card-actions>
                 </q-card>
             </q-dialog>
 
             <!-- Display Created API Key Dialog -->
-            <q-dialog v-model="showKeyDisplayModal" persistent>
+            <q-dialog v-model="showKeyDisplayModal" persistent @hide="createdApiKey = ''">
                 <q-card style="min-width: 500px">
                     <q-card-section class="bg-positive text-white">
                         <div class="text-h6">{{$t('apiKeys.createdSuccessTitle')}}</div>
@@ -309,7 +312,7 @@
                             {{$t('apiKeys.warningCopyNow')}}
                         </q-banner>
                         <q-input
-                            v-model="createdApiKey"
+                            :model-value="createdApiKey"
                             readonly
                             outlined
                             type="text"

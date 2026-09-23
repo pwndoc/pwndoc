@@ -8,7 +8,6 @@ const ApiKeySchema = new Schema({
     prefix: { type: String, required: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     roles: [String],
-    permissions: [String],
     enabled: { type: Boolean, default: true },
     expiresAt: { type: Date, default: null },
     lastUsed: { type: Date, default: null }
@@ -19,10 +18,20 @@ const ApiKeySchema = new Schema({
 */
 
 // Generate a new API Key for a user
-ApiKeySchema.statics.generateKey = async function(userId, { name, expiresAt, roles, permissions }) {
+ApiKeySchema.statics.generateKey = async function(userId, { name, expiresAt, roles }) {
     if (!name || typeof name !== 'string' || !name.trim()) {
         throw { fn: 'BadParameters', message: 'Name is required' };
     }
+
+    const owner = await mongoose.model('User').findById(userId).select('roles enabled').lean();
+    const acl = require('../lib/auth').acl;
+    if (!owner || owner.enabled === false)
+        throw { fn: 'Unauthorized', message: 'Account disabled or user not found' };
+    const ownerRoles = (owner.roles || []).filter(role => Object.hasOwn(acl.roles, role));
+    const assignedRoles = roles === undefined ? ownerRoles : roles;
+    if (!Array.isArray(assignedRoles) || assignedRoles.length === 0 ||
+        assignedRoles.some(role => typeof role !== 'string' || !ownerRoles.includes(role)))
+        throw { fn: 'BadParameters', message: 'Key roles must be a nonempty subset of current user roles' };
 
     let parsedExpiresAt = null;
     if (expiresAt) {
@@ -43,8 +52,7 @@ ApiKeySchema.statics.generateKey = async function(userId, { name, expiresAt, rol
         keyHash,
         prefix,
         user: userId,
-        roles: Array.isArray(roles) ? roles : [],
-        permissions: Array.isArray(permissions) ? permissions : [],
+        roles: [...new Set(assignedRoles)],
         enabled: true,
         expiresAt: parsedExpiresAt
     });
@@ -57,7 +65,6 @@ ApiKeySchema.statics.generateKey = async function(userId, { name, expiresAt, rol
         apiKey: rawKey, // Plaintext returned ONLY once upon creation!
         prefix: keyDoc.prefix,
         roles: keyDoc.roles,
-        permissions: keyDoc.permissions,
         enabled: keyDoc.enabled,
         expiresAt: keyDoc.expiresAt,
         createdAt: keyDoc.createdAt
@@ -66,12 +73,13 @@ ApiKeySchema.statics.generateKey = async function(userId, { name, expiresAt, rol
 
 // Validate a provided API Key string
 ApiKeySchema.statics.validateKey = async function(rawKey) {
-    if (!rawKey || typeof rawKey !== 'string' || !rawKey.startsWith('pwn_')) {
+    if (typeof rawKey !== 'string' || !/^pwn_[a-f0-9]{64}$/.test(rawKey)) {
         return null;
     }
 
     const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
-    const keyDoc = await this.findOne({ keyHash }).populate('user');
+    const keyDoc = await this.findOne({ keyHash }).select('-keyHash')
+        .populate('user', 'username firstname lastname roles enabled');
 
     if (!keyDoc) {
         return { error: 'Invalid API Key', status: 401 };
@@ -104,7 +112,7 @@ ApiKeySchema.statics.getByUser = async function(userId) {
         .sort({ createdAt: -1 });
 };
 
-// Get all API keys (admin only, never exposing keyHash)
+// Get all API keys (read-all permission enforced by the route, never exposing keyHash)
 ApiKeySchema.statics.getAll = async function() {
     return this.find()
         .populate('user', 'username firstname lastname')
@@ -131,12 +139,12 @@ ApiKeySchema.statics.toggle = async function(keyId, userId, isAdmin = false) {
     if (!isAdmin) {
         query.user = userId;
     }
-    const keyDoc = await this.findOne(query);
+    const keyDoc = await this.findOneAndUpdate(query,
+        [{ $set: { enabled: { $not: ['$enabled'] } } }],
+        { new: true, projection: { name: 1, enabled: 1, prefix: 1 } });
     if (!keyDoc) {
         throw { fn: 'NotFound', message: 'API Key not found or access denied' };
     }
-    keyDoc.enabled = !keyDoc.enabled;
-    await keyDoc.save();
     return {
         _id: keyDoc._id,
         name: keyDoc.name,
