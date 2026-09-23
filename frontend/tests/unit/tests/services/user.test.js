@@ -330,6 +330,17 @@ describe('UserService', () => {
     })
   })
 
+  describe('getOidcConfig', () => {
+    it('should fetch the public OIDC configuration', async () => {
+      api.get.mockResolvedValue({data: {datas: {enabled: true, displayName: 'SSO'}}})
+
+      const result = await UserService.getOidcConfig()
+
+      expect(api.get).toHaveBeenCalledWith('auth/oidc/config')
+      expect(result.data.datas.enabled).toBe(true)
+    })
+  })
+
   describe('updateProfile', () => {
     it('should update user profile', async () => {
       const userData = {

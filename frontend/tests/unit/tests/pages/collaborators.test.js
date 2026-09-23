@@ -233,7 +233,9 @@ describe('Collaborators Page', () => {
         phone: '',
         jobTitle: '',
         password: '',
-        totpEnabled: false
+        totpEnabled: false,
+        oidcIssuer: '',
+        oidcSubject: ''
       })
       expect(wrapper.vm.idUpdate).toBe('')
       expect(wrapper.vm.errors).toEqual({
@@ -697,7 +699,29 @@ describe('Collaborators Page', () => {
       await wrapper.vm.$nextTick()
       await wrapper.vm.$nextTick()
 
-      expect(CollabService.updateCollab).toHaveBeenCalledWith('collab-123', collabData)
+      expect(CollabService.updateCollab).toHaveBeenCalledWith('collab-123', {...collabData, oidc: null})
+    })
+
+    it('should submit a linked OIDC identity as issuer and subject', async () => {
+      CollabService.updateCollab.mockResolvedValue({})
+      const wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      wrapper.vm.idUpdate = 'collab-oidc'
+      wrapper.vm.currentCollab = {
+        lastname: 'Doe', firstname: 'Jane', username: 'janedoe', password: '',
+        roles: ['user'], oidcIssuer: ' https://issuer.example/ ', oidcSubject: ' subject-1 '
+      }
+      setRefs(wrapper, {
+        pwdUpdateRef: { validate: vi.fn().mockReturnValue(true) },
+        editModal: { hide: vi.fn() }
+      })
+
+      wrapper.vm.updateCollab()
+      await flushPromises()
+
+      expect(CollabService.updateCollab).toHaveBeenCalledWith('collab-oidc', expect.objectContaining({
+        oidc: {issuer: 'https://issuer.example/', subject: 'subject-1'}
+      }))
     })
 
     it('should show success notification on update', async () => {
@@ -853,6 +877,8 @@ describe('Collaborators Page', () => {
       expect(wrapper.vm.currentCollab.username).toBe('johndoe')
       expect(wrapper.vm.currentCollab.firstname).toBe('John')
       expect(wrapper.vm.currentCollab.lastname).toBe('Doe')
+      expect(wrapper.vm.currentCollab.oidcIssuer).toBe('')
+      expect(wrapper.vm.currentCollab.oidcSubject).toBe('')
     })
   })
 
@@ -907,6 +933,8 @@ describe('Collaborators Page', () => {
       expect(wrapper.vm.currentCollab.email).toBe('')
       expect(wrapper.vm.currentCollab.phone).toBe('')
       expect(wrapper.vm.currentCollab.jobTitle).toBe('')
+      expect(wrapper.vm.currentCollab.oidcIssuer).toBe('')
+      expect(wrapper.vm.currentCollab.oidcSubject).toBe('')
     })
   })
 

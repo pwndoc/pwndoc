@@ -59,6 +59,21 @@ module.exports = function(request, app) {
         // Login
         response = await request(app).post('/api/users/token')
         expect(response.status).toBe(422)
+
+        const oidcEnabled = process.env.OIDC_ENABLED
+        process.env.OIDC_ENABLED = 'false'
+        try {
+          response = await request(app).get('/api/auth/oidc/config')
+          expect(response.status).toBe(200)
+          expect(response.body.datas.enabled).toBe(false)
+
+          response = await request(app).get('/api/auth/oidc/login')
+          expect(response.status).toBe(404)
+        }
+        finally {
+          if (oidcEnabled === undefined) delete process.env.OIDC_ENABLED
+          else process.env.OIDC_ENABLED = oidcEnabled
+        }
       })
     })
 

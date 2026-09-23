@@ -22,8 +22,11 @@ var UserSchema = new Schema({
     totpEnabled:    {type: Boolean, default: false},
     totpSecret:     {type: String, default: ''},
     enabled:        {type: Boolean, default: true},
+    oidc:           {_id: false, issuer: String, subject: String, roleManaged: Boolean},
     refreshTokens:  [{_id: false, sessionId: String, userAgent: String, token: String}]
 }, {timestamps: true});
+
+UserSchema.index({'oidc.issuer': 1, 'oidc.subject': 1}, {unique: true, sparse: true});
 
 var totpConfig = {
     issuer: 'PwnDoc',
@@ -73,7 +76,9 @@ UserSchema.statics.create = function (user) {
             resolve();
         })
         .catch(function(err) {
-            if (err.code === 11000)
+            if (err.code === 11000 && err.keyPattern && (err.keyPattern['oidc.issuer'] || err.keyPattern['oidc.subject']))
+                reject({fn: 'BadParameters', message: 'OIDC identity is already linked'});
+            else if (err.code === 11000)
                 reject({fn: 'BadParameters', message: 'Username already exists'});
             else
                 reject(err);
@@ -82,10 +87,10 @@ UserSchema.statics.create = function (user) {
 }
 
 // Get all users
-UserSchema.statics.getAll = function () {
+UserSchema.statics.getAll = function (includeOidc = false) {
     return new Promise((resolve, reject) => {
         var query = this.find();
-        query.select('username firstname lastname email phone jobTitle roles totpEnabled enabled');
+        query.select(`username firstname lastname email phone jobTitle roles totpEnabled enabled${includeOidc ? ' oidc' : ''}`);
         query.exec()
         .then(function(rows) {
             resolve(rows);
@@ -97,10 +102,10 @@ UserSchema.statics.getAll = function () {
 }
 
 // Get one user by its username
-UserSchema.statics.getByUsername = function (username) {
+UserSchema.statics.getByUsername = function (username, includeOidc = false) {
     return new Promise((resolve, reject) => {
         var query = this.findOne({username: username})
-        query.select('username firstname lastname email phone jobTitle roles totpEnabled enabled');
+        query.select(`username firstname lastname email phone jobTitle roles totpEnabled enabled${includeOidc ? ' oidc' : ''}`);
         query.exec()
         .then(function(row) {
             if (row)
@@ -153,7 +158,9 @@ UserSchema.statics.updateProfile = function (username, user) {
             resolve({token: `JWT ${token}`});
         })
         .catch(function(err) {
-            if (err.code === 11000)
+            if (err.code === 11000 && err.keyPattern && (err.keyPattern['oidc.issuer'] || err.keyPattern['oidc.subject']))
+                reject({fn: 'BadParameters', message: 'OIDC identity is already linked'});
+            else if (err.code === 11000)
                 reject({fn: 'BadParameters', message: 'Username already exists'});
             else
                 reject(err);
@@ -166,7 +173,18 @@ UserSchema.statics.updateProfile = function (username, user) {
 UserSchema.statics.updateUser = function (userId, user) {
     return new Promise((resolve, reject) => {
         if (user.password) user.password = bcrypt.hashSync(user.password, 10);
-        var query = this.findOneAndUpdate({_id: userId}, user);
+        var update = user;
+        if (user.oidc === null) {
+            update = {$set: _.omit(user, ['oidc']), $unset: {oidc: 1}};
+        }
+        else if (user.oidc) {
+            update = {$set: {
+                ..._.omit(user, ['oidc']),
+                'oidc.issuer': user.oidc.issuer,
+                'oidc.subject': user.oidc.subject
+            }};
+        }
+        var query = this.findOneAndUpdate({_id: userId}, update);
         query.exec()
         .then(function(row) {
             if (row)
@@ -175,7 +193,9 @@ UserSchema.statics.updateUser = function (userId, user) {
                 reject({fn: 'NotFound', message: 'User not found'});
         })
         .catch(function(err) {
-            if (err.code === 11000)
+            if (err.code === 11000 && err.keyPattern && (err.keyPattern['oidc.issuer'] || err.keyPattern['oidc.subject']))
+                reject({fn: 'BadParameters', message: 'OIDC identity is already linked'});
+            else if (err.code === 11000)
                 reject({fn: 'BadParameters', message: 'Username already exists'});
             else
                 reject(err);
@@ -193,6 +213,7 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
             var userId = decoded.userId
             var sessionId = decoded.sessionId
             var expiration = decoded.exp
+            var externalAuthExpiresAt = decoded.externalAuthExpiresAt
         }
         catch (err) {
             if (err.name === 'TokenExpiredError')
@@ -200,6 +221,8 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
             else
                 throw({fn: 'Unauthorized', message: 'Invalid refreshToken'})
         }
+        if (externalAuthExpiresAt && externalAuthExpiresAt <= Math.floor(Date.now() / 1000))
+            throw({fn: 'Unauthorized', message: 'External reauthentication required'})
         var query = this.findById(userId)
         query.exec()
         .then(row => {
@@ -239,11 +262,17 @@ UserSchema.statics.updateRefreshToken = function (refreshToken, userAgent) {
                 var foundIndex = row.refreshTokens.findIndex(e => e.sessionId === sessionId)
                 if (foundIndex === -1) { // Not found
                     sessionId = generateUUID()
-                    newRefreshToken = jwt.sign({sessionId: sessionId, userId: userId}, auth.jwtRefreshSecret, {expiresIn: '7 days'})
+                    var refreshPayload = {sessionId: sessionId, userId: userId}
+                    if (externalAuthExpiresAt)
+                        refreshPayload.externalAuthExpiresAt = externalAuthExpiresAt
+                    newRefreshToken = jwt.sign(refreshPayload, auth.jwtRefreshSecret, {expiresIn: '7 days'})
                     row.refreshTokens.push({sessionId: sessionId, userAgent: userAgent, token:newRefreshToken})
                  }
                 else {
-                    newRefreshToken = jwt.sign({sessionId: sessionId, userId: userId, exp: expiration}, auth.jwtRefreshSecret)
+                    var rotatedRefreshPayload = {sessionId: sessionId, userId: userId, exp: expiration}
+                    if (externalAuthExpiresAt)
+                        rotatedRefreshPayload.externalAuthExpiresAt = externalAuthExpiresAt
+                    newRefreshToken = jwt.sign(rotatedRefreshPayload, auth.jwtRefreshSecret)
                     row.refreshTokens[foundIndex].token = newRefreshToken
                 }
                 return row.save()
@@ -520,8 +549,7 @@ UserSchema.methods.getToken = function (userAgent) {
                     checkTotpToken(user.totpToken, row.totpSecret)
                 else if (row.totpEnabled)
                     throw({fn: 'BadParameters', message: 'Missing TOTP token'})
-                var refreshToken = jwt.sign({sessionId: null, userId: row._id}, auth.jwtRefreshSecret)
-                return User.updateRefreshToken(refreshToken, userAgent)
+                return auth.createSessionForUser(row, userAgent)
             }
             else {
                 if (!row) {

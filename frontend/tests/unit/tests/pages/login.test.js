@@ -12,7 +12,8 @@ vi.mock('@/services/user', () => ({
   default: {
     getToken: vi.fn(),
     initUser: vi.fn(),
-    isInit: vi.fn()
+    isInit: vi.fn(),
+    getOidcConfig: vi.fn()
   }
 }))
 
@@ -107,6 +108,7 @@ describe('Login Page', () => {
     })
 
     vi.clearAllMocks()
+    UserService.getOidcConfig.mockResolvedValue({data: {datas: {enabled: false, displayName: 'SSO'}}})
   })
 
   const createWrapper = (options = {}) => {
@@ -170,6 +172,26 @@ describe('Login Page', () => {
       await wrapper.vm.$nextTick()
 
       expect(UserService.isInit).toHaveBeenCalled()
+    })
+
+    it('should expose the configured OIDC login provider', async () => {
+      UserService.isInit.mockResolvedValue({data: {datas: false}})
+      UserService.getOidcConfig.mockResolvedValue({
+        data: {datas: {enabled: true, displayName: 'Company SSO'}}
+      })
+
+      wrapper = createWrapper()
+      await vi.waitFor(() => expect(wrapper.vm.oidcEnabled).toBe(true))
+      expect(wrapper.vm.oidcDisplayName).toBe('Company SSO')
+    })
+
+    it('should keep local login available when OIDC configuration cannot be loaded', async () => {
+      UserService.isInit.mockResolvedValue({data: {datas: false}})
+      UserService.getOidcConfig.mockRejectedValue(new Error('unavailable'))
+
+      wrapper = createWrapper()
+      await vi.waitFor(() => expect(wrapper.vm.loaded).toBe(true))
+      expect(wrapper.vm.oidcEnabled).toBe(false)
     })
 
     it('should show registration form when system is not initialized', async () => {

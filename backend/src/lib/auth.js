@@ -1,5 +1,6 @@
 // Dynamic generation of JWT Secret if not exist (different for each environnment)
 var fs = require('fs')
+var jwt = require('jsonwebtoken')
 var env = process.env.NODE_ENV || 'dev'
 var config = require('../config/config.json')
 var permissionsCatalog = require('./permissions-catalog')
@@ -20,6 +21,24 @@ exports.jwtSecret = jwtSecret
 
 var jwtRefreshSecret = config[env].jwtRefreshSecret
 exports.jwtRefreshSecret = jwtRefreshSecret
+
+// Create a PwnDoc session once an authentication provider has identified a user.
+// Keeping session issuance separate from credential verification allows other
+// providers to reuse the existing JWT and refresh-token lifecycle.
+function createSessionForUser(user, userAgent, options = {}) {
+    var refreshPayload = {sessionId: null, userId: user._id}
+    if (options.externalAuthExpiresAt)
+        refreshPayload.externalAuthExpiresAt = options.externalAuthExpiresAt
+    var refreshToken = jwt.sign(refreshPayload, jwtRefreshSecret)
+    return user.constructor.updateRefreshToken(refreshToken, userAgent)
+}
+exports.createSessionForUser = createSessionForUser
+
+function setSessionCookies(res, session) {
+    res.cookie('token', `JWT ${session.token}`, {sameSite: 'strict', secure: true, httpOnly: true})
+    res.cookie('refreshToken', session.refreshToken, {sameSite: 'strict', secure: true, httpOnly: true, path: '/api/users/refreshtoken'})
+}
+exports.setSessionCookies = setSessionCookies
 
 /*  ROLES LOGIC
 
@@ -95,7 +114,6 @@ class ACL {
 
     hasPermission (permission) {
         var Response = require('./httpResponse')
-        var jwt = require('jsonwebtoken')
 
         return (req, res, next) => {
             if (!req.cookies['token']) {

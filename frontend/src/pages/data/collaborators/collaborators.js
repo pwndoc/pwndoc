@@ -52,7 +52,9 @@ export default {
                 phone: '',
                 jobTitle: '',
                 password: '',
-                totpEnabled: false
+                totpEnabled: false,
+                oidcIssuer: '',
+                oidcSubject: ''
             },
             // Username to identify collab to update
             idUpdate: '',
@@ -146,7 +148,14 @@ export default {
             if (this.errors.lastname || this.errors.firstname || this.errors.username || !this.$refs.pwdUpdateRef.validate())
                 return;
             
-            CollabService.updateCollab(this.idUpdate, this.currentCollab)
+            const collab = {...this.currentCollab}
+            const issuer = collab.oidcIssuer && collab.oidcIssuer.trim()
+            const subject = collab.oidcSubject && collab.oidcSubject.trim()
+            delete collab.oidcIssuer
+            delete collab.oidcSubject
+            collab.oidc = issuer || subject ? {issuer, subject} : null
+
+            CollabService.updateCollab(this.idUpdate, collab)
             .then(() => {
                 this.getCollabs();
                 this.$refs.editModal.hide();
@@ -184,6 +193,8 @@ export default {
         clone: function(row) {
             this.currentCollab = this.$_.clone(row);
             this.currentCollab.roles = this.currentCollab.roles || [];
+            this.currentCollab.oidcIssuer = row.oidc ? row.oidc.issuer : '';
+            this.currentCollab.oidcSubject = row.oidc ? row.oidc.subject : '';
             this.idUpdate = row._id;
         },
 
@@ -203,6 +214,8 @@ export default {
             this.currentCollab.email = '';
             this.currentCollab.phone = '';
             this.currentCollab.jobTitle = '';
+            this.currentCollab.oidcIssuer = '';
+            this.currentCollab.oidcSubject = '';
         },
 
         dblClick: function(evt, row) {
