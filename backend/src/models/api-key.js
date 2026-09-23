@@ -141,7 +141,7 @@ ApiKeySchema.statics.toggle = async function(keyId, userId, isAdmin = false) {
     }
     const keyDoc = await this.findOneAndUpdate(query,
         [{ $set: { enabled: { $not: ['$enabled'] } } }],
-        { new: true, projection: { name: 1, enabled: 1, prefix: 1 } });
+        { new: true, updatePipeline: true, projection: { name: 1, enabled: 1, prefix: 1 } });
     if (!keyDoc) {
         throw { fn: 'NotFound', message: 'API Key not found or access denied' };
     }

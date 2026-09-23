@@ -85,8 +85,6 @@ class ACL {
     }
 
     isAllowed(roleNames, permission) {
-        if (Array.isArray(roleNames) && roleNames.length === 0)
-            return false
         return this.normalizeRoleNames(roleNames).some(roleName => this.roleAllows(roleName, permission))
     }
 

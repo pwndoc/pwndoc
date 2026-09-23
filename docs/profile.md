@@ -50,3 +50,29 @@ Once enabled, you will be prompted for your TOTP token on each login after enter
 ### Status
 
 When 2FA is active, the section shows: *"Your account is currently protected by 2 factor authentication."*
+
+## API Keys
+
+Administrators can grant API key management through custom roles. These permissions
+are opt-in and are not included in the default user role:
+
+- `apikeys:create`: create keys using an interactive session.
+- `apikeys:read`, `apikeys:update`, `apikeys:delete`: list, toggle, and revoke your own keys.
+- The corresponding `read-all`, `update-all`, and `delete-all` permissions allow management across owners.
+
+The profile page displays the actions your permissions allow. Choose a name and
+expiration (or Never), then copy the secret when it is displayed. Closing the
+dialog clears the displayed secret; it cannot be retrieved later.
+
+API clients can send a key through `X-API-Key`, `Authorization: ApiKey`, or
+`Authorization: Bearer`. Treat the key as a password and use HTTPS.
+
+Each key stores explicit roles. If roles are omitted at creation, the current
+owner's roles are recorded; an explicit selection must be a nonempty subset of
+those roles. Every request uses only key roles that the owner still holds.
+Removing all matching roles, disabling the owner or key, expiration, and
+revocation prevent further access. Keys cannot create additional keys.
+Individual permission overrides are not supported.
+
+Keys created by earlier versions of this unmerged feature with no explicit roles
+must be recreated. Empty-role keys do not inherit the owner's permissions.
