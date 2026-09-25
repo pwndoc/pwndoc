@@ -318,6 +318,7 @@ import { Editor, EditorContent, BubbleMenu, VueNodeViewRenderer } from '@tiptap/
 // Import Extensions
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Code from '@tiptap/extension-code'
+import Link from '@tiptap/extension-link'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import CustomImage from './editor-image'
@@ -426,6 +427,13 @@ export default {
                         },
                         codeBlock: false,
                         code: false
+                    }),
+                    Link.configure({
+                        openOnClick: true,
+                        HTMLAttributes: {
+                            target: '_blank',
+                            rel: 'noopener noreferrer'
+                        }
                     }),
                     Underline,
                     CustomImage,
@@ -994,7 +1002,9 @@ export default {
     }
 
     a {
-      color: inherit;
+      color: var(--q-primary);
+      cursor: pointer;
+      text-decoration: underline;
     }
 
     blockquote {
