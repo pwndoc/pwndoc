@@ -19,6 +19,12 @@
                 </q-item-section>
                 <q-item-section>{{$t('roles')}}</q-item-section>
             </q-item>
+            <q-item v-if="userStore.isAllowed('apikeys:read-all')" to='/data/api-keys'>
+                <q-item-section avatar>
+                    <q-icon name="fa fa-key" />
+                </q-item-section>
+                <q-item-section>{{$t('apiKeys.adminTitle')}}</q-item-section>
+            </q-item>
             <q-item to='/data/companies'>
                 <q-item-section avatar>
                     <q-icon name="fa fa-building" />

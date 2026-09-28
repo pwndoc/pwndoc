@@ -77,6 +77,7 @@ require('./models/image');
 require('./models/settings');
 require('./models/dictionary');
 require('./models/languagetool-rule');
+require('./models/api-key');
 
 // Socket IO configuration
 io.on('connection', (socket) => {
@@ -182,6 +183,7 @@ require('./routes/test-utils')(app);
 require('./routes/spellcheck')(app);
 require('./routes/languagetool-rules')(app);
 require('./routes/ai')(app, io);
+require('./routes/api-key')(app);
 
 app.all(/(.*)/, function(req, res) {
     res.status(404).json({"status": "error", "data": "Route undefined"});

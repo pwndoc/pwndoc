@@ -93,6 +93,19 @@ const catalog = [
         ]
     },
     {
+        key: 'apikeys',
+        label: 'API Keys',
+        permissions: [
+            {scope: 'apikeys:create', core: false},
+            {scope: 'apikeys:read', core: false},
+            {scope: 'apikeys:read-all', core: false},
+            {scope: 'apikeys:update', core: false},
+            {scope: 'apikeys:update-all', core: false},
+            {scope: 'apikeys:delete', core: false},
+            {scope: 'apikeys:delete-all', core: false}
+        ]
+    },
+    {
         key: 'roles',
         label: 'Roles',
         permissions: [

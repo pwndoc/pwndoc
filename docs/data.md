@@ -23,6 +23,12 @@ The Collaborators table supports bulk role and status updates. Select users in t
 
 Roles are managed in **Data > Roles**. See [Roles](/roles.md) for the permission matrix and built-in role behavior.
 
+## API Keys
+
+Administrators (or any role with `apikeys:read-all`) can open **Data > API Keys** to list keys for every user: owner, name, prefix, roles, dates, and enabled status. From that page you can toggle or revoke keys if you also have `apikeys:update-all` / `apikeys:delete-all`.
+
+Users create and manage their own keys on the [Profile](/profile.md) page. Plaintext secrets are shown only once at creation and never in the admin list.
+
 
 ## Companies
 

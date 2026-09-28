@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
+import { useUserStore } from '@/stores/user'
+import { Notify, copyToClipboard } from 'quasar'
 import { createRouter, createWebHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
 import ProfilePage from '@/pages/profile/index.vue'
 import UserService from '@/services/user'
+import ApiKeyService from '@/services/api-key'
 import Utils from '@/services/utils'
 
 // Mock dependencies
@@ -25,13 +28,26 @@ vi.mock('@/services/utils', () => ({
   }
 }))
 
+vi.mock('@/services/api-key', () => ({
+  default: {
+    getApiKeys: vi.fn(() => Promise.resolve({ data: { datas: [] } })),
+    createApiKey: vi.fn(),
+    deleteApiKey: vi.fn(),
+    toggleApiKey: vi.fn()
+  }
+}))
+
 vi.mock('quasar', async () => {
   const actual = await vi.importActual('quasar')
   return {
     ...actual,
     Notify: {
       create: vi.fn()
-    }
+    },
+    Dialog: {
+      create: vi.fn(() => ({ onOk: vi.fn(cb => { cb(); return { onOk: vi.fn() } }) }))
+    },
+    copyToClipboard: vi.fn(() => Promise.resolve())
   }
 })
 
@@ -66,6 +82,8 @@ describe('Profile Page', () => {
   beforeEach(() => {
     pinia = createPinia()
     setActivePinia(pinia)
+    useUserStore().permissions = '*'
+    useUserStore().roles = ['user']
 
     router = createRouter({
       history: createWebHistory(),
@@ -102,6 +120,7 @@ describe('Profile Page', () => {
     })
 
     vi.clearAllMocks()
+    ApiKeyService.getApiKeys.mockResolvedValue({ data: { datas: [] } })
 
     // Default mock for getProfile
     UserService.getProfile.mockResolvedValue({
@@ -695,4 +714,168 @@ describe('Profile Page', () => {
       )
     })
   })
+
+  describe('API Keys Management', () => {
+    it('does not request keys without read permission', async () => {
+      useUserStore().permissions = []
+      wrapper = createWrapper()
+      await flushPromises()
+      expect(ApiKeyService.getApiKeys).not.toHaveBeenCalled()
+    })
+
+    it('creates keys without expiration and prevents duplicate submissions', async () => {
+      let complete
+      ApiKeyService.createApiKey.mockReturnValueOnce(new Promise(resolve => { complete = resolve }))
+      wrapper = createWrapper()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
+      wrapper.vm.newApiKey = { name: 'Permanent', expirationDays: 0, roles: ['user'] }
+      const pending = wrapper.vm.createApiKey()
+      wrapper.vm.createApiKey()
+      expect(ApiKeyService.createApiKey).toHaveBeenCalledTimes(1)
+      expect(ApiKeyService.createApiKey).toHaveBeenCalledWith({ name: 'Permanent', expiresAt: null, roles: ['user'] })
+      expect(wrapper.vm.creatingApiKey).toBe(true)
+      complete({ data: { datas: { apiKey: 'test-key' } } })
+      await pending
+      expect(wrapper.vm.creatingApiKey).toBe(false)
+    })
+
+    it('clears stale validation before reopening creation', async () => {
+      wrapper = createWrapper()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
+      wrapper.vm.apiKeyErrors.name = 'Previous error'
+      wrapper.vm.openCreateApiKey()
+      expect(wrapper.vm.apiKeyErrors.name).toBe('')
+      expect(wrapper.vm.newApiKey.roles).toEqual(['user'])
+      expect(wrapper.vm.showCreateApiKeyModal).toBe(true)
+    })
+
+    it('requires at least one role when creating API key', async () => {
+      wrapper = createWrapper()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
+      wrapper.vm.newApiKey = { name: 'No Roles', expirationDays: 90, roles: [] }
+      wrapper.vm.createApiKey()
+      expect(wrapper.vm.apiKeyErrors.roles).toBe('apiKeys.rolesRequired')
+      expect(ApiKeyService.createApiKey).not.toHaveBeenCalled()
+    })
+
+    it('reports list and clipboard failures', async () => {
+      ApiKeyService.getApiKeys.mockRejectedValueOnce(new Error('offline'))
+      wrapper = createWrapper()
+      await flushPromises()
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({message: 'apiKeys.loadFailed'}))
+      copyToClipboard.mockRejectedValueOnce(new Error('denied'))
+      await wrapper.vm.copyApiKey()
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({message: 'apiKeys.copyFailed'}))
+    })
+
+    it('preserves the displayed status on update failure', async () => {
+      ApiKeyService.toggleApiKey.mockRejectedValueOnce(new Error('offline'))
+      wrapper = createWrapper()
+      const row = { _id: 'key1', enabled: true }
+      await wrapper.vm.toggleApiKey(row)
+      expect(row.enabled).toBe(true)
+      expect(wrapper.vm.updatingApiKeys).toEqual([])
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({message: 'apiKeys.updateFailed'}))
+    })
+
+    it('refreshes the list after revocation', async () => {
+      ApiKeyService.getApiKeys.mockResolvedValueOnce({ data: { datas: [{_id: 'key1'}] } })
+      ApiKeyService.deleteApiKey.mockResolvedValueOnce({ data: {} })
+      wrapper = createWrapper()
+      await flushPromises()
+      expect(wrapper.vm.apiKeys).toHaveLength(1)
+      wrapper.vm.confirmRevokeApiKey({_id: 'key1'})
+      await flushPromises()
+      expect(wrapper.vm.apiKeys).toEqual([])
+    })
+    it('fetches API keys on mount', async () => {
+      ApiKeyService.getApiKeys.mockResolvedValue({
+        data: {
+          datas: [
+            { _id: 'key1', name: 'Test Key', prefix: 'pwn_abc...123', enabled: true, createdAt: new Date() }
+          ]
+        }
+      })
+      wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+      await wrapper.vm.$nextTick()
+
+      expect(ApiKeyService.getApiKeys).toHaveBeenCalled()
+      expect(wrapper.vm.apiKeys.length).toBe(1)
+      expect(wrapper.vm.apiKeys[0].name).toBe('Test Key')
+    })
+
+    it('validates name required when creating API key', async () => {
+      wrapper = createWrapper()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
+
+      wrapper.vm.newApiKey = { name: '', expirationDays: 90, roles: ['user'] }
+      wrapper.vm.createApiKey()
+
+      expect(wrapper.vm.apiKeyErrors.name).toBe('apiKeys.nameRequired')
+      expect(ApiKeyService.createApiKey).not.toHaveBeenCalled()
+    })
+
+    it('creates API key successfully and shows display modal', async () => {
+      ApiKeyService.createApiKey.mockResolvedValue({
+        data: {
+          datas: {
+            _id: 'new_key_id',
+            apiKey: 'pwn_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+            name: 'CI Pipeline',
+            prefix: 'pwn_0123...cdef'
+          }
+        }
+      })
+
+      wrapper = createWrapper()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
+
+      wrapper.vm.newApiKey = { name: 'CI Pipeline', expirationDays: 30, roles: ['user'] }
+      await wrapper.vm.createApiKey()
+      await wrapper.vm.$nextTick()
+
+      expect(ApiKeyService.createApiKey).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'CI Pipeline',
+          expiresAt: expect.any(String),
+          roles: ['user']
+        })
+      )
+      expect(wrapper.vm.createdApiKey).toBe('pwn_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+      expect(wrapper.vm.showKeyDisplayModal).toBe(true)
+      expect(wrapper.vm.showCreateApiKeyModal).toBe(false)
+    })
+
+    it('toggles API key enabled state', async () => {
+      ApiKeyService.toggleApiKey.mockResolvedValue({ data: { datas: { enabled: false } } })
+
+      wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+
+      const row = { _id: 'key1', enabled: true }
+      await wrapper.vm.toggleApiKey(row)
+
+      expect(ApiKeyService.toggleApiKey).toHaveBeenCalledWith('key1')
+      expect(row.enabled).toBe(false)
+    })
+
+    it('confirms and revokes API key', async () => {
+      ApiKeyService.deleteApiKey.mockResolvedValue({ data: { datas: 'API Key revoked successfully' } })
+
+      wrapper = createWrapper()
+      await wrapper.vm.$nextTick()
+
+      const row = { _id: 'key1', name: 'Test Key' }
+      await wrapper.vm.confirmRevokeApiKey(row)
+
+      expect(ApiKeyService.deleteApiKey).toHaveBeenCalledWith('key1')
+    })
+  })
 })
+
