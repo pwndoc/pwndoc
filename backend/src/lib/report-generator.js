@@ -18,7 +18,20 @@ var Image = require('mongoose').model('Image');
 var Settings = require('mongoose').model('Settings');
 const cvss = require('ae-cvss-calculator');
 var translate = require('../translate')
+var { applyDraftExport, resolveDraftWatermarkText } = require('./docx-watermark')
 var $t
+
+function shouldApplyDraftWatermark(audit, settings) {
+    if (!(
+        settings.reviews?.enabled &&
+        settings.reviews?.public?.mandatoryReview &&
+        settings.reviews?.public?.allowDraftExports &&
+        audit.state !== 'APPROVED'
+    ))
+        return false;
+
+    return !!resolveDraftWatermarkText(settings.reviews.public.draftWatermark, audit.language);
+}
 
 // Generate document with docxtemplater
 async function generateDoc(audit) {
@@ -112,9 +125,15 @@ async function generateDoc(audit) {
     }
     var buf = doc.getZip().generate({type:"nodebuffer"});
 
+    if (shouldApplyDraftWatermark(audit, settings)) {
+        var watermarkText = resolveDraftWatermarkText(settings.reviews.public.draftWatermark, audit.language);
+        buf = applyDraftExport(buf, watermarkText);
+    }
+
     return buf;
 }
 exports.generateDoc = generateDoc;
+exports.shouldApplyDraftWatermark = shouldApplyDraftWatermark;
 
 // Filters helper: handles the use of preformated easilly translatable strings.
 // Source: https://www.tutorialstonight.com/javascript-string-format.php

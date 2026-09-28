@@ -331,7 +331,33 @@ module.exports = function(request, app) {
 
         response = await request(app).put('/api/settings')
           .set('Cookie', [`token=JWT ${adminToken}`])
-          .send({reviews: {public: {mandatoryReview: false, minReviewers: 1}}})
+          .send({reviews: {public: {
+            mandatoryReview: true,
+            minReviewers: 1,
+            allowDraftExports: true,
+            draftWatermark: [{locale: 'en', value: 'DRAFT COPY'}]
+          }}})
+        expect(response.status).toBe(200)
+
+        response = await request(app).get(`/api/audits/${parentAuditId}/generate`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+        expect([200, 422, 500]).toContain(response.status)
+        if (response.status === 200) {
+          expect(Buffer.isBuffer(response.body) || typeof response.body === 'object').toBe(true)
+          // Watermark injection should leave a recognizable textpath string in the DOCX zip
+          var PizZip = require('pizzip')
+          var zip = new PizZip(response.body)
+          var headerXml = Object.keys(zip.files)
+            .filter(f => /^word\/header\d+\.xml$/.test(f))
+            .map(f => zip.file(f).asText())
+            .join('')
+          expect(headerXml).toContain('DRAFT COPY')
+          expect(zip.file('word/settings.xml').asText()).toContain('w:edit="readOnly"')
+        }
+
+        response = await request(app).put('/api/settings')
+          .set('Cookie', [`token=JWT ${adminToken}`])
+          .send({reviews: {public: {mandatoryReview: false, minReviewers: 1, allowDraftExports: false}}})
         expect(response.status).toBe(200)
 
         response = await request(app).get(`/api/audits/${parentAuditId}/generate`)

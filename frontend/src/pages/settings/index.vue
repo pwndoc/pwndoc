@@ -539,6 +539,39 @@
                         </q-item-section>
                     </q-item>
                 </q-card-section>
+                <template v-if="settings.reviews.public.mandatoryReview">
+                    <q-separator />
+                    <q-card-section>
+                        <div class="text-bold">{{$t('allowDraftExports')}}</div>
+                        <br/>
+                        <div class="text-grey-8" v-html="$t('allowDraftExportsInfo')"></div>
+                    </q-card-section>
+                    <q-card-section>
+                        <q-toggle
+                            :label="$t('btn.enable')"
+                            v-model="settings.reviews.public.allowDraftExports"
+                            color="primary"
+                            keep-color
+                            :disable="!canEdit || !settings.reviews.enabled"
+                        />
+                    </q-card-section>
+                    <q-card-section v-if="settings.reviews.public.allowDraftExports">
+                        <div class="text-grey-8 q-mb-md">{{$t('draftWatermarkDescription')}}</div>
+                        <div v-for="language of languages" :key="language.locale" class="q-mb-sm">
+                            <q-input
+                                :model-value="getDraftWatermarkValue(language.locale)"
+                                @update:model-value="val => setDraftWatermarkValue(language.locale, val)"
+                                :label="language.language"
+                                :disable="!canEdit || !settings.reviews.enabled"
+                                outlined
+                                dense
+                            />
+                        </div>
+                        <div v-if="languages.length === 0" class="text-grey-7 text-italic">
+                            {{$t('noLanguagesConfigured')}}
+                        </div>
+                    </q-card-section>
+                </template>
             </q-card>
 
             <q-card v-if="userStore.isAllowed('backups:read')" class="q-my-lg">
