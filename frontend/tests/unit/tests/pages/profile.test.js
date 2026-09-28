@@ -83,6 +83,7 @@ describe('Profile Page', () => {
     pinia = createPinia()
     setActivePinia(pinia)
     useUserStore().permissions = '*'
+    useUserStore().roles = ['user']
 
     router = createRouter({
       history: createWebHistory(),
@@ -726,23 +727,38 @@ describe('Profile Page', () => {
       let complete
       ApiKeyService.createApiKey.mockReturnValueOnce(new Promise(resolve => { complete = resolve }))
       wrapper = createWrapper()
-      wrapper.vm.newApiKey = { name: 'Permanent', expirationDays: 0 }
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
+      wrapper.vm.newApiKey = { name: 'Permanent', expirationDays: 0, roles: ['user'] }
       const pending = wrapper.vm.createApiKey()
       wrapper.vm.createApiKey()
       expect(ApiKeyService.createApiKey).toHaveBeenCalledTimes(1)
-      expect(ApiKeyService.createApiKey).toHaveBeenCalledWith({ name: 'Permanent', expiresAt: null })
+      expect(ApiKeyService.createApiKey).toHaveBeenCalledWith({ name: 'Permanent', expiresAt: null, roles: ['user'] })
       expect(wrapper.vm.creatingApiKey).toBe(true)
       complete({ data: { datas: { apiKey: 'test-key' } } })
       await pending
       expect(wrapper.vm.creatingApiKey).toBe(false)
     })
 
-    it('clears stale validation before reopening creation', () => {
+    it('clears stale validation before reopening creation', async () => {
       wrapper = createWrapper()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
       wrapper.vm.apiKeyErrors.name = 'Previous error'
       wrapper.vm.openCreateApiKey()
       expect(wrapper.vm.apiKeyErrors.name).toBe('')
+      expect(wrapper.vm.newApiKey.roles).toEqual(['user'])
       expect(wrapper.vm.showCreateApiKeyModal).toBe(true)
+    })
+
+    it('requires at least one role when creating API key', async () => {
+      wrapper = createWrapper()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
+      wrapper.vm.newApiKey = { name: 'No Roles', expirationDays: 90, roles: [] }
+      wrapper.vm.createApiKey()
+      expect(wrapper.vm.apiKeyErrors.roles).toBe('apiKeys.rolesRequired')
+      expect(ApiKeyService.createApiKey).not.toHaveBeenCalled()
     })
 
     it('reports list and clipboard failures', async () => {
@@ -794,9 +810,10 @@ describe('Profile Page', () => {
 
     it('validates name required when creating API key', async () => {
       wrapper = createWrapper()
-      await wrapper.vm.$nextTick()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
 
-      wrapper.vm.newApiKey = { name: '', expirationDays: 90 }
+      wrapper.vm.newApiKey = { name: '', expirationDays: 90, roles: ['user'] }
       wrapper.vm.createApiKey()
 
       expect(wrapper.vm.apiKeyErrors.name).toBe('apiKeys.nameRequired')
@@ -816,16 +833,18 @@ describe('Profile Page', () => {
       })
 
       wrapper = createWrapper()
-      await wrapper.vm.$nextTick()
+      await flushPromises()
+      wrapper.vm.user = { ...mockUser }
 
-      wrapper.vm.newApiKey = { name: 'CI Pipeline', expirationDays: 30 }
+      wrapper.vm.newApiKey = { name: 'CI Pipeline', expirationDays: 30, roles: ['user'] }
       await wrapper.vm.createApiKey()
       await wrapper.vm.$nextTick()
 
       expect(ApiKeyService.createApiKey).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'CI Pipeline',
-          expiresAt: expect.any(String)
+          expiresAt: expect.any(String),
+          roles: ['user']
         })
       )
       expect(wrapper.vm.createdApiKey).toBe('pwn_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')

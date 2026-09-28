@@ -67,12 +67,12 @@ dialog clears the displayed secret; it cannot be retrieved later.
 API clients can send a key through `X-API-Key`, `Authorization: ApiKey`, or
 `Authorization: Bearer`. Treat the key as a password and use HTTPS.
 
-Each key stores explicit roles. If roles are omitted at creation, the current
-owner's roles are recorded; an explicit selection must be a nonempty subset of
-those roles. Every request uses only key roles that the owner still holds.
+Each key stores explicit roles. When creating a key on the Profile page, pick a
+nonempty subset of your current roles (all are selected by default). An explicit
+API selection must also be a nonempty subset of those roles. Every request uses
+only key roles that the owner still holds.
 Removing all matching roles, disabling the owner or key, expiration, and
 revocation prevent further access. Keys cannot create additional keys.
 Individual permission overrides are not supported.
 
-Keys created by earlier versions of this unmerged feature with no explicit roles
-must be recreated. Empty-role keys do not inherit the owner's permissions.
+Administrators can review keys for all users under **Data > API Keys**.

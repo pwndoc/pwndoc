@@ -3,19 +3,18 @@ module.exports = function(app) {
     const acl = require('../lib/auth').acl;
     const ApiKey = require('mongoose').model('ApiKey');
 
-    // Listing other owners' keys requires the explicit read-all permission.
+    // Get API keys for the current user
     app.get("/api/apikeys", acl.hasPermission('apikeys:read'), function(req, res) {
-        if (req.query.all === 'true' && !acl.isAllowedToken(req.decodedToken, 'apikeys:read-all'))
-            return Response.Forbidden(res, 'Insufficient privileges');
-        if (req.query.all === 'true') {
-            ApiKey.getAll()
-            .then(keys => Response.Ok(res, keys))
-            .catch(err => Response.Internal(res, err));
-        } else {
-            ApiKey.getByUser(req.decodedToken.id)
-            .then(keys => Response.Ok(res, keys))
-            .catch(err => Response.Internal(res, err));
-        }
+        ApiKey.getByUser(req.decodedToken.id)
+        .then(keys => Response.Ok(res, keys))
+        .catch(err => Response.Internal(res, err));
+    });
+
+    // Get API keys for all users
+    app.get("/api/apikeys/all", acl.hasPermission('apikeys:read-all'), function(req, res) {
+        ApiKey.getAll()
+        .then(keys => Response.Ok(res, keys))
+        .catch(err => Response.Internal(res, err));
     });
 
     // Create a new API key

@@ -24,8 +24,8 @@ export default {
             showCreateApiKeyModal: false,
             showKeyDisplayModal: false,
             createdApiKey: '',
-            newApiKey: { name: '', expirationDays: 90 },
-            apiKeyErrors: { name: '' },
+            newApiKey: { name: '', expirationDays: 90, roles: [] },
+            apiKeyErrors: { name: '', roles: '' },
             expirationOptions: [
                 { label: $t('apiKeys.days30'), value: 30 },
                 { label: $t('apiKeys.days60'), value: 60 },
@@ -36,6 +36,7 @@ export default {
             apiKeyColumns: [
                 { name: 'name', label: $t('apiKeys.name'), field: 'name', align: 'left', sortable: true },
                 { name: 'prefix', label: $t('apiKeys.key'), field: 'prefix', align: 'left' },
+                { name: 'roles', label: $t('roles'), field: 'roles', align: 'left' },
                 { name: 'createdAt', label: $t('apiKeys.created'), field: row => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '', align: 'left', sortable: true },
                 { name: 'lastUsed', label: $t('apiKeys.lastUsed'), field: row => row.lastUsed ? new Date(row.lastUsed).toLocaleDateString() : $t('apiKeys.never'), align: 'left', sortable: true },
                 { name: 'expiresAt', label: $t('apiKeys.expires'), field: row => row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : $t('apiKeys.never'), align: 'left', sortable: true },
@@ -46,7 +47,13 @@ export default {
     },
 
     computed: {
-        userStore: () => useUserStore()
+        userStore: () => useUserStore(),
+        availableApiKeyRoles: function() {
+            const roles = Array.isArray(this.user.roles) && this.user.roles.length
+                ? this.user.roles
+                : (this.userStore.roles || [])
+            return [...new Set(roles)].map(role => ({ label: role, value: role }))
+        }
     },
 
     mounted: function() {
@@ -181,8 +188,9 @@ export default {
 
         // API Keys Management Methods
         openCreateApiKey: function() {
-            this.apiKeyErrors.name = '';
-            this.newApiKey = { name: '', expirationDays: 90 };
+            this.apiKeyErrors = { name: '', roles: '' };
+            const roles = this.availableApiKeyRoles.map(option => option.value);
+            this.newApiKey = { name: '', expirationDays: 90, roles: [...roles] };
             this.showCreateApiKeyModal = true;
         },
 
@@ -201,9 +209,15 @@ export default {
 
         createApiKey: function() {
             if (this.creatingApiKey) return;
-            this.apiKeyErrors.name = '';
+            this.apiKeyErrors = { name: '', roles: '' };
             if (!this.newApiKey.name || !this.newApiKey.name.trim()) {
                 this.apiKeyErrors.name = $t('apiKeys.nameRequired');
+                return;
+            }
+            const allowedRoles = this.availableApiKeyRoles.map(option => option.value);
+            const roles = [...new Set((this.newApiKey.roles || []).filter(role => allowedRoles.includes(role)))];
+            if (!roles.length) {
+                this.apiKeyErrors.roles = $t('apiKeys.rolesRequired');
                 return;
             }
 
@@ -215,13 +229,14 @@ export default {
             this.creatingApiKey = true;
             return ApiKeyService.createApiKey({
                 name: this.newApiKey.name.trim(),
-                expiresAt: expiresAt
+                expiresAt: expiresAt,
+                roles
             })
             .then((res) => {
                 this.createdApiKey = res.data.datas.apiKey;
                 this.showCreateApiKeyModal = false;
                 this.showKeyDisplayModal = true;
-                this.newApiKey = { name: '', expirationDays: 90 };
+                this.newApiKey = { name: '', expirationDays: 90, roles: [] };
                 this.getApiKeys();
                 Notify.create({
                     message: $t('apiKeys.createdOk'),

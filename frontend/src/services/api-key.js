@@ -5,6 +5,10 @@ export default {
         return api.get('apikeys');
     },
 
+    getAll: function() {
+        return api.get('apikeys/all');
+    },
+
     createApiKey: function(data) {
         return api.post('apikeys', data);
     },

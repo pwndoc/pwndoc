@@ -843,6 +843,9 @@ export default {
         generateBtn: 'Generate New Key',
         createTitle: 'Generate New API Key',
         keyName: 'Key Name *',
+        roles: 'Roles *',
+        rolesHint: 'Choose a nonempty subset of your current roles.',
+        rolesRequired: 'Select at least one role',
         expiration: 'Expiration',
         noKeys: 'No API keys generated yet',
         createdSuccessTitle: 'API Key Generated',
@@ -854,7 +857,12 @@ export default {
         revokedOk: 'API Key revoked successfully',
         statusUpdatedOk: 'API Key status updated successfully',
         confirmRevokeTitle: 'Revoke API Key',
-        confirmRevokeMsg: 'Are you sure you want to revoke this API Key? Any application or script using this key will immediately lose access.'
+        confirmRevokeMsg: 'Are you sure you want to revoke this API Key? Any application or script using this key will immediately lose access.',
+        confirmRevokeAdminMsg: 'Revoke API key "{name}" owned by {owner}? Any application or script using this key will immediately lose access.',
+        adminTitle: 'API Keys',
+        adminDescription: 'Review and manage API keys across all users. Plaintext secrets are never shown here.',
+        owner: 'Owner',
+        searchPlaceholder: 'Search by name, prefix, owner, or role'
     },
     reports: 'Reports',
     reportsImagesBorder: 'Report Images border',

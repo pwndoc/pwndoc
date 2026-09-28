@@ -56,7 +56,7 @@ module.exports = function(request, app) {
         const acl = require('../src/lib/auth').acl;
         expect(acl.isAllowed(['user'], 'apikeys:create')).toBe(false);
         expect(acl.isAllowed(['user'], 'apikeys:read')).toBe(false);
-        const response = await request(app).get('/api/apikeys?all=true')
+        const response = await request(app).get('/api/apikeys/all')
           .set('Cookie', [`token=JWT ${userToken}`]);
         expect(response.status).toBe(403);
       });
@@ -132,7 +132,7 @@ module.exports = function(request, app) {
           }, auth.jwtSecret);
           const cookie = [`token=JWT ${token}`];
           const key = await mongoose.model('ApiKey').generateKey(adminUserId, {name: 'Managed key'});
-          expect((await request(app).get('/api/apikeys?all=true').set('Cookie', cookie)).status).toBe(200);
+          expect((await request(app).get('/api/apikeys/all').set('Cookie', cookie)).status).toBe(200);
           expect((await request(app).put(`/api/apikeys/${key._id}/toggle`).set('Cookie', cookie)).body.datas.enabled).toBe(false);
           expect((await request(app).delete(`/api/apikeys/${key._id}`).set('Cookie', cookie)).status).toBe(200);
         } finally {
@@ -324,8 +324,8 @@ module.exports = function(request, app) {
         await User.updateOne({ _id: normalUserId }, { enabled: true });
       });
 
-      it('Admin can list all API keys with ?all=true', async () => {
-        const response = await request(app).get('/api/apikeys?all=true')
+      it('Admin can list all API keys with /apikeys/all', async () => {
+        const response = await request(app).get('/api/apikeys/all')
           .set('Cookie', [`token=JWT ${adminToken}`]);
 
         expect(response.status).toBe(200);

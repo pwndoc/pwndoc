@@ -6,16 +6,16 @@
                     <div class="text-h6">{{$t('updateUserInformation')}}</div>
                 </q-card-section>
                 <q-separator />
-                <q-card-section class="row">
-	                    <q-list class="col-md-6 col-12">
-	                        <q-item>
-	                            <q-item-section side>{{$t('roles')}}</q-item-section>
-	                            <q-item-section>
-	                                <div>
-	                                    <q-chip v-for="role in user.roles" :key="role" dense square :label="role" class="q-ml-none text-white" :color="(role === 'admin')?'orange':'info'" />
-	                                </div>
-	                            </q-item-section>
-	                        </q-item>
+                <q-card-section>
+                    <q-list>
+                        <q-item>
+                            <q-item-section side>{{$t('roles')}}</q-item-section>
+                            <q-item-section>
+                                <div>
+                                    <q-chip v-for="role in user.roles" :key="role" dense square :label="role" class="q-ml-none text-white" :color="(role === 'admin')?'orange':'info'" />
+                                </div>
+                            </q-item-section>
+                        </q-item>
                         <q-item>
                             <q-item-section>
                                 <q-input 
@@ -115,8 +115,7 @@
                                 </q-input>
                             </q-item-section>
                         </q-item>
-                    </q-list>
-                    <q-list class="col-md-6 col-12">
+
                         <q-item>
                             <q-item-section>
                                 <q-toggle 
@@ -237,6 +236,22 @@
                         :no-data-label="$t('apiKeys.noKeys')"
                         flat
                     >
+                        <template v-slot:body-cell-roles="props">
+                            <q-td :props="props">
+                                <div class="row q-gutter-xs">
+                                    <q-chip
+                                        v-for="role in (props.row.roles || [])"
+                                        :key="role"
+                                        dense
+                                        square
+                                        :label="role"
+                                        :color="role === 'admin' ? 'orange' : 'info'"
+                                        text-color="white"
+                                        class="q-ma-none"
+                                    />
+                                </div>
+                            </q-td>
+                        </template>
                         <template v-slot:body-cell-enabled="props">
                             <q-td :props="props">
                                 <q-toggle
@@ -280,6 +295,20 @@
                             :error-message="apiKeyErrors.name"
                             outlined
                             autofocus
+                        />
+                        <q-select
+                            class="q-mt-sm"
+                            v-model="newApiKey.roles"
+                            :options="availableApiKeyRoles"
+                            :label="$t('apiKeys.roles')"
+                            :hint="$t('apiKeys.rolesHint')"
+                            :error="!!apiKeyErrors.roles"
+                            :error-message="apiKeyErrors.roles"
+                            multiple
+                            use-chips
+                            outlined
+                            emit-value
+                            map-options
                         />
                         <q-select
                             class="q-mt-sm"
