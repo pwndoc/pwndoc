@@ -171,11 +171,16 @@ SettingSchema.statics.getPublic = () => {
 };
 
 // Update Settings
+// Apply only provided leaf paths so a partial nested payload (e.g. reviews.public
+// with just minReviewers) does not wipe sibling fields back to schema defaults.
+// Top-level Mongo operators ($unset, …) become unknown paths and are ignored under strict.
 SettingSchema.statics.update = (settings) => {
     return new Promise((resolve, reject) => {
         Settings.findOne({})
             .then(current => {
-                current.set(settings);
+                Utils.getObjectPaths(settings || {}).forEach(path => {
+                    current.set(path, _.get(settings, path));
+                });
                 return current.save();
             })
             .then(settings => resolve(settings))
