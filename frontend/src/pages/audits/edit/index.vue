@@ -1,5 +1,5 @@
 <template>
-	<q-drawer v-model="drawerModel" side="left" :width="400" :behavior="isDesktop ? 'desktop' : 'mobile'" bordered>
+	<q-drawer v-model="drawerOpen" side="left" :width="400" :behavior="$q.screen.gt.sm ? 'desktop' : 'mobile'" show-if-above bordered>
 		<q-btn flat round dense icon="close" aria-label="Close audit navigation menu" class="audit-drawer-close" @click="closeDrawer" />
 		<q-splitter horizontal v-model="splitterRatio" :limits="[50, 80]" style="height: 100%">
 			<template v-slot:before>
@@ -419,8 +419,7 @@ export default {
 	data () {
 		return {
 			auditId: "",
-			desktopDrawerOpen: true,
-			mobileDrawerOpen: false,
+			drawerOpen: false,
 			users: [],
 			audit: auditR,
 			sections: [],
@@ -450,7 +449,7 @@ export default {
 
 	provide() {
 		return {
-			auditDrawerOpen: computed(() => this.drawerModel),
+			auditDrawerOpen: computed(() => this.drawerOpen),
 			openAuditDrawer: this.openDrawer,
 			frontEndAuditState: computed(() => this.frontEndAuditState),
 			auditParent: auditR,
@@ -536,15 +535,17 @@ export default {
 	},
 
 	watch: {
-		'$q.screen.gt.sm': function(isWide, wasWide) {
-			if (isWide && !wasWide) {
-				this.desktopDrawerOpen = true
-				this.mobileDrawerOpen = false
-				return
-			}
+		'$q.screen.gt.sm': {
+			flush: 'sync',
+			async handler(isWide, wasWide) {
+				if (!isWide || wasWide || !this.drawerOpen)
+					return
 
-			if (!isWide && wasWide)
-				this.mobileDrawerOpen = false
+				// Release QDrawer's mobile body scroll lock before reopening on desktop.
+				this.drawerOpen = false
+				await this.$nextTick()
+				this.drawerOpen = true
+			}
 		},
 
 		'audit.findings': {
@@ -618,23 +619,6 @@ export default {
 			return 'audit-qa-sidebar-host--retest'
 		},
 
-		isDesktop: function() {
-			return this.$q.screen.gt.sm
-		},
-
-		drawerModel: {
-			get() {
-				return this.isDesktop ? this.desktopDrawerOpen : this.mobileDrawerOpen
-			},
-
-			set(value) {
-				if (this.isDesktop)
-					this.desktopDrawerOpen = value
-				else
-					this.mobileDrawerOpen = value
-			}
-		},
-
 		userLocations: function() {
 			var locationsByKey = new Map()
 
@@ -696,11 +680,11 @@ export default {
 
 	methods: {
 		openDrawer: function() {
-			this.drawerModel = true
+			this.drawerOpen = true
 		},
 
 		closeDrawer: function() {
-			this.drawerModel = false
+			this.drawerOpen = false
 		},
 
 		getFindingColor: function(finding) {
