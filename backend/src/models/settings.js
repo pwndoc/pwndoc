@@ -59,7 +59,16 @@ const SettingSchema = new Schema({
         enabled: { type: Boolean, default: false },
         public: {
             mandatoryReview: { type: Boolean, default: false },
-            minReviewers: { type: Number, default: 1, min: 1, max: 100, validate: [Number.isInteger, 'Invalid integer'] }
+            minReviewers: { type: Number, default: 1, min: 1, max: 100, validate: [Number.isInteger, 'Invalid integer'] },
+            allowDraftExports: { type: Boolean, default: false },
+            draftWatermark: {
+                type: [{
+                    _id: false,
+                    locale: { type: String, required: true },
+                    value: { type: String, default: '' }
+                }],
+                default: []
+            }
         },
         private: {
             removeApprovalsUponUpdate: { type: Boolean, default: false }
