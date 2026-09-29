@@ -241,3 +241,17 @@
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.75); }
 }
+.ProseMirror table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+
+.ProseMirror th {
+    background: #eee;
+}
