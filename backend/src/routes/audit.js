@@ -7,6 +7,26 @@ module.exports = function(app, io) {
     var _ = require('lodash');
     var utils = require('../lib/utils');
     var Settings = require('mongoose').model('Settings');
+    var emitAuditUpdateWebhooks = require('../lib/audit-webhooks').emitAuditUpdateWebhooks;
+    var emitFindingUpdateWebhook = require('../lib/finding-webhooks').emitFindingUpdateWebhook;
+
+    function emitAuditUpdateWebhook(req, previousState, update) {
+        emitAuditUpdateWebhooks({
+            auditId: req.params.auditId,
+            actorId: req.decodedToken.id,
+            previousState: previousState,
+            update: update
+        });
+    }
+
+    function emitFindingSavedWebhook(req, changedFields) {
+        emitFindingUpdateWebhook({
+            auditId: req.params.auditId,
+            findingId: req.params.findingId,
+            actorId: req.decodedToken.id,
+            changedFields: changedFields
+        });
+    }
 
     /* ### AUDITS LIST ### */
 
@@ -239,6 +259,7 @@ module.exports = function(app, io) {
         Audit.updateGeneral(acl.isAllowed(req.decodedToken.roles, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
+            emitAuditUpdateWebhook(req, audit.state, update);
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err))
@@ -358,7 +379,8 @@ module.exports = function(app, io) {
 
         Audit.updateFinding(acl.isAllowed(req.decodedToken.roles, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.findingId, finding)
         .then(msg => {
-            io.to(req.params.auditId).emit('updateAudit');            
+            io.to(req.params.auditId).emit('updateAudit');
+            emitFindingSavedWebhook(req, Object.keys(finding));
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err))
@@ -374,7 +396,7 @@ module.exports = function(app, io) {
         }
         Audit.deleteFinding(acl.isAllowed(req.decodedToken.roles, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.params.findingId)
         .then(msg => {
-            io.to(req.params.auditId).emit('updateAudit');            
+            io.to(req.params.auditId).emit('updateAudit');
             Response.Ok(res, msg);
         })
         .catch(err => Response.Internal(res, err))
@@ -535,6 +557,10 @@ module.exports = function(app, io) {
             Audit.updateApprovals(acl.isAllowed(req.decodedToken.roles, 'audits:review-all'), req.params.auditId, req.decodedToken.id, update)
             .then(() => {
                 io.to(req.params.auditId).emit('updateAudit');
+                emitAuditUpdateWebhook(req, audit.state, {
+                    approvals: newApprovalsArray,
+                    state: newApprovalsArray.length >= settings.reviews.public.minReviewers ? "APPROVED" : "REVIEW"
+                });
                 Response.Ok(res, "Approval updated successfully.")
             })
             .catch((err) => {
@@ -580,6 +606,7 @@ module.exports = function(app, io) {
         Audit.updateGeneral(acl.isAllowed(req.decodedToken.roles, 'audits:update-all'), req.params.auditId, req.decodedToken.id, update)
         .then(msg => {
             io.to(req.params.auditId).emit('updateAudit');
+            emitAuditUpdateWebhook(req, audit.state, update);
             Response.Ok(res, msg)
         })
         .catch(err => Response.Internal(res, err));

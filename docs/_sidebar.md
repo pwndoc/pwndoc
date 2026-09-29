@@ -3,6 +3,7 @@
 - [Roles](roles.md)
 - [Vulnerabilities](vulnerabilities.md)
 - [Audits](audits.md)
+- [Webhooks](webhooks.md)
 - [Docx Template](docxtemplate.md)
 - [Settings](settings.md)
 - [Profile](profile.md)
