@@ -212,12 +212,19 @@ export default {
         },
 
         ensureDraftWatermarkLocales: function() {
-            if (!this.settings?.reviews?.public || !Array.isArray(this.languages))
-                return
-            if (!Array.isArray(this.settings.reviews.public.draftWatermark))
-                this.settings.reviews.public.draftWatermark = []
+            this.fillDraftWatermarkLocales(this.settings)
+            // Keep settingsOrig in sync for structural locale slots so a late
+            // languages response does not mark the form dirty.
+            this.fillDraftWatermarkLocales(this.settingsOrig)
+        },
 
-            var existing = this.settings.reviews.public.draftWatermark
+        fillDraftWatermarkLocales: function(target) {
+            if (!target?.reviews?.public || !Array.isArray(this.languages))
+                return
+            if (!Array.isArray(target.reviews.public.draftWatermark))
+                target.reviews.public.draftWatermark = []
+
+            var existing = target.reviews.public.draftWatermark
             this.languages.forEach(lang => {
                 if (!existing.some(e => e.locale === lang.locale))
                     existing.push({ locale: lang.locale, value: '' })
