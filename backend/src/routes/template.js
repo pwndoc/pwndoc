@@ -33,8 +33,19 @@ module.exports = function(app) {
         Template.create(template)
         .then(data => {
             var fileBuffer = Buffer.from(req.body.file, 'base64');
-            fs.writeFileSync(`${__basedir}/../report-templates/${template.name}.${template.ext}`, fileBuffer);
-            Response.Created(res, data);
+            try {
+                fs.writeFileSync(`${__basedir}/../report-templates/${template.name}.${template.ext}`, fileBuffer);
+                Response.Created(res, data);
+            }
+            catch (err) {
+                Template.delete(data._id)
+                .catch(deleteErr => {
+                    console.log(deleteErr);
+                })
+                .finally(() => {
+                    Response.Internal(res, err);
+                });
+            }
         })
         .catch(err => Response.Internal(res, err))
     });
