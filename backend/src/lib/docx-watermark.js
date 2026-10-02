@@ -17,18 +17,13 @@ function escapeXmlAttr(text) {
 
 /**
  * Resolve the watermark string for an audit language from the localized settings list.
- * Falls back to the first non-empty value, then to "DRAFT".
  */
 function resolveDraftWatermarkText(draftWatermark, language) {
-    if (!Array.isArray(draftWatermark) || draftWatermark.length === 0)
-        return 'DRAFT';
+    if (!Array.isArray(draftWatermark) || !language)
+        return '';
 
     var match = draftWatermark.find(e => e.locale === language && e.value);
-    if (match)
-        return match.value;
-
-    var fallback = draftWatermark.find(e => e.value);
-    return fallback ? fallback.value : 'DRAFT';
+    return match ? match.value : '';
 }
 
 function watermarkParagraphXml(text) {

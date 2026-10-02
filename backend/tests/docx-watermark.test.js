@@ -11,14 +11,15 @@ const {
 
 module.exports = function() {
   describe('docx-watermark', () => {
-    it('Resolves localized watermark text with fallbacks', () => {
-      expect(resolveDraftWatermarkText([], 'en')).toBe('DRAFT');
-      expect(resolveDraftWatermarkText([{locale: 'fr', value: 'BROUILLON'}], 'en')).toBe('BROUILLON');
+    it('Resolves localized watermark text without cross-locale fallback', () => {
+      expect(resolveDraftWatermarkText([], 'en')).toBe('');
+      expect(resolveDraftWatermarkText([{locale: 'fr', value: 'BROUILLON'}], 'en')).toBe('');
       expect(resolveDraftWatermarkText([
         {locale: 'en', value: 'DRAFT'},
         {locale: 'fr', value: 'BROUILLON'}
       ], 'fr')).toBe('BROUILLON');
-      expect(resolveDraftWatermarkText([{locale: 'en', value: ''}], 'en')).toBe('DRAFT');
+      expect(resolveDraftWatermarkText([{locale: 'en', value: ''}], 'en')).toBe('');
+      expect(resolveDraftWatermarkText([{locale: 'en', value: 'DRAFT'}], '')).toBe('');
     });
 
     it('Injects a VML text watermark into an existing header', () => {
