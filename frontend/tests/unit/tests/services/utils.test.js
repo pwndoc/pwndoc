@@ -74,6 +74,23 @@ describe('Utils Service', () => {
       expect(result).toContain('id="comment123"')
     })
 
+    it('should preserve absolute HTTP(S) links', () => {
+      const html = '<a href="https://example.com/report.pdf" target="_self" onclick="alert(1)">report.pdf</a>'
+      const result = Utils.htmlEncode(html)
+      expect(result).toContain('<a href="https://example.com/report.pdf">report.pdf</a>')
+      expect(result).not.toContain('target=')
+      expect(result).not.toContain('onclick=')
+    })
+
+    it('should strip unsafe and relative link destinations', () => {
+      const html = '<a href="javascript:alert(1)">unsafe</a><a href="/relative">relative</a>'
+      const result = Utils.htmlEncode(html)
+      expect(result).toContain('<a>unsafe</a>')
+      expect(result).toContain('<a>relative</a>')
+      expect(result).not.toContain('href=')
+      expect(result).not.toContain('javascript:')
+    })
+
     it('should normalize invisible characters', () => {
       const html = '<p>Test\u00A0with\u200Binvisible\u200Ccharacters</p>'
       const result = Utils.htmlEncode(html)
