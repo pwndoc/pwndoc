@@ -423,7 +423,7 @@ module.exports = function(app, io) {
         .then(async audit => {
             var settings = await Settings.getAll();
 
-            if (settings.reviews.enabled && settings.reviews.public.mandatoryReview && audit.state !== 'APPROVED') {
+            if (settings.reviews.enabled && settings.reviews.public.mandatoryReview && audit.state !== 'APPROVED' && !settings.reviews.public.allowDraftExports) {
                 Response.Forbidden(res, "Audit was not approved therefore cannot be exported.");
                 return;
             }

@@ -115,6 +115,8 @@ module.exports = function(request, app) {
           "public": {
             "mandatoryReview": false,
             "minReviewers": 1,
+            "allowDraftExports": false,
+            "draftWatermark": [],
           },
         },
       };
@@ -178,6 +180,8 @@ module.exports = function(request, app) {
           "public": {
             "mandatoryReview": false,
             "minReviewers": 1,
+            "allowDraftExports": false,
+            "draftWatermark": [],
           },
         },
       });
@@ -268,6 +272,11 @@ module.exports = function(request, app) {
             "public": {
               "mandatoryReview": true,
               "minReviewers": 2,
+              "allowDraftExports": true,
+              "draftWatermark": [
+                { "locale": "en", "value": "DRAFT" },
+                { "locale": "fr", "value": "BROUILLON" }
+              ],
             },
           },
         };
@@ -308,6 +317,11 @@ module.exports = function(request, app) {
 
         expect(response.body.datas.reviews.public.mandatoryReview).toEqual(false);
         expect(response.body.datas.reviews.public.minReviewers).toEqual(5);
+        expect(response.body.datas.reviews.public.allowDraftExports).toEqual(true);
+        expect(response.body.datas.reviews.public.draftWatermark).toEqual([
+          { locale: "en", value: "DRAFT" },
+          { locale: "fr", value: "BROUILLON" }
+        ]);
         expect(response.body.datas.report.private.imageBorderColor).toEqual("#123456");
     })
 

@@ -881,6 +881,10 @@ export default {
     mandatoryReviewInfo: `Makes the review process mandatory. When activated, a user cannot export an audit unless it has been approved by the specified number of reviewers.<br />
     The minimal number of reviewers is also used to determine if a report is marked as approved.`,
     minimalNumberOfReviewers: 'Minimal number of reviewers',
+    allowDraftExports: 'Allow Draft report exports',
+    allowDraftExportsInfo: `When Mandatory Review is enabled, allow exporting reports that are not yet approved.`,
+    draftWatermarkDescription: 'Watermark text added to draft report exports, one value per audit language:',
+    noLanguagesConfigured: 'No languages configured. Add languages under Data → Custom Data first.',
     saveSettings: 'Save settings',
     revertSettingsToDefaults: 'Revert settings to defaults',
     importSettings: 'Import settings',

@@ -225,6 +225,30 @@ function test_backend_debug {
     $(dc_cmd) up -d pwndoc-backend
 }
 
+function wait_for_test_api {
+    echo "Waiting for backend API..."
+    local i
+    for i in $(seq 1 90); do
+        if $(dc_cmd) exec -T pwndoc-backend node -e '
+const https = require("https");
+const req = https.get(
+  "https://127.0.0.1:4242/api/users/init",
+  { rejectUnauthorized: false },
+  (res) => process.exit(res.statusCode === 200 ? 0 : 1)
+);
+req.on("error", () => process.exit(1));
+req.setTimeout(2000, () => { req.destroy(); process.exit(1); });
+' >/dev/null 2>&1; then
+            echo "Backend API is ready."
+            return 0
+        fi
+        sleep 1
+    done
+    echo "Error: backend API did not become ready in time" >&2
+    $(dc_cmd) logs --tail=80 pwndoc-backend || true
+    return 1
+}
+
 function test_frontend_e2e {
     ENV=test
     local selected_browsers=()
@@ -247,6 +271,7 @@ function test_frontend_e2e {
 
     $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests pwndoc-languagetools
     $(dc_cmd) up -d pwndoc-backend pwndoc-frontend pwndoc-languagetools
+    wait_for_test_api || return 1
 
     if [ "$TEST_UI" = true ]; then
         if [ -z "$pw_browsers" ]; then
@@ -273,6 +298,7 @@ function demo_record {
 
     $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests pwndoc-languagetools
     $(dc_cmd) up -d pwndoc-backend pwndoc-frontend pwndoc-languagetools
+    wait_for_test_api || return 1
 
     $(dc_cmd) run --rm --entrypoint npm frontend-tests run demo:record
     rc=$?

@@ -2,6 +2,7 @@ import { Notify, Dialog } from 'quasar'
 
 import SettingsService from '@/services/settings'
 import SpellcheckService from '@/services/spellcheck'
+import DataService from '@/services/data'
 import { useUserStore } from 'src/stores/user'
 import BackupService from '@/services/backup'
 import Utils from '@/services/utils'
@@ -107,7 +108,8 @@ export default {
             testingLtConnection: false,
             ltConnectionResult: null,
             languageToolApiKeyInput: '',
-            languageToolApiKeyOrig: ''
+            languageToolApiKeyOrig: '',
+            languages: []
         }
     },
     components: {
@@ -138,6 +140,7 @@ export default {
     mounted: function() {
         if (userStore.isAllowed('settings:read')) {
             this.getSettings()
+            this.getLanguages()
             if (userStore.isAllowed('backups:read')) {
                 this.getBackupStatus()
                 setInterval(() => {this.getBackupStatus()}, 10000); // 10 seconds
@@ -173,6 +176,13 @@ export default {
                 if (typeof this.settings.ai.public.enabled !== 'boolean') this.settings.ai.public.enabled = true
                 if (!this.settings.ai.public.defaultProvider) this.settings.ai.public.defaultProvider = 'openai'
                 if (!Array.isArray(this.settings.ai.public.allowedProviders)) this.settings.ai.public.allowedProviders = []
+                if (!this.settings.reviews) this.settings.reviews = {enabled: false, public: {}, private: {}}
+                if (!this.settings.reviews.public) this.settings.reviews.public = {}
+                if (typeof this.settings.reviews.public.allowDraftExports !== 'boolean')
+                    this.settings.reviews.public.allowDraftExports = false
+                if (!Array.isArray(this.settings.reviews.public.draftWatermark))
+                    this.settings.reviews.public.draftWatermark = []
+                this.ensureDraftWatermarkLocales()
                 this.languageToolApiKeyInput = this.settings.report?.private?.languageToolApiKeyConfigured ? MASKED_SECRET : ''
                 this.languageToolApiKeyOrig = this.languageToolApiKeyInput
                 this.settingsOrig = this.$_.cloneDeep(this.settings);
@@ -188,6 +198,54 @@ export default {
                     position: 'top-right'
                 })
             })
+        },
+
+        getLanguages: function() {
+            DataService.getLanguages()
+            .then((data) => {
+                this.languages = data.data.datas || []
+                this.ensureDraftWatermarkLocales()
+            })
+            .catch(() => {
+                this.languages = []
+            })
+        },
+
+        ensureDraftWatermarkLocales: function() {
+            this.fillDraftWatermarkLocales(this.settings)
+            // Keep settingsOrig in sync for structural locale slots so a late
+            // languages response does not mark the form dirty.
+            this.fillDraftWatermarkLocales(this.settingsOrig)
+        },
+
+        fillDraftWatermarkLocales: function(target) {
+            if (!target?.reviews?.public || !Array.isArray(this.languages))
+                return
+            if (!Array.isArray(target.reviews.public.draftWatermark))
+                target.reviews.public.draftWatermark = []
+
+            var existing = target.reviews.public.draftWatermark
+            this.languages.forEach(lang => {
+                if (!existing.some(e => e.locale === lang.locale))
+                    existing.push({ locale: lang.locale, value: '' })
+            })
+        },
+
+        getDraftWatermarkValue: function(locale) {
+            var entry = this.settings?.reviews?.public?.draftWatermark?.find(e => e.locale === locale)
+            return entry ? entry.value : ''
+        },
+
+        setDraftWatermarkValue: function(locale, value) {
+            if (!this.settings?.reviews?.public)
+                return
+            if (!Array.isArray(this.settings.reviews.public.draftWatermark))
+                this.settings.reviews.public.draftWatermark = []
+            var entry = this.settings.reviews.public.draftWatermark.find(e => e.locale === locale)
+            if (entry)
+                entry.value = value
+            else
+                this.settings.reviews.public.draftWatermark.push({ locale, value })
         },
 
         updateSettings: async function() {
