@@ -18,9 +18,26 @@ function html2ooxml(html, style = '') {
     var cParagraphProperties = {}
     var list_state = []
     var inCodeBlock = false
+    var cTable = null // Table being built: {rows: [], row: {cells: []}, cell: {children: [], ...}}
+
+    // Paragraphs created inside a table cell belong to the cell, not to the document body
+    function pushParagraph(paragraph) {
+        if (!paragraph)
+            return
+        if (cTable && cTable.cell)
+            cTable.cell.children.push(paragraph)
+        else
+            paragraphs.push(paragraph)
+    }
     var parser = new htmlparser.Parser(
     {
         onopentag(tag, attribs) {
+            // Text written directly in a cell (no block wrapper) is flushed before a block element starts
+            if (cTable && cTable.cell && cParagraph && ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'legend'].includes(tag)) {
+                pushParagraph(cParagraph)
+                cParagraph = null
+            }
+
             if (tag === "h1") {
                 cParagraph = new docx.Paragraph({heading: 'Heading1'})
             }
@@ -70,11 +87,27 @@ function html2ooxml(html, style = '') {
             }
             else if (tag === "br") {
                 if (inCodeBlock) {
-                    paragraphs.push(cParagraph)
+                    pushParagraph(cParagraph)
                     cParagraph = new docx.Paragraph({style: "Code"})
                 }
-                else
+                else if (cParagraph)
                     cParagraph.addChildElement(new docx.Run({break: 1}))
+            }
+            else if (tag === "table") {
+                cTable = {rows: [], row: null, cell: null}
+            }
+            else if (tag === "tr" && cTable) {
+                cTable.row = {cells: []}
+            }
+            else if ((tag === "td" || tag === "th") && cTable && cTable.row) {
+                cTable.cell = {
+                    children: [],
+                    header: tag === "th",
+                    colspan: Math.max(1, parseInt(attribs.colspan, 10) || 1),
+                    rowspan: Math.max(1, parseInt(attribs.rowspan, 10) || 1),
+                    // Column widths set by the editor when a column is resized: one value per spanned column
+                    colwidth: (attribs.colwidth || '').split(',').map(width => parseInt(width, 10) || 0)
+                }
             }
             else if (tag === "ul") {
                 list_state.push('bullet')
@@ -125,19 +158,45 @@ function html2ooxml(html, style = '') {
         },
 
         ontext(text) {
+            // Text written directly in a cell (no block wrapper) gets its own paragraph
+            if (text && text.trim() && !cParagraph && cTable && cTable.cell)
+                cParagraph = new docx.Paragraph({})
             if (text && cParagraph) {
                 cRunProperties.text = text
-                cParagraph.addChildElement(new docx.TextRun(cRunProperties))
+                var runProperties = cRunProperties
+                if (cTable && cTable.cell && cTable.cell.header)
+                    runProperties = Object.assign({}, cRunProperties, {bold: true})
+                cParagraph.addChildElement(new docx.TextRun(runProperties))
             }
         },
 
         onclosetag(tag) {
             if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'p', 'pre', 'legend'].includes(tag)) {
-                paragraphs.push(cParagraph)
+                pushParagraph(cParagraph)
                 cParagraph = null
                 cParagraphProperties = {}
                 if (tag === 'pre')
                     inCodeBlock = false
+            }
+            else if ((tag === "td" || tag === "th") && cTable && cTable.cell) {
+                pushParagraph(cParagraph) // Text written directly in the cell
+                cParagraph = null
+                cParagraphProperties = {}
+                if (cTable.cell.children.length === 0)
+                    cTable.cell.children.push(new docx.Paragraph({})) // Word requires at least one paragraph per cell
+                cTable.row.cells.push(cTable.cell)
+                cTable.cell = null
+            }
+            else if (tag === "tr" && cTable && cTable.row) {
+                if (cTable.row.cells.length > 0)
+                    cTable.rows.push(cTable.row)
+                cTable.row = null
+            }
+            else if (tag === "table" && cTable) {
+                var table = buildTable(cTable.rows)
+                if (table)
+                    paragraphs.push(table)
+                cTable = null
             }
             else if (tag === "b" || tag === "strong") {
                 delete cRunProperties.bold
@@ -191,7 +250,7 @@ function html2ooxml(html, style = '') {
     parser.end()
 
     var prepXml = doc.documentWrapper.document.body.prepForXml({ stack: [] })
-    var filteredXml = prepXml["w:body"].filter(e => {return e && Object.keys(e)[0] === "w:p"})
+    var filteredXml = prepXml["w:body"].filter(e => {return e && ["w:p", "w:tbl"].includes(Object.keys(e)[0])})
     var dataXml = xml(filteredXml)
     dataXml = dataXml.replace(/w:numId w:val="{2-0}"/g, 'w:numId w:val="2"') // Replace numbering to have correct value
 
@@ -199,6 +258,72 @@ function html2ooxml(html, style = '') {
         
 }
 module.exports = html2ooxml
+
+// Build a docx Table from rows of cells collected by the parser.
+// Cells: {children: [Paragraph], header: bool, colspan: int, rowspan: int, colwidth: [int]}
+function buildTable(rows) {
+    if (!rows || rows.length === 0)
+        return null
+
+    // Place cells on the grid (cells hidden by a rowspan are omitted in HTML, like in Word)
+    var occupied = {}
+    var columnCount = 0
+    rows.forEach((row, rowIndex) => {
+        var column = 0
+        row.cells.forEach(cell => {
+            while (occupied[`${rowIndex},${column}`])
+                column++
+            for (var r = 0; r < cell.rowspan; r++)
+                for (var c = 0; c < cell.colspan; c++)
+                    occupied[`${rowIndex + r},${column + c}`] = true
+            cell.column = column
+            column += cell.colspan
+        })
+        columnCount = Math.max(columnCount, column)
+    })
+
+    // Relative column widths: use the editor values when available, same width for the other columns
+    var columnWidths = new Array(columnCount).fill(0)
+    rows.forEach(row => {
+        row.cells.forEach(cell => {
+            for (var i = 0; i < cell.colspan; i++) {
+                if (!columnWidths[cell.column + i] && cell.colwidth[i] > 0)
+                    columnWidths[cell.column + i] = cell.colwidth[i]
+            }
+        })
+    })
+    var knownWidths = columnWidths.filter(width => width > 0)
+    var defaultWidth = knownWidths.length > 0 ? knownWidths.reduce((a, b) => a + b, 0) / knownWidths.length : 1
+    columnWidths = columnWidths.map(width => width > 0 ? width : defaultWidth)
+    var totalWidth = columnWidths.reduce((a, b) => a + b, 0)
+    var columnPercents = columnWidths.map(width => width / totalWidth * 100)
+
+    var tableRows = rows.map(row => {
+        var rowOptions = {
+            children: row.cells.map(cell => {
+                var cellPercent = columnPercents.slice(cell.column, cell.column + cell.colspan).reduce((a, b) => a + b, 0)
+                var options = {
+                    children: cell.children,
+                    width: {size: Math.round(cellPercent), type: docx.WidthType.PERCENTAGE}
+                }
+                if (cell.colspan > 1)
+                    options.columnSpan = cell.colspan
+                if (cell.rowspan > 1)
+                    options.rowSpan = cell.rowspan
+                return new docx.TableCell(options)
+            })
+        }
+        if (row.cells.every(cell => cell.header))
+            rowOptions.tableHeader = true // Repeat header rows on each page
+        return new docx.TableRow(rowOptions)
+    })
+
+    return new docx.Table({
+        rows: tableRows,
+        width: {size: 100, type: docx.WidthType.PERCENTAGE},
+        columnWidths: columnPercents.map(percent => Math.round(percent / 100 * 9000)) // Grid in twentieths of a point (A4 text width)
+    })
+}
 
 function getHighlightColor(hexColor) {
 // <xsd:simpleType name="ST_HighlightColor">

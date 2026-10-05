@@ -86,7 +86,18 @@ export default {
         deleteComment: 'Delete Comment',
         editReply: 'Edit Reply',
         deleteReply: 'Delete Reply',
-        addToDict: 'Add to dictionary'
+        addToDict: 'Add to dictionary',
+        table: 'Table',
+        insertTable: 'Insert table',
+        addRowBefore: 'Add row above',
+        addRowAfter: 'Add row below',
+        deleteRow: 'Delete row',
+        addColumnBefore: 'Add column before',
+        addColumnAfter: 'Add column after',
+        deleteColumn: 'Delete column',
+        mergeOrSplitCells: 'Merge or split cells',
+        toggleHeaderRow: 'Toggle header row',
+        deleteTable: 'Delete table'
     },
     msg: {
         auditReviewUpdateOk: 'Audit review status updated successfully',
