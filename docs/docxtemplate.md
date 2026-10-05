@@ -260,6 +260,17 @@ But in order to apply styles to the data from HTML editors, they must be defined
 | code (<>)  | CodeChar      |
 | code block | Code          |
 
+### Tables
+
+Tables created in the editor are converted to Word tables by `convertHTML`:
+
+- Header rows (cells created with the header row option) are rendered in bold and repeated on each page when the table spans several pages.
+- Merged cells and columns resized in the editor keep their layout. Other columns share the remaining width equally.
+- The table takes the full width of the paragraph it replaces and uses single-line borders. It does not depend on a table style of the template.
+- Text in cells can use the same formatting as paragraphs (bold, lists, code, etc).
+
+Images cannot be placed inside tables in generated reports: an image splits the text around it, so a table containing an image is cut in two.
+
 For `bullet list` and `ordered list` they must be correctly set in the *numbering.xml* file of the Docx Template.
 
 Open the file with an archive manager

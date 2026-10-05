@@ -99,6 +99,29 @@ describe('Utils Service', () => {
       expect(result).toContain('alt="caption"')
     })
 
+    it('should allow table tags with cell span and width attributes', () => {
+      const html = '<table><tbody><tr><th colspan="2" rowspan="1" colwidth="100,200"><p>Head</p></th></tr><tr><td colspan="1" rowspan="1"><p>Cell</p></td><td><p>Cell 2</p></td></tr></tbody></table>'
+      const result = Utils.htmlEncode(html)
+      expect(result).toContain('<table>')
+      expect(result).toContain('<tbody>')
+      expect(result).toContain('<th colspan="2" rowspan="1" colwidth="100,200"><p>Head</p></th>')
+      expect(result).toContain('<td colspan="1" rowspan="1"><p>Cell</p></td>')
+      expect(result).toContain('<td><p>Cell 2</p></td>')
+    })
+
+    it('should strip unsafe attributes and invalid span values from tables', () => {
+      const html = '<table style="width:1px" onclick="alert(1)"><tr><td style="color:red" colspan="2x" rowspan="-1" colwidth="100;200" onmouseover="alert(1)">Cell</td></tr></table>'
+      const result = Utils.htmlEncode(html)
+      expect(result).toContain('<table>')
+      expect(result).toContain('<td>Cell</td>')
+      expect(result).not.toContain('style')
+      expect(result).not.toContain('onclick')
+      expect(result).not.toContain('onmouseover')
+      expect(result).not.toContain('colspan')
+      expect(result).not.toContain('rowspan')
+      expect(result).not.toContain('colwidth')
+    })
+
     it('htmlEncodeDiff keeps diff marker spans and strips XSS', () => {
       const dirty = '<p onclick="alert(1)">Safe</p><span class="diffadd">added</span><script>alert(1)</script>'
       const result = Utils.htmlEncodeDiff(dirty)

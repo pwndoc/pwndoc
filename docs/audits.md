@@ -54,6 +54,10 @@ Proof of Concept / Exploitation of the vulnerability.
 
 Other details like affected assets, CVSS v3, CVSS v4, etc. The scoring panels available in this tab depend on the scoring types enabled in [Settings](/settings.md#scoring-types).
 
+### Tables
+
+Rich text fields (description, proofs, remediation, custom sections, etc.) support tables. The table menu in the editor toolbar inserts a 3x3 table with a header row, and offers the other operations once the cursor is inside a table: add or delete rows and columns, merge or split the selected cells, toggle the header row, or delete the table. Drag the border between two columns to resize them. Tables are rendered in the generated report, see [Docx Template](/docxtemplate.md#tables).
+
 ### Actions
 
 Toggle the `Completed` checkbox will mark the finding as done.

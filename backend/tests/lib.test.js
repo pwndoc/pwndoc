@@ -53,6 +53,82 @@ module.exports = function () {
         expect(ooxml).toEqual(expected)
       })
 
+      it('Table with header row', () => {
+        var html = '<table><tbody>'+
+          '<tr><th colspan="1" rowspan="1"><p>Host</p></th><th colspan="1" rowspan="1"><p>Port</p></th></tr>'+
+          '<tr><td colspan="1" rowspan="1"><p>10.0.0.1</p></td><td colspan="1" rowspan="1"><p><b>443</b></p></td></tr>'+
+          '</tbody></table>'
+        var borders =
+        `<w:tblBorders>`+
+          `<w:top w:val="single" w:color="auto" w:sz="4"/>`+
+          `<w:left w:val="single" w:color="auto" w:sz="4"/>`+
+          `<w:bottom w:val="single" w:color="auto" w:sz="4"/>`+
+          `<w:right w:val="single" w:color="auto" w:sz="4"/>`+
+          `<w:insideH w:val="single" w:color="auto" w:sz="4"/>`+
+          `<w:insideV w:val="single" w:color="auto" w:sz="4"/>`+
+        `</w:tblBorders>`
+        var expected =
+        `<w:tbl>`+
+          `<w:tblPr><w:tblW w:type="pct" w:w="100%"/>${borders}</w:tblPr>`+
+          `<w:tblGrid><w:gridCol w:w="4500"/><w:gridCol w:w="4500"/></w:tblGrid>`+
+          `<w:tr>`+
+            `<w:trPr><w:tblHeader/></w:trPr>`+
+            `<w:tc><w:tcPr><w:tcW w:type="pct" w:w="50%"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">Host</w:t></w:r></w:p></w:tc>`+
+            `<w:tc><w:tcPr><w:tcW w:type="pct" w:w="50%"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">Port</w:t></w:r></w:p></w:tc>`+
+          `</w:tr>`+
+          `<w:tr>`+
+            `<w:tc><w:tcPr><w:tcW w:type="pct" w:w="50%"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">10.0.0.1</w:t></w:r></w:p></w:tc>`+
+            `<w:tc><w:tcPr><w:tcW w:type="pct" w:w="50%"/></w:tcPr><w:p><w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">443</w:t></w:r></w:p></w:tc>`+
+          `</w:tr>`+
+        `</w:tbl>`
+        var ooxml = html2ooxml(html)
+        expect(ooxml).toEqual(expected)
+      })
+
+      it('Table between paragraphs', () => {
+        var html = '<p>Before</p><table><tbody><tr><td><p>Cell</p></td></tr></tbody></table><p>After</p>'
+        var ooxml = html2ooxml(html)
+        expect(ooxml.startsWith('<w:p><w:r><w:t xml:space="preserve">Before</w:t></w:r></w:p><w:tbl>')).toEqual(true)
+        expect(ooxml.endsWith('</w:tbl><w:p><w:r><w:t xml:space="preserve">After</w:t></w:r></w:p>')).toEqual(true)
+        expect(ooxml).toContain('<w:tc><w:tcPr><w:tcW w:type="pct" w:w="100%"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">Cell</w:t></w:r></w:p></w:tc>')
+      })
+
+      it('Table with merged cells and resized columns', () => {
+        var html = '<table><tbody>'+
+          '<tr><td colspan="2" rowspan="1" colwidth="100,300"><p>wide</p></td></tr>'+
+          '<tr><td colspan="1" rowspan="2"><p>tall</p></td><td colspan="1" rowspan="1"><p>b</p></td></tr>'+
+          '<tr><td colspan="1" rowspan="1"><p>c</p></td></tr>'+
+          '</tbody></table>'
+        var ooxml = html2ooxml(html)
+        // Column widths follow the editor values (100px / 300px)
+        expect(ooxml).toContain('<w:tblGrid><w:gridCol w:w="2250"/><w:gridCol w:w="6750"/></w:tblGrid>')
+        expect(ooxml).toContain('<w:tcPr><w:tcW w:type="pct" w:w="100%"/><w:gridSpan w:val="2"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">wide</w:t></w:r></w:p>')
+        expect(ooxml).toContain('<w:tcPr><w:tcW w:type="pct" w:w="25%"/><w:vMerge w:val="restart"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">tall</w:t></w:r></w:p>')
+        // The cell hidden by the rowspan is added back as a merge continuation
+        expect(ooxml).toContain('<w:tr><w:tc><w:tcPr><w:vMerge w:val="continue"/></w:tcPr><w:p/></w:tc><w:tc><w:tcPr><w:tcW w:type="pct" w:w="75%"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">c</w:t></w:r></w:p></w:tc></w:tr>')
+        expect(ooxml).not.toContain('tblHeader')
+      })
+
+      it('Table cells with lists and bare text', () => {
+        var html = '<table><tbody><tr>'+
+          '<td><ul><li><p>one</p></li><li><p>two</p></li></ul></td>'+
+          '<td>bare text</td>'+
+          '<td></td>'+
+          '</tr></tbody></table>'
+        var ooxml = html2ooxml(html)
+        expect(ooxml).toContain('<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t xml:space="preserve">one</w:t></w:r></w:p>')
+        expect(ooxml).toContain('<w:p><w:r><w:t xml:space="preserve">bare text</w:t></w:r></w:p></w:tc>')
+        // Word requires at least one paragraph per cell
+        expect(ooxml).toContain('<w:tc><w:tcPr><w:tcW w:type="pct" w:w="33%"/></w:tcPr><w:p/></w:tc></w:tr>')
+      })
+
+      it('Unclosed table (split by an image) still produces valid rows', () => {
+        var html = '<table><tbody><tr><td><p>a</p></td></tr><tr><td><p>b'
+        var ooxml = html2ooxml(html)
+        expect(ooxml.startsWith('<w:tbl>')).toEqual(true)
+        expect(ooxml.endsWith('<w:p><w:r><w:t xml:space="preserve">b</w:t></w:r></w:p></w:tc></w:tr></w:tbl>')).toEqual(true)
+      })
+
       it('Bold without wrapping paragraph', () => {
         var html = "<b>Paragraph Bold</b>"
         var expected = ""
