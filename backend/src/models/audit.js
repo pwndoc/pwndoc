@@ -1168,9 +1168,9 @@ AuditSchema.statics.getAuditsImages = (auditsIds = []) => {
             matchFilter['_id'] = {$in: auditsIds.map(e => new mongoose.Types.ObjectId(e))}
         var query = Audit.aggregate([{$match: matchFilter}])
         query.unwind({path: '$customFields', preserveNullAndEmptyArrays: true})
-        query.unwind('$sections')
-        query.unwind('$sections.customFields')
-        query.unwind('$findings')
+        query.unwind({path: '$sections', preserveNullAndEmptyArrays: true})
+        query.unwind({path: '$sections.customFields', preserveNullAndEmptyArrays: true})
+        query.unwind({path: '$findings', preserveNullAndEmptyArrays: true})
         query.unwind({path: '$findings.customFields', preserveNullAndEmptyArrays: true})
         query.addFields({
             imageFields: {
