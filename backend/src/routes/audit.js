@@ -51,6 +51,49 @@ module.exports = function(app, io) {
         .catch(err => Response.Internal(res, err))
     });
 
+    // Get finding statistics by vulnerability type
+    app.get("/api/audits/stats/findings-by-type", acl.hasPermission('data:stats'), function(req, res) {
+        var YAML = require('js-yaml');
+        var format = req.query.format || 'json';
+        var filters = {};
+
+        // Optional filters
+        if (req.query.companyId) filters.companyId = req.query.companyId;
+        if (req.query.auditType) filters.auditType = req.query.auditType;
+        if (req.query.dateFrom) filters.dateFrom = req.query.dateFrom;
+        if (req.query.dateTo) filters.dateTo = req.query.dateTo;
+
+        Audit.getFindingStatsByType(
+            acl.isAllowed(req.decodedToken.role, 'audits:read-all'),
+            req.decodedToken.id,
+            filters
+        )
+        .then(stats => {
+            if (format === 'yaml') {
+                var yamlData = YAML.dump(stats);
+                res.set('Content-Type', 'application/yaml');
+                res.set('Content-Disposition', 'attachment; filename="finding-statistics.yml"');
+                res.send(yamlData);
+            } else if (format === 'csv') {
+                var lines = ['Vulnerability Type,Count,Percentage,Critical,High,Medium,Low,None'];
+                stats.statisticsByType.forEach(s => {
+                    lines.push(`"${s.vulnType}",${s.count},${s.percentage},${s.bySeverity.critical},${s.bySeverity.high},${s.bySeverity.medium},${s.bySeverity.low},${s.bySeverity.none}`);
+                });
+                lines.push('');
+                lines.push(`Total Findings,${stats.totalFindings}`);
+                lines.push(`Total Audits,${stats.totalAudits}`);
+                lines.push(`Generated At,${stats.generatedAt}`);
+                var csvData = lines.join('\n');
+                res.set('Content-Type', 'text/csv');
+                res.set('Content-Disposition', 'attachment; filename="finding-statistics.csv"');
+                res.send(csvData);
+            } else {
+                Response.Ok(res, stats);
+            }
+        })
+        .catch(err => Response.Internal(res, err))
+    });
+
     // Create audit (default or multi) with name, auditType, language provided
     // parentId can be set only if type is default
     app.post("/api/audits", acl.hasPermission('audits:create'), function(req, res) {

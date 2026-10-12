@@ -2,6 +2,8 @@ import { Dialog, Notify } from 'quasar'
 import YAML from 'js-yaml'
 
 import VulnerabilityService from '@/services/vulnerability'
+import AuditService from '@/services/audit'
+import CompanyService from '@/services/company'
 import { useUserStore } from 'src/stores/user'
 
 import { $t } from '@/boot/i18n'
@@ -13,11 +15,25 @@ export default {
         return {
             userStore: userStore,
             vulnerabilities: [],
+            // Finding statistics
+            statsFormat: 'json',
+            formatOptions: [
+                { label: 'JSON', value: 'json' },
+                { label: 'YAML', value: 'yaml' },
+                { label: 'CSV', value: 'csv' }
+            ],
+            companies: [],
+            selectedCompany: null,
+            dateFrom: '',
+            dateTo: '',
+            loadingStats: false
         }
     },
 
     mounted: function() {
-        
+        if (this.userStore.isAllowed('data:stats')) {
+            this.getCompanies();
+        }
     },
 
     methods: {
@@ -259,6 +275,58 @@ export default {
                     })
                 })
             })
+        },
+
+        getCompanies: function() {
+            CompanyService.getCompanies()
+            .then((data) => {
+                this.companies = data.data.datas;
+            })
+            .catch((err) => {
+                console.log('Could not load companies:', err);
+            });
+        },
+
+        downloadFindingStats: function() {
+            this.loadingStats = true;
+            var filters = {};
+            if (this.selectedCompany) filters.companyId = this.selectedCompany._id;
+            if (this.dateFrom) filters.dateFrom = this.dateFrom;
+            if (this.dateTo) filters.dateTo = this.dateTo;
+
+            AuditService.getFindingStatsByType(this.statsFormat, filters)
+            .then((response) => {
+                if (this.statsFormat === 'json') {
+                    var data = JSON.stringify(response.data.datas, null, 2);
+                    this.downloadFile(data, 'finding-statistics.json', 'application/json');
+                } else {
+                    var ext = this.statsFormat === 'yaml' ? 'yml' : 'csv';
+                    var type = this.statsFormat === 'yaml' ? 'application/yaml' : 'text/csv';
+                    this.downloadFile(response.data, `finding-statistics.${ext}`, type);
+                }
+                this.loadingStats = false;
+            })
+            .catch((err) => {
+                this.loadingStats = false;
+                Notify.create({
+                    message: err.response?.data?.datas || $t('msg.downloadStatsFailed'),
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                });
+            });
+        },
+
+        downloadFile: function(data, filename, mimeType) {
+            var blob = new Blob([data], { type: mimeType });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         }
     }
 }
