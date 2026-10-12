@@ -14,7 +14,8 @@ describe('Backup archive IO', () => {
     afterEach(() => { jest.restoreAllMocks(); fs.rmSync(root, {recursive: true, force: true}); });
     const password = 'synthetic-test-password';
     const encrypt = bytes => {
-        const salt = crypto.randomBytes(8);
+        // Fixed fixture salt makes the wrong-password padding failure deterministic.
+        const salt = Buffer.from('testSalt');
         const secret = crypto.pbkdf2Sync(password, salt, 10000, 48, 'sha256');
         const cipher = crypto.createCipheriv('aes-256-cbc', secret.subarray(0, 32), secret.subarray(32));
         return Buffer.concat([Buffer.from('Salted__'), salt, cipher.update(bytes), cipher.final()]);
