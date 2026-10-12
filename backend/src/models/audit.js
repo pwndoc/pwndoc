@@ -1149,158 +1149,34 @@ AuditSchema.statics.updateComment = (isAdmin, auditId, userId, commentId, newCom
 }
 
 // Get images from audit ID list (mainly for backup purposes)
-AuditSchema.statics.getAuditsImages = (auditsIds = []) => {
-    return new Promise((resolve, reject) => {
-        var imgRegex = new RegExp(/img src=["']([0-9a-f]{24})["']/)
-        var matchFilter = {
-            $or: [
-                {"customFields.text": {$regex: imgRegex}},
-                {"sections.customFields.text": {$regex: imgRegex}},
-                {"findings.description": {$regex: imgRegex}},
-                {"findings.observation": {$regex: imgRegex}},
-                {"findings.poc": {$regex: imgRegex}},
-                {"findings.remediation": {$regex: imgRegex}},
-                {"findings.retestDescription": {$regex: imgRegex}},
-                {"findings.customFields.text": {$regex: imgRegex}}
-            ]
-        }
-        if (auditsIds.length > 0)
-            matchFilter['_id'] = {$in: auditsIds.map(e => new mongoose.Types.ObjectId(e))}
-        var query = Audit.aggregate([{$match: matchFilter}])
-        query.unwind({path: '$customFields', preserveNullAndEmptyArrays: true})
-        query.unwind('$sections')
-        query.unwind('$sections.customFields')
-        query.unwind('$findings')
-        query.unwind({path: '$findings.customFields', preserveNullAndEmptyArrays: true})
-        query.addFields({
-            imageFields: {
-            $concat: [
-                {$cond: [{$eq: [{$type: "$customFields.text"}, "string"]}, "$customFields.text", ""]},
-                {$cond: [{$eq: [{$type: "$sections.customFields.text"}, "string"]}, "$sections.customFields.text", ""]},
-                {$cond: [{$eq: [{$type: "$findings.description"}, "string"]}, "$findings.description", ""]},
-                {$cond: [{$eq: [{$type: "$findings.observation"}, "string"]}, "$findings.observation", ""]},
-                {$cond: [{$eq: [{$type: "$findings.poc"}, "string"]}, "$findings.poc", ""]},
-                {$cond: [{$eq: [{$type: "$findings.remediation"}, "string"]}, "$findings.remediation", ""]},
-                {$cond: [{$eq: [{$type: "$findings.retestDescription"}, "string"]}, "$findings.retestDescription", ""]},
-                {$cond: [{$eq: [{$type: "$findings.customFields.text"}, "string"]}, "$findings.customFields.text", ""]},
-            ],
-            },
-        })
-        query.project({
-            _id: 0,
-            name: "$name",
-            images: {
-                $regexFindAll: {
-                    input: "$imageFields",
-                    regex: imgRegex,
-                },
-            },
-        })
-        query.exec()
-        .then(row => {
-            if (!row)
-            throw ({ fn: 'NotFound', message: 'Audits not found' })
-            else {
-                var images = []
-                row.forEach(e => e.images.forEach(img => images.push(img.captures[0])))
-                var imagesUniq = [...new Set(images)]
-                resolve(imagesUniq);
-            }
-        })
-        .catch((err) => {
-            reject(err)
-        })
-    })
+AuditSchema.statics.getAuditsImages = async (auditsIds = []) => {
+    const {collectImageIds} = require('../lib/audit-backup');
+    const filters = auditsIds.length > 0
+        ? {_id: {$in: auditsIds.map(id => new mongoose.Types.ObjectId(id))}}
+        : {};
+    const audits = Audit.find(filters).select([
+        'customFields.text', 'sections.customFields.text',
+        'findings.description', 'findings.observation', 'findings.poc',
+        'findings.remediation', 'findings.retestDescription', 'findings.customFields.text'
+    ].join(' ')).lean().cursor({batchSize: 10});
+    return collectImageIds(audits);
 }
 
-AuditSchema.statics.backup = (path, auditsIds = []) => {
-    return new Promise(async (resolve, reject) => {
-        const fs = require('fs')
-
-        function exportAuditsPromise() {
-            return new Promise((resolve, reject) => {
-                let filters = {}
-                const writeStream = fs.createWriteStream(`${path}/audits.json`)
-                writeStream.write('[')
-
-                if (auditsIds.length > 0)
-                    filters = {'_id': {$in: auditsIds}}
-                let audits = Audit.find(filters).cursor()
-                let isFirst = true
-
-                audits.eachAsync(async (document) => {
-                    if (!isFirst) {
-                        writeStream.write(',')
-                    } else {
-                        isFirst = false
-                    }
-                    writeStream.write(JSON.stringify(document, null, 2))
-                    return Promise.resolve()
-                })
-                .then(() => {
-                    writeStream.write(']');
-                    writeStream.end();
-                })
-                .catch((error) => {
-                    reject(error);
-                });
-
-                writeStream.on('finish', () => {
-                    resolve('ok');
-                });
-            
-                writeStream.on('error', (error) => {
-                    reject(error);
-                });
-            })
-        }
-
-        function exportImagesPromise() {
-            return new Promise(async (resolve, reject) => {
-                const Image = mongoose.model("Image");
-                const writeStream = fs.createWriteStream(`${path}/audits-images.json`)
-                writeStream.write('[')
-
-                let auditsImages = await Audit.getAuditsImages(auditsIds)
-                let images = Image.find({'_id': {'$in': auditsImages}}).cursor()
-
-                let isFirst = true
-                images.eachAsync(async (document) => {
-                    if (!isFirst) {
-                        writeStream.write(',')
-                    } else {
-                        isFirst = false
-                    }
-                    writeStream.write(JSON.stringify(document, null, 2))
-                    return Promise.resolve()
-                })
-                .then(() => {
-                    writeStream.write(']');
-                    writeStream.end();
-                })
-                .catch((error) => {
-                    reject(error);
-                });
-
-                writeStream.on('finish', () => {
-                    resolve('ok');
-                });
-            
-                writeStream.on('error', (error) => {
-                    reject(error);
-                });
-            })
-        }
-
-        try {
-            await Promise.all([exportAuditsPromise(), exportImagesPromise()])
-            resolve()
-        }
-        catch (error) {
-            reject({error: error, model: 'Audit'})
-        }
-            
-    })
+AuditSchema.statics.backup = async (path, auditsIds = []) => {
+    const fs = require('fs');
+    const {writeJsonArray} = require('../lib/audit-backup');
+    try {
+        const filters = auditsIds.length > 0 ? {_id: {$in: auditsIds}} : {};
+        await writeJsonArray(Audit.find(filters).cursor({batchSize: 10}),
+            fs.createWriteStream(`${path}/audits.json`));
+        const imageIds = await Audit.getAuditsImages(auditsIds);
+        const Image = mongoose.model('Image');
+        await writeJsonArray(Image.find({_id: {$in: imageIds}}).cursor({batchSize: 10}),
+            fs.createWriteStream(`${path}/audits-images.json`));
+    }
+    catch (error) {
+        throw {error: error, model: 'Audit'};
+    }
 }
 
 AuditSchema.statics.restore = (path, mode = "upsert") => {
