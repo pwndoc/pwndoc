@@ -6,6 +6,7 @@ export default [
       {path: ':auditId', component: () => import('pages/audits/edit'), meta: {breadcrumb: 'Edit Audit'}, children: [
         {path: '', redirect: {name: 'general'}},
         {path: 'general', name:'general', component: () => import('pages/audits/edit/general')},
+        {path: 'files', name: 'auditFiles', component: () => import('pages/audits/edit/files/index.vue')},
         {path: 'network', name: 'network', component: () => import('pages/audits/edit/network')},
         {path: 'findings/add', name: 'addFindings', component: () => import('pages/audits/edit/findings/add')},
         {path: 'findings/:findingId', name: 'editFinding', component: () => import('pages/audits/edit/findings/edit')},

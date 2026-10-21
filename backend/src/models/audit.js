@@ -97,6 +97,12 @@ var AuditSchema = new Schema({
     approvals:          [{type: Schema.Types.ObjectId, ref: 'User'}],
     type:               {type: String, enum: ['default', 'multi', 'retest'], default: 'default'},
     parentId:           {type: Schema.Types.ObjectId, ref: 'Audit'},
+    // A short lease serializes attachment quota reservations across backend workers.
+    fileUploadLock: {
+        type: new Schema({ token: String, expiresAt: Date }, { _id: false }),
+        select: false,
+        default: undefined
+    },
     comments:           [Comment],
     qaReport: {
         type: new Schema({
@@ -472,10 +478,11 @@ AuditSchema.statics.delete = (isAdmin, auditId, userId) => {
         if (!isAdmin)
             query.or([{creator: userId}])
         return query.exec()               
-        .then((row) => {
+        .then(async (row) => {
             if (!row)
                 throw({fn: 'NotFound', message: 'Audit not found or Insufficient Privileges'})
             
+            await require('./audit-file').removeForAudit(row._id);
             resolve(row)
         })
         .catch((err) => {
@@ -1293,7 +1300,7 @@ AuditSchema.statics.backup = (path, auditsIds = []) => {
         }
 
         try {
-            await Promise.all([exportAuditsPromise(), exportImagesPromise()])
+            await Promise.all([exportAuditsPromise(), exportImagesPromise(), require('./audit-file').backup(path, auditsIds)])
             resolve()
         }
         catch (error) {
@@ -1435,10 +1442,16 @@ AuditSchema.statics.restore = (path, mode = "upsert") => {
         }
 
         try {
-            if (mode === "revert")
-                await Audit.deleteMany()
+            const AuditFile = require('./audit-file');
+            if (mode === "revert") {
+                for await (const file of AuditFile.find().cursor()) await AuditFile.remove(file);
+                await Audit.deleteMany();
+            }
             await importAuditsPromise()
             await importImagesPromise()
+            await AuditFile.restore(path);
+            // Never restore a transient upload lease from an archive.
+            await Audit.updateMany({ fileUploadLock: { $exists: true } }, { $unset: { fileUploadLock: 1 } }, { timestamps: false });
             // await Promise.all([importAuditsPromise(), importImagesPromise()])
             resolve()
         }

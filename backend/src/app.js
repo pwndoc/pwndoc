@@ -74,6 +74,7 @@ require('./models/custom-section');
 require('./models/custom-field');
 require('./models/ai-prompt');
 require('./models/image');
+require('./models/audit-file');
 require('./models/settings');
 require('./models/dictionary');
 require('./models/languagetool-rule');
@@ -138,7 +139,7 @@ io.on('connection', (socket) => {
 app.use(function(req, res, next) {
   // res.header("Access-Control-Allow-Origin", req.headers.origin);
   res.header("Access-Control-Allow-Methods", "GET,POST,DELETE,PUT,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, X-File-Name");
   res.header('Access-Control-Expose-Headers', 'Content-Disposition')
   // res.header('Access-Control-Allow-Credentials', 'true')
   next();
@@ -171,6 +172,7 @@ app.use(cookieParser())
 require('./routes/user')(app);
 require('./routes/role')(app);
 require('./routes/audit')(app, io);
+require('./routes/audit-file')(app);
 require('./routes/client')(app);
 require('./routes/company')(app);
 require('./routes/vulnerability')(app);
@@ -201,6 +203,10 @@ app.use((err, req, res, next) => {
     await mongoose.connection.asPromise();
     await require('./migrations').run();
     await require('./lib/auth').acl.reload();
+    const cleanFiles = () => require('./models/audit-file').cleanupIncomplete()
+        .catch(error => console.error('Incomplete audit file cleanup failed:', error.message));
+    await cleanFiles();
+    setInterval(cleanFiles, 60 * 60 * 1000).unref();
     https.listen(4242, () => {
         // Best-effort async: push custom rules to LanguageTool on startup
         const { syncRulesToLanguageTool } = require('./lib/languagetool-sync');
