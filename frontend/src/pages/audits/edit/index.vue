@@ -119,7 +119,7 @@
 						<div v-for="(user,idx) in generalUsers" :key="idx" class="col multi-colors-bar" :style="{background:user.color}" />
 					</div>
 
-					<q-item :to="'/audits/'+auditId+'/files'" data-testid="audit-files-navigation">
+					<q-item v-if="!currentAuditType?.hidden?.includes('files')" :to="'/audits/'+auditId+'/files'" data-testid="audit-files-navigation">
 						<q-item-section avatar><q-icon name="folder_open" /></q-item-section>
 						<q-item-section>{{ $t('auditFiles.title') }} ({{ audit.fileCount || 0 }})</q-item-section>
 					</q-item>

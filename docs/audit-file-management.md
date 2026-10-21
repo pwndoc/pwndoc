@@ -1,7 +1,16 @@
 # Audit File Management
 
 Every audit has a **File Management** entry below General Information. Existing
-audits receive the page automatically. Select multiple files or drop them onto the
+audits receive the page automatically. Administrators can hide its navigation entry
+per audit type under **Data → Custom Data → Audit Types → Hide Built-in Sections**
+by checking **File Management**. This option is available for default, retest and
+multi-audit types and applies to existing and future audits after reloading.
+Unchecking it restores the menu entry. Hiding it preserves files, backup/restore,
+and direct page/API access with the normal permissions; it is a navigation setting.
+Existing types without `files` in their `hidden` list keep the entry visible.
+For managed profiles, keep this choice in the profile so reconciliation preserves it.
+
+Select multiple files or drop them onto the
 page to upload them individually. Each successful upload is saved immediately;
 failed uploads are reported individually and do not discard successful transfers.
 The inventory shows filename, size, upload date, uploader and malware scan status.

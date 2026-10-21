@@ -371,7 +371,7 @@ module.exports = function(app) {
 
         // Fix hidden sections for multi and retest audits
         if (auditType.stage === 'multi' || auditType.stage === 'retest')
-            auditType.hidden = ['network']
+            auditType.hidden = (auditType.hidden || []).includes('files') ? ['network', 'files'] : ['network']
 
         AuditType.create(auditType)
         .then(msg => Response.Created(res, msg))
@@ -409,7 +409,7 @@ module.exports = function(app) {
                     name: e.name,
                     templates: e.templates,
                     sections: e.sections,
-                    hidden: ['network'],
+                    hidden: (e.hidden || []).includes('files') ? ['network', 'files'] : ['network'],
                     stage: e.stage
                 })
             else

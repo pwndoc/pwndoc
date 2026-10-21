@@ -225,11 +225,12 @@
                                     </q-select>
                                 </q-item-section>
                             </q-item>
-                            <q-item v-if="newAuditType.stage === 'default'">
+                            <q-item>
                                 <q-item-section>
                                     <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
-                                    <q-checkbox v-model="newAuditType.hidden" val="network" :label="$t('networkScan')" />
-                                    <q-checkbox v-model="newAuditType.hidden" val="findings" :label="$t('findings')" />
+                                    <q-checkbox v-if="newAuditType.stage === 'default'" v-model="newAuditType.hidden" val="network" :label="$t('networkScan')" />
+                                    <q-checkbox v-if="newAuditType.stage === 'default'" v-model="newAuditType.hidden" val="findings" :label="$t('findings')" />
+                                    <q-checkbox v-model="newAuditType.hidden" val="files" :label="$t('auditFiles.title')" />
                                 </q-item-section>
                             </q-item>
                             <q-separator inset class="q-mb-sm" />
@@ -307,11 +308,12 @@
                                                     </q-select>
                                                 </q-item-section>
                                             </q-item>
-                                            <q-item v-if="auditType.stage === 'default'">
+                                            <q-item>
                                                 <q-item-section>
                                                     <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
-                                                    <q-checkbox v-model="auditType.hidden" disable val="network" :label="$t('networkScan')" />
-                                                    <q-checkbox v-model="auditType.hidden" disable val="findings" :label="$t('findings')" />
+                                                    <q-checkbox v-if="auditType.stage === 'default'" v-model="auditType.hidden" disable val="network" :label="$t('networkScan')" />
+                                                    <q-checkbox v-if="auditType.stage === 'default'" v-model="auditType.hidden" disable val="findings" :label="$t('findings')" />
+                                                    <q-checkbox v-model="auditType.hidden" disable val="files" :label="$t('auditFiles.title')" />
                                                 </q-item-section>
                                             </q-item>
                                         </q-expansion-item>
@@ -436,11 +438,12 @@
                                                                 </q-select>
                                                             </q-item-section>
                                                         </q-item>
-                                                        <q-item v-if="auditType.stage === 'default'">
+                                                        <q-item>
                                                             <q-item-section>
                                                                 <span class="text-grey-7 text-italic">{{$t('hideBuiltInSections')}}</span>
-                                                                <q-checkbox v-model="auditType.hidden" val="network" :label="$t('networkScan')" />
-                                                                <q-checkbox v-model="auditType.hidden" val="findings" :label="$t('findings')" />
+                                                                <q-checkbox v-if="auditType.stage === 'default'" v-model="auditType.hidden" val="network" :label="$t('networkScan')" />
+                                                                <q-checkbox v-if="auditType.stage === 'default'" v-model="auditType.hidden" val="findings" :label="$t('findings')" />
+                                                                <q-checkbox v-model="auditType.hidden" val="files" :label="$t('auditFiles.title')" />
                                                             </q-item-section>
                                                         </q-item>
                                                     </q-expansion-item>

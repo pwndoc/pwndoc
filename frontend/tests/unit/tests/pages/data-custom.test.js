@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createWebHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
@@ -357,6 +357,31 @@ describe('Data Custom Page', () => {
   })
 
   describe('Audit Types', () => {
+    it.each(['default', 'retest', 'multi'])('offers file visibility when creating, viewing and editing %s types', async stage => {
+      const slot = { template: '<div><slot /></div>' }
+      const wrapper = createWrapper({ stubs: {
+        'q-tab-panels': slot, 'q-tab-panel': slot, 'q-card': slot,
+        'q-card-section': slot, 'q-item': slot, 'q-item-section': slot,
+        'q-expansion-item': slot,
+        draggable: { props: ['modelValue'], template: '<div><slot v-for="element in modelValue" name="item" :element="element" :index="0" /></div>' }
+      } })
+      try {
+        await flushPromises()
+        const type = { name: 'Visibility', templates: [], sections: [], hidden: ['files'], stage }
+        await wrapper.setData({
+          userStore: { isAllowed: () => true },
+          newAuditType: { ...type, hidden: [] }, auditTypes: [type], selectedTab: 'audit-types'
+        })
+        const viewed = wrapper.findAll('q-checkbox-stub[val="files"]')
+        expect(viewed).toHaveLength(2)
+        expect(viewed[1].attributes()).toHaveProperty('disable')
+        await wrapper.setData({ editAuditType: true, editAuditTypes: [type] })
+        const edited = wrapper.findAll('q-checkbox-stub[val="files"]')
+        expect(edited).toHaveLength(2)
+        expect(edited[1].attributes()).not.toHaveProperty('disable')
+      } finally { wrapper.unmount() }
+    })
+
     it('should create audit type and refresh on success', async () => {
       const wrapper = createWrapper()
       await wrapper.vm.$nextTick()

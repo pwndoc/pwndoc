@@ -11,7 +11,7 @@ var AuditTypeSchema = new Schema({
     name:   {type: String, unique: true},
     templates: [Template],
     sections: [{type: String, ref: 'CustomSection'}],
-    hidden: [{type: String, enum: ['network', 'findings']}],
+    hidden: [{type: String, enum: ['network', 'findings', 'files']}],
     stage: {type: String, enum: ['default', 'retest', 'multi'], default: 'default'},
     order: Number
 }, {timestamps: true});

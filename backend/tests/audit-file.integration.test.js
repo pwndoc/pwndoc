@@ -196,6 +196,19 @@ describe('Audit file storage and authorization', () => {
         expect(await File.usage(audit._id)).toEqual({ count: 1, bytes: 7 });
     });
 
+    test('keeps file operations available when the audit type hides the menu entry', async () => {
+        const Type = mongoose.model('AuditType');
+        const type = await new Type({ name: 'Files Hidden', stage: 'default', hidden: ['files'] }).save();
+        try {
+            await Audit.updateOne({ _id: audit._id }, { $set: { auditType: type.name } });
+            const created = await upload();
+            expect(created.status).toBe(201);
+            expect((await as(request(app).get(`/api/audits/${audit._id}/files`))).body.datas.files).toHaveLength(1);
+            expect((await download(created.body.datas)).status).toBe(200);
+            expect((await remove(created.body.datas)).status).toBe(200);
+        } finally { await Type.deleteOne({ _id: type._id }); }
+    });
+
     test('deletes content and metadata with the owning audit', async () => {
         const file = (await upload()).body.datas;
         await Audit.delete(false, audit._id, ids.author);
