@@ -3,8 +3,20 @@ vi.mock('boot/axios', () => ({ api: { get: vi.fn(), head: vi.fn(), post: vi.fn()
 import { api } from 'boot/axios'
 import Service from '@/services/audit-file'
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => {
+    vi.clearAllMocks()
+    api.defaults.baseURL = 'http://localhost/api'
+})
 describe('Audit file transfers', () => {
+    test.each(['https://pwndoc.example/api', 'https://pwndoc.example/api/'])(
+        'provides an absolute download link from %s without authentication tokens', baseURL => {
+            api.defaults.baseURL = baseURL
+            expect(Service.downloadUrl('audit', 'file')).toBe('https://pwndoc.example/api/audits/audit/files/file/download')
+        })
+    test('resolves a relative API base against the current origin', () => {
+        api.defaults.baseURL = '/api/'
+        expect(Service.downloadUrl('audit', 'file')).toBe(`${window.location.origin}/api/audits/audit/files/file/download`)
+    })
     test('sends the original binary body and percent-encodes the Unicode filename', async () => {
         const file = new File([new Uint8Array([0, 255, 10])], 'preuve été.bin')
         const progress = vi.fn()

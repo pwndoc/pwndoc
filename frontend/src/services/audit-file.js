@@ -1,6 +1,10 @@
 import { api } from 'boot/axios'
 
 export default {
+  downloadUrl(auditId, fileId) {
+    const base = api.defaults.baseURL.replace(/\/$/, '')
+    return new URL(`${base}/audits/${auditId}/files/${fileId}/download`, window.location.origin).href
+  },
   list(auditId) {
     return api.get(`audits/${auditId}/files`)
   },
@@ -22,7 +26,7 @@ export default {
     // potentially large Blob in the application's JavaScript heap.
     await api.head(path)
     const link = document.createElement('a')
-    link.href = `${api.defaults.baseURL.replace(/\/$/, '')}/${path}`
+    link.href = this.downloadUrl(auditId, fileId)
     document.body.appendChild(link)
     link.click()
     link.remove()

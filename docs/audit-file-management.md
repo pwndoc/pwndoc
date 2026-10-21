@@ -13,8 +13,10 @@ For managed profiles, keep this choice in the profile so reconciliation preserve
 Select multiple files or drop them onto the
 page to upload them individually. Each successful upload is saved immediately;
 failed uploads are reported individually and do not discard successful transfers.
-The inventory shows filename, size, upload date, uploader and malware scan status.
-Users can search the list, download the original bytes, and confirm deletion.
+The inventory shows filename, size, upload date and uploader. Users can search the
+list, download the original bytes, copy a file's download URL using the button next
+to Download, and confirm deletion. Copied links require authentication and the
+recipient's normal access to the audit; they do not grant access or contain tokens.
 
 Files belong to one audit. They are independent of findings, custom fields, the
 generated report, and external ticket delivery. A retest starts with an empty file
@@ -72,7 +74,8 @@ Use the deployment's existing transport, disk and backup encryption controls.
 
 ## Optional malware scanning
 
-Without `AUDIT_FILES_CLAMAV_HOST`, files are explicitly labelled **Not scanned**.
+Without `AUDIT_FILES_CLAMAV_HOST`, files are not scanned. Scan status remains in
+the attachment metadata/API and is not displayed in the file inventory.
 There is no implied antivirus protection. To enforce scanning, configure a ClamAV
 daemon reachable from the backend's private network and set its `StreamMaxLength`
 at least as large as the file size limit. Use a trusted private connection; the

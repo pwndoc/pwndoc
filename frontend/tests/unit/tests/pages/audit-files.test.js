@@ -1,17 +1,18 @@
-import { shallowMount, flushPromises } from '@vue/test-utils'
+import { mount, shallowMount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
-import { Notify, Dialog } from 'quasar'
+import { Notify, Dialog, copyToClipboard } from 'quasar'
 import Page from '@/pages/audits/edit/files/files'
+import FilePage from '@/pages/audits/edit/files/index.vue'
 import Service from '@/services/audit-file'
 
 const permissions = vi.hoisted(() => ({ update: true }))
-vi.mock('@/services/audit-file', () => ({ default: { list: vi.fn(), upload: vi.fn(), download: vi.fn(), remove: vi.fn() } }))
+vi.mock('@/services/audit-file', () => ({ default: { list: vi.fn(), upload: vi.fn(), download: vi.fn(), downloadUrl: vi.fn(), remove: vi.fn() } }))
 vi.mock('@/boot/i18n', () => ({ $t: key => key }))
 vi.mock('src/stores/user', () => ({ useUserStore: () => ({ isAllowed: () => permissions.update }) }))
 vi.mock('quasar', async () => ({
     ...await vi.importActual('quasar'),
-    Notify: { create: vi.fn() }, Dialog: { create: vi.fn(() => ({ onOk: vi.fn() })) }
+    Notify: { create: vi.fn() }, Dialog: { create: vi.fn(() => ({ onOk: vi.fn() })) }, copyToClipboard: vi.fn()
 }))
 
 let wrapper
@@ -29,6 +30,8 @@ beforeEach(async () => {
     Service.list.mockResolvedValue(response())
     Service.upload.mockResolvedValue({})
     Service.remove.mockResolvedValue({})
+    Service.downloadUrl.mockReturnValue('https://pwndoc.example/api/audits/audit-id/files/file-id/download')
+    copyToClipboard.mockResolvedValue(undefined)
     wrapper = shallowMount({ ...Page, render: () => null }, {
         global: { provide: { auditParent: ref({ name: 'Audit' }), frontEndAuditState: state },
             mocks: { $route: route, $socket: { emit: vi.fn() } } }
@@ -38,6 +41,33 @@ beforeEach(async () => {
 afterEach(() => wrapper.unmount())
 
 describe('Audit File Management', () => {
+    test('shows the copy action beside Download for readers and omits the scan column', async () => {
+        const slot = { template: '<div><slot /></div>' }
+        const view = mount(FilePage, {
+            global: {
+                provide: { auditParent: ref({ name: 'Audit' }), frontEndAuditState: ref(1) },
+                mocks: { $route: route, $socket: { emit: vi.fn() }, $t: key => key },
+                stubs: {
+                    breadcrumb: true, 'q-card': slot, 'q-card-section': slot, 'q-banner': slot,
+                    'q-input': true, 'q-tooltip': true, 'q-icon': true, 'q-linear-progress': true,
+                    'q-btn': { props: ['icon', 'disable'], template: '<button :disabled="disable" :data-icon="icon"><slot /></button>' },
+                    'q-td': { template: '<td><slot /></td>' },
+                    'q-table': {
+                        props: ['rows', 'columns'],
+                        template: '<table><thead><tr><th v-for="column in columns">{{ column.label }}</th></tr></thead><tbody><tr v-for="row in rows"><slot name="body-cell-actions" :row="row" /></tr></tbody></table>'
+                    }
+                }
+            }
+        })
+        try {
+            await flushPromises()
+            expect(view.find('thead').text()).not.toContain('auditFiles.scan')
+            expect(view.findAll('tbody button').map(button => button.attributes('data-icon'))).toEqual(['download', 'link'])
+            await view.find('button[aria-label="auditFiles.copyLink"]').trigger('click')
+            await flushPromises()
+            expect(copyToClipboard).toHaveBeenCalledWith('https://pwndoc.example/api/audits/audit-id/files/file-id/download')
+        } finally { view.unmount() }
+    })
     test('loads file metadata and limits', () => {
         expect(Service.list).toHaveBeenCalledWith('audit-id')
         expect(wrapper.vm.files).toEqual([file])
@@ -106,6 +136,31 @@ describe('Audit File Management', () => {
         Service.download.mockRejectedValueOnce(new Error('offline'))
         await wrapper.vm.downloadFile(file)
         expect(Notify.create).toHaveBeenCalledWith({ type: 'negative', message: 'auditFiles.error' })
+    })
+    test('copies the authenticated download URL even in read-only mode', async () => {
+        state.value = 1
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.copyFileLink(file)
+        expect(Service.downloadUrl).toHaveBeenCalledWith('audit-id', 'file-id')
+        expect(copyToClipboard).toHaveBeenCalledWith('https://pwndoc.example/api/audits/audit-id/files/file-id/download')
+        expect(Notify.create).toHaveBeenCalledWith({ type: 'positive', message: 'auditFiles.linkCopied' })
+        expect(wrapper.vm.copying).toBe(null)
+    })
+    test('reports clipboard failures without leaving the button busy', async () => {
+        copyToClipboard.mockRejectedValueOnce(new Error('Clipboard permission denied'))
+        await wrapper.vm.copyFileLink(file)
+        expect(Notify.create).toHaveBeenCalledWith({ type: 'negative', message: 'auditFiles.copyLinkError' })
+        expect(wrapper.vm.copying).toBe(null)
+    })
+    test('ignores repeated copy actions until the clipboard operation finishes', async () => {
+        let finish
+        copyToClipboard.mockReturnValueOnce(new Promise(resolve => { finish = resolve }))
+        const copying = wrapper.vm.copyFileLink(file)
+        await wrapper.vm.copyFileLink(file)
+        expect(copyToClipboard).toHaveBeenCalledTimes(1)
+        finish()
+        await copying
+        expect(wrapper.vm.copying).toBe(null)
     })
     test('guards navigation and reload during transfers', () => {
         const next = vi.fn()

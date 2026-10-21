@@ -1,4 +1,4 @@
-import { Dialog, Notify } from 'quasar'
+import { Dialog, Notify, copyToClipboard } from 'quasar'
 import Breadcrumb from 'components/breadcrumb'
 import FileService from '@/services/audit-file'
 import Utils from '@/services/utils'
@@ -11,7 +11,7 @@ export default {
     data() {
         return {
             files: [], usage: { bytes: 0, count: 0 }, limits: {}, queue: [],
-            loading: false, uploading: false, deleting: false, downloading: null,
+            loading: false, uploading: false, deleting: false, downloading: null, copying: null,
             dragging: false, filter: '', loadError: '', loadGeneration: 0
         }
     },
@@ -28,7 +28,6 @@ export default {
                 { name: 'createdAt', field: 'createdAt', label: $t('auditFiles.date'),
                     format: value => new Date(value).toLocaleString(), align: 'left', sortable: true },
                 { name: 'uploadedByName', field: 'uploadedByName', label: $t('auditFiles.author'), align: 'left', sortable: true },
-                { name: 'scanStatus', field: 'scanStatus', label: $t('auditFiles.scan'), align: 'left' },
                 { name: 'actions', label: '', align: 'right' }
             ]
         }
@@ -138,6 +137,16 @@ export default {
             } catch (error) {
                 Notify.create({ type: 'negative', message: await this.errorMessage(error) })
             } finally { this.downloading = null }
+        },
+        async copyFileLink(file) {
+            if (this.copying) return
+            this.copying = file._id
+            try {
+                await copyToClipboard(FileService.downloadUrl(this.auditId, file._id))
+                Notify.create({ type: 'positive', message: $t('auditFiles.linkCopied') })
+            } catch {
+                Notify.create({ type: 'negative', message: $t('auditFiles.copyLinkError') })
+            } finally { this.copying = null }
         },
         confirmRemove(file) {
             if (!this.canEdit || this.busy) return

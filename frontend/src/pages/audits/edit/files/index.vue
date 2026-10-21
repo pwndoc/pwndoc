@@ -65,18 +65,15 @@
                 <template #body-cell-name="props">
                     <q-td :props="props" class="file-name"><q-icon name="insert_drive_file" class="q-mr-sm" />{{ props.row.name }}</q-td>
                 </template>
-                <template #body-cell-scanStatus="props">
-                    <q-td :props="props">
-                        <q-badge :color="props.row.scanStatus === 'clean' ? 'positive' : 'grey-7'">
-                            {{ $t(props.row.scanStatus === 'clean' ? 'auditFiles.clean' : 'auditFiles.notScanned') }}
-                        </q-badge>
-                    </q-td>
-                </template>
                 <template #body-cell-actions="props">
                     <q-td :props="props" class="text-right no-wrap">
                         <q-btn flat round color="primary" icon="download" :loading="downloading === props.row._id"
                             :disable="Boolean(downloading)" :aria-label="$t('auditFiles.download')" @click="downloadFile(props.row)">
                             <q-tooltip>{{ $t('auditFiles.download') }}</q-tooltip>
+                        </q-btn>
+                        <q-btn flat round color="primary" icon="link" :loading="copying === props.row._id"
+                            :disable="Boolean(copying)" :aria-label="$t('auditFiles.copyLink')" @click="copyFileLink(props.row)">
+                            <q-tooltip>{{ $t('auditFiles.copyLink') }}</q-tooltip>
                         </q-btn>
                         <q-btn v-if="canEdit" flat round color="negative" icon="delete"
                             :disable="busy" :aria-label="$t('auditFiles.remove')" @click="confirmRemove(props.row)">
