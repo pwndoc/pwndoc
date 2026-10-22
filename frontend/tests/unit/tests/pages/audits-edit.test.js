@@ -240,6 +240,7 @@ describe('Audit Edit Page', () => {
           component: AuditEditPage,
           children: [
             { path: 'general', name: 'general', component: { template: '<div>General</div>' } },
+            { path: 'files', name: 'auditFiles', component: { template: '<div>Files</div>' } },
             { path: 'network', name: 'network', component: { template: '<div>Network</div>' } },
             { path: 'findings/add', name: 'addFindings', component: { template: '<div>Add</div>' } },
             { path: 'findings/:findingId', name: 'editFinding', component: { template: '<div>Edit</div>' } },
@@ -354,6 +355,34 @@ describe('Audit Edit Page', () => {
 
     return wrapper
   }
+
+  describe('File Management navigation', () => {
+    it('hides only the file menu entry and restores it when unchecked', async () => {
+      const wrapper = await createWrapper()
+      await flushPromises()
+      expect(wrapper.find('[data-testid="audit-files-navigation"]').exists()).toBe(true)
+      await wrapper.setData({ auditTypes: [{ name: mockAudit.auditType, stage: 'default', hidden: ['files'] }] })
+      expect(wrapper.find('[data-testid="audit-files-navigation"]').exists()).toBe(false)
+      await wrapper.setData({ auditTypes: [{ name: mockAudit.auditType, stage: 'default', hidden: [] }] })
+      expect(wrapper.find('[data-testid="audit-files-navigation"]').exists()).toBe(true)
+    })
+
+    it.each(['default', 'retest', 'multi'])('keeps direct file routes available for a hidden %s audit type', async stage => {
+      const wrapper = await createWrapper({ route: '/audits/audit-123/files' })
+      await flushPromises()
+      await wrapper.setData({ auditTypes: [{ name: mockAudit.auditType, stage, hidden: ['network', 'files'] }] })
+      expect(wrapper.find('[data-testid="audit-files-navigation"]').exists()).toBe(false)
+      expect(router.currentRoute.value.name).toBe('auditFiles')
+      expect(wrapper.vm.getMenuSection()).toEqual({ menu: 'files', room: 'audit-123' })
+    })
+
+    it('keeps files visible when the audit type is not found', async () => {
+      const wrapper = await createWrapper()
+      await flushPromises()
+      await wrapper.setData({ auditTypes: [] })
+      expect(wrapper.find('[data-testid="audit-files-navigation"]').exists()).toBe(true)
+    })
+  })
 
   describe('Initialization', () => {
     it('should set auditId from route params on creation', async () => {

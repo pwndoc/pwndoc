@@ -215,6 +215,12 @@ function test_backend {
         $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api
     fi
     rc=$?
+    if [ "$rc" -eq 0 ]; then
+        $(dc_cmd) run --rm --entrypoint npm \
+            -e AUDIT_FILE_TEST_URI=mongodb://mongodb:27017/pwndoc-files-test \
+            pwndoc-backend run test:files:api
+        rc=$?
+    fi
     $(dc_cmd) down -v --remove-orphans
     return $rc
 }

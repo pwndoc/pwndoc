@@ -426,6 +426,24 @@ module.exports = function(request, app) {
         expect(response.body.datas).toEqual(expected)
       })
 
+      it.each(['default', 'retest', 'multi'])('Can hide files when creating a %s audit type', async stage => {
+        const name = `File Visibility ${stage}`;
+        try {
+          const created = await request(app).post('/api/data/audit-types')
+            .set('Cookie', [`token=JWT ${userToken}`])
+            .send({ name, templates, stage, hidden: ['files', 'findings'] });
+          expect(created.status).toBe(201);
+          const response = await request(app).get('/api/data/audit-types')
+            .set('Cookie', [`token=JWT ${userToken}`]);
+          expect(response.body.datas.find(type => type.name === name)).toMatchObject({
+            stage, hidden: stage === 'default' ? ['files', 'findings'] : ['network', 'files']
+          });
+        } finally {
+          await request(app).delete(`/api/data/audit-types/${encodeURIComponent(name)}`)
+            .set('Cookie', [`token=JWT ${userToken}`]);
+        }
+      });
+
       it('Delete audit type', async () => {
         var response = await request(app).delete('/api/data/audit-types/Wifi')
           .set('Cookie', [
@@ -467,6 +485,32 @@ module.exports = function(request, app) {
 
         expect(response.status).toBe(422)
       })
+
+      it('Preserves the files flag on updates and allows re-enabling every audit stage', async () => {
+        const response = await request(app).get('/api/data/audit-types')
+          .set('Cookie', [`token=JWT ${userToken}`]);
+        const original = response.body.datas;
+        try {
+          const hidden = original.map(type => ({ ...type, hidden: [...type.hidden, 'files'] }));
+          expect((await request(app).put('/api/data/audit-types')
+            .set('Cookie', [`token=JWT ${userToken}`]).send(hidden)).status).toBe(201);
+          const saved = await request(app).get('/api/data/audit-types')
+            .set('Cookie', [`token=JWT ${userToken}`]);
+          for (const type of saved.body.datas) {
+            expect(type.hidden).toContain('files');
+            if (type.stage !== 'default') expect(type.hidden).toContain('network');
+          }
+        } finally {
+          expect((await request(app).put('/api/data/audit-types')
+            .set('Cookie', [`token=JWT ${userToken}`]).send(original)).status).toBe(201);
+        }
+        const visible = await request(app).get('/api/data/audit-types')
+          .set('Cookie', [`token=JWT ${userToken}`]);
+        for (const type of visible.body.datas) {
+          expect(type.hidden).not.toContain('files');
+          if (type.stage !== 'default') expect(type.hidden).toEqual(['network']);
+        }
+      });
 
       it('Update audit types', async () => {
         var response = await request(app).put('/api/data/audit-types')

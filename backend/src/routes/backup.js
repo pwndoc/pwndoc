@@ -337,6 +337,7 @@ module.exports = function(app) {
             type: 'full',
             protected: false,
             data: allData,
+            auditFilesVersion: 1,
         }
 
         // Params
@@ -509,83 +510,41 @@ module.exports = function(app) {
         Response.Ok(res, 'Backup request submitted')
     });
 
-    function extractFiles(archivePath, destPath, files = []) {
-        return new Promise((resolve, reject) => {
-            const readStream = fs.createReadStream(archivePath)
-            const extract = tar.extract()
-            let filesExtracted = []
-            const directories = files.filter(e => e.endsWith('/'))
-
-            extract.on('entry', (header, stream, next) => {
-                console.log('entry: ', header.name)
-                if (
-                    files.includes(header.name) || 
-                    (utils.isSafePath(header.name) && directories.some(e => path.normalize(header.name).startsWith(e)))
-                ) {
-                    if (header.type === "directory") {
-                        try {
-                            console.log(`Creating directory ${destPath}/${header.name}`)
-                            fs.mkdirSync(`${destPath}/${header.name}`)
-                            filesExtracted.push(header.name)
-                            next()
-                        } catch (error) {
-                            reject(error)
-                        }
-                        
-                    }
-                    else {
-                        console.log('extracting')
-                        const writeStream = fs.createWriteStream(`${destPath}/${header.name}`)
-
-                        stream.on('data', (chunk) => {
-                            writeStream.write(chunk)
-                        })
-
-                        stream.on('end', () => {
-                            writeStream.end()
-                            filesExtracted.push(header.name)
-                            next()
-                        })
-
-                        stream.on('error', (error) => {
-                            console.log('stream error')
-                            reject(error)
-                        })
-                    }
-                    stream.resume()
+    async function extractFiles(archivePath, destPath, files = []) {
+        const { pipeline } = require('node:stream/promises');
+        const extract = tar.extract();
+        const extracted = new Set();
+        const directories = files.filter(name => name.endsWith('/'));
+        extract.on('entry', (header, stream, next) => {
+            const selected = files.includes(header.name) || directories.some(name => header.name.startsWith(name));
+            if (!selected) {
+                stream.on('end', next);
+                stream.resume();
+                return;
+            }
+            const target = path.resolve(destPath, header.name);
+            const root = path.resolve(destPath) + path.sep;
+            if (!target.startsWith(root) || header.name.includes('\\') ||
+                !utils.isSafePath(header.name) || !['file', 'directory'].includes(header.type)) {
+                stream.resume();
+                extract.destroy(new Error('Unsafe archive entry'));
+                return;
+            }
+            (async () => {
+                if (header.type === 'directory') {
+                    await fs.promises.mkdir(target, { recursive: true });
+                    stream.resume();
+                } else {
+                    await fs.promises.mkdir(path.dirname(target), { recursive: true });
+                    await pipeline(stream, fs.createWriteStream(target));
                 }
-                stream.on('error', error => reject(error))
-                stream.on('end', () => next())
-                stream.resume()
-            })
-
-            extract.on('error', error => {
-                console.log(error)
-                reject(error)
-            })
-
-            extract.on('finish', () => {
-                console.log('finish')
-                readStream.close()
-                const missingFiles = files.filter(x => !filesExtracted.includes(x))
-                if (filesExtracted.length === 0 )
-                    reject(new Error('No files were extracted from the Archive'))
-                else if (missingFiles.length > 0)
-                    reject(new Error(`Missing files in the archive: ${missingFiles.toString()}`))
-                else
-                    resolve()
-            })
-
-            readStream.on('error', err => {
-                reject(err)
-            })
-
-            readStream
-            .pipe(zlib.createGunzip())
-            .on('error', err => reject(err))
-            .pipe(extract)
-            .on('error', err => reject(err))
-        })
+                extracted.add(header.name);
+                next();
+            })().catch(error => extract.destroy(error));
+        });
+        await pipeline(fs.createReadStream(archivePath), zlib.createGunzip(), extract);
+        const missing = files.filter(name => !extracted.has(name));
+        if (missing.length) throw new Error(`Missing files in the archive: ${missing.join(', ')}`);
     }
 
     function decryptArchive(encryptedPath, decryptedPath, password) {
@@ -733,6 +692,10 @@ module.exports = function(app) {
             if (info.data.includes('Audits') && backupData.includes('Audits')) {
                 files.push('audits.json')
                 files.push('audits-images.json')
+                if (info.auditFilesVersion === 1) {
+                    files.push('audits-files.json')
+                    files.push('audit-files/')
+                }
             }
 
             // Vulnerabilities
@@ -809,7 +772,7 @@ module.exports = function(app) {
             let restorePromises = [Language.restore(restoreTmpPath)]
             // Audits
             if (info.data.includes('Audits') && backupData.includes('Audits')) {
-                restorePromises.push(Audit.restore(restoreTmpPath))
+                restorePromises.push(Audit.restore(restoreTmpPath, restoreMode))
             }
 
             // Vulnerabilities

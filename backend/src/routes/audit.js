@@ -135,7 +135,10 @@ module.exports = function(app, io) {
     // Get Audit with ID
     app.get("/api/audits/:auditId", acl.hasPermission('audits:read'), function(req, res) {
         Audit.getAudit(acl.isAllowed(req.decodedToken.roles, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
-        .then(msg => Response.Ok(res, msg))
+        .then(async msg => {
+            const fileCount = await require('../models/audit-file').countDocuments({ auditId: msg._id, state: 'ready' });
+            Response.Ok(res, { ...msg.toObject(), fileCount });
+        })
         .catch(err => Response.Internal(res, err))
     });
 
