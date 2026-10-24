@@ -20,7 +20,8 @@ const AI_SECRET_FIELDS = [
     'bedrockApiKey',
     'bedrockAccessKeyId',
     'bedrockSecretAccessKey',
-    'bedrockSessionToken'
+    'bedrockSessionToken',
+    'orcarouterApiKey'
 ]
 
 export default {

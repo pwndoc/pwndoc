@@ -261,6 +261,120 @@
             </div>
         </div>
     </q-tab-panel>
+    <q-tab-panel name="orcarouter" class="q-gutter-md q-px-none" data-test="orcarouter-panel">
+        <div class="text-caption text-grey-7">
+            {{ $t('aiIntegration.provider.orcarouterDescription') }}
+            <a href="https://www.orcarouter.ai/cyber" target="_blank" rel="noopener noreferrer">www.orcarouter.ai/cyber</a>
+            ·
+            <a href="https://www.orcarouter.ai/models?tier=cyber" target="_blank" rel="noopener noreferrer">{{ $t('aiIntegration.provider.orcarouterCatalogLink') }}</a>
+        </div>
+        <q-input
+        outlined
+        :label="$t('aiIntegration.provider.orcarouterBaseUrl')"
+        v-model="settings.ai.private.orcarouterBaseUrl"
+        :readonly="!canEdit"
+        data-test="orcarouter-base-url"
+        />
+        <div class="row items-center q-gutter-sm">
+            <q-select
+            class="col"
+            outlined
+            :model-value="settings.ai.private.orcarouterModel"
+            :options="orcaModelOptions"
+            :label="$t('aiIntegration.provider.orcarouterModel')"
+            :readonly="!canEdit"
+            :disable="!canEdit"
+            :loading="orcaModelsState === 'loading'"
+            emit-value
+            map-options
+            options-dense
+            popup-content-class="orcarouter-model-menu"
+            data-test="orcarouter-model-select"
+            @update:model-value="setOrcaModel"
+            >
+                <template v-slot:option="scope">
+                    <q-item v-bind="scope.itemProps">
+                        <q-item-section>
+                            <q-item-label>{{ scope.opt.label }}</q-item-label>
+                            <q-item-label caption>{{ scope.opt.caption }}</q-item-label>
+                        </q-item-section>
+                    </q-item>
+                </template>
+                <template v-slot:no-option>
+                    <q-item>
+                        <q-item-section class="text-grey">
+                            {{ orcaModelsState === 'loading'
+                                ? $t('aiIntegration.provider.orcarouterCatalogLoading')
+                                : $t('aiIntegration.provider.orcarouterCatalogEmpty') }}
+                        </q-item-section>
+                    </q-item>
+                </template>
+            </q-select>
+            <q-btn
+            outline
+            no-caps
+            color="primary"
+            icon="refresh"
+            :label="$t('aiIntegration.provider.orcarouterRefresh')"
+            :loading="orcaModelsState === 'loading'"
+            :disable="!canEdit || orcaModelsState === 'loading'"
+            data-test="orcarouter-refresh"
+            @click="loadOrcaModels(true)"
+            />
+        </div>
+        <div v-if="orcaModelsState === 'live'" class="text-caption text-positive" data-test="orcarouter-catalog-status">
+            {{ $t('aiIntegration.provider.orcarouterCatalogLoaded', { count: orcaModels.length }) }}
+        </div>
+        <div v-else-if="orcaModelsState === 'degraded'" class="text-caption text-warning" data-test="orcarouter-catalog-status">
+            {{ $t('aiIntegration.provider.orcarouterCatalogDegraded', { count: orcaModels.length }) }}
+            <span v-if="orcaModelsMessage"> {{ orcaModelsMessage }}</span>
+        </div>
+        <div v-else-if="orcaModelsState === 'auth'" class="text-caption text-negative" data-test="orcarouter-catalog-status">
+            {{ $t('aiIntegration.provider.orcarouterCatalogAuth') }}
+        </div>
+        <div v-else-if="orcaModelsState === 'error'" class="text-caption text-negative" data-test="orcarouter-catalog-status">
+            {{ orcaModelsMessage || $t('aiIntegration.provider.orcarouterCatalogError') }}
+        </div>
+        <div v-if="orcaModelCleared" class="text-caption text-warning" data-test="orcarouter-model-cleared">
+            {{ $t('aiIntegration.provider.orcarouterModelCleared') }}
+        </div>
+        <div v-if="orcaModelUnverified" class="text-caption text-warning" data-test="orcarouter-model-unverified">
+            {{ $t('aiIntegration.provider.orcarouterModelUnverified') }}
+        </div>
+        <q-input
+        outlined
+        :type="showOrcaRouterApiKey ? 'text' : 'password'"
+        :label="$t('aiIntegration.provider.orcarouterApiKey')"
+        v-model="orcarouterApiKeyInput"
+        :readonly="!canEdit"
+        data-test="orcarouter-api-key"
+        >
+            <template v-slot:append>
+                <q-icon
+                :name="showOrcaRouterApiKey ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="showOrcaRouterApiKey = !showOrcaRouterApiKey"
+                />
+            </template>
+        </q-input>
+        <div class="text-caption">
+            <a href="https://www.orcarouter.ai/console" target="_blank" rel="noopener noreferrer">{{ $t('aiIntegration.provider.orcarouterKeyConsole') }}</a>
+        </div>
+        <div>
+            <q-btn
+            outline
+            no-caps
+            color="primary"
+            :label="$t('aiIntegration.provider.testConnection')"
+            :loading="testingProvider === 'orcarouter'"
+            :disable="testingProvider !== null"
+            @click="testConnection('orcarouter')"
+            />
+            <div v-if="testResults.orcarouter" :class="testResults.orcarouter.ok ? 'text-positive' : 'text-negative'" class="q-mt-xs">
+                {{ testResults.orcarouter.message }}
+            </div>
+        </div>
+    </q-tab-panel>
     </q-tab-panels>
 
     <!-- Default + allow-list toggles for the active provider (shared across all tabs). -->
@@ -327,12 +441,29 @@ export default {
             showBedrockSecretAccessKey: false,
             bedrockSessionTokenInput: '',
             showBedrockSessionToken: false,
+            orcarouterApiKeyInput: '',
+            showOrcaRouterApiKey: false,
+            orcaModels: [],
+            orcaModelsState: 'idle',
+            orcaModelsMessage: '',
+            orcaModelCleared: false,
+            orcaModelUnverified: false,
+            orcaBaseUrlReloadTimer: null,
             testingProvider: null,
             testResults: {}
         }
     },
 
     computed: {
+        orcaModelOptions() {
+            return this.orcaModels.map((model) => ({
+                label: model.name || model.id,
+                caption: model.contextLength
+                    ? `${model.id} · ${model.contextLength} tokens`
+                    : model.id,
+                value: model.id
+            }))
+        },
         hasOpenAIApiKey() {
             return this.hasStoredSecret('openaiApiKey')
         },
@@ -359,6 +490,33 @@ export default {
 
     mounted() {
         this.initializeSecretFields()
+        if (this.canEdit && this.activeTab === 'orcarouter')
+            this.loadOrcaModels()
+    },
+
+    beforeUnmount() {
+        if (this.orcaBaseUrlReloadTimer)
+            clearTimeout(this.orcaBaseUrlReloadTimer)
+    },
+
+    watch: {
+        activeTab(value) {
+            // Provider change recomputes the selector: the options always come from the
+            // catalog for the provider whose tab is open.
+            if (this.canEdit && value === 'orcarouter' && this.orcaModelsState === 'idle')
+                this.loadOrcaModels()
+        },
+
+        'settings.ai.private.orcarouterBaseUrl'() {
+            if (this.activeTab !== 'orcarouter')
+                return
+            if (this.orcaBaseUrlReloadTimer)
+                clearTimeout(this.orcaBaseUrlReloadTimer)
+            this.orcaBaseUrlReloadTimer = setTimeout(() => {
+                this.orcaBaseUrlReloadTimer = null
+                this.loadOrcaModels(true)
+            }, 600)
+        }
     },
 
     methods: {
@@ -431,12 +589,79 @@ export default {
             this.bedrockAccessKeyIdInput = this.maskedValue(this.hasStoredSecret('bedrockAccessKeyId'))
             this.bedrockSecretAccessKeyInput = this.maskedValue(this.hasStoredSecret('bedrockSecretAccessKey'))
             this.bedrockSessionTokenInput = this.maskedValue(this.hasBedrockSessionToken)
+            this.orcarouterApiKeyInput = this.maskedValue(this.hasStoredSecret('orcarouterApiKey'))
+        },
+
+        // Selection is only ever a catalog id. There is deliberately no free-text/new-value
+        // mode: an unknown model must be rejected rather than typed in.
+        setOrcaModel(value) {
+            this.settings.ai.private.orcarouterModel = String(value || '')
+            this.orcaModelCleared = false
+            this.orcaModelUnverified = false
+        },
+
+        async loadOrcaModels(force = false) {
+            if (this.orcaModelsState === 'loading')
+                return
+            if (!force && this.orcaModels.length > 0)
+                return
+
+            this.orcaModelsState = 'loading'
+            this.orcaModelsMessage = ''
+
+            try {
+                const response = await AiService.getOrcaModels({
+                    orcarouterApiKey: this.orcarouterApiKeyInput,
+                    orcarouterBaseUrl: this.settings.ai.private.orcarouterBaseUrl
+                })
+                const payload = response.data?.datas || {}
+                this.orcaModels = Array.isArray(payload.models) ? payload.models : []
+                this.orcaModelsMessage = payload.error || ''
+
+                if (payload.degraded) {
+                    this.orcaModelsState = 'degraded'
+                    this.reconcileOrcaModelSelection(false)
+                } else {
+                    this.orcaModelsState = this.orcaModels.length > 0 ? 'live' : 'empty'
+                    this.reconcileOrcaModelSelection(true)
+                }
+            } catch (err) {
+                const status = err.response?.status
+                this.orcaModels = []
+                this.orcaModelsState = (status === 401 || status === 403) ? 'auth' : 'error'
+                this.orcaModelsMessage = err.response?.data?.datas || ''
+                this.reconcileOrcaModelSelection(false)
+            }
+        },
+
+        // A live catalog is authoritative: a stored model that is no longer offered is
+        // cleared so an incompatible id cannot be submitted. During an outage the last
+        // selection is kept but flagged, because the fallback seed is not a full catalog.
+        reconcileOrcaModelSelection(hasLiveCatalog) {
+            const current = String(this.settings?.ai?.private?.orcarouterModel || '').trim()
+            const known = this.orcaModels.some((model) => model.id === current)
+
+            if (!current || known || this.orcaModels.length === 0) {
+                this.orcaModelCleared = false
+                this.orcaModelUnverified = false
+                return
+            }
+
+            if (hasLiveCatalog) {
+                this.settings.ai.private.orcarouterModel = ''
+                this.orcaModelCleared = true
+                this.orcaModelUnverified = false
+            } else {
+                this.orcaModelCleared = false
+                this.orcaModelUnverified = true
+            }
         },
 
         applyPendingKeyUpdates() {
             this.applyKeyUpdate('openaiApiKey', this.openaiApiKeyInput, this.hasOpenAIApiKey)
             this.applyKeyUpdate('anthropicApiKey', this.anthropicApiKeyInput, this.hasAnthropicApiKey)
             this.applyKeyUpdate('deepseekApiKey', this.deepseekApiKeyInput, this.hasDeepseekApiKey)
+            this.applyKeyUpdate('orcarouterApiKey', this.orcarouterApiKeyInput, this.hasStoredSecret('orcarouterApiKey'))
             this.applyKeyUpdate('ollamaApiKey', this.ollamaApiKeyInput, this.hasOllamaApiKey)
             this.applyKeyUpdate('bedrockApiKey', this.bedrockApiKeyInput, this.hasBedrockApiKey)
             this.applyKeyUpdate(
@@ -494,6 +719,11 @@ export default {
                     deepseekApiKey: this.deepseekApiKeyInput,
                     deepseekBaseUrl: this.settings.ai.private.deepseekBaseUrl,
                     deepseekModel: this.settings.ai.private.deepseekModel
+                }),
+                orcarouter: () => ({
+                    orcarouterApiKey: this.orcarouterApiKeyInput,
+                    orcarouterBaseUrl: this.settings.ai.private.orcarouterBaseUrl,
+                    orcarouterModel: this.settings.ai.private.orcarouterModel
                 }),
                 ollama: () => ({
                     ollamaApiKey: this.ollamaApiKeyInput,
@@ -559,3 +789,14 @@ export default {
 }
 </style>
 
+
+<!-- The model menu is rendered outside this component; keep a visible border so the
+     popup has a real edge in both light and dark themes. -->
+<style>
+.orcarouter-model-menu {
+    border: 1px solid rgba(0, 0, 0, 0.18);
+}
+.body--dark .orcarouter-model-menu {
+    border-color: rgba(255, 255, 255, 0.24);
+}
+</style>

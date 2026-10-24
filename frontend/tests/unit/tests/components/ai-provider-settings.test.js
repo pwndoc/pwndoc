@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
 import { createTestWrapper } from '../../test-utils'
 import AiProviderSettings from '@/components/ai-provider-settings.vue'
 
 vi.mock('@/services/ai', () => ({
   default: {
-    testProvider: vi.fn()
+    testProvider: vi.fn(),
+    getOrcaModels: vi.fn()
   }
 }))
 
@@ -44,7 +46,11 @@ function buildSettings() {
         bedrockSessionToken: '',
         bedrockSessionTokenConfigured: false,
         bedrockRegion: 'us-east-1',
-        bedrockModel: 'global.anthropic.claude-opus-4-8'
+        bedrockModel: 'global.anthropic.claude-opus-4-8',
+        orcarouterApiKey: '',
+        orcarouterApiKeyConfigured: false,
+        orcarouterBaseUrl: 'https://api.orcarouter.ai/v1',
+        orcarouterModel: 'orcarouter/auto'
       }
     }
   }
@@ -63,6 +69,21 @@ const messages = {
         openaiBaseUrl: 'OpenAI Base URL',
         openaiModel: 'OpenAI Model',
         openaiApiKey: 'OpenAI API Key',
+        orcarouterBaseUrl: 'OrcaRouter Base URL',
+        orcarouterModel: 'OrcaRouter Model',
+        orcarouterApiKey: 'OrcaRouter API Key',
+        orcarouterDescription: 'OrcaRouter Cyber Inference',
+        orcarouterCatalogLink: 'Cyber model catalog',
+        orcarouterKeyConsole: 'Manage OrcaRouter API keys',
+        orcarouterRefresh: 'Refresh models',
+        orcarouterCatalogLoading: 'Loading models from OrcaRouter…',
+        orcarouterCatalogLoaded: 'Live catalog: {count} compatible chat models',
+        orcarouterCatalogEmpty: 'No compatible chat models were returned by the catalog',
+        orcarouterCatalogDegraded: 'Catalog unreachable — showing {count} verified fallback models',
+        orcarouterCatalogAuth: 'OrcaRouter rejected the API key.',
+        orcarouterCatalogError: 'Could not load the OrcaRouter model catalog',
+        orcarouterModelCleared: 'The previously selected model is no longer offered.',
+        orcarouterModelUnverified: 'The selected model is not in the verified fallback list.',
         testConnection: 'Test connection',
         testSuccess: 'Connection successful',
         testSuccessWithModel: 'Connection successful (model: {model})',
@@ -214,5 +235,117 @@ describe('AiProviderSettings allow-list', () => {
     wrapper.vm.setProviderAllowed('anthropic', false)
     expect(settings.ai.public.allowedProviders).not.toContain('anthropic')
     expect(wrapper.vm.isProviderAllowed('anthropic')).toBe(false)
+  })
+})
+
+describe('AiProviderSettings OrcaRouter catalog', () => {
+  const liveModels = [
+    { id: 'orcarouter/auto', name: 'OrcaRouter Auto', contextLength: null, inputModalities: ['text'], supportedEndpointTypes: ['openai'] },
+    { id: 'openai/gpt-5.5', name: 'GPT-5.5', contextLength: 400000, inputModalities: ['text', 'image'], supportedEndpointTypes: ['openai'] },
+    { id: 'anthropic/claude-opus-4.8', name: 'Claude Opus 4.8', contextLength: 200000, inputModalities: ['text', 'image'], supportedEndpointTypes: ['anthropic'] }
+  ]
+
+  function orcaSettings() {
+    const settings = buildSettings()
+    settings.ai.public.defaultProvider = 'orcarouter'
+    settings.ai.private.orcarouterApiKeyConfigured = true
+    settings.ai.private.orcarouterApiKey = ''
+    settings.ai.private.orcarouterModel = 'orcarouter/auto'
+    return settings
+  }
+
+  it('loads the model options from the backend catalog, not a typed value', async () => {
+    AiService.getOrcaModels.mockResolvedValue({
+      data: { datas: { models: liveModels, source: 'live', degraded: false } }
+    })
+    const wrapper = createWrapper(orcaSettings())
+    await flushPromises()
+
+    expect(AiService.getOrcaModels).toHaveBeenCalledWith(expect.objectContaining({
+      orcarouterBaseUrl: 'https://api.orcarouter.ai/v1'
+    }))
+    expect(wrapper.vm.orcaModelsState).toBe('live')
+    expect(wrapper.vm.orcaModelOptions.map((option) => option.value))
+      .toEqual(['orcarouter/auto', 'openai/gpt-5.5', 'anthropic/claude-opus-4.8'])
+  })
+
+  it('clears a stored model that the authoritative live catalog no longer offers', async () => {
+    const settings = orcaSettings()
+    settings.ai.private.orcarouterModel = 'orcarouter/legacy-removed'
+    AiService.getOrcaModels.mockResolvedValue({
+      data: { datas: { models: liveModels, source: 'live', degraded: false } }
+    })
+    const wrapper = createWrapper(settings)
+    await flushPromises()
+
+    expect(settings.ai.private.orcarouterModel).toBe('')
+    expect(wrapper.vm.orcaModelCleared).toBe(true)
+  })
+
+  it('keeps the selection but flags it when only the verified fallback is available', async () => {
+    const settings = orcaSettings()
+    settings.ai.private.orcarouterModel = 'orca/orcacyber-ultra-1.0'
+    AiService.getOrcaModels.mockResolvedValue({
+      data: {
+        datas: {
+          models: [{ id: 'orcarouter/auto', name: 'OrcaRouter Auto', supportedEndpointTypes: ['openai'], inputModalities: ['text'] }],
+          source: 'fallback',
+          degraded: true,
+          error: 'Could not reach the OrcaRouter model catalog'
+        }
+      }
+    })
+    const wrapper = createWrapper(settings)
+    await flushPromises()
+
+    expect(wrapper.vm.orcaModelsState).toBe('degraded')
+    expect(settings.ai.private.orcarouterModel).toBe('orca/orcacyber-ultra-1.0')
+    expect(wrapper.vm.orcaModelUnverified).toBe(true)
+  })
+
+  it('shows the auth error state instead of an unverified fallback after a 401', async () => {
+    AiService.getOrcaModels.mockRejectedValue({
+      response: { status: 401, data: { datas: 'OrcaRouter rejected the API key.' } }
+    })
+    const wrapper = createWrapper(orcaSettings())
+    await flushPromises()
+
+    expect(wrapper.vm.orcaModelsState).toBe('auth')
+    expect(wrapper.vm.orcaModels).toEqual([])
+  })
+
+  it('reloads the catalog when the provider tab changes to OrcaRouter', async () => {
+    AiService.getOrcaModels.mockClear()
+    AiService.getOrcaModels.mockResolvedValue({
+      data: { datas: { models: liveModels, source: 'live', degraded: false } }
+    })
+    const wrapper = createWrapper()
+    expect(AiService.getOrcaModels).not.toHaveBeenCalled()
+
+    wrapper.vm.activeTab = 'orcarouter'
+    await flushPromises()
+
+    expect(AiService.getOrcaModels).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not fetch the catalog for read-only viewers', async () => {
+    AiService.getOrcaModels.mockClear()
+    const wrapper = createTestWrapper(AiProviderSettings, {
+      messages,
+      props: { settings: buildSettings(), canEdit: false }
+    })
+
+    wrapper.vm.activeTab = 'orcarouter'
+    await flushPromises()
+
+    expect(AiService.getOrcaModels).not.toHaveBeenCalled()
+  })
+
+  it('only forwards catalog ids: setOrcaModel never invents a free-text model', () => {
+    const wrapper = createWrapper(orcaSettings())
+
+    wrapper.vm.setOrcaModel('openai/gpt-5.5')
+    expect(wrapper.vm.settings.ai.private.orcarouterModel).toBe('openai/gpt-5.5')
+    expect(wrapper.vm.orcaModelOptions.every((option) => typeof option.value === 'string')).toBe(true)
   })
 })
