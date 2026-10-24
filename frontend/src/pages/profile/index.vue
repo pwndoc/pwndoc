@@ -6,16 +6,16 @@
                     <div class="text-h6">{{$t('updateUserInformation')}}</div>
                 </q-card-section>
                 <q-separator />
-                <q-card-section class="row">
-	                    <q-list class="col-md-6 col-12">
-	                        <q-item>
-	                            <q-item-section side>{{$t('roles')}}</q-item-section>
-	                            <q-item-section>
-	                                <div>
-	                                    <q-chip v-for="role in user.roles" :key="role" dense square :label="role" class="q-ml-none text-white" :color="(role === 'admin')?'orange':'info'" />
-	                                </div>
-	                            </q-item-section>
-	                        </q-item>
+                <q-card-section>
+                    <q-list>
+                        <q-item>
+                            <q-item-section side>{{$t('roles')}}</q-item-section>
+                            <q-item-section>
+                                <div>
+                                    <q-chip v-for="role in user.roles" :key="role" dense square :label="role" class="q-ml-none text-white" :color="(role === 'admin')?'orange':'info'" />
+                                </div>
+                            </q-item-section>
+                        </q-item>
                         <q-item>
                             <q-item-section>
                                 <q-input 
@@ -115,8 +115,7 @@
                                 </q-input>
                             </q-item-section>
                         </q-item>
-                    </q-list>
-                    <q-list class="col-md-6 col-12">
+
                         <q-item>
                             <q-item-section>
                                 <q-toggle 
@@ -210,6 +209,155 @@
                     </q-list>
                 </q-card-section>
             </q-card>
+
+            <!-- API Keys Section -->
+            <q-card class="q-mt-md" v-if="userStore.isAllowed('apikeys:read') || userStore.isAllowed('apikeys:create')">
+                <q-card-section class="q-py-xs bg-blue-grey-5 text-white row items-center justify-between">
+                    <div class="text-h6">{{$t('apiKeys.title')}}</div>
+                    <q-btn 
+                        :label="$t('apiKeys.generateBtn')" 
+                        color="secondary" 
+                        unelevated 
+                        icon="add"
+                        v-if="userStore.isAllowed('apikeys:create')"
+                        @click="openCreateApiKey"
+                    />
+                </q-card-section>
+                <q-separator />
+                <q-card-section>
+                    <div class="text-caption text-grey-7 q-mb-md">
+                        {{$t('apiKeys.description')}}
+                    </div>
+                    <q-table
+                        :rows="apiKeys"
+                        :columns="apiKeyColumns"
+                        row-key="_id"
+                        :loading="loadingApiKeys"
+                        :no-data-label="$t('apiKeys.noKeys')"
+                        flat
+                    >
+                        <template v-slot:body-cell-roles="props">
+                            <q-td :props="props">
+                                <div class="row q-gutter-xs">
+                                    <q-chip
+                                        v-for="role in (props.row.roles || [])"
+                                        :key="role"
+                                        dense
+                                        square
+                                        :label="role"
+                                        :color="role === 'admin' ? 'orange' : 'info'"
+                                        text-color="white"
+                                        class="q-ma-none"
+                                    />
+                                </div>
+                            </q-td>
+                        </template>
+                        <template v-slot:body-cell-enabled="props">
+                            <q-td :props="props">
+                                <q-toggle
+                                    :model-value="props.row.enabled"
+                                    :disable="!userStore.isAllowed('apikeys:update') || updatingApiKeys.includes(props.row._id)"
+                                    @update:model-value="toggleApiKey(props.row)"
+                                    color="secondary"
+                                />
+                            </q-td>
+                        </template>
+                        <template v-slot:body-cell-actions="props">
+                            <q-td :props="props">
+                                <q-btn
+                                    flat
+                                    round
+                                    dense
+                                    color="negative"
+                                    icon="delete"
+                                    v-if="userStore.isAllowed('apikeys:delete')"
+                                    @click="confirmRevokeApiKey(props.row)"
+                                >
+                                    <q-tooltip>{{$t('btn.delete')}}</q-tooltip>
+                                </q-btn>
+                            </q-td>
+                        </template>
+                    </q-table>
+                </q-card-section>
+            </q-card>
+
+            <!-- Create API Key Dialog -->
+            <q-dialog v-model="showCreateApiKeyModal" persistent>
+                <q-card style="min-width: 400px">
+                    <q-card-section class="bg-blue-grey-5 text-white">
+                        <div class="text-h6">{{$t('apiKeys.createTitle')}}</div>
+                    </q-card-section>
+                    <q-card-section class="q-pt-md">
+                        <q-input
+                            v-model="newApiKey.name"
+                            :label="$t('apiKeys.keyName')"
+                            :error="!!apiKeyErrors.name"
+                            :error-message="apiKeyErrors.name"
+                            outlined
+                            autofocus
+                        />
+                        <q-select
+                            class="q-mt-sm"
+                            v-model="newApiKey.roles"
+                            :options="availableApiKeyRoles"
+                            :label="$t('apiKeys.roles')"
+                            :hint="$t('apiKeys.rolesHint')"
+                            :error="!!apiKeyErrors.roles"
+                            :error-message="apiKeyErrors.roles"
+                            multiple
+                            use-chips
+                            outlined
+                            emit-value
+                            map-options
+                        />
+                        <q-select
+                            class="q-mt-sm"
+                            v-model="newApiKey.expirationDays"
+                            :options="expirationOptions"
+                            :label="$t('apiKeys.expiration')"
+                            outlined
+                            emit-value
+                            map-options
+                        />
+                    </q-card-section>
+                    <q-card-actions align="right">
+                        <q-btn flat :label="$t('btn.cancel')" color="grey-7" :disable="creatingApiKey" v-close-popup />
+                        <q-btn unelevated :label="$t('btn.create')" color="secondary" :loading="creatingApiKey" :disable="creatingApiKey" @click="createApiKey" />
+                    </q-card-actions>
+                </q-card>
+            </q-dialog>
+
+            <!-- Display Created API Key Dialog -->
+            <q-dialog v-model="showKeyDisplayModal" persistent @hide="createdApiKey = ''">
+                <q-card style="min-width: 500px">
+                    <q-card-section class="bg-positive text-white">
+                        <div class="text-h6">{{$t('apiKeys.createdSuccessTitle')}}</div>
+                    </q-card-section>
+                    <q-card-section class="q-pt-md">
+                        <q-banner class="bg-amber-1 text-amber-10 q-mb-md" rounded>
+                            <template v-slot:avatar>
+                                <q-icon name="warning" color="amber-9" />
+                            </template>
+                            {{$t('apiKeys.warningCopyNow')}}
+                        </q-banner>
+                        <q-input
+                            :model-value="createdApiKey"
+                            readonly
+                            outlined
+                            type="text"
+                        >
+                            <template v-slot:append>
+                                <q-btn flat round icon="content_copy" color="secondary" @click="copyApiKey">
+                                    <q-tooltip>{{$t('apiKeys.copy')}}</q-tooltip>
+                                </q-btn>
+                            </template>
+                        </q-input>
+                    </q-card-section>
+                    <q-card-actions align="right">
+                        <q-btn unelevated :label="$t('btn.close')" color="secondary" v-close-popup />
+                    </q-card-actions>
+                </q-card>
+            </q-dialog>
         </div>
     </div>
 </template>

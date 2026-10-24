@@ -2,95 +2,122 @@ import _ from 'lodash';
 import { $t } from 'boot/i18n'
 import DOMPurify from 'dompurify'
 
+const ALLOWED_TAGS = [
+  'p',
+  'br',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'b',
+  'strong',
+  'i',
+  'em',
+  'u',
+  's',
+  'strike',
+  'mark',
+  'ul',
+  'ol',
+  'li',
+  'code',
+  'pre',
+  'img',
+  'legend',
+  'comment'
+]
+
+// Diff markers are added after content sanitize; allow them when purifying v-html diffs.
+const DIFF_ALLOWED_TAGS = ALLOWED_TAGS.concat(['span'])
+
+const normalizeInvisibleCharacters = (str) => {
+  return str
+    // Replace non-breaking spaces and other space variants with regular space
+    .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ')
+    // Remove control characters except \n, \r, \t
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+
+function ensureDomPurifyConfigured() {
+  if (!DOMPurify.isSupported || ensureDomPurifyConfigured.done)
+    return
+
+  // Clear hooks first so Vite HMR / repeated init cannot stack them (that froze the
+  // vulnerability-updates modal when diffs started calling htmlEncode from computeds).
+  DOMPurify.removeHooks('uponSanitizeAttribute')
+
+  // Do not setConfig(ALLOWED_TAGS): that locks the tag list and prevents per-call
+  // ALLOWED_TAGS overrides (needed for span.diff* in htmlEncodeDiff).
+  DOMPurify.addHook('uponSanitizeAttribute', function (node, data, config) {
+    data.keepAttr = false // default to remove any attribute
+
+    // Filter authorized attributes for <img> tags (<img src="..." alt="...">)
+    if (node.tagName === 'IMG') {
+      if (data.attrName === 'src') {
+        const pattern = /^[a-fA-F0-9]{24}$/; // Check if the `src` consists of exactly 24 hexadecimal characters
+        const pattern_b64 = /^data:image\/.+base64,.+$/; // Check if the `src` is a base64 image (retrocompatibility)
+        if (pattern.test(data.attrValue) || pattern_b64.test(data.attrValue))
+          data.forceKeepAttr = true;
+      }
+      else if (data.attrName === 'alt' || data.attrName === 'commentid') {
+        data.forceKeepAttr = true;
+      }
+    }
+    // Filter authorized attributes for <legend> tags (<legend label="..." alt="...">)
+    else if (node.tagName === 'LEGEND') {
+      if (data.attrName === 'label' || data.attrName === 'alt' || data.attrName === 'commentid')
+        data.forceKeepAttr = true;
+    }
+    // Filter authorized attributes for <mark> tags (<mark data-color="..." style="...">)
+    else if (node.tagName === 'MARK') {
+      if (data.attrName === 'data-color' || data.attrName === 'style')
+        data.forceKeepAttr = true;
+    }
+    // Filter authorized attributes for <code> tags (<code class="...")
+    else if (node.tagName === 'CODE') {
+      if (data.attrName === 'class') {
+        const pattern = /^language-[a-zA-Z0-9\-]{1,}$/; // Check for highlight language value
+        if (pattern.test(data.attrValue)) {
+          data.forceKeepAttr = true;
+        }
+      }
+    }
+    else if (node.tagName === 'COMMENT') {
+      if (data.attrName === 'id') {
+        data.forceKeepAttr = true
+      }
+    }
+    else if (node.tagName === 'SPAN') {
+      if (data.attrName === 'class' && /^diff(add|rem|eq)$/.test(data.attrValue || ''))
+        data.forceKeepAttr = true
+    }
+  });
+
+  ensureDomPurifyConfigured.done = true
+}
+
+function purify(html, allowedTags) {
+  ensureDomPurifyConfigured()
+  if (!DOMPurify.isSupported)
+    return ''
+
+  const cleanHTML = normalizeInvisibleCharacters(html)
+  // Always return a real string — TrustedHTML breaks Diff.tokenize / string ops.
+  return String(DOMPurify.sanitize(cleanHTML, { ALLOWED_TAGS: allowedTags }))
+}
+
 export default {
   htmlEncode(html) {
-    if(typeof(html) !== "string")  return "";
+    if (typeof(html) !== "string")  return "";
+    return purify(html, ALLOWED_TAGS)
+  },
 
-    const ALLOWED_TAGS = [
-      'p',
-      'br',
-      'h1',
-      'h2',
-      'h3',
-      'h4',
-      'h5',
-      'h6',
-      'b',
-      'strong',
-      'i',
-      'em',
-      'u',
-      's',
-      'strike',
-      'mark',
-      'ul',
-      'ol',
-      'li',
-      'code',
-      'pre',
-      'img',
-      'legend',
-      'comment'
-    ]
-    
-    DOMPurify.setConfig({
-      ALLOWED_TAGS: ALLOWED_TAGS,
-    }
-  );
-
-    // Hook to enable image sources not having a valid URL.
-    DOMPurify.addHook('uponSanitizeAttribute', function (node, data, config) {
-      data.keepAttr = false // default to remove any attribute
-
-      // Filter authorized attributes for <img> tags (<img src="..." alt="...">)
-      if (node.tagName === 'IMG') { 
-        if (data.attrName === 'src') {
-          const pattern = /^[a-fA-F0-9]{24}$/; // Check if the `src` consists of exactly 24 hexadecimal characters
-          const pattern_b64 = /^data:image\/.+base64,.+$/; // Check if the `src` is a base64 image (retrocompatibility)
-          if (pattern.test(data.attrValue) || pattern_b64.test(data.attrValue))
-            data.forceKeepAttr = true;
-        }
-        else if (data.attrName === 'alt' || data.attrName === 'commentid') {
-          data.forceKeepAttr = true; 
-        }
-      }
-      // Filter authorized attributes for <legend> tags (<legend label="..." alt="...">)
-      else if (node.tagName === 'LEGEND') {
-        if (data.attrName === 'label' || data.attrName === 'alt' || data.attrName === 'commentid')
-          data.forceKeepAttr = true;
-      }
-      // Filter authorized attributes for <mark> tags (<mark data-color="..." style="...">)
-      else if (node.tagName === 'MARK') {
-        if (data.attrName === 'data-color' || data.attrName === 'style')
-          data.forceKeepAttr = true;
-      }
-      // Filter authorized attributes for <code> tags (<code class="...")
-      else if (node.tagName === 'CODE') {
-        if (data.attrName === 'class') {
-          const pattern = /^language-[a-zA-Z0-9\-]{1,}$/; // Check for highlight language value
-          if (pattern.test(data.attrValue)) {
-            data.forceKeepAttr = true;
-          }
-        }
-      }
-      else if (node.tagName === 'COMMENT') {
-        if (data.attrName === 'id') {
-          data.forceKeepAttr = true
-        }
-      }
-    });
-    
-    const normalizeInvisibleCharacters = (str) => {
-      return str
-        // Replace non-breaking spaces and other space variants with regular space
-        .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ')
-        // Remove control characters except \n, \r, \t
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-    }
-
-    const cleanHTML = normalizeInvisibleCharacters(html)
-    const result = DOMPurify.sanitize(cleanHTML);
-    return result
+  // Sanitize editor diff HTML after markers are injected (allows span.diffadd/etc).
+  htmlEncodeDiff(html) {
+    if (typeof(html) !== "string")  return "";
+    return purify(html, DIFF_ALLOWED_TAGS)
   },
 
   // Update all basic-editor when noSync is necessary for performance (text with images). 

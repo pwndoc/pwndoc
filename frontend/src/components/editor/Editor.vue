@@ -609,8 +609,10 @@ export default {
                 HtmlDiff.tokenize = function(value) {
                     return value.replace(/<code[^>]*>/g, "<code>").split(/([{}:;,.]|<p>|<\/p>|<pre><code>|<\/code><\/pre>|<[uo]l><li>.*<\/li><\/[uo]l>|\s+)/);
                 }
-                var value = this.modelValue || ""
-                var diff = HtmlDiff.diff(this.diff, value)
+                // Sanitize before diffing so broken tags cannot smuggle attributes into v-html.
+                var value = Utils.htmlEncode(this.modelValue || "")
+                var previous = Utils.htmlEncode(this.diff || "")
+                var diff = HtmlDiff.diff(previous, value)
                 diff.forEach(part => {
                     const diffclass = part.added ? 'diffadd' : part.removed ? 'diffrem' : 'diffeq'
                     var value = part.value.replace(/<p><\/p>/g, '<p><br></p>')

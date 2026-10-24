@@ -1,25 +1,27 @@
-The frontend uses Vuejs and Quasar framework.
+The frontend uses Vue 3 and the Quasar framework.
 
 It has to be used with the backend.
 
-# Installation for developpment environnment
+# Installation for development environment
 
 *Source code can be modified live and application will automatically hot reload in browser.*
 
-Build and run Docker container
+All operations go through the `./pwndoc-cli` wrapper script at the repository root. See [docs/installation.md](../docs/installation.md) for full usage.
+
+Build and run Docker containers
 ```
-docker-compose -f ./docker-compose.dev.yml up -d --build
+./pwndoc-cli up --dev
 ```
 
 Display container logs
 ```
-docker-compose logs -f
+./pwndoc-cli logs --frontend-only
 ```
 
-Stop/Start container
+Stop/Start containers
 ```
-docker-compose stop
-docker-compose start
+./pwndoc-cli stop
+./pwndoc-cli start
 ```
 
 Application is accessible through https://localhost:8081
