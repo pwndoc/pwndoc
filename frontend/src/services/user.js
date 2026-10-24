@@ -69,6 +69,10 @@ export default {
         return (api.get(`users/init`, {timeout: 10000}));
     },
 
+    getOidcConfig() {
+        return api.get('auth/oidc/config')
+    },
+
     isAllowed(scope) {
         return userStore.isAllowed(scope)
     },
