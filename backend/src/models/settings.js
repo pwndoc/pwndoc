@@ -116,7 +116,10 @@ const SettingSchema = new Schema({
             bedrockSecretAccessKey: {type: String, default: ''},
             bedrockSessionToken: {type: String, default: ''},
             bedrockRegion: {type: String, default: 'us-east-1'},
-            bedrockModel: {type: String, default: 'global.anthropic.claude-opus-4-8'}
+            bedrockModel: {type: String, default: 'global.anthropic.claude-opus-4-8'},
+            orcarouterApiKey: {type: String, default: ''},
+            orcarouterBaseUrl: {type: String, default: 'https://api.orcarouter.ai/v1'},
+            orcarouterModel: {type: String, default: 'orcarouter/auto'}
         }
     }
 }, {strict: true});

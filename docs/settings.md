@@ -18,7 +18,7 @@ AI integration is **disabled by default**. The toggle in the card header turns i
 
 ### AI Provider
 
-One tab per supported provider: OpenAI, Anthropic, DeepSeek, Ollama, and AWS Bedrock. A green check on a tab means credentials are stored for that provider.
+One tab per supported provider: OpenAI, Anthropic, DeepSeek, Ollama, AWS Bedrock, and [OrcaRouter Cyber Inference](https://www.orcarouter.ai/cyber). A green check on a tab means credentials are stored for that provider.
 
 | Provider | Fields |
 |----------|--------|
@@ -27,6 +27,15 @@ One tab per supported provider: OpenAI, Anthropic, DeepSeek, Ollama, and AWS Bed
 | DeepSeek | Base URL, Model, API Key |
 | Ollama | Base URL, Model, API Key |
 | AWS Bedrock | AWS Region, Model ID, and either a Bedrock API Key or IAM credentials (Access Key ID, Secret Access Key, optional Session Token) |
+| OrcaRouter Cyber Inference | Base URL, Model, API Key |
+
+#### OrcaRouter Cyber Inference
+
+[OrcaRouter](https://www.orcarouter.ai) is an OpenAI-compatible AI gateway that routes many providers behind one endpoint. Its Cyber Inference tier serves authorized, scoped security reasoning for verified security teams: the gateway is built to let organization-approved, in-scope pentest and defensive work through where a general-purpose gateway may refuse or silently downgrade it. Cyber models and defenses are documented at [orcarouter.ai/cyber](https://www.orcarouter.ai/cyber) and the [cyber model catalog](https://www.orcarouter.ai/models?tier=cyber).
+
+- **Base URL** — defaults to `https://api.orcarouter.ai/v1`. Override it for self-hosted deployments; remote hosts must use HTTPS.
+- **Model** — a searchable selector populated from OrcaRouter's live `/v1/models` catalog, filtered to OpenAI-wire chat models. `orcarouter/auto` is the default. Verified security teams can select the dedicated cyber models from the [cyber catalog](https://www.orcarouter.ai/models?tier=cyber) — OrcaCyber Ultra (`orca/orcacyber-ultra-1.0`) for security code review and multi-step reasoning over large codebases, and OrcaCyber Zero (`orca/orcacyber-zero-1.5`) — while `orcarouter/fusion` is the general fallback. The list is not hard-coded: it is whatever the live catalog returns, subject to the key's model access. The catalog is fetched by the backend, so the API key never reaches the browser. If the catalog is unreachable, the selector falls back to a small verified set of models and says so; press **Refresh models** to retry.
+- **API Key** — an `sk-orca-…` key from the [OrcaRouter console](https://www.orcarouter.ai/console). It is stored with the same masked-secret handling as the other providers and is never returned to the browser.
 
 Stored keys are shown masked and never sent back to the browser. Leave a masked field untouched to keep the current key, type a new value to replace it, or clear it to remove the key.
 

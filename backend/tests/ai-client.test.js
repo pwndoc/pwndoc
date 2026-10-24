@@ -244,6 +244,34 @@ module.exports = function() {
             });
         });
 
+        it('should route OrcaRouter through the OpenAI wire transport with its own base URL', () => {
+            const config = buildLlmConfig('orcarouter', {
+                timeoutMs: 8000,
+                apiKey: 'sk-orca-test-value',
+                baseUrl: 'https://api.orcarouter.ai/v1'
+            });
+
+            expect(config).toMatchObject({
+                provider: 'openai',
+                openaiApiKey: 'sk-orca-test-value',
+                openaiApiBase: 'https://api.orcarouter.ai/v1',
+                requestTimeout: 8000,
+                maxRetries: 0
+            });
+        });
+
+        it('should redact an sk-orca key echoed back in a provider error body', () => {
+            const err = new Error('Unauthorized');
+            err.status = 401;
+            err.body = 'Invalid key sk-orca-abcdef1234567890';
+
+            const mapped = mapLlmError(err, 'OrcaRouter Cyber Inference', 5000);
+
+            expect(mapped.message).not.toContain('sk-orca-abcdef1234567890');
+            expect(mapped.message).toContain('[redacted]');
+            expect(mapped.message).toContain('OrcaRouter Cyber Inference returned HTTP 401');
+        });
+
         it('should skip temperature for bedrock only', () => {
             const chat = { withTemperature: jest.fn().mockReturnValue('with-temp') };
 

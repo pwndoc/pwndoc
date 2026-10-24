@@ -31,7 +31,7 @@ The main goal is to have more time to **Pwn** and less time to **Doc** by mutual
 - Docx Report Generation
 - Docx Template customization
 - Spellcheck and grammar check via LanguageTool (with custom rules)
-- AI-assisted writing with configurable prompts. Current providers: OpenAI, Anthropic, DeepSeek, Ollama, AWS Bedrock
+- AI-assisted writing with configurable prompts. Current providers: OpenAI, Anthropic, DeepSeek, Ollama, AWS Bedrock, OrcaRouter Cyber Inference
 - Quality assurance review of audits and vulnerability templates (built-in and AI checks)
 - Backup and restore with encryption and selective restore
 - Two-factor authentication (TOTP)

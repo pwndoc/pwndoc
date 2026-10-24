@@ -4,6 +4,7 @@ import anthropicLogo from '@/assets/ai-providers/anthropic.svg'
 import deepseekLogo from '@/assets/ai-providers/deepseek.svg'
 import ollamaLogo from '@/assets/ai-providers/ollama.svg'
 import bedrockLogo from '@/assets/ai-providers/bedrock.svg'
+import orcarouterLogo from '@/assets/ai-providers/orcarouter.png'
 
 // Single source of truth for AI provider metadata on the frontend. Mirrors AI_PROVIDERS in
 // backend/src/lib/ai-prompts.js. Used by the settings component (provider tabs) and the
@@ -16,7 +17,10 @@ export const AI_PROVIDER_OPTIONS = [
   { label: 'Anthropic', value: 'anthropic', logo: anthropicLogo },
   { label: 'DeepSeek', value: 'deepseek', logo: deepseekLogo },
   { label: 'Ollama', value: 'ollama', logo: ollamaLogo, mono: true },
-  { label: 'AWS Bedrock', value: 'bedrock', logo: bedrockLogo }
+  { label: 'AWS Bedrock', value: 'bedrock', logo: bedrockLogo },
+  // Cyber positioning: authorized, scoped security reasoning for verified security teams.
+  // https://www.orcarouter.ai/cyber
+  { label: 'OrcaRouter Cyber Inference', value: 'orcarouter', logo: orcarouterLogo }
 ]
 
 const PROVIDER_MONO_BY_VALUE = AI_PROVIDER_OPTIONS.reduce((map, option) => {
