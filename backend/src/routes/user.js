@@ -96,12 +96,9 @@ module.exports = function(app) {
         try {
             const transaction = req.cookies.oidcTransaction
             res.clearCookie('oidcTransaction', {path: getOidcCallbackPath()})
-            if (!transaction || req.query.error || typeof req.query.code !== 'string') {
-                Response.Unauthorized(res, 'OIDC authentication failed')
-                return
-            }
-
             const callbackUrl = new URL(req.originalUrl, oidc.getConfig().redirectUri)
+            // Every callback must verify the signed transaction and let the OIDC
+            // client validate the authorization response before looking up a user.
             const identity = await oidc.completeAuthorization(callbackUrl, transaction)
             if (identity.jitEnabled) {
                 try {

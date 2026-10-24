@@ -589,6 +589,57 @@ module.exports = function(request, app) {
         }
       })
 
+      it('Rejects invalid OIDC callbacks without issuing a session', async () => {
+        const previousEnv = {...process.env}
+        process.env.OIDC_ENABLED = 'true'
+        process.env.OIDC_ISSUER = 'https://issuer.example/'
+        process.env.OIDC_CLIENT_ID = 'pwndoc-test'
+        process.env.OIDC_REDIRECT_URI = 'https://pwndoc.example/api/auth/oidc/callback'
+        const auth = require('../src/lib/auth')
+        const jwt = require('jsonwebtoken')
+        const payload = {type: 'oidc-transaction', state: 'state', nonce: 'nonce', codeVerifier: 'verifier'}
+        const transaction = jwt.sign(payload, auth.jwtSecret, {expiresIn: '10 minutes'})
+        const grant = jest.fn().mockRejectedValue(new Error('Invalid authorization response'))
+        oidc.setClientLibraryForTests({
+          discovery: jest.fn().mockResolvedValue({}), authorizationCodeGrant: grant
+        })
+        const sessionSpy = jest.spyOn(auth, 'createSessionForUser')
+        const userSpy = jest.spyOn(User, 'findOne')
+        try {
+          const invalidTransactions = [
+            undefined, `${transaction}tampered`,
+            jwt.sign(payload, auth.jwtSecret, {expiresIn: -1}),
+            jwt.sign({state: 'state', nonce: 'nonce', codeVerifier: 'verifier'}, auth.jwtSecret)
+          ]
+          for (const invalidTransaction of invalidTransactions) {
+            let callback = request(app).get('/api/auth/oidc/callback?code=test&state=state')
+            if (invalidTransaction) callback = callback.set('Cookie', [`oidcTransaction=${invalidTransaction}`])
+            const response = await callback
+            expect(response.status).toBe(401)
+            expect(response.body.datas).toBe('Invalid or expired OIDC transaction')
+            expect(response.headers['set-cookie'].some(cookie => cookie.startsWith('token='))).toBe(false)
+          }
+          expect(grant).not.toHaveBeenCalled()
+          for (const query of ['', '?error=access_denied&state=state', '?code=test&state=wrong']) {
+            const response = await request(app).get(`/api/auth/oidc/callback${query}`)
+              .set('Cookie', [`oidcTransaction=${transaction}`])
+            expect(response.status).toBe(401)
+            expect(response.body.datas).toBe('OIDC authentication failed')
+          }
+          expect(grant).toHaveBeenCalledTimes(3)
+          expect(userSpy).not.toHaveBeenCalled()
+          expect(sessionSpy).not.toHaveBeenCalled()
+        } finally {
+          sessionSpy.mockRestore()
+          userSpy.mockRestore()
+          oidc.setClientLibraryForTests(undefined)
+          for (const key of Object.keys(process.env)) {
+            if (!(key in previousEnv)) delete process.env[key]
+          }
+          Object.assign(process.env, previousEnv)
+        }
+      })
+
       it('Uses the configured OIDC redirect URI path for the callback and transaction cookie', async () => {
         const previousEnv = {
           OIDC_ENABLED: process.env.OIDC_ENABLED,
@@ -619,7 +670,7 @@ module.exports = function(request, app) {
 
           response = await request(oidcApp).get('/api/sso?code=test')
           expect(response.status).toBe(401)
-          expect(response.body.datas).toBe('OIDC authentication failed')
+          expect(response.body.datas).toBe('Invalid or expired OIDC transaction')
           expect(response.headers['set-cookie']).toEqual(expect.arrayContaining([
             expect.stringMatching(/oidcTransaction=; Path=\/api\/sso;/)
           ]))
