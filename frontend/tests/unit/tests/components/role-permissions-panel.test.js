@@ -24,6 +24,15 @@ const catalog = [
     permissions: [
       { scope: 'backups:update' }
     ]
+  },
+  {
+    key: 'audits',
+    label: 'Audits',
+    permissions: [
+      { scope: 'audits:update', core: true },
+      { scope: 'audits:delete', core: true },
+      { scope: 'audits:comments:delete', core: true }
+    ]
   }
 ]
 
@@ -52,7 +61,7 @@ const createWrapper = (props = {}) => {
       permissionsCatalog: catalog,
       allows: ['roles:read'],
       search: '',
-      expandedPermissionGroups: { roles: true, users: true, backups: true },
+      expandedPermissionGroups: { roles: true, users: true, backups: true, audits: true },
       ...props
     },
     global: {
@@ -76,8 +85,8 @@ describe('RolePermissionsPanel', () => {
   it('treats all permissions as selected when allPermissions is true', () => {
     const wrapper = createWrapper({ allows: [], allPermissions: true })
 
-    expect(wrapper.vm.selectedPermissionsCount).toBe(4)
-    expect(wrapper.text()).toContain('4 / 4 assigned')
+    expect(wrapper.vm.selectedPermissionsCount).toBe(7)
+    expect(wrapper.text()).toContain('7 / 7 assigned')
   })
 
   it('filters permissions by search text', async () => {
@@ -105,5 +114,26 @@ describe('RolePermissionsPanel', () => {
     expect(wrapper.text()).toContain('criticalPermissionBadge')
     expect(wrapper.text()).toContain('highImpactPermissionTitle')
     expect(wrapper.find('.critical-permission-banner').exists()).toBe(true)
+  })
+
+  it('shows a comment cascade note only when audits update or delete permission is selected', async () => {
+    const wrapper = createWrapper({ allows: ['audits:comments:delete'] })
+
+    expect(wrapper.find('[data-testid="role-permission-note-audits"]').exists()).toBe(false)
+
+    await wrapper.setProps({ allows: ['audits:update'] })
+    expect(wrapper.find('[data-testid="role-permission-note-audits"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('auditsPermissionCommentCascadeNote')
+
+    await wrapper.setProps({ allows: ['audits:delete'] })
+    expect(wrapper.find('[data-testid="role-permission-note-audits"]').exists()).toBe(true)
+
+    expect(wrapper.find('[data-testid="role-permission-note-roles"]').exists()).toBe(false)
+  })
+
+  it('shows the comment cascade note when all permissions are selected', () => {
+    const wrapper = createWrapper({ allows: [], allPermissions: true })
+
+    expect(wrapper.find('[data-testid="role-permission-note-audits"]').exists()).toBe(true)
   })
 })

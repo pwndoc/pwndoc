@@ -56,6 +56,14 @@
                                 <q-icon v-if="isSensitivePermission(permission.scope)" name="warning" color="negative" size="18px" class="q-mr-sm" />
                             </div>
                         </div>
+                        <div v-if="groupPermissionNote(group)" class="col-12">
+                            <q-banner dense rounded class="permission-note-banner bg-blue-1" :data-testid="`role-permission-note-${group.key}`">
+                                <template v-slot:avatar>
+                                    <q-icon name="info" color="primary" size="20px" />
+                                </template>
+                                <div>{{groupPermissionNote(group)}}</div>
+                            </q-banner>
+                        </div>
                         <div v-if="groupHasSensitivePermission(group)" class="col-12">
                             <q-banner dense rounded class="critical-permission-banner bg-red-1">
                                 <template v-slot:avatar>
@@ -75,6 +83,14 @@
 
 <script>
 const SENSITIVE_PERMISSIONS = new Set(['backups:update'])
+
+// Informational notes shown under specific permission groups when a trigger permission is selected
+const GROUP_PERMISSION_NOTES = {
+    audits: {
+        key: 'auditsPermissionCommentCascadeNote',
+        whenSelected: ['audits:update', 'audits:update-all', 'audits:delete', 'audits:delete-all']
+    }
+}
 
 export default {
     name: 'RolePermissionsPanel',
@@ -137,6 +153,14 @@ export default {
         groupHasSensitivePermission: function(group) {
             return group.permissions.some(permission => this.isSensitivePermission(permission.scope))
         },
+        groupPermissionNote: function(group) {
+            const note = GROUP_PERMISSION_NOTES[group.key]
+            if (!note)
+                return null
+            if (!note.whenSelected.some(scope => this.isPermissionChecked(scope)))
+                return null
+            return this.$t(note.key)
+        },
         permissionMatchesSearch: function(permission, group) {
             const needle = this.search.trim().toLowerCase()
             if (!needle)
@@ -194,5 +218,9 @@ export default {
 
 .critical-permission-banner {
     border-left: 4px solid var(--q-negative);
+}
+
+.permission-note-banner {
+    border-left: 4px solid var(--q-primary);
 }
 </style>

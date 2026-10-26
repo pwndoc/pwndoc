@@ -45,6 +45,8 @@ Common actions:
 | `audits:comments:delete` | Delete comments from audits where the user is creator or collaborator |
 | `audits:comments:delete-all` | Delete comments from any audit |
 
+Editing or deleting a finding (via `audits:update` / `audits:update-all`) also deletes its associated comments, even without `audits:comments:delete`.
+
 ### Vulnerabilities
 
 | Permission | Description |
