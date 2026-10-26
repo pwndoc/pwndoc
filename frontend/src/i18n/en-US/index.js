@@ -207,6 +207,7 @@ export default {
     criticalPermissionBadge: 'CRITICAL',
     highImpactPermissionTitle: 'High impact',
     sensitivePermissionTooltip: 'This permission can overwrite existing users, roles and all permissions.',
+    auditsPermissionCommentCascadeNote: 'Editing or deleting a finding also deletes its associated comments, even without audits:comments:delete.',
     systemRole: 'System',
     cannotEditSystemRole: 'System roles cannot be edited',
     usersWithRole: 'Users with this role',

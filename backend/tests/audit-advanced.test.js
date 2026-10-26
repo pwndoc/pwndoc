@@ -249,6 +249,72 @@ module.exports = function(request, app) {
         expect(response.status).toBe(200)
       })
 
+      it('Cascades comment deletes when marked content or finding is removed', async () => {
+        var anchoredCommentId = 'aaaaaaaaaaaaaaaaaaaaaaaa'
+        var fieldCommentId = 'bbbbbbbbbbbbbbbbbbbbbbbb'
+
+        var response = await request(app).post(`/api/audits/${parentAuditId}/findings`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+          .send({
+            title: 'Cascade Comment Finding',
+            description: `<p><comment id="${anchoredCommentId}">marked</comment></p>`
+          })
+        expect(response.status).toBe(200)
+
+        response = await request(app).get(`/api/audits/${parentAuditId}`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+        expect(response.status).toBe(200)
+        var cascadeFindingId = response.body.datas.findings.find(f => f.title === 'Cascade Comment Finding')._id
+
+        response = await request(app).post(`/api/audits/${parentAuditId}/comments`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+          .send({
+            findingId: cascadeFindingId,
+            fieldName: 'descriptionField',
+            authorId: adminUserId,
+            commentId: anchoredCommentId,
+            text: 'anchored'
+          })
+        expect(response.status).toBe(201)
+
+        response = await request(app).post(`/api/audits/${parentAuditId}/comments`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+          .send({
+            findingId: cascadeFindingId,
+            fieldName: 'titleField',
+            authorId: adminUserId,
+            commentId: fieldCommentId,
+            text: 'field level'
+          })
+        expect(response.status).toBe(201)
+
+        // Removing the mark from HTML should delete only the mark-anchored comment
+        response = await request(app).put(`/api/audits/${parentAuditId}/findings/${cascadeFindingId}`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+          .send({
+            title: 'Cascade Comment Finding',
+            description: '<p>marked</p>'
+          })
+        expect(response.status).toBe(200)
+
+        response = await request(app).get(`/api/audits/${parentAuditId}`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+        expect(response.status).toBe(200)
+        var findingComments = response.body.datas.comments.filter(c => String(c.findingId) === String(cascadeFindingId))
+        expect(findingComments.map(c => String(c._id))).toEqual([fieldCommentId])
+
+        // Deleting the finding should cascade-delete remaining comments on it
+        response = await request(app).delete(`/api/audits/${parentAuditId}/findings/${cascadeFindingId}`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+        expect(response.status).toBe(200)
+
+        response = await request(app).get(`/api/audits/${parentAuditId}`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+        expect(response.status).toBe(200)
+        findingComments = response.body.datas.comments.filter(c => String(c.findingId) === String(cascadeFindingId))
+        expect(findingComments.length).toBe(0)
+      })
+
       it('Stores rich finding content used by report generation', async () => {
         var response = await request(app).post('/api/images')
           .set('Cookie', [`token=JWT ${adminToken}`])
