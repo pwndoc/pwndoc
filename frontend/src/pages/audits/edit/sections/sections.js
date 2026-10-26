@@ -87,9 +87,10 @@ export default {
 
         // save on ctrl+s
         document.addEventListener('keydown', this._listener, false)
-        // listen for comments added in the editor
+        // listen for comments added/removed in the editor
         document.addEventListener('comment-added', this.editorCommentAdded)
         document.addEventListener('comment-clicked', this.editorCommentClicked)
+        document.addEventListener('comment-removed', this.editorCommentRemoved)
 
         // Handle focus when comment mode is enabled
         if (this.commentMode) {
@@ -118,6 +119,7 @@ export default {
         document.removeEventListener('keydown', this._listener, false)
         document.removeEventListener('comment-added', this.editorCommentAdded)
         document.removeEventListener('comment-clicked', this.editorCommentClicked)
+        document.removeEventListener('comment-removed', this.editorCommentRemoved)
         if (this.draftRecovery)
             this.draftRecovery.stop()
         this.clearSaveSuccess()
@@ -648,6 +650,16 @@ export default {
                     this.focusedComment = comment._id
                 }
             }
+        },
+
+        // Cascade-delete comments when their anchored text/image is removed from the editor
+        editorCommentRemoved: function(event) {
+            if (!event.detail || !event.detail.id)
+                return
+
+            let comment = this.auditParent.comments.find(e => e._id === event.detail.id)
+            if (comment)
+                this.deleteComment(comment)
         },
 
         scrollSidebarCommentIntoView: function(commentId, block = "center") {
