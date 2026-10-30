@@ -57,7 +57,8 @@ export default {
     inject: [
         'frontEndAuditState',
         'auditParent',
-        'customFields'
+        'customFields',
+        'customFieldsLoaded'
     ],
 
     components: {
@@ -150,6 +151,10 @@ export default {
         },
 
         addFindingFromVuln: function(vuln) {
+            if (vuln && !this.customFieldsLoaded) {
+                Notify.create({message: $t('msg.customFieldsUnavailable'), color: 'negative', textColor: 'white', position: 'top-right'});
+                return;
+            }
             var finding = null;
             if (vuln) {
                 finding = {
@@ -191,6 +196,10 @@ export default {
         },
 
         addFinding: function(category) {
+            if (this.findingTitle && !this.customFieldsLoaded) {
+                Notify.create({message: $t('msg.customFieldsUnavailable'), color: 'negative', textColor: 'white', position: 'top-right'});
+                return;
+            }
             var finding = null;
             if (category && this.findingTitle) {
                 finding = {

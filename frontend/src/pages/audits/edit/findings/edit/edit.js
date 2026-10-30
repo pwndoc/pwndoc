@@ -32,6 +32,8 @@ export default {
         return {
             finding: {},
             findingOrig: {},
+            findingLoaded: false,
+            customFieldsUnavailable: false,
             selectedTab: "definition",
             proofsTabVisited: false,
             detailsTabVisited: false,
@@ -73,7 +75,8 @@ export default {
         'replyingComment',
         'fieldHighlighted',
         'commentIdList',
-        'customFields'
+        'customFields',
+        'loadCustomFields'
     ],
 
     components: {
@@ -323,18 +326,34 @@ export default {
         // Get Finding
         getFinding: function() {
             AuditService.getFinding(this.auditId, this.findingId)
-            .then((data) => {
-                this.finding = data.data.datas;
-                if (this.finding.customFields && // For retrocompatibility with customField reference instead of object
-                    this.finding.customFields.length > 0 && 
-                    typeof (this.finding.customFields[0].customField) === 'string') 
-                    this.finding.customFields = Utils.filterCustomFields('finding', this.finding.category, this.customFields, this.finding.customFields, this.auditParent.language)
+            .then(async (data) => {
+                const finding = data.data.datas;
+                this.customFieldsUnavailable = false;
+                if (finding.customFields && // For retrocompatibility with customField reference instead of object
+                    finding.customFields.length > 0 &&
+                    typeof finding.customFields[0].customField === 'string') {
+                    // The audit page loads the catalog independently. Never resolve an id-only
+                    // finding against its initial empty catalog: that would erase every field.
+                    const catalog = await this.loadCustomFields();
+                    if (Array.isArray(catalog)) {
+                        const resolved = Utils.filterCustomFields('finding', finding.category, catalog, finding.customFields, this.auditParent.language);
+                        const resolvedIds = new Set(resolved.map(field => field.customField?._id));
+                        if (finding.customFields.every(field => resolvedIds.has(field.customField)))
+                            finding.customFields = resolved;
+                        else
+                            this.customFieldsUnavailable = true;
+                    }
+                    else
+                        this.customFieldsUnavailable = true;
+                }
+                this.finding = finding;
                 if (this.finding.paragraphs.length > 0 && !this.finding.poc)
                     this.finding.poc = this.convertParagraphsToHTML(this.finding.paragraphs)
 
                 this.$nextTick(() => {
                     Utils.syncEditors(this.$refs)
                     this.findingOrig = this.$_.cloneDeep(this.finding); 
+                    this.findingLoaded = true;
                     this.setupDraftRecovery()
                     this.draftRecovery.maybePromptRecovery()
                 })
@@ -365,6 +384,16 @@ export default {
 
         // Update Finding
         updateFinding: function() {
+            if (!this.findingLoaded || this.customFieldsUnavailable ||
+                (this.findingOrig.customFields?.length > 0 && !this.finding.customFields?.length)) {
+                Notify.create({
+                    message: $t('msg.customFieldsUnavailable'),
+                    color: 'negative',
+                    textColor: 'white',
+                    position: 'top-right'
+                })
+                return
+            }
             Utils.syncEditors(this.$refs)
             this.$nextTick(() => {
                 var customFieldsEmpty = this.$refs.customfields && this.$refs.customfields.requiredFieldsEmpty()

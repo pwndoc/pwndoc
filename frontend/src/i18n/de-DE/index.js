@@ -76,6 +76,7 @@ export default {
         auditDraftDownloadWarningTitle: 'Lokale Wiederherstellungsänderungen sind vorhanden',
         auditDraftDownloadWarningMessage: 'Dieses Audit enthält lokale Wiederherstellungsänderungen, die nicht auf dem Server gespeichert sind. Sie werden erst in den generierten Bericht aufgenommen, wenn Sie sie zuvor speichern.',
         fieldRequired: 'Bitte füllen Sie alle benötigten Felder aus',
+        customFieldsUnavailable: 'Benutzerdefinierte Felder sind noch nicht bereit oder unvollständig. Speichern ist zum Schutz der Daten gesperrt; bitte erneut versuchen oder die Seite neu laden.',
         deleteFindingConfirm: 'Aktuelles Ergebnis löschen ?',
         deleteFindingNotice: 'Diese Aktion kann nicht rückgängig gemacht werden',
         selectHost: 'Host auswählen',
