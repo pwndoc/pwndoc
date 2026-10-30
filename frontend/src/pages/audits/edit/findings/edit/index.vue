@@ -107,6 +107,10 @@
         </template>
     </breadcrumb>
 
+    <div v-if="customFieldsUnavailable" class="q-pa-sm bg-red-1 text-negative">
+        {{ $t('msg.customFieldsUnavailable') }}
+    </div>
+
     <div class="row" v-if="auditParent.type === 'default'">
         <q-tabs data-testid="finding-tabs-bar" v-model="selectedTab" align="left" indicator-color="primary" active-bg-color="grey-3" class="bg-white top-fixed" :style="findingTabsBarStyle">
             <q-tab name="definition" default :label="$t('definition')" />
@@ -271,7 +275,7 @@
                         </q-card-section>
                         <q-expansion-item 
                         :label="$t('customFields')"
-                        v-if="finding.customFields && finding.customFields.length > 0"
+                        v-if="!customFieldsUnavailable && finding.customFields && finding.customFields.length > 0"
                         default-opened
                         header-class="bg-blue-grey-5 text-white" 
                         expand-icon-class="text-white">
@@ -743,7 +747,7 @@
                         </q-card-section>
                         <q-expansion-item 
                         :label="$t('customFields')"
-                        v-if="finding.customFields && finding.customFields.length > 0"
+                        v-if="!customFieldsUnavailable && finding.customFields && finding.customFields.length > 0"
                         default-opened
                         header-class="bg-blue-grey-5 text-white" 
                         expand-icon-class="text-white">

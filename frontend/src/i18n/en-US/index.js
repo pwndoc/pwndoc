@@ -100,6 +100,7 @@ export default {
         auditDraftDownloadWarningTitle: 'Local recovery changes exist',
         auditDraftDownloadWarningMessage: 'This audit has local recovery changes that are not saved to the server. They will not be included in the generated report unless you save them first.',
         fieldRequired: 'Please fill all required Fields',
+        customFieldsUnavailable: 'Custom fields are not ready or are incomplete. Saving is blocked to prevent data loss; wait and retry, or reload the page.',
         errorLoading: 'Error loading data',
         errorCreating: 'Error creating rule',
         errorDeleting: 'Error deleting rule',

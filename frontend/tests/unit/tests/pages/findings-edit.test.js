@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createWebHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
@@ -284,6 +284,7 @@ describe('Findings Edit Page', () => {
           fieldHighlighted: null,
           commentIdList: [],
           customFields: [],
+          loadCustomFields: () => Promise.resolve([]),
           ...(options.provide || {})
         }
       }
@@ -356,6 +357,79 @@ describe('Findings Edit Page', () => {
 
       expect(wrapper.vm.finding.title).toBe('Test Finding')
       expect(wrapper.vm.finding.vulnType).toBe('Injection')
+    })
+
+    it('waits for the catalog before resolving id-only custom fields', async () => {
+      let resolveCatalog
+      const catalogPending = new Promise(resolve => { resolveCatalog = resolve })
+      const storedFields = [{ customField: 'ticket-status', text: 'Failed' }]
+      const catalog = [{ _id: 'ticket-status', label: 'Ticketing Status', display: 'finding' }]
+      AuditService.getFinding.mockResolvedValue({
+        data: { datas: { ...mockFinding, customFields: storedFields } }
+      })
+      Utils.filterCustomFields.mockImplementationOnce((_page, _category, fields, values) => [
+        { customField: fields[0], text: values[0].text }
+      ])
+
+      const wrapper = createWrapper({ provide: { loadCustomFields: () => catalogPending } })
+      await flushPromises()
+
+      expect(wrapper.vm.findingLoaded).toBe(false)
+      wrapper.vm.updateFinding()
+      expect(AuditService.updateFinding).not.toHaveBeenCalled()
+      expect(Utils.filterCustomFields).not.toHaveBeenCalled()
+
+      resolveCatalog(catalog)
+      await flushPromises()
+
+      expect(Utils.filterCustomFields).toHaveBeenCalledWith('finding', 'Web', catalog, storedFields, 'en')
+      expect(wrapper.vm.finding.customFields).toEqual([{ customField: catalog[0], text: 'Failed' }])
+      expect(wrapper.vm.findingLoaded).toBe(true)
+      expect(wrapper.vm.customFieldsUnavailable).toBe(false)
+    })
+
+    it('preserves id-only fields and blocks saving when the catalog is unavailable', async () => {
+      const storedFields = [{ customField: 'ticket-status', text: 'Failed' }]
+      AuditService.getFinding.mockResolvedValue({
+        data: { datas: { ...mockFinding, customFields: storedFields } }
+      })
+      const wrapper = createWrapper({ provide: { loadCustomFields: () => Promise.resolve(null) } })
+      await flushPromises()
+
+      expect(wrapper.vm.finding.customFields).toEqual(storedFields)
+      expect(wrapper.vm.customFieldsUnavailable).toBe(true)
+      wrapper.vm.updateFinding()
+      expect(AuditService.updateFinding).not.toHaveBeenCalled()
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'msg.customFieldsUnavailable', color: 'negative'
+      }))
+    })
+
+    it('blocks saving when a catalog mismatch would drop a stored custom field', async () => {
+      const storedFields = [{ customField: 'ticket-status', text: 'Failed' }]
+      AuditService.getFinding.mockResolvedValue({
+        data: { datas: { ...mockFinding, customFields: storedFields } }
+      })
+      const wrapper = createWrapper({ provide: { loadCustomFields: () => Promise.resolve([]) } })
+      await flushPromises()
+
+      expect(wrapper.vm.finding.customFields).toEqual(storedFields)
+      expect(wrapper.vm.customFieldsUnavailable).toBe(true)
+      wrapper.vm.updateFinding()
+      expect(AuditService.updateFinding).not.toHaveBeenCalled()
+    })
+
+    it('blocks saving if a restored draft removes previously loaded custom fields', async () => {
+      const storedFields = [{ customField: { _id: 'ticket-status', label: 'Ticketing Status' }, text: 'Failed' }]
+      AuditService.getFinding.mockResolvedValue({
+        data: { datas: { ...mockFinding, customFields: storedFields } }
+      })
+      const wrapper = createWrapper()
+      await flushPromises()
+      wrapper.vm.finding.customFields = []
+
+      wrapper.vm.updateFinding()
+      expect(AuditService.updateFinding).not.toHaveBeenCalled()
     })
 
     it('should populate vulnTypes after getVulnTypes resolves', async () => {

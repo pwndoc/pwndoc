@@ -88,6 +88,7 @@ msg: {
     auditDraftDownloadWarningTitle: 'Existem alterações locais recuperadas',
     auditDraftDownloadWarningMessage: 'Esta auditoria possui alterações locais recuperadas que não foram salvas no servidor. Elas não serão incluídas no relatório gerado a menos que você as salve primeiro.',
     fieldRequired: 'Por favor, preencha todos os campos obrigatórios',
+    customFieldsUnavailable: 'Os campos personalizados ainda não estão prontos ou estão incompletos. O salvamento está bloqueado para evitar perda de dados; tente novamente ou recarregue a página.',
     deleteFindingConfirm: 'Excluir Descoberta atual?',
     deleteFindingNotice: 'Esta ação não pode ser desfeita',
     selectHost: 'Selecionar Hospedeiro',
