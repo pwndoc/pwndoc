@@ -1166,11 +1166,6 @@ describe('Findings Edit Page', () => {
       expect(AuditService.createComment).toHaveBeenCalledWith('audit123', {
         findingId: 'finding1',
         fieldName: 'titleField',
-        authorId: 'user1',
-        author: {
-          firstname: 'Test',
-          lastname: 'User'
-        },
         text: '',
         commentId: 'commentId1'
       })
@@ -1339,8 +1334,7 @@ describe('Findings Edit Page', () => {
       wrapper.vm.updateComment(comment)
 
       expect(comment.replies).toHaveLength(1)
-      expect(comment.replies[0].text).toBe('reply text')
-      expect(comment.replies[0].author).toBe('user1')
+      expect(comment.replies[0]).toEqual({ text: 'reply text' })
     })
 
     it('should show error notification on update failure', async () => {

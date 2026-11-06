@@ -1161,9 +1161,42 @@ AuditSchema.statics.deleteParent = (isAdmin, auditId, userId) => {
     })
 }
 
+// Keep reply authorship with the user who wrote each reply.
+// Existing replies keep their stored author; new replies belong to the caller.
+function assignReplyAuthors(existingReplies, incomingReplies, userId) {
+    return incomingReplies.reduce((replies, reply) => {
+        if (!reply || typeof reply !== 'object')
+            return replies
+
+        var existing = null
+        if (reply._id && mongoose.Types.ObjectId.isValid(reply._id)) {
+            try {
+                existing = existingReplies.id(reply._id)
+            } catch (err) {
+                existing = null
+            }
+        }
+
+        var next = {
+            text: typeof reply.text === 'string' ? reply.text : (existing ? existing.text : '')
+        }
+        if (existing) {
+            next._id = existing._id
+            next.author = existing.author
+            if (existing.createdAt)
+                next.createdAt = existing.createdAt
+        } else {
+            next.author = userId
+        }
+        replies.push(next)
+        return replies
+    }, [])
+}
+
 // Create Comment
 AuditSchema.statics.createComment = (isAdmin, auditId, userId, comment) => {
     return new Promise(async(resolve, reject) => {
+        comment.author = userId
         var query = Audit.findByIdAndUpdate(auditId, {$push: {comments: comment}}, {new: true})
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
@@ -1223,6 +1256,9 @@ AuditSchema.statics.updateComment = (isAdmin, auditId, userId, commentId, newCom
             if (comment === null)
                 reject({fn: 'NotFound', message: 'Comment not found'})         
             else {
+                if (Array.isArray(newComment.replies))
+                    newComment.replies = assignReplyAuthors(comment.replies, newComment.replies, userId)
+                delete newComment.author
                 Object.keys(newComment).forEach((key) => {
                     comment[key] = newComment[key]
                 })
