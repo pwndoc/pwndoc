@@ -1,4 +1,4 @@
-const AI_PROVIDERS = ['openai', 'anthropic', 'deepseek', 'ollama', 'bedrock'];
+const AI_PROVIDERS = ['openai', 'anthropic', 'deepseek', 'ollama', 'bedrock', 'orcarouter'];
 const AI_DEFAULT_PROVIDER = 'openai';
 
 const AI_PROVIDER_DEFAULTS = {
@@ -26,6 +26,13 @@ const AI_PROVIDER_DEFAULTS = {
     bedrock: {
         region: 'us-east-1',
         model: 'global.anthropic.claude-opus-4-8',
+        timeoutMs: 120000
+    },
+    // OrcaRouter Cyber Inference: an OpenAI-compatible gateway for authorized security
+    // reasoning. https://www.orcarouter.ai/cyber
+    orcarouter: {
+        baseUrl: 'https://api.orcarouter.ai/v1',
+        model: 'orcarouter/auto',
         timeoutMs: 120000
     }
 };
