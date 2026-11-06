@@ -662,6 +662,76 @@ AuditSchema.statics.getFinding = (isAdmin, auditId, userId, findingId) => {
     })
 }
 
+// Extract TipTap comment mark / node ids embedded in HTML content
+function extractCommentIdsFromHtml(html) {
+    var ids = new Set()
+    if (!html || typeof html !== 'string')
+        return ids
+
+    var match
+    var commentTag = /<comment\b[^>]*\bid=["']([^"']+)["']/gi
+    while ((match = commentTag.exec(html)) !== null)
+        ids.add(match[1])
+
+    var commentIdAttr = /\bcommentid=["']([^"']+)["']/gi
+    while ((match = commentIdAttr.exec(html)) !== null)
+        ids.add(match[1])
+
+    return ids
+}
+
+function extractCommentIdsFromFinding(finding) {
+    var ids = new Set()
+    if (!finding)
+        return ids
+
+    ;['description', 'observation', 'poc', 'remediation', 'retestDescription', 'scope'].forEach((field) => {
+        extractCommentIdsFromHtml(finding[field]).forEach((id) => ids.add(id))
+    })
+
+    if (Array.isArray(finding.customFields)) {
+        finding.customFields.forEach((customField) => {
+            if (typeof customField.text === 'string')
+                extractCommentIdsFromHtml(customField.text).forEach((id) => ids.add(id))
+        })
+    }
+
+    return ids
+}
+
+function extractCommentIdsFromSection(section) {
+    var ids = new Set()
+    if (!section)
+        return ids
+
+    if (Array.isArray(section.customFields)) {
+        section.customFields.forEach((customField) => {
+            if (typeof customField.text === 'string')
+                extractCommentIdsFromHtml(customField.text).forEach((id) => ids.add(id))
+        })
+    }
+
+    return ids
+}
+
+// Drop mark-anchored comments whose ids disappeared from rich-text content
+function pullOrphanedComments(comments, entityIdField, entityId, oldIds, newIds) {
+    if (!comments || !comments.length)
+        return
+
+    var entityIdStr = String(entityId)
+    var orphanIds = []
+    comments.forEach((comment) => {
+        if (!comment[entityIdField] || String(comment[entityIdField]) !== entityIdStr)
+            return
+
+        var commentId = String(comment._id)
+        if (oldIds.has(commentId) && !newIds.has(commentId))
+            orphanIds.push(comment._id)
+    })
+    orphanIds.forEach((id) => comments.pull(id))
+}
+
 // Update finding of audit
 AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFinding) => {
     return new Promise((resolve, reject) => { 
@@ -683,9 +753,15 @@ AuditSchema.statics.updateFinding = (isAdmin, auditId, userId, findingId, newFin
                 if (sortOption && !sortOption.sortAuto)
                     sortAuto = false
 
+                var oldCommentIds = extractCommentIdsFromFinding(finding)
+
                 Object.keys(newFinding).forEach((key) => {
                     finding[key] = newFinding[key]
                 })
+
+                var newCommentIds = extractCommentIdsFromFinding(finding)
+                pullOrphanedComments(row.comments, 'findingId', findingId, oldCommentIds, newCommentIds)
+
                 return row.save({ validateBeforeSave: false }) // Disable schema validation since scope changed from Array to String
             } 
         })
@@ -710,7 +786,7 @@ AuditSchema.statics.deleteFinding = (isAdmin, auditId, userId, findingId) => {
         var query = Audit.findById(auditId)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
-        query.select('findings')
+        query.select('findings comments')
         query.exec()
         .then((row) => {
             if (!row)
@@ -720,6 +796,10 @@ AuditSchema.statics.deleteFinding = (isAdmin, auditId, userId, findingId) => {
             if (finding === null) reject({fn: 'NotFound', message: 'Finding not found'})
             else {
                 row.findings.pull(findingId)
+                // Cascade-delete comments anchored to this finding
+                row.comments
+                    .filter((comment) => comment.findingId && String(comment.findingId) === String(findingId))
+                    .forEach((comment) => row.comments.pull(comment._id))
                 return row.save()
             }
         })
@@ -791,9 +871,15 @@ AuditSchema.statics.updateSection = (isAdmin, auditId, userId, sectionId, newSec
             if (section === null)
                 throw({fn: 'NotFound', message: 'Section not found'})          
             else {
+                var oldCommentIds = extractCommentIdsFromSection(section)
+
                 Object.keys(newSection).forEach((key) => {
                     section[key] = newSection[key]
                 })
+
+                var newCommentIds = extractCommentIdsFromSection(section)
+                pullOrphanedComments(row.comments, 'sectionId', sectionId, oldCommentIds, newCommentIds)
+
                 return row.save()
             } 
         })
@@ -812,7 +898,7 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
         var query = Audit.findById(auditId)
         if (!isAdmin)
             query.or([{creator: userId}, {collaborators: userId}])
-        query.select('sections')
+        query.select('sections comments')
         query.exec()
         .then((row) => {
             if (!row)
@@ -822,6 +908,10 @@ AuditSchema.statics.deleteSection = (isAdmin, auditId, userId, sectionId) => {
             if (section === null) throw({fn: 'NotFound', message: 'Section not found'})
             else {
                 row.sections.pull(sectionId)
+                // Cascade-delete comments anchored to this section
+                row.comments
+                    .filter((comment) => comment.sectionId && String(comment.sectionId) === String(sectionId))
+                    .forEach((comment) => row.comments.pull(comment._id))
                 return row.save()
             }
         })

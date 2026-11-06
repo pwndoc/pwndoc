@@ -338,6 +338,7 @@ describe('Findings Edit Page', () => {
       createWrapper()
       expect(addEventSpy).toHaveBeenCalledWith('comment-added', expect.any(Function))
       expect(addEventSpy).toHaveBeenCalledWith('comment-clicked', expect.any(Function))
+      expect(addEventSpy).toHaveBeenCalledWith('comment-removed', expect.any(Function))
       addEventSpy.mockRestore()
     })
 
@@ -1276,6 +1277,40 @@ describe('Findings Edit Page', () => {
     })
   })
 
+  describe('editorCommentRemoved', () => {
+    it('should cascade-delete the matching comment when anchored content is removed', async () => {
+      AuditService.deleteComment.mockResolvedValue({})
+      AuditService.updateFinding.mockResolvedValue({})
+
+      const wrapper = createWrapper({
+        auditParent: {
+          comments: [{ _id: 'comment1', fieldName: 'descriptionField', text: 'orphaned' }]
+        }
+      })
+      await wrapper.vm.$nextTick()
+      await wrapper.vm.$nextTick()
+
+      wrapper.vm.editorCommentRemoved({ detail: { id: 'comment1' } })
+
+      expect(AuditService.deleteComment).toHaveBeenCalledWith('audit123', 'comment1')
+    })
+
+    it('should ignore removals for unknown comment ids', async () => {
+      AuditService.deleteComment.mockClear()
+
+      const wrapper = createWrapper({
+        auditParent: {
+          comments: [{ _id: 'comment1', fieldName: 'descriptionField', text: 'still there' }]
+        }
+      })
+      await wrapper.vm.$nextTick()
+
+      wrapper.vm.editorCommentRemoved({ detail: { id: 'missing-comment' } })
+
+      expect(AuditService.deleteComment).not.toHaveBeenCalled()
+    })
+  })
+
   describe('updateComment', () => {
     it('should update comment text from textTemp', async () => {
       AuditService.updateComment.mockResolvedValue({})
@@ -1408,6 +1443,7 @@ describe('Findings Edit Page', () => {
       expect(removeEventSpy).toHaveBeenCalledWith('keydown', expect.any(Function), false)
       expect(removeEventSpy).toHaveBeenCalledWith('comment-added', expect.any(Function))
       expect(removeEventSpy).toHaveBeenCalledWith('comment-clicked', expect.any(Function))
+      expect(removeEventSpy).toHaveBeenCalledWith('comment-removed', expect.any(Function))
 
       removeEventSpy.mockRestore()
     })

@@ -271,6 +271,7 @@ describe('Sections Page', () => {
       createWrapper()
       expect(addEventSpy).toHaveBeenCalledWith('comment-added', expect.any(Function))
       expect(addEventSpy).toHaveBeenCalledWith('comment-clicked', expect.any(Function))
+      expect(addEventSpy).toHaveBeenCalledWith('comment-removed', expect.any(Function))
     })
   })
 
@@ -282,6 +283,7 @@ describe('Sections Page', () => {
       expect(removeEventSpy).toHaveBeenCalledWith('keydown', expect.any(Function), false)
       expect(removeEventSpy).toHaveBeenCalledWith('comment-added', expect.any(Function))
       expect(removeEventSpy).toHaveBeenCalledWith('comment-clicked', expect.any(Function))
+      expect(removeEventSpy).toHaveBeenCalledWith('comment-removed', expect.any(Function))
     })
   })
 
@@ -638,6 +640,34 @@ describe('Sections Page', () => {
           color: 'negative'
         })
       )
+    })
+  })
+
+  describe('editorCommentRemoved', () => {
+    it('should cascade-delete the matching comment when anchored content is removed', async () => {
+      AuditService.deleteComment.mockResolvedValue({})
+      AuditService.updateSection.mockResolvedValue({})
+
+      const wrapper = createWrapper({
+        auditParent: {
+          name: 'Test Audit',
+          auditType: 'Internal',
+          state: 'In Progress',
+          approvals: [],
+          parentId: null,
+          type: 'default',
+          language: 'en',
+          creator: { _id: 'user123' },
+          collaborators: [],
+          comments: [{ _id: 'comment1', fieldName: 'field-Notes', text: 'orphaned' }]
+        }
+      })
+      wrapper.vm.auditId = 'audit1'
+
+      wrapper.vm.editorCommentRemoved({ detail: { id: 'comment1' } })
+      await wrapper.vm.$nextTick()
+
+      expect(AuditService.deleteComment).toHaveBeenCalledWith('audit1', 'comment1')
     })
   })
 

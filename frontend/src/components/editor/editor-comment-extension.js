@@ -18,6 +18,23 @@ function generateObjectId() {
 }
 
 const nodesWithComment = ['caption', 'image']
+const commentCascadeKey = new PluginKey('commentCascade')
+
+function collectCommentIds(doc) {
+    const ids = new Set()
+    doc.descendants((node) => {
+        if (node.isText) {
+            for (const mark of node.marks) {
+                if (mark.type.name === 'comment' && mark.attrs.id)
+                    ids.add(mark.attrs.id)
+            }
+        }
+        else if (nodesWithComment.includes(node.type.name) && node.attrs.commentId) {
+            ids.add(node.attrs.commentId)
+        }
+    })
+    return ids
+}
 
 export default Extension.create({
     name: 'CommentExtension',
@@ -93,6 +110,8 @@ export default Extension.create({
 
             const after = tr.steps.length
             if (after > before) {
+                // Sidebar-initiated deletes already remove the comment; skip cascade
+                tr.setMeta(commentCascadeKey, { ignore: true })
                 dispatch(tr)
                 return true
             }
@@ -131,6 +150,42 @@ export default Extension.create({
                     return true
                 }
                 return false // Let Prosemirror handle click
+              }
+            }
+          }),
+          new Plugin({
+            key: commentCascadeKey,
+            state: {
+              init() {
+                return { removed: [] }
+              },
+              apply(tr, _value, oldState, newState) {
+                if (!tr.docChanged || tr.getMeta(commentCascadeKey)?.ignore)
+                  return { removed: [] }
+
+                const oldIds = collectCommentIds(oldState.doc)
+                const newIds = collectCommentIds(newState.doc)
+                const removed = []
+                for (const id of oldIds) {
+                  if (!newIds.has(id))
+                    removed.push(id)
+                }
+                return { removed }
+              }
+            },
+            view() {
+              return {
+                update(view) {
+                  const pluginState = commentCascadeKey.getState(view.state)
+                  if (!pluginState?.removed?.length)
+                    return
+
+                  for (const id of pluginState.removed) {
+                    document.dispatchEvent(new CustomEvent('comment-removed', {
+                      detail: { id }
+                    }))
+                  }
+                }
               }
             }
           })
