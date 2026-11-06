@@ -59,7 +59,16 @@ const SettingSchema = new Schema({
         enabled: { type: Boolean, default: false },
         public: {
             mandatoryReview: { type: Boolean, default: false },
-            minReviewers: { type: Number, default: 1, min: 1, max: 100, validate: [Number.isInteger, 'Invalid integer'] }
+            minReviewers: { type: Number, default: 1, min: 1, max: 100, validate: [Number.isInteger, 'Invalid integer'] },
+            allowDraftExports: { type: Boolean, default: false },
+            draftWatermark: {
+                type: [{
+                    _id: false,
+                    locale: { type: String, required: true },
+                    value: { type: String, default: '' }
+                }],
+                default: []
+            }
         },
         private: {
             removeApprovalsUponUpdate: { type: Boolean, default: false }
@@ -162,11 +171,16 @@ SettingSchema.statics.getPublic = () => {
 };
 
 // Update Settings
+// Apply only provided leaf paths so a partial nested payload (e.g. reviews.public
+// with just minReviewers) does not wipe sibling fields back to schema defaults.
+// Top-level Mongo operators ($unset, …) become unknown paths and are ignored under strict.
 SettingSchema.statics.update = (settings) => {
     return new Promise((resolve, reject) => {
         Settings.findOne({})
             .then(current => {
-                current.set(settings);
+                Utils.getObjectPaths(settings || {}).forEach(path => {
+                    current.set(path, _.get(settings, path));
+                });
                 return current.save();
             })
             .then(settings => resolve(settings))

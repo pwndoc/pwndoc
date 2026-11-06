@@ -49,6 +49,12 @@ vi.mock('@/services/backup', () => ({
   }
 }))
 
+vi.mock('@/services/data', () => ({
+  default: {
+    getLanguages: vi.fn()
+  }
+}))
+
 vi.mock('@/services/utils', () => ({
   default: {
     bytesToHumanReadable: vi.fn((size) => `${size} bytes`),
@@ -90,6 +96,7 @@ vi.mock('quasar', async () => {
 import SettingsService from '@/services/settings'
 import SpellcheckService from '@/services/spellcheck'
 import BackupService from '@/services/backup'
+import DataService from '@/services/data'
 import { Notify, Dialog } from 'quasar'
 
 const mockSettings = {
@@ -148,7 +155,9 @@ const mockSettings = {
     },
     public: {
       mandatoryReview: false,
-      minReviewers: 1
+      minReviewers: 1,
+      allowDraftExports: false,
+      draftWatermark: []
     }
   }
 }
@@ -182,7 +191,7 @@ const mockSettingsWithLt = {
         enableSpellCheck: true
       }
     },
-    reviews: { enabled: false, private: { removeApprovalsUponUpdate: true }, public: { mandatoryReview: false, minReviewers: 1 } }
+    reviews: { enabled: false, private: { removeApprovalsUponUpdate: true }, public: { mandatoryReview: false, minReviewers: 1, allowDraftExports: false, draftWatermark: [] } }
   }))
 }
 
@@ -246,6 +255,9 @@ describe('Settings Page', () => {
     BackupService.getBackupStatus.mockResolvedValue({
       data: { datas: { state: 'idle', operation: 'idle', message: '' } }
     })
+    DataService.getLanguages.mockResolvedValue({
+      data: { datas: [] }
+    })
 
     vi.clearAllMocks()
 
@@ -258,6 +270,9 @@ describe('Settings Page', () => {
     })
     BackupService.getBackupStatus.mockResolvedValue({
       data: { datas: { state: 'idle', operation: 'idle', message: '' } }
+    })
+    DataService.getLanguages.mockResolvedValue({
+      data: { datas: [] }
     })
   })
 

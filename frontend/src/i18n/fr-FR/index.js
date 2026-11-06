@@ -443,6 +443,10 @@ export default {
     mandatoryReviewInfo: `Rend le processus de révision obligatoire. Lorsqu'il est activé, un utilisateur ne peut pas exporter un audit à moins qu'il n'ait été approuvé par le nombre spécifié d'examinateurs. 
     <br/>Le nombre minimal d'examinateurs est également utilisé pour déterminer si un rapport est marqué comme approuvé.`,
     minimalNumberOfReviewers: 'Nombre minimal d\'Examinateurs',
+    allowDraftExports: 'Autoriser l\'export de rapports brouillon',
+    allowDraftExportsInfo: `Lorsque l'examen obligatoire est activé, autorise l'export de rapports qui n'ont pas encore été approuvés.`,
+    draftWatermarkDescription: 'Texte du filigrane ajouté aux exports de rapports brouillon, une valeur par langue d\'audit :',
+    noLanguagesConfigured: 'Aucune langue configurée. Ajoutez d\'abord des langues sous Données → Données personnalisées.',
     saveSettings: 'Sauvegarder les paramètres',
     revertSettingsToDefaults: 'Rétablir les paramètres par défaut',
     importSettings: 'Importation des paramètres',
