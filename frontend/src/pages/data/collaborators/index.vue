@@ -413,6 +413,27 @@
                 />
             </q-card-section>
             <q-card-section>
+                <div class="text-subtitle2 q-mb-sm">OIDC identity</div>
+                <div class="row q-col-gutter-md">
+                    <q-input
+                    data-testid="edit-collaborator-oidc-issuer-input"
+                    class="col-md-7 col-12"
+                    v-model="currentCollab.oidcIssuer"
+                    label="OIDC issuer"
+                    hint="Exact issuer URL returned by the identity provider"
+                    outlined
+                    />
+                    <q-input
+                    data-testid="edit-collaborator-oidc-subject-input"
+                    class="col-md-5 col-12"
+                    v-model="currentCollab.oidcSubject"
+                    label="OIDC subject"
+                    hint="Value of the configured stable identity claim (normally sub)"
+                    outlined
+                    />
+                </div>
+            </q-card-section>
+            <q-card-section>
                 <div class="q-pl-sm">
                     <p v-if="currentCollab.totpEnabled">{{$t('twoFactorAuthentication')}} <b>{{$t('enabled')}}</b> {{$t('forThisUser')}}</p>
                     <p v-else>{{$t('twoFactorAuthentication')}} <b>{{$t('disabled')}}</b> {{$t('forThisUser')}}</p>
