@@ -427,6 +427,8 @@ export default {
 			loading: true,
 			vulnCategories: [],
 			customFields: [],
+			customFieldsLoaded: false,
+			customFieldsRequest: null,
 			auditTypes: [],
 			findingList: [],
 			frontEndAuditState: Utils.AUDIT_VIEW_STATE.EDIT_READONLY,
@@ -464,6 +466,8 @@ export default {
 			fieldHighlighted: fieldHighlightedR,
 			commentIdList: computed(() => this.commentIdList),
 			customFields: computed(() => this.customFields),
+			customFieldsLoaded: computed(() => this.customFieldsLoaded),
+			loadCustomFields: () => this.getCustomFields(),
 		}
 	},
 
@@ -919,13 +923,25 @@ export default {
 		},
 
 		getCustomFields: function() {
-			DataService.getCustomFields()
+			if (this.customFieldsLoaded)
+				return Promise.resolve(this.customFields);
+			if (this.customFieldsRequest)
+				return this.customFieldsRequest;
+
+			this.customFieldsRequest = DataService.getCustomFields()
 			.then((data) => {
+				if (!Array.isArray(data.data.datas))
+					throw new Error('Invalid custom field catalog');
 				this.customFields = data.data.datas;
+				this.customFieldsLoaded = true;
+				return this.customFields;
 			})
 			.catch((err) => {
+				this.customFieldsRequest = null;
 				console.log(err);
-			})
+				return null;
+			});
+			return this.customFieldsRequest;
 		},
 
 		getSections: function() {

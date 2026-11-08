@@ -78,6 +78,7 @@ export default {
         auditDraftDownloadWarningTitle: '存在本地恢复更改',
         auditDraftDownloadWarningMessage: '此审计存在尚未保存到服务器的本地恢复更改。除非先保存这些更改，否则它们不会包含在生成的报告中。',
         fieldRequired: '请填写所有必填字段',
+        customFieldsUnavailable: '自定义字段尚未加载完成或不完整。为防止数据丢失，保存已被阻止；请重试或重新加载页面。',
         deleteFindingConfirm: '确认删除当前问题？',
         deleteFindingNotice: '此操作无法被取消',
         selectHost: '选择主机IP',
