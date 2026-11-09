@@ -502,7 +502,7 @@ module.exports = function(app, io) {
             return;
         }
 
-        Audit.findById(req.params.auditId)
+        Audit.getAudit(acl.isAllowed(req.decodedToken.roles, 'audits:review-all'), req.params.auditId, req.decodedToken.id)
         .then(audit => {
             if (audit.state !== "REVIEW" && audit.state !== "APPROVED") {
                 Response.Forbidden(res, "The audit is not approvable in the current state.");
@@ -587,22 +587,27 @@ module.exports = function(app, io) {
 
     // Update parentId of Audit
     app.put("/api/audits/:auditId/updateParent", acl.hasPermission('audits:create'), async function(req, res) {
-        var settings = await Settings.getAll();
-        var audit = await Audit.getAudit(acl.isAllowed(req.decodedToken.roles, 'audits:read-all'), req.body.parentId, req.decodedToken.id);
-        if (settings.reviews.enabled && audit.state !== "EDIT") {
-            Response.Forbidden(res, "The audit is not in the EDIT state and therefore cannot be edited.");
-            return;
-        }
         if (!req.body.parentId) {
             Response.BadParameters(res, 'Missing some required parameters: parentId');
             return;
         }
-        Audit.updateParent(acl.isAllowed(req.decodedToken.roles, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.body.parentId)
-        .then(msg => {
+
+        try {
+            var settings = await Settings.getAll();
+            var isAdmin = acl.isAllowed(req.decodedToken.roles, 'audits:read-all');
+            // Verify access to both the child audit and the parent audit before linking them.
+            await Audit.getAudit(isAdmin, req.params.auditId, req.decodedToken.id);
+            var audit = await Audit.getAudit(isAdmin, req.body.parentId, req.decodedToken.id);
+            if (settings.reviews.enabled && audit.state !== "EDIT") {
+                Response.Forbidden(res, "The audit is not in the EDIT state and therefore cannot be edited.");
+                return;
+            }
+            var msg = await Audit.updateParent(acl.isAllowed(req.decodedToken.roles, 'audits:update-all'), req.params.auditId, req.decodedToken.id, req.body.parentId);
             io.to(req.body.parentId).emit('updateAudit');
             Response.Ok(res, msg)
-        })
-        .catch(err => Response.Internal(res, err))
+        } catch (err) {
+            Response.Internal(res, err)
+        }
     });
 
     // Delete parentId of Audit

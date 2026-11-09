@@ -413,7 +413,7 @@ module.exports = function(request, app) {
         var response = await request(app).put(`/api/audits/${childAuditId}/updateParent`)
           .set('Cookie', [`token=JWT ${adminToken}`])
           .send({})
-        expect(response.status).toBe(500)
+        expect(response.status).toBe(422)
 
         response = await request(app).put(`/api/audits/${childAuditId}/updateParent`)
           .set('Cookie', [`token=JWT ${adminToken}`])
