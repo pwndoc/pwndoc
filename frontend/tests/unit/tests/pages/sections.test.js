@@ -570,11 +570,6 @@ describe('Sections Page', () => {
       expect(AuditService.createComment).toHaveBeenCalledWith('audit1', {
         sectionId: 'section1',
         fieldName: 'fieldName1',
-        authorId: 'user123',
-        author: {
-          firstname: 'Test',
-          lastname: 'User'
-        },
         text: '',
         commentId: 'commentId1'
       })
@@ -778,7 +773,6 @@ describe('Sections Page', () => {
 
       expect(comment.replies).toHaveLength(1)
       expect(comment.replies[0]).toEqual({
-        author: 'user123',
         text: 'My reply'
       })
     })

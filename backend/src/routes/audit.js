@@ -632,8 +632,8 @@ module.exports = function(app, io) {
             return;
         }
 
-        if (!req.body.fieldName || !req.body.authorId) {
-            Response.BadParameters(res, 'Missing some required parameters: fieldName, authorId');
+        if (!req.body.fieldName) {
+            Response.BadParameters(res, 'Missing some required parameters: fieldName');
             return;
         }
 
@@ -642,7 +642,7 @@ module.exports = function(app, io) {
         if (req.body.findingId) comment.findingId = req.body.findingId;
         if (req.body.sectionId) comment.sectionId = req.body.sectionId;
         comment.fieldName = req.body.fieldName;
-        comment.author = req.body.authorId;
+        comment.author = req.decodedToken.id;
         comment.text = (req.body.text) ? req.body.text : '';
 
         // Optional parameters

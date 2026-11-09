@@ -249,6 +249,83 @@ module.exports = function(request, app) {
         expect(response.status).toBe(200)
       })
 
+      it('Attributes comments and replies to the authenticated user', async () => {
+        var response = await request(app).post('/api/users/token').send({username: 'user2', password: 'User1234'})
+        expect(response.status).toBe(200)
+        var collaboratorToken = response.body.datas.token
+
+        response = await request(app).get('/api/users/me').set('Cookie', [`token=JWT ${collaboratorToken}`])
+        expect(response.status).toBe(200)
+        var collaboratorUserId = response.body.datas._id
+
+        response = await request(app).put(`/api/audits/${parentAuditId}/general`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+          .send({collaborators: [{_id: collaboratorUserId}]})
+        expect(response.status).toBe(200)
+
+        response = await request(app).post(`/api/audits/${parentAuditId}/comments`)
+          .set('Cookie', [`token=JWT ${collaboratorToken}`])
+          .send({
+            findingId: findingId,
+            fieldName: 'description',
+            authorId: adminUserId,
+            text: 'forged author'
+          })
+        expect(response.status).toBe(201)
+        var spoofedCommentId = response.body.datas._id
+        expect(String(response.body.datas.author)).toBe(String(collaboratorUserId))
+
+        response = await request(app).post(`/api/audits/${parentAuditId}/comments`)
+          .set('Cookie', [`token=JWT ${collaboratorToken}`])
+          .send({
+            findingId: findingId,
+            fieldName: 'observation',
+            text: 'no author id'
+          })
+        expect(response.status).toBe(201)
+        expect(String(response.body.datas.author)).toBe(String(collaboratorUserId))
+        var plainCommentId = response.body.datas._id
+
+        response = await request(app).put(`/api/audits/${parentAuditId}/comments/${spoofedCommentId}`)
+          .set('Cookie', [`token=JWT ${collaboratorToken}`])
+          .send({
+            replies: [{author: adminUserId, text: 'forged reply'}]
+          })
+        expect(response.status).toBe(200)
+
+        response = await request(app).get(`/api/audits/${parentAuditId}`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+        expect(response.status).toBe(200)
+        var stored = response.body.datas.comments.find(comment => String(comment._id) === String(spoofedCommentId))
+        expect(String(stored.author._id)).toBe(String(collaboratorUserId))
+        expect(stored.replies).toHaveLength(1)
+        expect(String(stored.replies[0].author._id)).toBe(String(collaboratorUserId))
+        var replyId = stored.replies[0]._id
+
+        response = await request(app).put(`/api/audits/${parentAuditId}/comments/${spoofedCommentId}`)
+          .set('Cookie', [`token=JWT ${collaboratorToken}`])
+          .send({
+            replies: [{_id: replyId, author: adminUserId, text: 'edited reply'}]
+          })
+        expect(response.status).toBe(200)
+
+        response = await request(app).get(`/api/audits/${parentAuditId}`)
+          .set('Cookie', [`token=JWT ${adminToken}`])
+        stored = response.body.datas.comments.find(comment => String(comment._id) === String(spoofedCommentId))
+        expect(stored.replies).toHaveLength(1)
+        expect(String(stored.replies[0]._id)).toBe(String(replyId))
+        expect(String(stored.replies[0].author._id)).toBe(String(collaboratorUserId))
+        expect(stored.replies[0].text).toBe('edited reply')
+
+        response = await request(app).delete(`/api/audits/${parentAuditId}/comments/${spoofedCommentId}`)
+          .set('Cookie', [`token=JWT ${collaboratorToken}`])
+        expect(response.status).toBe(200)
+
+        response = await request(app).delete(`/api/audits/${parentAuditId}/comments/${plainCommentId}`)
+          .set('Cookie', [`token=JWT ${collaboratorToken}`])
+        expect(response.status).toBe(200)
+      })
+
       it('Cascades comment deletes when marked content or finding is removed', async () => {
         var anchoredCommentId = 'aaaaaaaaaaaaaaaaaaaaaaaa'
         var fieldCommentId = 'bbbbbbbbbbbbbbbbbbbbbbbb'

@@ -878,11 +878,6 @@ export default {
             let comment = {
                 findingId: this.findingId,
                 fieldName: fieldName,
-                authorId: userStore.id,
-                author: {
-                    firstname: userStore.firstname,
-                    lastname: userStore.lastname
-                },
                 text: "" 
             }
             if (commentId) comment.commentId = commentId
@@ -938,7 +933,6 @@ export default {
                 comment.text = comment.textTemp
             if (comment.replyTemp){
                 comment.replies.push({
-                    author: userStore.id,
                     text: comment.replyTemp
                 })
             }
