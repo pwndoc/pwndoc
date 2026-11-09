@@ -119,4 +119,10 @@ export default {
   testProvider: function(params = {}) {
     return api.post('ai/test', params)
   },
+
+  // Server-side catalog discovery: the backend holds the API key and returns the
+  // filtered chat-model projection for the OrcaRouter Cyber Inference selector.
+  getOrcaModels: function(params = {}) {
+    return api.post('ai/providers/orcarouter/models', params)
+  }
 }
