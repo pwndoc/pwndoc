@@ -205,6 +205,11 @@ function update {
     $(dc_cmd) ps
 }
 
+function cleanup_test_environment {
+    ENV=test
+    $(dc_cmd) --profile languagetools down -v --remove-orphans
+}
+
 function test_backend {
     ENV=test
     $(dc_cmd) build pwndoc-backend pwndoc-languagetools
@@ -215,7 +220,7 @@ function test_backend {
         $(dc_cmd) run --rm --entrypoint npm pwndoc-backend run test:api
     fi
     rc=$?
-    $(dc_cmd) down -v --remove-orphans
+    cleanup_test_environment
     return $rc
 }
 
@@ -243,7 +248,7 @@ function test_frontend_e2e {
         pw_browsers=$(IFS=,; echo "${selected_browsers[*]}")
     fi
 
-    $(dc_cmd) down -v --remove-orphans
+    cleanup_test_environment || return $?
 
     $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests pwndoc-languagetools
     $(dc_cmd) up -d pwndoc-backend pwndoc-frontend pwndoc-languagetools
@@ -263,20 +268,20 @@ function test_frontend_e2e {
     fi
 
     rc=$?
-    $(dc_cmd) down -v --remove-orphans
+    cleanup_test_environment
     return $rc
 }
 
 function demo_record {
     ENV=test
-    $(dc_cmd) down -v --remove-orphans
+    cleanup_test_environment || return $?
 
     $(dc_cmd) build pwndoc-backend pwndoc-frontend frontend-tests pwndoc-languagetools
     $(dc_cmd) up -d pwndoc-backend pwndoc-frontend pwndoc-languagetools
 
     $(dc_cmd) run --rm --entrypoint npm frontend-tests run demo:record
     rc=$?
-    $(dc_cmd) down -v --remove-orphans
+    cleanup_test_environment
     return $rc
 }
 
@@ -289,7 +294,7 @@ function test_frontend_unit {
         $(dc_cmd) run --rm frontend-unit-tests
     fi
     rc=$?
-    $(dc_cmd) down -v --remove-orphans
+    cleanup_test_environment
     return $rc
 }
 
