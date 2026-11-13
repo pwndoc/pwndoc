@@ -48,6 +48,16 @@ function createWrapper(props = {}) {
 }
 
 describe('BasicEditor assisted-writing toolbar actions', () => {
+  it('preserves HTTPS links loaded from stored editor HTML', () => {
+    const wrapper = createWrapper({
+      modelValue: '<p><a href="https://example.com/report.pdf">report.pdf</a></p>'
+    })
+
+    expect(wrapper.vm.editor.getHTML()).toContain(
+      '<a target="_blank" rel="noopener noreferrer" href="https://example.com/report.pdf">report.pdf</a>'
+    )
+  })
+
   it('places the AI action immediately after the existing comment action', () => {
     const wrapper = createWrapper({ commentMode: true, showAiButton: true })
     const group = wrapper.find('.editor-toolbar__assisted-actions')

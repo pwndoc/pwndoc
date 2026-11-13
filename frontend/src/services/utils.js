@@ -25,6 +25,7 @@ const ALLOWED_TAGS = [
   'code',
   'pre',
   'img',
+  'a',
   'legend',
   'comment'
 ]
@@ -74,6 +75,20 @@ function ensureDomPurifyConfigured() {
     else if (node.tagName === 'MARK') {
       if (data.attrName === 'data-color' || data.attrName === 'style')
         data.forceKeepAttr = true;
+    }
+    // Only keep absolute HTTP(S) links. This preserves report links while
+    // rejecting javascript:, data: and other unsafe or unexpected schemes.
+    else if (node.tagName === 'A') {
+      if (data.attrName === 'href') {
+        try {
+          const url = new URL(data.attrValue)
+          if (url.protocol === 'http:' || url.protocol === 'https:')
+            data.forceKeepAttr = true
+        }
+        catch (_) {
+          // Invalid and relative URLs are intentionally stripped.
+        }
+      }
     }
     // Filter authorized attributes for <code> tags (<code class="...")
     else if (node.tagName === 'CODE') {
