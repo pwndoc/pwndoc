@@ -6,5 +6,6 @@
 - [Docx Template](docxtemplate.md)
 - [Settings](settings.md)
 - [Profile](profile.md)
+- [OpenID Connect](oidc.md)
 - [Debug](debug.md)
 - [API Documentation](/pwndoc/api/ ":ignore API Swagger File")

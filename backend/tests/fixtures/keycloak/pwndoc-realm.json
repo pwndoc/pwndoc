@@ -1,0 +1,39 @@
+{
+  "realm": "pwndoc",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "pwndoc",
+      "name": "PwnDoc development client",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "pwndoc-dev-secret",
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "https://localhost:18443/api/auth/oidc/callback"
+      ],
+      "webOrigins": [
+        "https://localhost:18443"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "username": "oidc-user",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "OIDC",
+      "lastName": "User",
+      "email": "oidc-user@example.test",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "OidcTest123!",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

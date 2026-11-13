@@ -146,6 +146,9 @@
                 <q-card-section align="center">
                     <q-btn :loading="loginLoading" color="blue" class="full-width" unelevated no-caps @click="getToken()">{{$t('login')}}</q-btn>
                 </q-card-section>
+                <q-card-section v-if="oidcEnabled && step === 0" class="q-pt-none" align="center">
+                    <q-btn outline color="blue" class="full-width" unelevated no-caps @click="loginWithOidc">{{oidcDisplayName}}</q-btn>
+                </q-card-section>
             </div>
         </q-card>
     </div>
@@ -172,6 +175,8 @@ export default {
             step: 0,
             errors: {alert: "", username: "", password: "", firstname: "", lastname: ""},
             loginLoading: false,
+            oidcEnabled: false,
+            oidcDisplayName: 'SSO',
             strongPassword: [Utils.strongPassword]
         }
     },
@@ -205,6 +210,14 @@ export default {
                 Loading.hide();
                 this.loaded = true;
                 this.init = data.data.datas;
+                UserService.getOidcConfig()
+                .then((oidcData) => {
+                    this.oidcEnabled = oidcData.data.datas.enabled === true
+                    this.oidcDisplayName = oidcData.data.datas.displayName || 'SSO'
+                })
+                .catch(() => {
+                    this.oidcEnabled = false
+                })
             })
             .catch(err => {
                 Loading.show({
@@ -215,6 +228,10 @@ export default {
                     customClass: 'loading-error'})
                 console.log(err)
             })
+        },
+
+        loginWithOidc() {
+            window.location.assign('/api/auth/oidc/login')
         },
 
          initUser() {
