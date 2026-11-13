@@ -7,6 +7,13 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const frontendRoot = path.resolve(__dirname, '../..')
 
+// Node 25+ enables experimental Web Storage by default. That global shadows
+// jsdom's localStorage/sessionStorage in Vitest workers, so storage APIs are
+// undefined unless Node's implementation is disabled.
+// See https://github.com/vitest-dev/vitest/issues/8757
+const nodeMajor = Number.parseInt(process.versions.node.split('.')[0], 10)
+const execArgv = nodeMajor >= 25 ? ['--no-webstorage'] : []
+
 export const UNIT_COVERAGE_EXCLUDE = [
   'node_modules/',
   'tests/',
@@ -48,6 +55,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    execArgv,
     fileParallelism: false,
     include: ['./tests/unit/tests/**/*.test.js'],
     setupFiles: ['./tests/unit/setup.js'],
