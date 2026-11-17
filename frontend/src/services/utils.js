@@ -26,7 +26,14 @@ const ALLOWED_TAGS = [
   'pre',
   'img',
   'legend',
-  'comment'
+  'comment',
+  'table',
+  'thead',
+  'tbody',
+  'tfoot',
+  'tr',
+  'th',
+  'td'
 ]
 
 // Diff markers are added after content sanitize; allow them when purifying v-html diffs.
@@ -88,6 +95,13 @@ function ensureDomPurifyConfigured() {
       if (data.attrName === 'id') {
         data.forceKeepAttr = true
       }
+    }
+    // Filter authorized attributes for table cells (<td colspan="..." rowspan="..." colwidth="...">)
+    else if (node.tagName === 'TD' || node.tagName === 'TH') {
+      if ((data.attrName === 'colspan' || data.attrName === 'rowspan') && /^[0-9]{1,3}$/.test(data.attrValue || ''))
+        data.forceKeepAttr = true
+      else if (data.attrName === 'colwidth' && /^[0-9,]{1,255}$/.test(data.attrValue || '')) // Column widths set by the editor, one per spanned column
+        data.forceKeepAttr = true
     }
     else if (node.tagName === 'SPAN') {
       if (data.attrName === 'class' && /^diff(add|rem|eq)$/.test(data.attrValue || ''))

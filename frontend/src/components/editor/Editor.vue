@@ -152,6 +152,29 @@
                 </div>
                 <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('code') !== -1" />
                     
+                <div v-if="toolbar.indexOf('table') !== -1">
+                    <q-tooltip :delay="500" class="text-bold">{{$t('tooltip.table')}}</q-tooltip>
+                    <q-btn-dropdown flat size="sm" dense icon="mdi-table" data-testid="editor-table-menu"
+                    :class="{ 'is-active': editor.isActive('table') }">
+                        <q-list dense>
+                            <q-item clickable v-close-popup data-testid="editor-table-insert"
+                            @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()">
+                                <q-item-section avatar><q-icon name="mdi-table-plus" /></q-item-section>
+                                <q-item-section>{{$t('tooltip.insertTable')}}</q-item-section>
+                            </q-item>
+                            <q-separator />
+                            <q-item v-for="action of tableActions" :key="action.command" clickable v-close-popup
+                            :data-testid="`editor-table-${action.command}`"
+                            :disable="!editor.can()[action.command]()"
+                            @click="editor.chain().focus()[action.command]().run()">
+                                <q-item-section avatar><q-icon :name="action.icon" /></q-item-section>
+                                <q-item-section>{{$t(action.label)}}</q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-btn-dropdown>
+                </div>
+                <q-separator vertical class="q-mx-sm" v-if="toolbar.indexOf('table') !== -1" />
+
                 <div v-if="toolbar.indexOf('image') !== -1">
                     <q-tooltip :delay="500" class="text-bold">Insert Image</q-tooltip>
                     <q-btn
@@ -320,6 +343,10 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Code from '@tiptap/extension-code'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
 import CustomImage from './editor-image'
 import Caption from './editor-caption'
 import Comment from './editor-comment'
@@ -356,7 +383,7 @@ export default {
         toolbar: {
             type: Array,
             default: function() {
-                return ['format', 'marks', 'list', 'code', 'image', 'caption']
+                return ['format', 'marks', 'list', 'code', 'table', 'image', 'caption']
             }
         },
         noAffix: {
@@ -428,6 +455,12 @@ export default {
                         code: false
                     }),
                     Underline,
+                    Table.configure({
+                        resizable: true
+                    }),
+                    TableRow,
+                    TableHeader,
+                    TableCell,
                     CustomImage,
                     Caption,
                     Comment,
@@ -476,6 +509,17 @@ export default {
             toggleDiff: true,
 
             htmlEncode: Utils.htmlEncode,
+            tableActions: [
+                { command: 'addRowBefore', icon: 'mdi-table-row-plus-before', label: 'tooltip.addRowBefore' },
+                { command: 'addRowAfter', icon: 'mdi-table-row-plus-after', label: 'tooltip.addRowAfter' },
+                { command: 'deleteRow', icon: 'mdi-table-row-remove', label: 'tooltip.deleteRow' },
+                { command: 'addColumnBefore', icon: 'mdi-table-column-plus-before', label: 'tooltip.addColumnBefore' },
+                { command: 'addColumnAfter', icon: 'mdi-table-column-plus-after', label: 'tooltip.addColumnAfter' },
+                { command: 'deleteColumn', icon: 'mdi-table-column-remove', label: 'tooltip.deleteColumn' },
+                { command: 'mergeOrSplit', icon: 'mdi-table-merge-cells', label: 'tooltip.mergeOrSplitCells' },
+                { command: 'toggleHeaderRow', icon: 'mdi-table-headers-eye', label: 'tooltip.toggleHeaderRow' },
+                { command: 'deleteTable', icon: 'mdi-table-remove', label: 'tooltip.deleteTable' }
+            ],
             highlightColor: '#ffff25',
             highlightPalette: [
                 '#ffff25', '#00ff41', '#00ffff', '#ff00f9', '#0005fd',
@@ -973,6 +1017,67 @@ export default {
             }
         }
 
+        table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+            margin: 0;
+            overflow: hidden;
+
+            td,
+            th {
+                min-width: 1em;
+                border: 1px solid #b0b0b0;
+                padding: 3px 5px;
+                vertical-align: top;
+                box-sizing: border-box;
+                position: relative;
+
+                > * {
+                    margin-bottom: 0;
+                }
+            }
+
+            th {
+                background-color: #f1f3f5;
+                font-weight: bold;
+                text-align: left;
+            }
+
+            .selectedCell:after {
+                z-index: 2;
+                position: absolute;
+                content: "";
+                left: 0;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                background: rgba(200, 200, 255, 0.4);
+                pointer-events: none;
+            }
+
+            .column-resize-handle {
+                position: absolute;
+                right: -2px;
+                top: 0;
+                bottom: 0;
+                width: 4px;
+                z-index: 20;
+                background-color: #adf;
+                pointer-events: none;
+            }
+        }
+
+        .tableWrapper {
+            margin: 0.5em 0;
+            overflow-x: auto;
+        }
+
+        &.resize-cursor {
+            cursor: ew-resize;
+            cursor: col-resize;
+        }
+
         &-focused {
             outline: none !important;
         }
@@ -1210,6 +1315,10 @@ export default {
 
 .body--dark .ai-anchor-highlight {
     background: rgba(159, 168, 218, 0.3);
+}
+
+.body--dark .editor__content .ProseMirror th {
+    background-color: #37474f;
 }
 
 .diffrem {
