@@ -402,6 +402,33 @@ describe('Audit Edit Page', () => {
       await flushPromises()
 
       expect(wrapper.vm.customFields).toEqual(mockCustomFields)
+      expect(wrapper.vm.customFieldsLoaded).toBe(true)
+    })
+
+    it('shares one pending catalog request with finding editors', async () => {
+      let resolveCatalog
+      DataService.getCustomFields.mockReturnValueOnce(new Promise(resolve => { resolveCatalog = resolve }))
+      const wrapper = await createWrapper()
+      const pending = wrapper.vm.getCustomFields()
+
+      expect(DataService.getCustomFields).toHaveBeenCalledTimes(1)
+      expect(wrapper.vm.customFieldsLoaded).toBe(false)
+
+      resolveCatalog({ data: { datas: mockCustomFields } })
+      expect(await pending).toEqual(mockCustomFields)
+      expect(wrapper.vm.customFieldsLoaded).toBe(true)
+    })
+
+    it('does not mark the catalog loaded when its request fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      DataService.getCustomFields.mockRejectedValueOnce(new Error('Catalog unavailable'))
+      const wrapper = await createWrapper()
+      await flushPromises()
+
+      expect(wrapper.vm.customFieldsLoaded).toBe(false)
+      expect(await wrapper.vm.getCustomFields()).toEqual(mockCustomFields)
+      expect(wrapper.vm.customFieldsLoaded).toBe(true)
+      consoleSpy.mockRestore()
     })
 
     it('should store sections after loading', async () => {

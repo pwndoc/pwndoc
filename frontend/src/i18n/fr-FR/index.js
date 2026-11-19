@@ -89,6 +89,7 @@ export default {
         auditDraftDownloadWarningTitle: 'Des modifications locales récupérées existent',
         auditDraftDownloadWarningMessage: 'Cet audit contient des modifications locales récupérées qui ne sont pas enregistrées sur le serveur. Elles ne seront pas incluses dans le rapport généré tant que vous ne les aurez pas enregistrées.',
         fieldRequired: 'Veuillez remplir tous les champs obligatoires',
+        customFieldsUnavailable: 'Les champs personnalisés ne sont pas prêts ou sont incomplets. L’enregistrement est bloqué pour éviter une perte de données ; réessayez ou rechargez la page.',
         deleteFindingConfirm: 'Supprimer la découverte actuelle ?',
         deleteFindingNotice: 'Cette action ne peut pas être annulée',
         selectHost: 'Sélectionnez les hôtes',

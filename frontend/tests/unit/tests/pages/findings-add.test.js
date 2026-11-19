@@ -197,6 +197,7 @@ describe('Findings Add Page', () => {
             ...(options.auditParent || {})
           },
           customFields: [],
+          customFieldsLoaded: true,
           ...(options.provide || {})
         }
       }
@@ -457,6 +458,16 @@ describe('Findings Add Page', () => {
   })
 
   describe('addFindingFromVuln', () => {
+    it('does not create a finding while the custom field catalog is loading', () => {
+      const wrapper = createWrapper({ provide: { customFieldsLoaded: false } })
+      wrapper.vm.addFindingFromVuln(mockVulnerabilities[0])
+
+      expect(AuditService.createFinding).not.toHaveBeenCalled()
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'msg.customFieldsUnavailable', color: 'negative'
+      }))
+    })
+
     it('should call AuditService.createFinding with correct data from vulnerability', async () => {
       AuditService.createFinding.mockResolvedValue({})
 
@@ -566,6 +577,17 @@ describe('Findings Add Page', () => {
   })
 
   describe('addFinding', () => {
+    it('does not create a manual finding while the custom field catalog is loading', () => {
+      const wrapper = createWrapper({ provide: { customFieldsLoaded: false } })
+      wrapper.vm.findingTitle = 'New Finding'
+      wrapper.vm.addFinding()
+
+      expect(AuditService.createFinding).not.toHaveBeenCalled()
+      expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'msg.customFieldsUnavailable', color: 'negative'
+      }))
+    })
+
     it('should create finding with category and title', async () => {
       AuditService.createFinding.mockResolvedValue({})
 
