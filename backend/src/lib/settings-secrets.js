@@ -16,7 +16,8 @@ const SECRET_FIELDS = [
     'ai.private.bedrockApiKey',
     'ai.private.bedrockAccessKeyId',
     'ai.private.bedrockSecretAccessKey',
-    'ai.private.bedrockSessionToken'
+    'ai.private.bedrockSessionToken',
+    'ai.private.orcarouterApiKey'
 ];
 
 const configuredFieldPath = (path) => `${path}Configured`;

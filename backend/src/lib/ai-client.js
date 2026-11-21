@@ -10,7 +10,8 @@ const PROVIDER_LABELS = {
     anthropic: 'Anthropic',
     deepseek: 'DeepSeek',
     ollama: 'Ollama',
-    bedrock: 'AWS Bedrock'
+    bedrock: 'AWS Bedrock',
+    orcarouter: 'OrcaRouter Cyber Inference'
 };
 
 let nodeLlmModule = null;
@@ -204,6 +205,14 @@ const resolveProviderConfig = (provider, settings = {}) => {
                 hasCredentials: Boolean(apiKey || (accessKeyId && secretAccessKey))
             };
         }
+        case 'orcarouter':
+            return {
+                apiKey: (privateSettings.orcarouterApiKey || '').trim(),
+                baseUrl: toBaseUrl(privateSettings.orcarouterBaseUrl, defaults.baseUrl),
+                model: (privateSettings.orcarouterModel || defaults.model).trim() || defaults.model,
+                timeoutMs: toTimeout(privateSettings.orcarouterTimeoutMs, defaults.timeoutMs),
+                requireApiKey: true
+            };
         default:
             return null;
     }
@@ -231,6 +240,14 @@ const buildLlmConfig = (provider, providerConfig) => {
             break;
         case 'ollama':
             config.ollamaApiBase = providerConfig.baseUrl;
+            break;
+        // OrcaRouter exposes the OpenAI wire format, so the OpenAI chat transport is the
+        // correct adapter. The named `orcarouter` provider keeps its own settings, label,
+        // catalog and error surface; only the transport is shared.
+        case 'orcarouter':
+            config.provider = 'openai';
+            config.openaiApiKey = providerConfig.apiKey;
+            config.openaiApiBase = providerConfig.baseUrl;
             break;
         case 'bedrock':
             config.bedrockRegion = providerConfig.region;

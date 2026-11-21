@@ -24,6 +24,15 @@ module.exports = function() {
         });
 
         describe('sanitizeSettingsForClient', () => {
+            it('masks the OrcaRouter API key and flags it as configured', () => {
+                const sanitized = sanitizeSettingsForClient({
+                    ai: { private: { orcarouterApiKey: 'sk-orca-test-value' }, public: {} }
+                });
+
+                expect(sanitized.ai.private.orcarouterApiKey).toBe('');
+                expect(sanitized.ai.private.orcarouterApiKeyConfigured).toBe(true);
+            });
+
             it('masks a configured secret and flags it as configured', () => {
                 const sanitized = sanitizeSettingsForClient(buildSettings('super-secret-key'));
 
@@ -40,6 +49,15 @@ module.exports = function() {
         });
 
         describe('mergeSettingsSecrets', () => {
+            it('keeps a stored OrcaRouter key when the client resends the masked sentinel', () => {
+                const merged = mergeSettingsSecrets(
+                    { ai: { private: { orcarouterApiKey: MASKED_SECRET } } },
+                    { ai: { private: { orcarouterApiKey: 'persisted-orca-key' } } }
+                );
+
+                expect(merged.ai.private.orcarouterApiKey).toBe('persisted-orca-key');
+            });
+
             it('keeps the existing secret when the client resends the masked sentinel', () => {
                 const existing = buildSettings('persisted-key');
                 const incoming = buildSettings(MASKED_SECRET);

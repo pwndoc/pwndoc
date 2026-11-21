@@ -6,6 +6,7 @@ const Vulnerability = require('mongoose').model('Vulnerability');
 const CustomField = require('mongoose').model('CustomField');
 const AiPrompt = require('mongoose').model('AiPrompt');
 const { generateWithProvider, generateWithProviderStream, testProviderConnection } = require('../lib/ai-client');
+const { discoverOrcaModels, resolveOrcaBaseUrl, OrcaDiscoveryError } = require('../lib/ai-orcarouter');
 const { MASKED_SECRET } = require('../lib/settings-secrets');
 const { runAuditQa } = require('../lib/ai-qa');
 const {
@@ -895,6 +896,7 @@ const AI_TEST_OVERRIDE_FIELDS = {
     anthropic: ['anthropicApiKey', 'anthropicBaseUrl', 'anthropicModel', 'anthropicVersion'],
     deepseek: ['deepseekApiKey', 'deepseekBaseUrl', 'deepseekModel'],
     ollama: ['ollamaApiKey', 'ollamaBaseUrl', 'ollamaModel'],
+    orcarouter: ['orcarouterApiKey', 'orcarouterBaseUrl', 'orcarouterModel'],
     bedrock: [
         'bedrockApiKey',
         'bedrockAccessKeyId',
@@ -944,6 +946,36 @@ const handleAiTestConnection = async function(req, res) {
         const result = await testProviderConnection(provider, testSettings);
         Response.Ok(res, result);
     } catch (err) {
+        Response.Internal(res, err);
+    }
+};
+
+// Server-side model discovery for OrcaRouter Cyber Inference. The API key never leaves
+// the backend; the browser receives only the filtered selector projection.
+const handleOrcaModelDiscovery = async function(req, res) {
+    try {
+        const settings = await Settings.getAll();
+        const settingsObject = typeof settings?.toObject === 'function' ? settings.toObject() : settings;
+        const overrides = buildAiTestOverrides('orcarouter', req.body);
+        const privateSettings = {
+            ...(settingsObject?.ai?.private || {}),
+            ...overrides
+        };
+
+        const result = await discoverOrcaModels({
+            apiKey: String(privateSettings.orcarouterApiKey || '').trim(),
+            baseUrl: resolveOrcaBaseUrl(privateSettings),
+            capability: 'chat'
+        });
+
+        Response.Ok(res, result);
+    } catch (err) {
+        if (err instanceof OrcaDiscoveryError || err?.name === 'OrcaDiscoveryError') {
+            if (err.code === 'auth')
+                return Response.Unauthorized(res, err.message);
+            if (err.code === 'not_configured' || err.code === 'invalid_url')
+                return Response.BadParameters(res, err.message);
+        }
         Response.Internal(res, err);
     }
 };
@@ -1028,4 +1060,7 @@ module.exports = function(app, io) {
     app.post('/api/ai/vulnerabilities/qa/dismiss', acl.hasPermission('validtoken'), requireAnyPermission(...VULN_QA_GENERATE_CATALOG), handleVulnerabilityQaDismiss);
     app.post('/api/ai/vulnerabilities/qa/resolve', acl.hasPermission('validtoken'), requireAnyPermission(...VULN_QA_GENERATE_CATALOG), handleVulnerabilityQaResolve);
     app.post('/api/ai/test', acl.hasPermission('settings:update'), handleAiTestConnection);
+    // Editor-only: the request may override the base URL, and the stored key is sent to
+    // whatever URL is used, so this must never be reachable with read-only settings access.
+    app.post('/api/ai/providers/orcarouter/models', acl.hasPermission('settings:update'), handleOrcaModelDiscovery);
 };

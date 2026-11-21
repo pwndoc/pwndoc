@@ -31,8 +31,8 @@ describe('ai-providers allowedProviderOptions', () => {
 })
 
 describe('ai-providers metadata', () => {
-  it('exposes the five backend provider ids', () => {
-    expect(AI_PROVIDERS).toEqual(['openai', 'anthropic', 'deepseek', 'ollama', 'bedrock'])
+  it('exposes the six backend provider ids', () => {
+    expect(AI_PROVIDERS).toEqual(['openai', 'anthropic', 'deepseek', 'ollama', 'bedrock', 'orcarouter'])
   })
 
   it('maps ids to human labels and falls back to the id', () => {
@@ -45,5 +45,20 @@ describe('ai-providers metadata', () => {
       expect(providerLogo(provider)).toBeTruthy()
     })
     expect(providerLogo('unknown')).toBeNull()
+  })
+})
+
+describe('ai-providers OrcaRouter entry', () => {
+  it('registers OrcaRouter Cyber Inference as a named provider with a bundled logo', () => {
+    expect(providerLabel('orcarouter')).toBe('OrcaRouter Cyber Inference')
+    expect(providerLogo('orcarouter')).toBeTruthy()
+  })
+
+  it('can be selected once the administrator allows it', () => {
+    const options = allowedProviderOptions({
+      defaultProvider: 'openai',
+      allowedProviders: ['orcarouter']
+    })
+    expect(options.map((option) => option.value)).toEqual(['openai', 'orcarouter'])
   })
 })
